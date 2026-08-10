@@ -5,7 +5,6 @@ import 'package:anx_reader/l10n/generated/L10n.dart';
 import 'package:anx_reader/main.dart';
 import 'package:anx_reader/models/book_note.dart';
 import 'package:anx_reader/page/reading_page.dart';
-import 'package:anx_reader/service/tts/tts_handler.dart';
 import 'package:anx_reader/utils/toast/common.dart';
 import 'package:anx_reader/widgets/book_share/excerpt_share_service.dart';
 import 'package:anx_reader/widgets/common/axis_flex.dart';
@@ -294,30 +293,6 @@ class ExcerptMenuState extends State<ExcerptMenu> {
             onTap: widget.toggleTranslationMenu,
             icon: const Icon(Icons.translate),
             text: L10n.of(context).contextMenuTranslate,
-          ),
-          // narrate
-          IconAndText(
-            compact: true,
-            onTap: () async {
-              widget.onClose();
-              final playerState = epubPlayerKey.currentState;
-              if (playerState == null) return;
-
-              // Stop existing TTS playback if any
-              await audioHandler.stop();
-
-              // Now initialize TTS - it will use the current (updated) position
-              await TtsHandler().init(
-                () => playerState.initTts(fromCfi: widget.annoCfi),
-                playerState.ttsNext,
-                playerState.ttsPrev,
-              );
-
-              // Start TTS - audioHandler.play() will call TTS speak
-              await audioHandler.play();
-            },
-            icon: const Icon(Icons.headphones),
-            text: L10n.of(context).contextMenuNarrate,
           ),
           // edit note
           if (!widget.footnote)

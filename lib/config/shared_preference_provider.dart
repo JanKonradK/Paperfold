@@ -431,83 +431,6 @@ class Prefs extends ChangeNotifier {
     return prefs.getString('annotationColor') ?? '66CCFF';
   }
 
-  set ttsVolume(double volume) {
-    prefs.setDouble('ttsVolume', volume);
-    notifyListeners();
-  }
-
-  double get ttsVolume {
-    return prefs.getDouble('ttsVolume') ?? 1.0;
-  }
-
-  set ttsPitch(double pitch) {
-    prefs.setDouble('ttsPitch', pitch);
-    notifyListeners();
-  }
-
-  double get ttsPitch {
-    return prefs.getDouble('ttsPitch') ?? 1.0;
-  }
-
-  set ttsRate(double rate) {
-    prefs.setDouble('ttsRate', rate);
-    notifyListeners();
-  }
-
-  double get ttsRate {
-    return prefs.getDouble('ttsRate') ?? 0.6;
-  }
-
-  void setTtsVoiceModel(String serviceId, String shortName) {
-    prefs.setString('ttsVoiceModel_$serviceId', shortName);
-    notifyListeners();
-  }
-
-  void removeTtsVoiceModel(String serviceId) {
-    prefs.remove('ttsVoiceModel_$serviceId');
-    notifyListeners();
-  }
-
-  String getTtsVoiceModel(String serviceId) {
-    return prefs.getString('ttsVoiceModel_$serviceId') ?? '';
-  }
-
-  set ttsService(String serviceId) {
-    prefs.setString('ttsService', serviceId);
-    notifyListeners();
-  }
-
-  String get ttsService {
-    String? service = prefs.getString('ttsService');
-    if (service != null) return service;
-
-    // Migration/Fallback
-    bool isSystem = prefs.getBool('isSystemTts') ??
-        true; // Default to system if nothing set
-    if (!isSystem) {
-      // Check if there was an online service set
-      String? online = prefs.getString('onlineTtsService');
-      if (online != null) return online;
-    }
-    return 'system';
-  }
-
-  Map<String, dynamic> getOnlineTtsConfig(String serviceId) {
-    String? json = prefs.getString('onlineTtsConfig_$serviceId');
-    if (json == null) return {};
-    try {
-      return jsonDecode(json) as Map<String, dynamic>;
-    } catch (e) {
-      return {};
-    }
-  }
-
-  Future<void> saveOnlineTtsConfig(
-      String serviceId, Map<String, dynamic> config) async {
-    await prefs.setString('onlineTtsConfig_$serviceId', jsonEncode(config));
-    notifyListeners();
-  }
-
   set pageTurnStyle(PageTurn style) {
     prefs.setString('pageTurnStyle', style.name);
     notifyListeners();
@@ -1047,11 +970,6 @@ class Prefs extends ChangeNotifier {
         fontSize: prefs.getDouble('pageFooterFontSize') ?? 10,
       ),
     );
-  }
-
-  set isSystemTts(bool status) {
-    prefs.setBool('isSystemTts', status);
-    notifyListeners();
   }
 
   bool get showTextUnderIconButton {

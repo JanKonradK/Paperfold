@@ -29,9 +29,6 @@ import 'package:anx_reader/providers/chapter_content_bridge.dart';
 import 'package:anx_reader/providers/current_reading.dart';
 import 'package:anx_reader/service/book_player/book_player_server.dart';
 import 'package:anx_reader/providers/toc_search.dart';
-import 'package:anx_reader/service/tts/base_tts.dart';
-import 'package:anx_reader/service/tts/models/tts_sentence.dart';
-import 'package:anx_reader/service/tts/tts_handler.dart';
 import 'package:anx_reader/utils/coordinates_to_part.dart';
 import 'package:anx_reader/utils/js/convert_dart_color_to_js.dart';
 import 'package:anx_reader/utils/platform_utils.dart';
@@ -319,85 +316,6 @@ class EpubPlayerState extends ConsumerState<EpubPlayer>
 
   void _clearSearchHighlights() {
     webViewController.evaluateJavascript(source: "clearSearch()");
-  }
-
-  Future<void> initTts({String? fromCfi}) async {
-    if (fromCfi != null && fromCfi.isNotEmpty) {
-      await webViewController.evaluateJavascript(
-          source: "window.ttsFromCfi('$fromCfi')");
-    } else {
-      await webViewController.evaluateJavascript(source: "window.ttsHere()");
-    }
-  }
-
-  void ttsStop() => webViewController.evaluateJavascript(source: "ttsStop()");
-
-  Future<String> ttsNext() async => (await webViewController
-          .callAsyncJavaScript(functionBody: "return await ttsNext()"))
-      ?.value;
-
-  Future<String> ttsPrev() async => (await webViewController
-          .callAsyncJavaScript(functionBody: "return await ttsPrev()"))
-      ?.value;
-
-  Future<String> ttsPrevSection() async => (await webViewController
-          .callAsyncJavaScript(functionBody: "return await ttsPrevSection()"))
-      ?.value;
-
-  Future<String> ttsNextSection() async => (await webViewController
-          .callAsyncJavaScript(functionBody: "return await ttsNextSection()"))
-      ?.value;
-
-  Future<String> ttsPrepare() async =>
-      (await webViewController.evaluateJavascript(source: "ttsPrepare()"));
-
-  TtsSentence? _parseTtsSentence(dynamic value) {
-    if (value is Map<dynamic, dynamic>) {
-      try {
-        return TtsSentence.fromMap(value);
-      } catch (_) {
-        return null;
-      }
-    }
-    return null;
-  }
-
-  List<TtsSentence> _parseTtsSentences(dynamic value) {
-    if (value is! List) return const [];
-
-    final sentences = <TtsSentence>[];
-    for (final item in value) {
-      final sentence = _parseTtsSentence(item);
-      if (sentence != null) {
-        sentences.add(sentence);
-      }
-    }
-    return sentences;
-  }
-
-  Future<TtsSentence?> ttsCurrentDetail() async {
-    final result = await webViewController.callAsyncJavaScript(
-      functionBody: 'return ttsCurrentDetail()',
-    );
-    return _parseTtsSentence(result?.value);
-  }
-
-  Future<List<TtsSentence>> ttsCollectDetails({
-    required int count,
-    bool includeCurrent = false,
-    int offset = 1,
-  }) async {
-    final result = await webViewController.callAsyncJavaScript(
-      functionBody:
-          'return ttsCollectDetails($count, ${includeCurrent ? 'true' : 'false'}, $offset)',
-    );
-    return _parseTtsSentences(result?.value);
-  }
-
-  Future<void> ttsHighlightByCfi(String cfi) async {
-    await webViewController.callAsyncJavaScript(
-      functionBody: 'return ttsHighlightByCfi(${jsonEncode(cfi)})',
-    );
   }
 
   Future<bool> isFootNoteOpen() async => (await webViewController
@@ -728,17 +646,8 @@ class EpubPlayerState extends ConsumerState<EpubPlayer>
           Map<String, dynamic> annotation = args[0];
 
           if (annotation['annotation'] == null) {
-            // Check if TTS is active and the click is on the currently read text
-            final currentTtsState = TtsHandler().ttsStateNotifier.value;
-            if (currentTtsState == TtsStateEnum.playing ||
-                currentTtsState == TtsStateEnum.paused) {
-              if (currentTtsState == TtsStateEnum.playing) {
-                audioHandler.pause();
-              } else {
-                audioHandler.play();
-              }
-              return;
-            }
+            // Nothing to open: the tap did not land on a stored annotation.
+            return;
           }
 
           int id = annotation['annotation']['id'];
