@@ -3,12 +3,10 @@
 #
 
 list(APPEND FLUTTER_PLUGIN_LIST
-  audioplayers_windows
   battery_plus
   connectivity_plus
   desktop_drop
   flutter_inappwebview_windows
-  flutter_tts
   permission_handler_windows
   screen_retriever_windows
   share_plus

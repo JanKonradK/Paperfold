@@ -12,7 +12,6 @@ import 'package:anx_reader/page/home_page.dart';
 import 'package:anx_reader/page/migration_page.dart';
 import 'package:anx_reader/service/book_player/book_player_server.dart';
 import 'package:anx_reader/service/network/http_proxy_overrides.dart';
-import 'package:anx_reader/service/tts/tts_handler.dart';
 import 'package:anx_reader/utils/get_path/macos_migration.dart';
 import 'package:anx_reader/utils/color_scheme.dart';
 import 'package:anx_reader/utils/error/common.dart';
@@ -20,7 +19,6 @@ import 'package:anx_reader/utils/get_path/get_base_path.dart';
 import 'package:anx_reader/utils/log/common.dart';
 import 'package:anx_reader/utils/window_position_validator.dart';
 import 'package:anx_reader/providers/sync.dart';
-import 'package:audio_service/audio_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
@@ -29,7 +27,6 @@ import 'package:provider/provider.dart' as provider;
 import 'package:window_manager/window_manager.dart';
 
 final navigatorKey = GlobalKey<NavigatorState>();
-late AudioHandler audioHandler;
 final heroineController = HeroineController();
 
 /// Whether macOS data migration is needed (checked at startup)
@@ -61,16 +58,6 @@ Future<void> main() async {
   }
 
   Server().start();
-
-  audioHandler = await AudioService.init(
-    builder: () => TtsHandler(),
-    config: const AudioServiceConfig(
-      androidNotificationChannelId: 'com.anx.reader.tts.channel.audio',
-      androidNotificationChannelName: 'ANX Reader TTS',
-      androidNotificationOngoing: true,
-      androidStopForegroundOnPause: true,
-    ),
-  );
 
   SmartDialog.config.custom = SmartConfigCustom(
     maskColor: Colors.black.withAlpha(35),

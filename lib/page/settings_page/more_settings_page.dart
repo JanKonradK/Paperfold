@@ -3,7 +3,6 @@ import 'package:anx_reader/l10n/generated/L10n.dart';
 import 'package:anx_reader/page/settings_page/advanced.dart';
 import 'package:anx_reader/page/settings_page/appearance.dart';
 import 'package:anx_reader/page/settings_page/developer/developer_options_page.dart';
-import 'package:anx_reader/page/settings_page/narrate.dart';
 import 'package:anx_reader/page/settings_page/reading.dart';
 import 'package:anx_reader/page/settings_page/settings_page.dart';
 import 'package:anx_reader/page/settings_page/storege.dart';
@@ -97,15 +96,6 @@ class _SubMoreSettingsState extends State<SubMoreSettings> {
                 "subtitles": [
                   L10n.of(context).settingsSyncWebdav,
                   L10n.of(context).exportAndImport,
-                ],
-              },
-              {
-                "title": L10n.of(context).settingsNarrate,
-                "icon": EvaIcons.headphones,
-                "sections": const NarrateSettings(),
-                "subtitles": [
-                  L10n.of(context).settingsNarrateVoice,
-                  L10n.of(context).settingsNarrateVoiceModel,
                 ],
               },
               {

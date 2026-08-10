@@ -1,7 +1,7 @@
 import 'package:anx_reader/service/config/config_item.dart';
 import 'package:flutter/material.dart';
 
-/// Base class for all service providers (Translate, TTS, etc.).
+/// Base class for all service providers (Translate, etc.).
 ///
 /// [T] is the service enum type (e.g., TranslateService, TtsService).
 ///
