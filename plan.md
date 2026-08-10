@@ -24,6 +24,7 @@ There is no product code and no git repository yet.
 | Decision | Choice | Date |
 |---|---|---|
 | Version 1 scope | Journal **plus** EPUB and PDF reader | 2026-08-09 |
+| Text-to-speech | **Remove it completely.** Supersedes Section 3.3.2 | 2026-08-10 |
 | Page turn | Build the real curl | 2026-08-09 |
 | Research delegation | Add Luna to the allowlist, then run a deeper pass | 2026-08-09 |
 | ~~Stack~~ | ~~Expo (React Native)~~ — **superseded** | 2026-08-09 |
@@ -171,7 +172,7 @@ Store the number. The mark is a view choice, not data.
 |---|---|---|---|
 | AI | `lib/service/ai`, `lib/widgets/ai`, `lib/enums/ai_*`, `lib/providers/ai_*` | 246 KB | **Remove** |
 | In-app purchase | `lib/service/iap`, `lib/page/iap_page.dart`, `lib/providers/iap.dart` | 54 KB | **Must remove** |
-| Text-to-speech | `lib/service/tts`, `lib/widgets/reading_page/tts_*` | 77 KB | **Keep.** See 3.3.2 |
+| Text-to-speech | `lib/service/tts`, `lib/widgets/reading_page/tts_*` | 77 KB | **Remove.** Decision 2026-08-10. See 3.3.2 |
 | Translate | `lib/service/translate` | 24 KB | **Keep.** See 3.3.1 |
 | Settings | `lib/page/settings_page` | 204 KB | **Keep the function. Rebuild the interface.** |
 | Locales | 15 languages in `lib/l10n` | 830 KB | **Keep all. Add Polish.** See 3.4 |
@@ -203,7 +204,23 @@ Order the work:
 The remaining five backends are self-contained. DeepL, Google, and Microsoft
 need user API keys. `web_view.dart` needs none, so make it the default.
 
-#### 3.3.2 Keep TTS, but decide which backends
+#### 3.3.2 ~~Keep TTS, but decide which backends~~ — SUPERSEDED 2026-08-10
+
+> **This section no longer applies. Text-to-speech is removed completely.**
+>
+> Decision on 2026-08-10: remove the whole subsystem, not only the online
+> backends. The factory does not stay.
+>
+> **What this gains.** `flutter_tts` is one of the personal forks in Section 3.6.
+> Removing TTS drops it, so the inherited fork count falls from 7 to 6.
+> No book text can leave the device through a voice service.
+>
+> **What this costs, stated plainly.** Read-aloud is an accessibility feature.
+> Removing it shuts out users who depend on listening instead of reading.
+> If Paperfold adds voice later, it starts from nothing, because the factory
+> abstraction goes too.
+>
+> The text below is kept for the record. Do not act on it.
 
 TTS has a clean factory with pluggable backends:
 
@@ -224,8 +241,8 @@ your local-first position. They need keys most users will not have.
 And `openai_tts_backend.dart` may share code with the AI service you are removing
 — check it during step 4 above.
 
-**Keeping TTS keeps a liability.** `flutter_tts` is one of the four pinned personal
-forks in Section 3.6. You cannot drop it now.
+~~**Keeping TTS keeps a liability.**~~ Superseded. Removing TTS drops
+`flutter_tts`, one of the personal forks in Section 3.6.
 
 ### 3.4 Locales
 
@@ -289,19 +306,39 @@ State this plainly, because it sets Milestone 1:
 
 ### 3.6 Inherited liabilities — know these before you commit
 
-**Four dependencies point at Anxcye's personal forks, pinned to commits:**
+~~**Four dependencies point at Anxcye's personal forks**~~ — **corrected
+2026-08-10: there are eleven, not four.**
+
+The full inventory, with resolved commits and load-bearing rank, is in
+`docs/paperfold/inherited-dependency-forks.md`. Summary:
 
 ```yaml
-flutter_inappwebview:      git: Anxcye/flutter_inappwebview  ref: 4a275c3
-webdav_client:             git: Anxcye/webdav_client
-flutter_tts:               git: Anxcye/flutter_tts           ref: 88d20d28...
-contentsize_tabbarview:    git: Anxcye/contentsize_tabbarview ref: feat/animation
+flutter_inappwebview:      Anxcye/flutter_inappwebview   ref: 4a275c3
+webdav_client:             Anxcye/webdav_client          ref: NONE  <-- unpinned
+contentsize_tabbarview:    Anxcye/contentsize_tabbarview ref: feat/animation
+flutter_tts:               Anxcye/flutter_tts            ref: 88d20d28...
+flutter_heatmap_calendar:  Anxcye/flutter_heatmap_calendar ref: NONE <-- unpinned
+share_handler:             Anxcye/share_handler          ref: eeaa04d2...
+staggered_reorderable:     Anxcye/staggered_reorderable  ref: 2ac799a6...
+langchain, langchain_core, langchain_openai, langchain_anthropic:
+                           Anxcye/langchain_dart         ref: 310fb6b3
 ```
 
-You inherit maintenance of all four. Removing TTS drops one.
-`flutter_inappwebview` is load-bearing and cannot be dropped.
-**Action in Milestone 0:** record why each fork exists. If upstream has merged
-the change, move back to the public package.
+The four `langchain_*` entries left with the AI subsystem, and `flutter_tts`
+left with TTS. **Six forks remain.**
+
+**Two forks carry no `ref` at all.** `webdav_client` and
+`flutter_heatmap_calendar` track the default branch of a single-maintainer
+repository, so the build is not reproducible and a force-push changes it
+silently. Pin both to the commits `pubspec.lock` already resolves.
+
+`flutter_inappwebview` is load-bearing and cannot be dropped. It hosts
+foliate-js, so it carries the whole reader, and Section 4.2's capture path
+runs through its screenshot method.
+
+**Action in Milestone 0:** pin the two unpinned forks. Recording why each fork
+exists is done for the inventory; the per-fork diff against upstream is
+deferred to Milestone 6.
 
 **Rebranding is manual.** `rename.sh` in the repository only renames built APK
 files. It does not rename the project. The Dart package is `anx_reader`, so
@@ -663,12 +700,13 @@ feature are the same feature.** Build them together.
 - Cloud sync and accounts (the fork has WebDAV — disable it, do not delete it yet)
 - Social features, shared shelves, recommendations
 - AI features of any kind
-- Online TTS voices (Azure, OpenAI, Aliyun). System TTS ships. Section 3.3.2
+- Text-to-speech of any kind. The whole subsystem is removed. Section 3.3.2
 - Hindi, Bengali, and Urdu locales, until real translations exist
 - iOS release
 
-**Kept, against the earlier draft:** text-to-speech, translate, the settings
-page, and all fifteen locales. Section 3.3 and Section 3.4.
+**Kept, against the earlier draft:** translate, the settings page, and all
+fifteen locales. Section 3.3 and Section 3.4. Text-to-speech was on this list
+until 2026-08-10. It is now removed. Section 3.3.2.
 
 ---
 
@@ -729,11 +767,25 @@ Do not optimize a screen that meets one.
 
 **Milestone 0 — Fork and strip. No design work.**
 - Fork `anxcye/anx-reader`. Add the `upstream` remote (Section 3.8).
+- **Run code generation first. The fork does not compile without it.**
+  `.gitignore` excludes `*.g.dart` and `*.freezed.dart`, and no generated file
+  is in the tree. A clean checkout fails with two errors that look unrelated:
+  an undefined riverpod provider, and a switch that is "not exhaustively
+  matched" because its freezed union is missing. One cause, not two.
+
+  ```bash
+  flutter pub get
+  dart run build_runner build --delete-conflicting-outputs
+  ```
+
+  **Every build checkpoint below means this pair, then the build.** Any change
+  to a riverpod or freezed source file needs codegen again, or the next removal
+  looks like it broke a build that it did not break.
 - Build it unchanged. Prove it runs on your Android phone **before** you edit.
 - Remove IAP first. It is self-contained (Section 3.3).
 - Then delete `translate/ai.dart`, clean `translate/index.dart`, build, and
   **only then** delete `lib/service/ai` (Section 3.3.1). Order matters.
-- Keep TTS, translate, and settings. Cut the online TTS backends (Section 3.3.2).
+- Keep translate and settings. Remove text-to-speech completely (Section 3.3.2).
 - Build after every removal, never only at the end.
 - Rename the package `anx_reader` to `paperfold` in one mechanical commit.
 - Write the README fork notice and keep the MIT notice (Section 3.7).
@@ -777,10 +829,10 @@ Do not optimize a screen that meets one.
 - To-be-read list and the separate books-to-buy list.
 - Open Library metadata lookup. Optional. Manual entry always works.
 
-**Milestone 6 — Settings, TTS, and translate: the inherited screens**
+**Milestone 6 — Settings and translate: the inherited screens**
 - These screens work. They do not look like Paperfold. Restyle, do not rewrite.
 - Split `lib/page/settings_page` (204 KB) into lazy routes (Section 11.2).
-- Give TTS and translate the book treatment: a reading control that belongs on
+- Give translate the book treatment: a reading control that belongs on
   a page, not a floating panel from another application.
 - Run `/impeccable critique` on each inherited screen before you touch it.
   It tells you what to change. Restyling without that step reproduces the
