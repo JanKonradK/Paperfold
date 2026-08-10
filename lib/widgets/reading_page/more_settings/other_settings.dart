@@ -219,19 +219,6 @@ class _OtherSettingsState extends State<OtherSettings> {
       );
     }
 
-    ListTile autoSummaryPreviousContent() {
-      return ListTile(
-        contentPadding: EdgeInsets.zero,
-        title: Text(L10n.of(context).readingPageAutoSummaryPreviousContent),
-        trailing: Switch(
-          value: Prefs().autoSummaryPreviousContent,
-          onChanged: (bool value) => setState(() {
-            Prefs().autoSummaryPreviousContent = value;
-          }),
-        ),
-      );
-    }
-
     Widget autoMarkSelection() {
       return ListTile(
         contentPadding: EdgeInsets.zero,
@@ -330,7 +317,6 @@ class _OtherSettingsState extends State<OtherSettings> {
           autoAdjustReadingTheme(),
           autoTranslateSelection(),
           autoMarkSelection(),
-          autoSummaryPreviousContent(),
           screenTimeout(),
           pageTurningControl(),
         ],

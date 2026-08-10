@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'dart:core';
 
-import 'package:anx_reader/enums/ai_prompts.dart';
 import 'package:anx_reader/enums/bgimg_alignment.dart';
 import 'package:anx_reader/enums/bgimg_type.dart';
 import 'package:anx_reader/enums/bookshelf_folder_style.dart';
@@ -16,8 +15,6 @@ import 'package:anx_reader/enums/sync_protocol.dart';
 import 'package:anx_reader/enums/translation_mode.dart';
 import 'package:anx_reader/enums/writing_mode.dart';
 import 'package:anx_reader/enums/text_alignment.dart';
-import 'package:anx_reader/enums/ai_panel_position.dart';
-import 'package:anx_reader/enums/ai_chat_display_mode.dart';
 import 'package:anx_reader/enums/bgimg_fit.dart';
 import 'package:anx_reader/enums/code_highlight_theme.dart';
 import 'package:anx_reader/l10n/generated/L10n.dart';
@@ -31,10 +28,8 @@ import 'package:anx_reader/models/book_notes_state.dart';
 import 'package:anx_reader/models/read_theme.dart';
 import 'package:anx_reader/models/reading_info.dart';
 import 'package:anx_reader/models/reading_rules.dart';
-import 'package:anx_reader/models/user_prompt.dart';
 import 'package:anx_reader/widgets/statistic/dashboard_tiles/dashboard_tile_registry.dart';
 import 'package:anx_reader/models/window_info.dart';
-import 'package:anx_reader/service/ai/tools/ai_tool_registry.dart';
 import 'package:anx_reader/service/translate/index.dart';
 import 'package:anx_reader/utils/get_current_language_code.dart';
 import 'package:anx_reader/utils/log/common.dart';
@@ -63,8 +58,6 @@ class Prefs extends ChangeNotifier {
       'chapterSplitSelectedRuleId';
   static const String _chapterSplitCustomRulesKey = 'chapterSplitCustomRules';
   static const String _statisticsDashboardTilesKey = 'statisticsDashboardTiles';
-  static const String _enabledAiToolsKey = 'enabledAiTools';
-  static const String _userPromptsKey = 'userPrompts';
 
   Future<void> initPrefs() async {
     prefs = await SharedPreferences.getInstance();
@@ -639,23 +632,6 @@ class Prefs extends ChangeNotifier {
         prefs.getString('fullTextTranslateTo') ?? getCurrentLanguageCode());
   }
 
-  set aiRpm(int rpm) {
-    prefs.setInt('aiRpm', rpm);
-    notifyListeners();
-  }
-
-  /// Maximum AI requests per minute across all AI features. 0 means unlimited.
-  int get aiRpm {
-    // Migrate from old fullTextTranslateRpm key if present
-    final legacy = prefs.getInt('fullTextTranslateRpm');
-    if (legacy != null) {
-      prefs.setInt('aiRpm', legacy);
-      prefs.remove('fullTextTranslateRpm');
-      return legacy;
-    }
-    return prefs.getInt('aiRpm') ?? 0;
-  }
-
   // set convertChineseMode(ConvertChineseMode mode) {
   //   prefs.setString('convertChineseMode', mode.name);
   //   notifyListeners();
@@ -819,111 +795,6 @@ class Prefs extends ChangeNotifier {
     notifyListeners();
   }
 
-  void saveAiConfig(String identifier, Map<String, String> config) {
-    prefs.setString('aiConfig_$identifier', jsonEncode(config));
-    notifyListeners();
-  }
-
-  Map<String, String> getAiConfig(String identifier) {
-    String? aiConfigJson = prefs.getString('aiConfig_$identifier');
-    if (aiConfigJson == null) {
-      return {};
-    }
-    Map<String, dynamic> decoded = jsonDecode(aiConfigJson);
-    return decoded.map((key, value) => MapEntry(key, value.toString()));
-  }
-
-  set selectedAiService(String identifier) {
-    prefs.setString('selectedAiService', identifier);
-    notifyListeners();
-  }
-
-  String get selectedAiService {
-    return prefs.getString('selectedAiService') ?? 'openai';
-  }
-
-  void deleteAiConfig(String identifier) {
-    prefs.remove('aiConfig_$identifier');
-    notifyListeners();
-  }
-
-  void saveAiProviders(List<dynamic> providers) {
-    final jsonList = providers.map((p) {
-      // Handle both AiProvider objects and already-serialized maps
-      if (p is Map<String, dynamic>) {
-        return p;
-      } else {
-        return p.toJson();
-      }
-    }).toList();
-    prefs.setString('aiProviders', jsonEncode(jsonList));
-    notifyListeners();
-  }
-
-  List<dynamic> getAiProviders() {
-    String? jsonString = prefs.getString('aiProviders');
-    if (jsonString == null) {
-      return [];
-    }
-    try {
-      final List<dynamic> decoded = jsonDecode(jsonString);
-      // Import will be handled in ai_providers.dart to avoid circular dependency
-      return decoded;
-    } catch (e) {
-      return [];
-    }
-  }
-
-  void saveAiPrompt(AiPrompts identifier, String prompt) {
-    prefs.setString('aiPrompt_${identifier.name}', prompt);
-    notifyListeners();
-  }
-
-  String getAiPrompt(AiPrompts identifier) {
-    String? aiPrompt = prefs.getString('aiPrompt_${identifier.name}');
-    if (aiPrompt == null) {
-      return identifier.getPrompt();
-    }
-    return aiPrompt;
-  }
-
-  void deleteAiPrompt(AiPrompts identifier) {
-    prefs.remove('aiPrompt_${identifier.name}');
-    notifyListeners();
-  }
-
-  List<String> get enabledAiToolIds {
-    final stored = prefs.getStringList(_enabledAiToolsKey);
-    if (stored == null) {
-      return AiToolRegistry.defaultEnabledToolIds();
-    }
-    if (stored.isEmpty) {
-      return const [];
-    }
-    final sanitized = AiToolRegistry.sanitizeIds(stored);
-    if (sanitized.isEmpty && stored.isNotEmpty) {
-      return AiToolRegistry.defaultEnabledToolIds();
-    }
-    return sanitized;
-  }
-
-  set enabledAiToolIds(List<String> ids) {
-    prefs.setStringList(
-      _enabledAiToolsKey,
-      AiToolRegistry.sanitizeIds(ids),
-    );
-    notifyListeners();
-  }
-
-  bool isAiToolEnabled(String id) {
-    return enabledAiToolIds.contains(id);
-  }
-
-  void resetEnabledAiTools() {
-    prefs.remove(_enabledAiToolsKey);
-    notifyListeners();
-  }
-
   bool shouldShowHint(HintKey key) {
     return prefs.getBool('hint_${key.code}') ?? true;
   }
@@ -940,15 +811,6 @@ class Prefs extends ChangeNotifier {
     notifyListeners();
   }
 
-  set autoSummaryPreviousContent(bool status) {
-    prefs.setBool('autoSummaryPreviousContent', status);
-    notifyListeners();
-  }
-
-  bool get autoSummaryPreviousContent {
-    return prefs.getBool('autoSummaryPreviousContent') ?? false;
-  }
-
   set autoAdjustReadingTheme(bool status) {
     prefs.setBool('autoAdjustReadingTheme', status);
     notifyListeners();
@@ -956,46 +818,6 @@ class Prefs extends ChangeNotifier {
 
   bool get autoAdjustReadingTheme {
     return prefs.getBool('autoAdjustReadingTheme') ?? false;
-  }
-
-  // User prompts - simple read/write methods
-  List<UserPrompt> get userPrompts {
-    final jsonString = prefs.getString(_userPromptsKey);
-    if (jsonString == null || jsonString.isEmpty) return [];
-
-    try {
-      final List<dynamic> jsonList = jsonDecode(jsonString);
-      return jsonList
-          .map((json) => UserPrompt.fromJson(json as Map<String, dynamic>))
-          .toList();
-    } catch (e) {
-      AnxLog.severe('Error loading user prompts: $e');
-      return [];
-    }
-  }
-
-  set userPrompts(List<UserPrompt> prompts) {
-    final jsonList = prompts.map((p) => p.toJson()).toList();
-    prefs.setString(_userPromptsKey, jsonEncode(jsonList));
-    notifyListeners();
-  }
-
-  set maxAiCacheCount(int count) {
-    prefs.setInt('maxAiCacheCount', count);
-    notifyListeners();
-  }
-
-  int get maxAiCacheCount {
-    return prefs.getInt('maxAiCacheCount') ?? 300;
-  }
-
-  set aiChatFontSize(double size) {
-    prefs.setDouble('aiChatFontSize', size);
-    notifyListeners();
-  }
-
-  double get aiChatFontSize {
-    return prefs.getDouble('aiChatFontSize') ?? 14.0;
   }
 
   set volumeKeyTurnPage(bool status) {
@@ -1149,15 +971,6 @@ class Prefs extends ChangeNotifier {
 
   bool get bottomNavigatorShowStatistics {
     return prefs.getBool('bottomNavigatorShowStatistics') ?? true;
-  }
-
-  bool get bottomNavigatorShowAI {
-    return prefs.getBool('bottomNavigatorShowAI') ?? true;
-  }
-
-  set bottomNavigatorShowAI(bool status) {
-    prefs.setBool('bottomNavigatorShowAI', status);
-    notifyListeners();
   }
 
   set syncCompletedToast(bool status) {
@@ -1590,16 +1403,6 @@ class Prefs extends ChangeNotifier {
     notifyListeners();
   }
 
-  AiPanelPositionEnum get aiPanelPosition {
-    return AiPanelPositionEnum.fromCode(
-        prefs.getString('aiPanelPosition') ?? 'right');
-  }
-
-  set aiPanelPosition(AiPanelPositionEnum position) {
-    prefs.setString('aiPanelPosition', position.code);
-    notifyListeners();
-  }
-
   CodeHighlightThemeEnum get codeHighlightTheme {
     return CodeHighlightThemeEnum.fromCode(
         prefs.getString('codeHighlightTheme') ?? 'default');
@@ -1607,37 +1410,6 @@ class Prefs extends ChangeNotifier {
 
   set codeHighlightTheme(CodeHighlightThemeEnum theme) {
     prefs.setString('codeHighlightTheme', theme.code);
-    notifyListeners();
-  }
-
-  // AI chat display mode configuration
-  AiChatDisplayMode get aiChatDisplayMode {
-    return AiChatDisplayMode.fromCode(
-        prefs.getString('aiChatDisplayMode') ?? 'adaptive');
-  }
-
-  set aiChatDisplayMode(AiChatDisplayMode mode) {
-    prefs.setString('aiChatDisplayMode', mode.code);
-    notifyListeners();
-  }
-
-  // AI panel width (for split mode)
-  double get aiPanelWidth {
-    return prefs.getDouble('aiPanelWidth') ?? 300;
-  }
-
-  set aiPanelWidth(double width) {
-    prefs.setDouble('aiPanelWidth', width);
-    notifyListeners();
-  }
-
-  // AI panel height (for split mode)
-  double get aiPanelHeight {
-    return prefs.getDouble('aiPanelHeight') ?? 300;
-  }
-
-  set aiPanelHeight(double height) {
-    prefs.setDouble('aiPanelHeight', height);
     notifyListeners();
   }
 }
