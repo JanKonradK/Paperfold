@@ -4,12 +4,10 @@ import 'package:anx_reader/config/shared_preference_provider.dart';
 import 'package:anx_reader/enums/lang_list.dart';
 import 'package:anx_reader/l10n/generated/L10n.dart';
 import 'package:anx_reader/service/config/config_item.dart';
-import 'package:anx_reader/service/translate/ai.dart';
 import 'package:anx_reader/service/translate/deepl.dart';
 import 'package:anx_reader/service/translate/google_api.dart';
 import 'package:anx_reader/service/translate/microsoft_api.dart';
 import 'package:anx_reader/service/translate/web_view.dart';
-import 'package:anx_reader/utils/env_var.dart';
 import 'package:anx_reader/utils/log/common.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -19,8 +17,7 @@ enum TranslateService {
   googleWeb,
   microsoftApi,
   googleApi,
-  deepl,
-  ai;
+  deepl;
 
   TranslateServiceProvider get provider {
     switch (this) {
@@ -34,8 +31,6 @@ enum TranslateService {
         return GoogleApiTranslateProvider();
       case TranslateService.deepl:
         return DeepLTranslateProvider();
-      case TranslateService.ai:
-        return AiTranslateProvider();
     }
   }
 
@@ -45,9 +40,7 @@ enum TranslateService {
   /// Check if the service is a WebView provider.
   bool get isWebView => provider is WebViewTranslateProvider;
 
-  static List<TranslateService> get activeValues => values
-      .where((e) => e != TranslateService.ai || EnvVar.enableAIFeature)
-      .toList();
+  static List<TranslateService> get activeValues => values;
 }
 
 TranslateService getTranslateService(String name) {

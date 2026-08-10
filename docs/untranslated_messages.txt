@@ -1,11 +1,5 @@
 {
   "ar": [
-    "settingsAiProviderReasoningEffort",
-    "settingsAiProviderReasoningEffortHelp",
-    "settingsAiProviderReasoningEffortAuto",
-    "settingsAiProviderReasoningEffortLow",
-    "settingsAiProviderReasoningEffortMedium",
-    "settingsAiProviderReasoningEffortHigh",
     "settingsAdvancedNetwork",
     "settingsAdvancedHttpProxyEnabled",
     "settingsAdvancedHttpProxyConfig",
@@ -23,12 +17,6 @@
   ],
 
   "de": [
-    "settingsAiProviderReasoningEffort",
-    "settingsAiProviderReasoningEffortHelp",
-    "settingsAiProviderReasoningEffortAuto",
-    "settingsAiProviderReasoningEffortLow",
-    "settingsAiProviderReasoningEffortMedium",
-    "settingsAiProviderReasoningEffortHigh",
     "settingsAdvancedNetwork",
     "settingsAdvancedHttpProxyEnabled",
     "settingsAdvancedHttpProxyConfig",
@@ -46,12 +34,6 @@
   ],
 
   "es": [
-    "settingsAiProviderReasoningEffort",
-    "settingsAiProviderReasoningEffortHelp",
-    "settingsAiProviderReasoningEffortAuto",
-    "settingsAiProviderReasoningEffortLow",
-    "settingsAiProviderReasoningEffortMedium",
-    "settingsAiProviderReasoningEffortHigh",
     "settingsAdvancedNetwork",
     "settingsAdvancedHttpProxyEnabled",
     "settingsAdvancedHttpProxyConfig",
@@ -69,12 +51,6 @@
   ],
 
   "fr": [
-    "settingsAiProviderReasoningEffort",
-    "settingsAiProviderReasoningEffortHelp",
-    "settingsAiProviderReasoningEffortAuto",
-    "settingsAiProviderReasoningEffortLow",
-    "settingsAiProviderReasoningEffortMedium",
-    "settingsAiProviderReasoningEffortHigh",
     "settingsAdvancedNetwork",
     "settingsAdvancedHttpProxyEnabled",
     "settingsAdvancedHttpProxyConfig",
@@ -92,12 +68,6 @@
   ],
 
   "it": [
-    "settingsAiProviderReasoningEffort",
-    "settingsAiProviderReasoningEffortHelp",
-    "settingsAiProviderReasoningEffortAuto",
-    "settingsAiProviderReasoningEffortLow",
-    "settingsAiProviderReasoningEffortMedium",
-    "settingsAiProviderReasoningEffortHigh",
     "settingsAdvancedNetwork",
     "settingsAdvancedHttpProxyEnabled",
     "settingsAdvancedHttpProxyConfig",
@@ -115,12 +85,6 @@
   ],
 
   "ja": [
-    "settingsAiProviderReasoningEffort",
-    "settingsAiProviderReasoningEffortHelp",
-    "settingsAiProviderReasoningEffortAuto",
-    "settingsAiProviderReasoningEffortLow",
-    "settingsAiProviderReasoningEffortMedium",
-    "settingsAiProviderReasoningEffortHigh",
     "settingsAdvancedNetwork",
     "settingsAdvancedHttpProxyEnabled",
     "settingsAdvancedHttpProxyConfig",
@@ -138,12 +102,6 @@
   ],
 
   "ko": [
-    "settingsAiProviderReasoningEffort",
-    "settingsAiProviderReasoningEffortHelp",
-    "settingsAiProviderReasoningEffortAuto",
-    "settingsAiProviderReasoningEffortLow",
-    "settingsAiProviderReasoningEffortMedium",
-    "settingsAiProviderReasoningEffortHigh",
     "settingsAdvancedNetwork",
     "settingsAdvancedHttpProxyEnabled",
     "settingsAdvancedHttpProxyConfig",
@@ -161,12 +119,6 @@
   ],
 
   "pt": [
-    "settingsAiProviderReasoningEffort",
-    "settingsAiProviderReasoningEffortHelp",
-    "settingsAiProviderReasoningEffortAuto",
-    "settingsAiProviderReasoningEffortLow",
-    "settingsAiProviderReasoningEffortMedium",
-    "settingsAiProviderReasoningEffortHigh",
     "settingsAdvancedNetwork",
     "settingsAdvancedHttpProxyEnabled",
     "settingsAdvancedHttpProxyConfig",
@@ -184,12 +136,6 @@
   ],
 
   "ro": [
-    "settingsAiProviderReasoningEffort",
-    "settingsAiProviderReasoningEffortHelp",
-    "settingsAiProviderReasoningEffortAuto",
-    "settingsAiProviderReasoningEffortLow",
-    "settingsAiProviderReasoningEffortMedium",
-    "settingsAiProviderReasoningEffortHigh",
     "settingsAdvancedNetwork",
     "settingsAdvancedHttpProxyEnabled",
     "settingsAdvancedHttpProxyConfig",
@@ -207,12 +153,6 @@
   ],
 
   "ru": [
-    "settingsAiProviderReasoningEffort",
-    "settingsAiProviderReasoningEffortHelp",
-    "settingsAiProviderReasoningEffortAuto",
-    "settingsAiProviderReasoningEffortLow",
-    "settingsAiProviderReasoningEffortMedium",
-    "settingsAiProviderReasoningEffortHigh",
     "settingsAdvancedNetwork",
     "settingsAdvancedHttpProxyEnabled",
     "settingsAdvancedHttpProxyConfig",
@@ -230,12 +170,6 @@
   ],
 
   "tr": [
-    "settingsAiProviderReasoningEffort",
-    "settingsAiProviderReasoningEffortHelp",
-    "settingsAiProviderReasoningEffortAuto",
-    "settingsAiProviderReasoningEffortLow",
-    "settingsAiProviderReasoningEffortMedium",
-    "settingsAiProviderReasoningEffortHigh",
     "settingsAdvancedNetwork",
     "settingsAdvancedHttpProxyEnabled",
     "settingsAdvancedHttpProxyConfig",
@@ -252,22 +186,7 @@
     "settingsAdvancedHttpProxyTestFailed"
   ],
 
-  "zh": [
-    "settingsAiProviderReasoningEffort",
-    "settingsAiProviderReasoningEffortHelp",
-    "settingsAiProviderReasoningEffortAuto",
-    "settingsAiProviderReasoningEffortLow",
-    "settingsAiProviderReasoningEffortMedium",
-    "settingsAiProviderReasoningEffortHigh"
-  ],
-
   "zh_LZH": [
-    "settingsAiProviderReasoningEffort",
-    "settingsAiProviderReasoningEffortHelp",
-    "settingsAiProviderReasoningEffortAuto",
-    "settingsAiProviderReasoningEffortLow",
-    "settingsAiProviderReasoningEffortMedium",
-    "settingsAiProviderReasoningEffortHigh",
     "settingsAdvancedNetwork",
     "settingsAdvancedHttpProxyEnabled",
     "settingsAdvancedHttpProxyConfig",
@@ -285,12 +204,6 @@
   ],
 
   "zh_TW": [
-    "settingsAiProviderReasoningEffort",
-    "settingsAiProviderReasoningEffortHelp",
-    "settingsAiProviderReasoningEffortAuto",
-    "settingsAiProviderReasoningEffortLow",
-    "settingsAiProviderReasoningEffortMedium",
-    "settingsAiProviderReasoningEffortHigh",
     "settingsAdvancedNetwork",
     "settingsAdvancedHttpProxyEnabled",
     "settingsAdvancedHttpProxyConfig",

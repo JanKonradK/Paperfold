@@ -1,6 +1,5 @@
 import 'package:anx_reader/config/shared_preference_provider.dart';
 import 'package:anx_reader/l10n/generated/L10n.dart';
-import 'package:anx_reader/utils/env_var.dart';
 import 'package:anx_reader/widgets/common/anx_segmented_button.dart';
 import 'package:anx_reader/widgets/settings/settings_title.dart';
 import 'package:anx_reader/widgets/settings/simple_dialog.dart';
@@ -238,16 +237,6 @@ class _AppearanceSettingState extends State<AppearanceSetting> {
         SettingsSection(
           title: Text(L10n.of(context).settingsAppearanceBottomNavigatorShow),
           tiles: [
-            if (EnvVar.enableAIFeature)
-              SettingsTile.switchTile(
-                title: Text(L10n.of(context).navBarAI),
-                initialValue: Prefs().bottomNavigatorShowAI,
-                onToggle: (bool value) {
-                  setState(() {
-                    Prefs().bottomNavigatorShowAI = value;
-                  });
-                },
-              ),
             SettingsTile.switchTile(
               title: Text(L10n.of(context).navBarStatistics),
               initialValue: Prefs().bottomNavigatorShowStatistics,

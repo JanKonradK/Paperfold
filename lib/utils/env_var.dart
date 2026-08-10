@@ -23,6 +23,4 @@ class EnvVar {
       (isAppStore && _isChineseMainlandLocale) || isOhosStore;
   static bool get enableOpenAiConfig => !showBeian;
   static bool get showTelegramLink => !showBeian;
-
-  static bool get enableAIFeature => !isOhosStore;
 }
