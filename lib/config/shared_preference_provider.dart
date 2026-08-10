@@ -47,11 +47,6 @@ const int prefsBackupSchemaVersion = 1;
 const String _prefsBackupEntryTypeKey = 'type';
 const String _prefsBackupEntryValueKey = 'value';
 
-const Set<String> _prefsImportSkipKeys = {
-  'iapPurchaseStatus',
-  'iapLastCheckTime',
-};
-
 class Prefs extends ChangeNotifier {
   late SharedPreferences prefs;
   static final Prefs _instance = Prefs._internal();
@@ -133,7 +128,7 @@ class Prefs extends ChangeNotifier {
   Future<void> applyPrefsBackupMap(Map<String, dynamic> backup) async {
     for (final MapEntry<String, dynamic> entry in backup.entries) {
       final String key = entry.key;
-      if (key == prefsBackupVersionKey || _prefsImportSkipKeys.contains(key)) {
+      if (key == prefsBackupVersionKey) {
         continue;
       }
       final dynamic entryValue = entry.value;
@@ -1424,28 +1419,6 @@ class Prefs extends ChangeNotifier {
       return null;
     }
     return jsonDecode(configJson) as Map<String, dynamic>;
-  }
-
-  set iapPurchaseStatus(bool isPurchased) {
-    prefs.setBool('iapPurchaseStatus', isPurchased);
-    // notifyListeners();
-  }
-
-  bool get iapPurchaseStatus {
-    return prefs.getBool('iapPurchaseStatus') ?? false;
-  }
-
-  set iapLastCheckTime(DateTime checkTime) {
-    prefs.setString('iapLastCheckTime', checkTime.toIso8601String());
-    // notifyListeners();
-  }
-
-  DateTime get iapLastCheckTime {
-    String? lastCheckTimeStr = prefs.getString('iapLastCheckTime');
-    if (lastCheckTimeStr == null) {
-      return DateTime(1970, 1, 1);
-    }
-    return DateTime.parse(lastCheckTimeStr);
   }
 
   WritingModeEnum get writingMode {
