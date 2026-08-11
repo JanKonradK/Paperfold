@@ -1,15 +1,15 @@
-import 'package:anx_reader/config/shared_preference_provider.dart';
-import 'package:anx_reader/l10n/generated/L10n.dart';
-import 'package:anx_reader/widgets/common/anx_segmented_button.dart';
-import 'package:anx_reader/widgets/settings/settings_title.dart';
-import 'package:anx_reader/widgets/settings/simple_dialog.dart';
-import 'package:anx_reader/widgets/settings/theme_mode.dart';
+import 'package:paperfold/config/shared_preference_provider.dart';
+import 'package:paperfold/l10n/generated/L10n.dart';
+import 'package:paperfold/widgets/common/anx_segmented_button.dart';
+import 'package:paperfold/widgets/settings/settings_title.dart';
+import 'package:paperfold/widgets/settings/simple_dialog.dart';
+import 'package:paperfold/widgets/settings/theme_mode.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:provider/provider.dart';
-import 'package:anx_reader/widgets/settings/settings_section.dart';
-import 'package:anx_reader/widgets/settings/settings_tile.dart';
-import 'package:anx_reader/enums/bookshelf_folder_style.dart';
+import 'package:paperfold/widgets/settings/settings_section.dart';
+import 'package:paperfold/widgets/settings/settings_tile.dart';
+import 'package:paperfold/enums/bookshelf_folder_style.dart';
 
 const List<Map<String, String>> languageOptions = [
   {'system': 'System'},

@@ -1,5 +1,5 @@
-name: anx_reader
-description: "An e-book reader."
+name: paperfold
+description: "Paperfold is a reading journal, reader, and note application."
 publish_to: 'none'
 
 version: 1.15.0+6324

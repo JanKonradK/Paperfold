@@ -1,5 +1,5 @@
-import 'package:anx_reader/dao/database.dart';
-import 'package:anx_reader/models/tb_group.dart';
+import 'package:paperfold/dao/database.dart';
+import 'package:paperfold/models/tb_group.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'tb_groups.g.dart';

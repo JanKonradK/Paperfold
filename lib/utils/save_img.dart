@@ -1,9 +1,9 @@
-import 'package:anx_reader/l10n/generated/L10n.dart';
-import 'package:anx_reader/main.dart';
-import 'package:anx_reader/utils/platform_utils.dart';
-import 'package:anx_reader/utils/save_file_to_download.dart';
-import 'package:anx_reader/utils/log/common.dart';
-import 'package:anx_reader/utils/toast/common.dart';
+import 'package:paperfold/l10n/generated/L10n.dart';
+import 'package:paperfold/main.dart';
+import 'package:paperfold/utils/platform_utils.dart';
+import 'package:paperfold/utils/save_file_to_download.dart';
+import 'package:paperfold/utils/log/common.dart';
+import 'package:paperfold/utils/toast/common.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -83,7 +83,7 @@ class SaveImg {
         img,
         fileName: '$name.$extension',
         skipIfExists: false,
-        androidRelativePath: "Pictures/AnxReader",
+        androidRelativePath: "Pictures/Paperfold",
       );
 
       SmartDialog.dismiss();
@@ -159,7 +159,7 @@ class SaveImg {
     String name,
   ) async {
     String picName =
-        "AnxReader_${name}_${DateTime.now().toString().replaceAll(RegExp(r'[- :]'), '').split('.').first}";
+        "Paperfold_${name}_${DateTime.now().toString().replaceAll(RegExp(r'[- :]'), '').split('.').first}";
     switch (AnxPlatform.type) {
       case AnxPlatformEnum.android:
         return await androidImgSaver(img, extension, picName);

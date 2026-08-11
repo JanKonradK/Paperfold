@@ -1,7 +1,7 @@
-import 'package:anx_reader/constants/note_annotations.dart';
-import 'package:anx_reader/models/book_note.dart';
-import 'package:anx_reader/utils/time_to_human.dart';
-import 'package:anx_reader/widgets/common/container/filled_container.dart';
+import 'package:paperfold/constants/note_annotations.dart';
+import 'package:paperfold/models/book_note.dart';
+import 'package:paperfold/utils/time_to_human.dart';
+import 'package:paperfold/widgets/common/container/filled_container.dart';
 import 'package:flutter/material.dart';
 
 class BookNoteTile extends StatelessWidget {

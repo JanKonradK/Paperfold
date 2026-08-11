@@ -1,13 +1,13 @@
-import 'package:anx_reader/l10n/generated/L10n.dart';
-import 'package:anx_reader/models/book.dart';
-import 'package:anx_reader/providers/last_read_book_provider.dart';
-import 'package:anx_reader/service/book.dart';
-import 'package:anx_reader/utils/date/relative_time_formatter.dart';
-import 'package:anx_reader/widgets/bookshelf/book_cover.dart';
-import 'package:anx_reader/widgets/common/async_skeleton_wrapper.dart';
-import 'package:anx_reader/widgets/statistic/dashboard_tiles/dashboard_tile_base.dart';
-import 'package:anx_reader/widgets/statistic/dashboard_tiles/dashboard_tile_metadata.dart';
-import 'package:anx_reader/widgets/statistic/dashboard_tiles/dashboard_tile_registry.dart';
+import 'package:paperfold/l10n/generated/L10n.dart';
+import 'package:paperfold/models/book.dart';
+import 'package:paperfold/providers/last_read_book_provider.dart';
+import 'package:paperfold/service/book.dart';
+import 'package:paperfold/utils/date/relative_time_formatter.dart';
+import 'package:paperfold/widgets/bookshelf/book_cover.dart';
+import 'package:paperfold/widgets/common/async_skeleton_wrapper.dart';
+import 'package:paperfold/widgets/statistic/dashboard_tiles/dashboard_tile_base.dart';
+import 'package:paperfold/widgets/statistic/dashboard_tiles/dashboard_tile_metadata.dart';
+import 'package:paperfold/widgets/statistic/dashboard_tiles/dashboard_tile_registry.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 

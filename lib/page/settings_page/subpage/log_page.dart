@@ -1,10 +1,10 @@
 import 'dart:io';
 
-import 'package:anx_reader/l10n/generated/L10n.dart';
-import 'package:anx_reader/utils/save_file_to_download.dart';
-import 'package:anx_reader/utils/get_path/log_file.dart';
-import 'package:anx_reader/utils/toast/common.dart';
-import 'package:anx_reader/utils/log/common.dart';
+import 'package:paperfold/l10n/generated/L10n.dart';
+import 'package:paperfold/utils/save_file_to_download.dart';
+import 'package:paperfold/utils/get_path/log_file.dart';
+import 'package:paperfold/utils/toast/common.dart';
+import 'package:paperfold/utils/log/common.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -95,7 +95,7 @@ class _LogPageState extends State<LogPage> {
     // );
     // await FlutterFileDialog.saveFile(params: params);
     String fileName =
-        'AnxReader-Log-${DateTime.now().year}-${DateTime.now().month}-${DateTime.now().day}.txt';
+        'Paperfold-Log-${DateTime.now().year}-${DateTime.now().month}-${DateTime.now().day}.txt';
     String? filePath = await saveFileToDownload(
         bytes: await logFile.readAsBytes(),
         fileName: fileName,

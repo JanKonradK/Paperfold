@@ -1,7 +1,7 @@
-import 'package:anx_reader/page/settings_page/more_settings_page.dart';
-import 'package:anx_reader/widgets/settings/about.dart';
-import 'package:anx_reader/widgets/settings/theme_mode.dart';
-import 'package:anx_reader/widgets/settings/webdav_switch.dart';
+import 'package:paperfold/page/settings_page/more_settings_page.dart';
+import 'package:paperfold/widgets/settings/about.dart';
+import 'package:paperfold/widgets/settings/theme_mode.dart';
+import 'package:paperfold/widgets/settings/webdav_switch.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 

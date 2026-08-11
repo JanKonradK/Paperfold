@@ -1,8 +1,8 @@
-import 'package:anx_reader/dao/base_dao.dart';
-import 'package:anx_reader/l10n/generated/L10n.dart';
-import 'package:anx_reader/main.dart';
-import 'package:anx_reader/models/read_theme.dart';
-import 'package:anx_reader/utils/toast/common.dart';
+import 'package:paperfold/dao/base_dao.dart';
+import 'package:paperfold/l10n/generated/L10n.dart';
+import 'package:paperfold/main.dart';
+import 'package:paperfold/models/read_theme.dart';
+import 'package:paperfold/utils/toast/common.dart';
 
 class ThemeDao extends BaseDao {
   ThemeDao();

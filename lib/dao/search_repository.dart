@@ -1,8 +1,8 @@
-import 'package:anx_reader/dao/book.dart';
-import 'package:anx_reader/dao/book_note.dart';
-import 'package:anx_reader/models/book_note.dart';
-import 'package:anx_reader/models/search_note_group.dart';
-import 'package:anx_reader/models/search_result_data.dart';
+import 'package:paperfold/dao/book.dart';
+import 'package:paperfold/dao/book_note.dart';
+import 'package:paperfold/models/book_note.dart';
+import 'package:paperfold/models/search_note_group.dart';
+import 'package:paperfold/models/search_result_data.dart';
 
 class SearchRepository {
   const SearchRepository();

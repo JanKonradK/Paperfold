@@ -1,24 +1,24 @@
 import 'dart:io';
 
-import 'package:anx_reader/utils/platform_utils.dart';
+import 'package:paperfold/utils/platform_utils.dart';
 
-import 'package:anx_reader/config/shared_preference_provider.dart';
-import 'package:anx_reader/dao/database.dart';
-import 'package:anx_reader/enums/sync_direction.dart';
-import 'package:anx_reader/enums/sync_trigger.dart';
-import 'package:anx_reader/l10n/generated/L10n.dart';
-import 'package:anx_reader/models/window_info.dart';
-import 'package:anx_reader/page/home_page.dart';
-import 'package:anx_reader/page/migration_page.dart';
-import 'package:anx_reader/service/book_player/book_player_server.dart';
-import 'package:anx_reader/service/network/http_proxy_overrides.dart';
-import 'package:anx_reader/utils/get_path/macos_migration.dart';
-import 'package:anx_reader/utils/color_scheme.dart';
-import 'package:anx_reader/utils/error/common.dart';
-import 'package:anx_reader/utils/get_path/get_base_path.dart';
-import 'package:anx_reader/utils/log/common.dart';
-import 'package:anx_reader/utils/window_position_validator.dart';
-import 'package:anx_reader/providers/sync.dart';
+import 'package:paperfold/config/shared_preference_provider.dart';
+import 'package:paperfold/dao/database.dart';
+import 'package:paperfold/enums/sync_direction.dart';
+import 'package:paperfold/enums/sync_trigger.dart';
+import 'package:paperfold/l10n/generated/L10n.dart';
+import 'package:paperfold/models/window_info.dart';
+import 'package:paperfold/page/home_page.dart';
+import 'package:paperfold/page/migration_page.dart';
+import 'package:paperfold/service/book_player/book_player_server.dart';
+import 'package:paperfold/service/network/http_proxy_overrides.dart';
+import 'package:paperfold/utils/get_path/macos_migration.dart';
+import 'package:paperfold/utils/color_scheme.dart';
+import 'package:paperfold/utils/error/common.dart';
+import 'package:paperfold/utils/get_path/get_base_path.dart';
+import 'package:paperfold/utils/log/common.dart';
+import 'package:paperfold/utils/window_position_validator.dart';
+import 'package:paperfold/providers/sync.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
@@ -187,7 +187,7 @@ class _MyAppState extends ConsumerState<MyApp>
             localeListResolutionCallback: _resolveLocale,
             localizationsDelegates: L10n.localizationsDelegates,
             supportedLocales: L10n.supportedLocales,
-            title: 'Anx Reader',
+            title: 'Paperfold',
             themeMode: prefsNotifier.themeMode,
             theme: colorSchema(prefsNotifier, context, Brightness.light),
             darkTheme: colorSchema(prefsNotifier, context, Brightness.dark),

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:anx_reader/main.dart';
+import 'package:paperfold/main.dart';
 
 Future<dynamic> showSimpleDialog(
     String title, Function saveToPrefs, List<Widget> children) {

@@ -1,14 +1,14 @@
 import 'dart:async';
 
-import 'package:anx_reader/config/shared_preference_provider.dart';
-import 'package:anx_reader/l10n/generated/L10n.dart';
-import 'package:anx_reader/main.dart';
-import 'package:anx_reader/page/settings_page/developer/developer_options_page.dart';
-import 'package:anx_reader/utils/env_var.dart';
-import 'package:anx_reader/utils/toast/common.dart';
-import 'package:anx_reader/widgets/settings/link_icon.dart';
-import 'package:anx_reader/utils/check_update.dart';
-import 'package:anx_reader/widgets/settings/show_donate_dialog.dart';
+import 'package:paperfold/config/shared_preference_provider.dart';
+import 'package:paperfold/l10n/generated/L10n.dart';
+import 'package:paperfold/main.dart';
+import 'package:paperfold/page/settings_page/developer/developer_options_page.dart';
+import 'package:paperfold/utils/env_var.dart';
+import 'package:paperfold/utils/toast/common.dart';
+import 'package:paperfold/widgets/settings/link_icon.dart';
+import 'package:paperfold/utils/check_update.dart';
+import 'package:paperfold/widgets/settings/show_donate_dialog.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -228,7 +228,7 @@ Future<void> openAboutDialog() async {
                               Icons.telegram,
                               color: Theme.of(context).colorScheme.secondary,
                             ),
-                            url: 'https://t.me/AnxReader',
+                            url: 'https://t.me/Paperfold',
                             mode: LaunchMode.externalApplication),
                       linkIcon(
                           icon: Image.asset(

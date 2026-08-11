@@ -1,13 +1,13 @@
-import 'package:anx_reader/config/shared_preference_provider.dart';
-import 'package:anx_reader/enums/lang_list.dart';
-import 'package:anx_reader/l10n/generated/L10n.dart';
-import 'package:anx_reader/service/translate/index.dart';
-import 'package:anx_reader/utils/toast/common.dart';
-import 'package:anx_reader/widgets/common/container/filled_container.dart';
-import 'package:anx_reader/widgets/settings/service_config_form.dart';
-import 'package:anx_reader/widgets/settings/settings_section.dart';
-import 'package:anx_reader/widgets/settings/settings_tile.dart';
-import 'package:anx_reader/widgets/settings/settings_title.dart';
+import 'package:paperfold/config/shared_preference_provider.dart';
+import 'package:paperfold/enums/lang_list.dart';
+import 'package:paperfold/l10n/generated/L10n.dart';
+import 'package:paperfold/service/translate/index.dart';
+import 'package:paperfold/utils/toast/common.dart';
+import 'package:paperfold/widgets/common/container/filled_container.dart';
+import 'package:paperfold/widgets/settings/service_config_form.dart';
+import 'package:paperfold/widgets/settings/settings_section.dart';
+import 'package:paperfold/widgets/settings/settings_tile.dart';
+import 'package:paperfold/widgets/settings/settings_title.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 

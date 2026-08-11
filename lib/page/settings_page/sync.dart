@@ -3,24 +3,24 @@ import 'dart:io';
 
 import 'package:url_launcher/url_launcher.dart';
 
-import 'package:anx_reader/dao/database.dart';
-import 'package:anx_reader/enums/sync_protocol.dart';
-import 'package:anx_reader/l10n/generated/L10n.dart';
-import 'package:anx_reader/main.dart';
-import 'package:anx_reader/providers/sync.dart';
-import 'package:anx_reader/service/sync/sync_client_factory.dart';
-import 'package:anx_reader/utils/platform_utils.dart';
-import 'package:anx_reader/utils/save_file_to_download.dart';
-import 'package:anx_reader/utils/get_path/get_temp_dir.dart';
-import 'package:anx_reader/utils/get_path/databases_path.dart';
-import 'package:anx_reader/utils/get_path/get_base_path.dart';
-import 'package:anx_reader/utils/log/common.dart';
-import 'package:anx_reader/utils/sync_test_helper.dart';
-import 'package:anx_reader/utils/toast/common.dart';
-import 'package:anx_reader/config/shared_preference_provider.dart';
-import 'package:anx_reader/utils/webdav/test_webdav.dart';
-import 'package:anx_reader/widgets/settings/settings_title.dart';
-import 'package:anx_reader/widgets/settings/webdav_switch.dart';
+import 'package:paperfold/dao/database.dart';
+import 'package:paperfold/enums/sync_protocol.dart';
+import 'package:paperfold/l10n/generated/L10n.dart';
+import 'package:paperfold/main.dart';
+import 'package:paperfold/providers/sync.dart';
+import 'package:paperfold/service/sync/sync_client_factory.dart';
+import 'package:paperfold/utils/platform_utils.dart';
+import 'package:paperfold/utils/save_file_to_download.dart';
+import 'package:paperfold/utils/get_path/get_temp_dir.dart';
+import 'package:paperfold/utils/get_path/databases_path.dart';
+import 'package:paperfold/utils/get_path/get_base_path.dart';
+import 'package:paperfold/utils/log/common.dart';
+import 'package:paperfold/utils/sync_test_helper.dart';
+import 'package:paperfold/utils/toast/common.dart';
+import 'package:paperfold/config/shared_preference_provider.dart';
+import 'package:paperfold/utils/webdav/test_webdav.dart';
+import 'package:paperfold/widgets/settings/settings_title.dart';
+import 'package:paperfold/widgets/settings/webdav_switch.dart';
 import 'package:archive/archive_io.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
@@ -29,8 +29,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:path/path.dart' as path;
-import 'package:anx_reader/widgets/settings/settings_section.dart';
-import 'package:anx_reader/widgets/settings/settings_tile.dart';
+import 'package:paperfold/widgets/settings/settings_section.dart';
+import 'package:paperfold/widgets/settings/settings_tile.dart';
 
 const String _prefsBackupFileName = 'anx_shared_prefs.json';
 
@@ -184,7 +184,7 @@ class _SyncSettingState extends ConsumerState<SyncSetting> {
       // );
       // final filePath = await FlutterFileDialog.saveFile(params: params);
       String fileName =
-          'AnxReader-Backup-${DateTime.now().year}-${DateTime.now().month}-${DateTime.now().day}-v3.zip';
+          'Paperfold-Backup-${DateTime.now().year}-${DateTime.now().month}-${DateTime.now().day}-v3.zip';
 
       String? filePath = await saveFileToDownload(
           sourceFilePath: file.path,
@@ -237,7 +237,7 @@ class _SyncSettingState extends ConsumerState<SyncSetting> {
 
     Directory cacheDir = await getAnxTempDir();
     String cachePath = cacheDir.path;
-    String extractPath = '$cachePath${pathSeparator}anx_reader_import';
+    String extractPath = '$cachePath${pathSeparator}paperfold_import';
 
     try {
       await Directory(extractPath).create(recursive: true);
@@ -305,7 +305,7 @@ Future<String> createZipFile(Map<String, dynamic> params) async {
   BackgroundIsolateBinaryMessenger.ensureInitialized(token);
   final date =
       '${DateTime.now().year}-${DateTime.now().month}-${DateTime.now().day}';
-  final zipPath = '${(await getAnxTempDir()).path}/AnxReader-Backup-$date.zip';
+  final zipPath = '${(await getAnxTempDir()).path}/Paperfold-Backup-$date.zip';
   final docPath = await getAnxDocumentsPath();
   final directoryList = [
     getFileDir(path: docPath),

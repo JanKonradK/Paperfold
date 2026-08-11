@@ -1,5 +1,5 @@
-import 'package:anx_reader/providers/sync.dart';
-import 'package:anx_reader/widgets/bookshelf/sync_status_bottom_sheet.dart';
+import 'package:paperfold/providers/sync.dart';
+import 'package:paperfold/widgets/bookshelf/sync_status_bottom_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 

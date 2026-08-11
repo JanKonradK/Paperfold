@@ -1,4 +1,4 @@
-import 'package:anx_reader/service/vibration_service.dart';
+import 'package:paperfold/service/vibration_service.dart';
 import 'package:flutter/material.dart';
 
 class VibrationTestPage extends StatefulWidget {

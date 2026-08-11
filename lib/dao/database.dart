@@ -1,14 +1,14 @@
 import 'dart:async';
 import 'dart:io';
-import 'package:anx_reader/utils/get_path/get_cache_dir.dart';
-import 'package:anx_reader/utils/platform_utils.dart';
+import 'package:paperfold/utils/get_path/get_cache_dir.dart';
+import 'package:paperfold/utils/platform_utils.dart';
 
-import 'package:anx_reader/config/shared_preference_provider.dart';
-import 'package:anx_reader/dao/book.dart';
-import 'package:anx_reader/service/book.dart';
-import 'package:anx_reader/utils/get_path/get_base_path.dart';
-import 'package:anx_reader/utils/get_path/databases_path.dart';
-import 'package:anx_reader/utils/log/common.dart';
+import 'package:paperfold/config/shared_preference_provider.dart';
+import 'package:paperfold/dao/book.dart';
+import 'package:paperfold/service/book.dart';
+import 'package:paperfold/utils/get_path/get_base_path.dart';
+import 'package:paperfold/utils/get_path/databases_path.dart';
+import 'package:paperfold/utils/log/common.dart';
 import 'package:path/path.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
@@ -330,11 +330,11 @@ class DBHelper {
       case 1:
         // add a column (rating) to tb_books
         await db.execute('ALTER TABLE tb_books ADD COLUMN rating REAL');
-        // remove '/data/user/0/com.anxcye.anx_reader/app_flutter/' from file_path & cover_path
+        // remove '/data/user/0/com.anxcye.paperfold/app_flutter/' from file_path & cover_path
         await db.execute(
-            "UPDATE tb_books SET file_path = REPLACE(file_path, '/data/user/0/com.anxcye.anx_reader/app_flutter/', '')");
+            "UPDATE tb_books SET file_path = REPLACE(file_path, '/data/user/0/com.anxcye.paperfold/app_flutter/', '')");
         await db.execute(
-            "UPDATE tb_books SET cover_path = REPLACE(cover_path, '/data/user/0/com.anxcye.anx_reader/app_flutter/', '')");
+            "UPDATE tb_books SET cover_path = REPLACE(cover_path, '/data/user/0/com.anxcye.paperfold/app_flutter/', '')");
         continue case2;
       case2:
       case 2:
