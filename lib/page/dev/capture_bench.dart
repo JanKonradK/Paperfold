@@ -99,9 +99,17 @@ class CaptureBenchPage extends StatefulWidget {
   State<CaptureBenchPage> createState() => _CaptureBenchPageState();
 }
 
-class _CaptureBenchPageState extends State<CaptureBenchPage> {
+class _CaptureBenchPageState extends State<CaptureBenchPage>
+    with SingleTickerProviderStateMixin {
   /// Runs per configuration. The first is discarded as warm-up.
   static const int _runsPerCase = 9;
+
+  /// Drives a always-running animation so there is always a frame in flight.
+  ///
+  /// Without this the worst-frame column is meaningless: an idle Flutter app
+  /// renders no frames, so a capture that blocks the Android main thread has
+  /// nothing to stall and the column reads zero.
+  late final AnimationController _pulse;
 
   static const List<_BenchCase> _cases = <_BenchCase>[
     // The current default, and the baseline plan.md Section 4.2 assumed.
@@ -136,6 +144,10 @@ class _CaptureBenchPageState extends State<CaptureBenchPage> {
   @override
   void initState() {
     super.initState();
+    _pulse = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1400),
+    )..repeat();
     _timingsCallback = (List<FrameTiming> timings) {
       if (!_watchingFrames) return;
       for (final timing in timings) {
@@ -151,6 +163,7 @@ class _CaptureBenchPageState extends State<CaptureBenchPage> {
     if (_timingsCallback != null) {
       SchedulerBinding.instance.removeTimingsCallback(_timingsCallback!);
     }
+    _pulse.dispose();
     super.dispose();
   }
 
@@ -299,7 +312,22 @@ class _CaptureBenchPageState extends State<CaptureBenchPage> {
                           onPressed: (_pageReady && !_running) ? _runSuite : null,
                           child: Text(_running ? 'Running' : 'Run suite'),
                         ),
-                        const SizedBox(width: 12),
+                        const SizedBox(width: 10),
+                        // Always animating, so a capture that blocks the
+                        // Android main thread has a frame to stall.
+                        SizedBox(
+                          width: 26,
+                          height: 26,
+                          child: AnimatedBuilder(
+                            animation: _pulse,
+                            builder: (context, child) => Transform.rotate(
+                              angle: _pulse.value * 6.2831853,
+                              child: child,
+                            ),
+                            child: const Icon(Icons.autorenew, size: 26),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
                         Expanded(
                           child: Text(
                             _status,
