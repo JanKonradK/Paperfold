@@ -1,7 +1,7 @@
-import 'package:anx_reader/enums/sync_protocol.dart';
-import 'package:anx_reader/service/sync/sync_client_base.dart';
-import 'package:anx_reader/service/sync/webdav_client.dart';
-import 'package:anx_reader/config/shared_preference_provider.dart';
+import 'package:paperfold/enums/sync_protocol.dart';
+import 'package:paperfold/service/sync/sync_client_base.dart';
+import 'package:paperfold/service/sync/webdav_client.dart';
+import 'package:paperfold/config/shared_preference_provider.dart';
 
 class SyncClientFactory {
   static final SyncClientFactory _instance = SyncClientFactory._internal();

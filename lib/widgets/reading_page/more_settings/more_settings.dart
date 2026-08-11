@@ -1,9 +1,9 @@
-import 'package:anx_reader/l10n/generated/L10n.dart';
-import 'package:anx_reader/main.dart';
-import 'package:anx_reader/page/reading_page.dart';
-import 'package:anx_reader/widgets/reading_page/more_settings/other_settings.dart';
-import 'package:anx_reader/widgets/reading_page/more_settings/reading_settings.dart';
-import 'package:anx_reader/widgets/reading_page/more_settings/style_settings.dart';
+import 'package:paperfold/l10n/generated/L10n.dart';
+import 'package:paperfold/main.dart';
+import 'package:paperfold/page/reading_page.dart';
+import 'package:paperfold/widgets/reading_page/more_settings/other_settings.dart';
+import 'package:paperfold/widgets/reading_page/more_settings/reading_settings.dart';
+import 'package:paperfold/widgets/reading_page/more_settings/style_settings.dart';
 import 'package:contentsize_tabbarview/contentsize_tabbarview.dart';
 import 'package:flutter/material.dart';
 import 'package:pointer_interceptor/pointer_interceptor.dart';

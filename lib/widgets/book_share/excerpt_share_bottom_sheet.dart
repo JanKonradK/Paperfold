@@ -1,19 +1,19 @@
 import 'dart:io';
 import 'dart:ui' as ui;
 
-import 'package:anx_reader/config/shared_preference_provider.dart';
-import 'package:anx_reader/enums/excerpt_share_template.dart';
-import 'package:anx_reader/l10n/generated/L10n.dart';
-import 'package:anx_reader/models/font_model.dart';
-import 'package:anx_reader/providers/font_list.dart';
-import 'package:anx_reader/utils/get_path/get_temp_dir.dart';
-import 'package:anx_reader/utils/log/common.dart';
-import 'package:anx_reader/utils/save_img.dart';
-import 'package:anx_reader/utils/share_file.dart';
-import 'package:anx_reader/utils/toast/common.dart';
-import 'package:anx_reader/widgets/book_share/excerpt_share_card.dart';
-import 'package:anx_reader/widgets/icon_and_text.dart';
-import 'package:anx_reader/widgets/show_loading.dart';
+import 'package:paperfold/config/shared_preference_provider.dart';
+import 'package:paperfold/enums/excerpt_share_template.dart';
+import 'package:paperfold/l10n/generated/L10n.dart';
+import 'package:paperfold/models/font_model.dart';
+import 'package:paperfold/providers/font_list.dart';
+import 'package:paperfold/utils/get_path/get_temp_dir.dart';
+import 'package:paperfold/utils/log/common.dart';
+import 'package:paperfold/utils/save_img.dart';
+import 'package:paperfold/utils/share_file.dart';
+import 'package:paperfold/utils/toast/common.dart';
+import 'package:paperfold/widgets/book_share/excerpt_share_card.dart';
+import 'package:paperfold/widgets/icon_and_text.dart';
+import 'package:paperfold/widgets/show_loading.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
@@ -137,7 +137,7 @@ class _ExcerptShareBottomSheetState
     SmartDialog.dismiss();
     if (imageData == null) return;
 
-    final fileName = 'AnxReader_${widget.bookTitle.replaceAll(' ', '_')}';
+    final fileName = 'Paperfold_${widget.bookTitle.replaceAll(' ', '_')}';
     await SaveImg.downloadImg(imageData, 'png', fileName);
   }
 

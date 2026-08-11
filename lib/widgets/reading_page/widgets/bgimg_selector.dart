@@ -1,15 +1,15 @@
 import 'dart:io';
 
-import 'package:anx_reader/config/shared_preference_provider.dart';
-import 'package:anx_reader/enums/bgimg_fit.dart';
-import 'package:anx_reader/enums/bgimg_theme_mode.dart';
-import 'package:anx_reader/enums/bgimg_type.dart';
-import 'package:anx_reader/l10n/generated/L10n.dart';
-import 'package:anx_reader/models/bgimg.dart';
-import 'package:anx_reader/page/reading_page.dart';
-import 'package:anx_reader/providers/bgimg.dart';
-import 'package:anx_reader/utils/get_path/get_base_path.dart';
-import 'package:anx_reader/widgets/common/anx_segmented_button.dart';
+import 'package:paperfold/config/shared_preference_provider.dart';
+import 'package:paperfold/enums/bgimg_fit.dart';
+import 'package:paperfold/enums/bgimg_theme_mode.dart';
+import 'package:paperfold/enums/bgimg_type.dart';
+import 'package:paperfold/l10n/generated/L10n.dart';
+import 'package:paperfold/models/bgimg.dart';
+import 'package:paperfold/page/reading_page.dart';
+import 'package:paperfold/providers/bgimg.dart';
+import 'package:paperfold/utils/get_path/get_base_path.dart';
+import 'package:paperfold/widgets/common/anx_segmented_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';

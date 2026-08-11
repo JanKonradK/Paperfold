@@ -1,4 +1,4 @@
-import 'package:anx_reader/dao/reading_time.dart';
+import 'package:paperfold/dao/reading_time.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'statictics_summary_value.g.dart';

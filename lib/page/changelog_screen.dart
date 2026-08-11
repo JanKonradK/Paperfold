@@ -1,9 +1,9 @@
-import 'package:anx_reader/l10n/generated/L10n.dart';
-import 'package:anx_reader/utils/get_current_language_code.dart';
-import 'package:anx_reader/widgets/markdown/styled_markdown.dart';
+import 'package:paperfold/l10n/generated/L10n.dart';
+import 'package:paperfold/utils/get_current_language_code.dart';
+import 'package:paperfold/widgets/markdown/styled_markdown.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:anx_reader/utils/log/common.dart';
+import 'package:paperfold/utils/log/common.dart';
 
 /// Changelog screen for showing app updates
 /// Displays version history and new features

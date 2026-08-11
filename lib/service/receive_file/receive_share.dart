@@ -1,8 +1,8 @@
 import 'dart:io';
 
-import 'package:anx_reader/main.dart';
-import 'package:anx_reader/service/book.dart';
-import 'package:anx_reader/utils/log/common.dart';
+import 'package:paperfold/main.dart';
+import 'package:paperfold/service/book.dart';
+import 'package:paperfold/utils/log/common.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:share_handler/share_handler.dart';
 

@@ -1,7 +1,7 @@
-import 'package:anx_reader/dao/database.dart';
-import 'package:anx_reader/models/bookmark.dart';
-import 'package:anx_reader/page/reading_page.dart';
-import 'package:anx_reader/utils/log/common.dart';
+import 'package:paperfold/dao/database.dart';
+import 'package:paperfold/models/bookmark.dart';
+import 'package:paperfold/page/reading_page.dart';
+import 'package:paperfold/utils/log/common.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:sqflite/sqflite.dart';
 

@@ -1,4 +1,4 @@
-import 'package:anx_reader/models/book.dart';
+import 'package:paperfold/models/book.dart';
 
 class ImportFileCheck {
   final String filePath;

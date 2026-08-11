@@ -1,7 +1,7 @@
 import 'dart:io';
-import 'package:anx_reader/config/shared_preference_provider.dart';
-import 'package:anx_reader/utils/log/common.dart';
-import 'package:anx_reader/utils/platform_utils.dart';
+import 'package:paperfold/config/shared_preference_provider.dart';
+import 'package:paperfold/utils/log/common.dart';
+import 'package:paperfold/utils/platform_utils.dart';
 
 import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';

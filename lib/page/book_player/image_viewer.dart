@@ -1,11 +1,11 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
-import 'package:anx_reader/utils/save_img.dart';
-import 'package:anx_reader/utils/get_path/get_temp_dir.dart';
-import 'package:anx_reader/utils/log/common.dart';
-import 'package:anx_reader/utils/save_image_to_path.dart';
-import 'package:anx_reader/utils/share_file.dart';
+import 'package:paperfold/utils/save_img.dart';
+import 'package:paperfold/utils/get_path/get_temp_dir.dart';
+import 'package:paperfold/utils/log/common.dart';
+import 'package:paperfold/utils/save_image_to_path.dart';
+import 'package:paperfold/utils/share_file.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:photo_view/photo_view.dart';
@@ -115,7 +115,7 @@ class _ImageViewerState extends State<ImageViewer> {
                             final path = await saveB64ImageToPath(
                               widget.image,
                               (await getAnxTempDir()).path,
-                              "AnxReader_${widget.bookName}",
+                              "Paperfold_${widget.bookName}",
                             );
 
                             await shareFile(filePath: path);

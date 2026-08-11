@@ -1,12 +1,12 @@
 import 'dart:io';
 
-import 'package:anx_reader/dao/book.dart';
-import 'package:anx_reader/enums/sync_direction.dart';
-import 'package:anx_reader/models/book.dart';
-import 'package:anx_reader/models/sync_status.dart';
-import 'package:anx_reader/providers/sync.dart';
-import 'package:anx_reader/utils/get_path/get_base_path.dart';
-import 'package:anx_reader/utils/log/common.dart';
+import 'package:paperfold/dao/book.dart';
+import 'package:paperfold/enums/sync_direction.dart';
+import 'package:paperfold/models/book.dart';
+import 'package:paperfold/models/sync_status.dart';
+import 'package:paperfold/providers/sync.dart';
+import 'package:paperfold/utils/get_path/get_base_path.dart';
+import 'package:paperfold/utils/log/common.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'sync_status.g.dart';

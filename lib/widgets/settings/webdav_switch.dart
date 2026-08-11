@@ -1,8 +1,8 @@
-import 'package:anx_reader/config/shared_preference_provider.dart';
-import 'package:anx_reader/l10n/generated/L10n.dart';
-import 'package:anx_reader/providers/sync.dart';
-import 'package:anx_reader/utils/webdav/test_webdav.dart';
-import 'package:anx_reader/widgets/settings/settings_tile.dart';
+import 'package:paperfold/config/shared_preference_provider.dart';
+import 'package:paperfold/l10n/generated/L10n.dart';
+import 'package:paperfold/providers/sync.dart';
+import 'package:paperfold/utils/webdav/test_webdav.dart';
+import 'package:paperfold/widgets/settings/settings_tile.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 

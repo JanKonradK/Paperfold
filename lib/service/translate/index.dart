@@ -1,14 +1,14 @@
 import 'dart:core';
 
-import 'package:anx_reader/config/shared_preference_provider.dart';
-import 'package:anx_reader/enums/lang_list.dart';
-import 'package:anx_reader/l10n/generated/L10n.dart';
-import 'package:anx_reader/service/config/config_item.dart';
-import 'package:anx_reader/service/translate/deepl.dart';
-import 'package:anx_reader/service/translate/google_api.dart';
-import 'package:anx_reader/service/translate/microsoft_api.dart';
-import 'package:anx_reader/service/translate/web_view.dart';
-import 'package:anx_reader/utils/log/common.dart';
+import 'package:paperfold/config/shared_preference_provider.dart';
+import 'package:paperfold/enums/lang_list.dart';
+import 'package:paperfold/l10n/generated/L10n.dart';
+import 'package:paperfold/service/config/config_item.dart';
+import 'package:paperfold/service/translate/deepl.dart';
+import 'package:paperfold/service/translate/google_api.dart';
+import 'package:paperfold/service/translate/microsoft_api.dart';
+import 'package:paperfold/service/translate/web_view.dart';
+import 'package:paperfold/utils/log/common.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 

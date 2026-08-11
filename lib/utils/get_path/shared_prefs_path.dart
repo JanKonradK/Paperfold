@@ -1,7 +1,7 @@
 import 'dart:io';
 
-import 'package:anx_reader/utils/get_path/get_base_path.dart';
-import 'package:anx_reader/utils/platform_utils.dart';
+import 'package:paperfold/utils/get_path/get_base_path.dart';
+import 'package:paperfold/utils/platform_utils.dart';
 import 'package:path_provider/path_provider.dart';
 
 // Future<Directory> getAnxSharedPrefsDir() async {
@@ -26,7 +26,7 @@ String getSharedPrefsFileName() {
       return 'shared_preferences.json';
     case AnxPlatformEnum.macos:
     case AnxPlatformEnum.ios:
-      return 'com.anxcye.anxReader.plist';
+      return 'com.paperfold.app.plist';
     case AnxPlatformEnum.ohos:
       return 'FlutterSharedPreferences';
   }

@@ -1,6 +1,6 @@
 import 'dart:io';
 
-import 'package:anx_reader/utils/log/common.dart';
+import 'package:paperfold/utils/log/common.dart';
 import 'package:path_provider/path_provider.dart';
 
 /// Callback for migration progress updates
@@ -47,12 +47,12 @@ Future<bool> performStorageMigration({
     }
 
     // Also copy the log file if it exists
-    onProgress?.call('anx_reader.log', 6, totalItems);
+    onProgress?.call('paperfold.log', 6, totalItems);
     final sourceLogFile =
-        File('$sourcePath${Platform.pathSeparator}anx_reader.log');
+        File('$sourcePath${Platform.pathSeparator}paperfold.log');
     if (sourceLogFile.existsSync()) {
       final destLogFile =
-          File('$destinationPath${Platform.pathSeparator}anx_reader.log');
+          File('$destinationPath${Platform.pathSeparator}paperfold.log');
       await sourceLogFile.copy(destLogFile.path);
       AnxLog.info('StorageMigration: Copied log file successfully');
     }

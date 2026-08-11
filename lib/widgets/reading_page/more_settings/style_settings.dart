@@ -1,11 +1,11 @@
-import 'package:anx_reader/config/shared_preference_provider.dart';
-import 'package:anx_reader/enums/text_alignment.dart';
-import 'package:anx_reader/enums/writing_mode.dart';
-import 'package:anx_reader/l10n/generated/L10n.dart';
-import 'package:anx_reader/models/book_style.dart';
-import 'package:anx_reader/page/reading_page.dart';
-import 'package:anx_reader/widgets/icon_and_text.dart';
-import 'package:anx_reader/widgets/reading_page/more_settings/custom_css_editor.dart';
+import 'package:paperfold/config/shared_preference_provider.dart';
+import 'package:paperfold/enums/text_alignment.dart';
+import 'package:paperfold/enums/writing_mode.dart';
+import 'package:paperfold/l10n/generated/L10n.dart';
+import 'package:paperfold/models/book_style.dart';
+import 'package:paperfold/page/reading_page.dart';
+import 'package:paperfold/widgets/icon_and_text.dart';
+import 'package:paperfold/widgets/reading_page/more_settings/custom_css_editor.dart';
 import 'package:flutter/material.dart';
 import 'package:icons_plus/icons_plus.dart';
 

@@ -1,7 +1,7 @@
 import 'dart:math';
 
-import 'package:anx_reader/enums/excerpt_share_template.dart';
-import 'package:anx_reader/models/font_model.dart';
+import 'package:paperfold/enums/excerpt_share_template.dart';
+import 'package:paperfold/models/font_model.dart';
 import 'package:flutter/material.dart';
 import 'package:mongol/mongol.dart';
 
@@ -86,10 +86,10 @@ class ExcerptShareCard extends StatelessWidget {
     }
   }
 
-  Widget _getAnxReaderLogo({double fontSize = 12, Color? color}) {
+  Widget _getPaperfoldLogo({double fontSize = 12, Color? color}) {
     color ??= textColor;
     return Text(
-      'Anx Reader',
+      'Paperfold',
       style: TextStyle(
         fontSize: fontSize,
         fontWeight: FontWeight.w100,
@@ -279,7 +279,7 @@ class ExcerptShareCard extends StatelessWidget {
                   ],
                 ),
               ),
-              _getAnxReaderLogo(),
+              _getPaperfoldLogo(),
             ],
           ),
         ],
@@ -347,7 +347,7 @@ class ExcerptShareCard extends StatelessWidget {
               Row(
                 children: [
                   Spacer(),
-                  _getAnxReaderLogo(),
+                  _getPaperfoldLogo(),
                 ],
               ),
             ],
@@ -396,7 +396,7 @@ class ExcerptShareCard extends StatelessWidget {
                 Row(
                   children: [
                     const Spacer(),
-                    _getAnxReaderLogo(
+                    _getPaperfoldLogo(
                       fontSize: 16,
                       color: backgroundImage != null ? Colors.white : null,
                     ),
@@ -455,7 +455,7 @@ class ExcerptShareCard extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 16),
-              _getAnxReaderLogo(),
+              _getPaperfoldLogo(),
             ],
           ),
         ],
