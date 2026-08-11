@@ -25,6 +25,7 @@ There is no product code and no git repository yet.
 |---|---|---|
 | Version 1 scope | Journal **plus** EPUB and PDF reader | 2026-08-09 |
 | Text-to-speech | **Remove it completely.** Supersedes Section 3.3.2 | 2026-08-10 |
+| Milestone 1 gate | **Go. The reader curls too.** See `docs/paperfold/milestone-1-gate.md` | 2026-08-11 |
 | Page turn | Build the real curl | 2026-08-09 |
 | Research delegation | Add Luna to the allowlist, then run a deeper pass | 2026-08-09 |
 | ~~Stack~~ | ~~Expo (React Native)~~ — **superseded** | 2026-08-09 |

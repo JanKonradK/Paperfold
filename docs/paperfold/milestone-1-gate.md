@@ -3,6 +3,13 @@
 `plan.md` Section 12 makes Milestone 1 a go or no-go. This is the evidence and
 what it supports. Written 2026-08-11.
 
+## DECISION: GO — 2026-08-11
+
+Taken on the evidence below, with the reader curl included. The two open items,
+the mid-range measurement and the reduce-motion check, are **carried as known
+gaps** rather than blocking the milestone. They stay listed in
+"What this evidence does not cover" until they are closed.
+
 ## The question the gate exists to answer
 
 Section 4.2 states the open risk plainly: a real curl needs each page as a GPU
