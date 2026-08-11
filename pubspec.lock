@@ -579,7 +579,7 @@ packages:
     dependency: "direct main"
     description:
       path: "."
-      ref: HEAD
+      ref: c14e6ebb29c209e318aea36cd715d5001bc26100
       resolved-ref: c14e6ebb29c209e318aea36cd715d5001bc26100
       url: "https://github.com/Anxcye/flutter_heatmap_calendar"
     source: git
@@ -2002,7 +2002,7 @@ packages:
     dependency: "direct main"
     description:
       path: "."
-      ref: HEAD
+      ref: "3c6d0eb21baf593d8a0a10ba039b0b73ce891ad6"
       resolved-ref: "3c6d0eb21baf593d8a0a10ba039b0b73ce891ad6"
       url: "https://github.com/Anxcye/webdav_client.git"
     source: git
