@@ -2,7 +2,7 @@
 
 `plan.md` Section 4.2 names this the open risk of the project and the least
 known cost. This note records what the pinned dependency actually does, read
-from its source on 2026-08-11. **The measurement is separate and comes next.**
+from its source on 2026-08-11, and the numbers measured on a device the same day.
 
 ## What the plan assumed
 
@@ -64,7 +64,12 @@ A curl distorts the page, so a small loss of sharpness during the turn may be
 invisible. The page is sharp again the moment it settles, because the live
 WebView returns. This is worth measuring against full-resolution PNG.
 
-## MEASURED — 2026-08-11
+## MEASURED — 2026-08-11, first pass
+
+> **The worst-frame column in this first table is wrong.** It reads zero for the
+> JPEG cases because the app was idle and rendered no frames, so nothing was
+> timed. The corrected table is in the next section. The capture and decode
+> timings here are sound.
 
 Harness: `lib/page/dev/capture_bench.dart`, run through
 `lib/dev_capture_main.dart`. **Profile build**, Samsung SM-S918B, Android 16.
@@ -86,24 +91,59 @@ Nine runs per case, first discarded, median reported.
    get if you pass no configuration. It costs 165 ms and it stalled a Flutter
    frame for 158 ms, about ten frames at 60 Hz. Never use the default.
 2. **JPEG is the single biggest win.** Switching format alone takes the total
-   from 165 ms to 72 ms, and removes the frame stall. The PNG encode, not the
-   bitmap allocation or the software draw, was the dominant cost.
+   from 165 ms to 72 ms. The PNG encode, not the bitmap allocation or the
+   software draw, was the dominant cost. It does **not** remove the frame
+   stall, only shrink it; see the corrected table below.
 3. **Downscaling mostly helps the decode.** Half width cuts the Dart-side decode
    from 32 ms to 9 ms while the platform call barely moves, 40 ms to 38 ms. The
    draw and encode still work on the full view; only the output shrinks.
 4. **Two captures, next and previous, cost about 144 ms at full width or about
-   94 ms at half width.** That fits comfortably in idle time between turns. It
+   94 ms at half width.** That fits in genuinely idle time between turns. It
    does not fit inside a gesture, which confirms the plan's rule.
 
-### Honest limit of the "worst frame" column
+### Re-measured with frames in flight — this changes the conclusion
 
-It records the worst Flutter frame observed while a capture was in flight,
-through `SchedulerBinding.addTimingsCallback`. **A zero does not prove there was
-no jank.** When the app is idle Flutter produces no frames, so there is nothing
-to time. The PNG figure is meaningful because a frame was produced and it took
-158 ms. The zeros mean "no frame was rendered during the capture", not "the
-capture was free". Measuring jank properly requires capturing while an
-animation is running, which is the next test.
+The first run reported a worst frame of zero for every JPEG case. That was an
+artifact: an idle Flutter app renders no frames, so a capture that blocks the
+Android main thread has nothing to stall.
+
+The bench now keeps a small animation running continuously, so there is always
+a frame in flight. Re-measured, same device, same profile build:
+
+| Case | Capture | Decode | **Total** | **Worst frame** |
+|---|---:|---:|---:|---:|
+| PNG q100 full | 148 ms | 25 ms | **173 ms** | **160 ms** |
+| JPEG q80 full | 46 ms | 33 ms | **79 ms** | **45 ms** |
+| JPEG q60 full | 41 ms | 32 ms | **73 ms** | **44 ms** |
+| JPEG q80 half width | 35 ms | 9 ms | **44 ms** | **33 ms** |
+| JPEG q80 third width | 28 ms | 6 ms | **34 ms** | **28 ms** |
+
+**Every capture stalls a frame. There is no free option.** Even the cheapest,
+JPEG at one third width, stalls 28 ms, which is more than three frames at
+120 Hz and nearly two at 60 Hz.
+
+The stall tracks the platform call, not the total. That is consistent with the
+mechanism: the platform work happens on the Android main thread while the Dart
+decode does not block the same thread.
+
+### What this means for the design
+
+The rule is stronger than "pre-capture before the finger lands". It is:
+
+> **Capture only when nothing is animating.**
+
+A capture during a page turn, during the opening sequence, or during any
+transition will drop frames on any device. Capturing after a page has settled
+and the reader is sitting still is invisible, because there are no frames to
+lose.
+
+Two consequences to handle in the reader:
+
+1. **Debounce rapid turns.** If a user turns pages quickly, a capture started
+   after one settle can still be running when the next gesture begins. Cancel or
+   defer it rather than letting it overlap.
+2. **Prefer the smaller capture.** One third width stalls 28 ms against 45 ms
+   for full width, and the page is distorted mid-curl anyway.
 
 ### The device caveat
 
@@ -118,8 +158,8 @@ to be materially worse. The ranking of the options should hold.
 
 1. **Use JPEG, never the PNG default.** Quality 80 is enough; the page is
    distorted during the turn and the live WebView returns the moment it settles.
-2. **Pre-capture during idle after each settle**, never inside the gesture.
-   Even the cheapest case, 36 ms, is more than two frames at 60 Hz.
+2. **Capture only when nothing is animating**, never inside a gesture or a
+   transition. Every capture stalls a frame; the cheapest still costs 28 ms.
 3. **Consider half width.** It costs 47 ms against 72 ms, quarters the memory,
    and the loss lands only on a page that is mid-curl.
 
