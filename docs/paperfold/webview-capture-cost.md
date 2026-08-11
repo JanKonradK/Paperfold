@@ -64,7 +64,70 @@ A curl distorts the page, so a small loss of sharpness during the turn may be
 invisible. The page is sharp again the moment it settles, because the live
 WebView returns. This is worth measuring against full-resolution PNG.
 
-## What to measure next, on a real device
+## MEASURED — 2026-08-11
+
+Harness: `lib/page/dev/capture_bench.dart`, run through
+`lib/dev_capture_main.dart`. **Profile build**, Samsung SM-S918B, Android 16.
+WebView 1440 x 1776 logical pixels, showing a page of styled prose with a
+heading, a drop capital, justified text, and an inline illustration.
+Nine runs per case, first discarded, median reported.
+
+| Case | Capture | Decode | **Total** | Bytes | Decoded size | Worst frame |
+|---|---:|---:|---:|---:|---|---:|
+| **PNG q100 full** | 142 ms | 23 ms | **165 ms** | 350 KB | 1440x1776 | **158 ms** |
+| JPEG q80 full | 40 ms | 32 ms | **72 ms** | 245 KB | 1440x1776 | 0 |
+| JPEG q60 full | 33 ms | 30 ms | **63 ms** | 183 KB | 1440x1776 | 0 |
+| JPEG q80 half width | 38 ms | 9 ms | **47 ms** | 92 KB | 720x888 | 0 |
+| JPEG q80 third width | 32 ms | 4 ms | **36 ms** | 58 KB | 480x592 | 0 |
+
+### What this says
+
+1. **The default is the trap.** `CompressFormat.PNG` at quality 100 is what you
+   get if you pass no configuration. It costs 165 ms and it stalled a Flutter
+   frame for 158 ms, about ten frames at 60 Hz. Never use the default.
+2. **JPEG is the single biggest win.** Switching format alone takes the total
+   from 165 ms to 72 ms, and removes the frame stall. The PNG encode, not the
+   bitmap allocation or the software draw, was the dominant cost.
+3. **Downscaling mostly helps the decode.** Half width cuts the Dart-side decode
+   from 32 ms to 9 ms while the platform call barely moves, 40 ms to 38 ms. The
+   draw and encode still work on the full view; only the output shrinks.
+4. **Two captures, next and previous, cost about 144 ms at full width or about
+   94 ms at half width.** That fits comfortably in idle time between turns. It
+   does not fit inside a gesture, which confirms the plan's rule.
+
+### Honest limit of the "worst frame" column
+
+It records the worst Flutter frame observed while a capture was in flight,
+through `SchedulerBinding.addTimingsCallback`. **A zero does not prove there was
+no jank.** When the app is idle Flutter produces no frames, so there is nothing
+to time. The PNG figure is meaningful because a frame was produced and it took
+158 ms. The zeros mean "no frame was rendered during the capture", not "the
+capture was free". Measuring jank properly requires capturing while an
+animation is running, which is the next test.
+
+### The device caveat
+
+This is a flagship. A mid-range phone has slower memory bandwidth and a slower
+CPU, and the dominant costs here are a full-size bitmap allocation, a software
+draw, and an encode, all of which scale with that. Expect the mid-range numbers
+to be materially worse. The ranking of the options should hold.
+
+## Verdict for Milestone 1
+
+**The reader can have a real curl**, on three conditions:
+
+1. **Use JPEG, never the PNG default.** Quality 80 is enough; the page is
+   distorted during the turn and the live WebView returns the moment it settles.
+2. **Pre-capture during idle after each settle**, never inside the gesture.
+   Even the cheapest case, 36 ms, is more than two frames at 60 Hz.
+3. **Consider half width.** It costs 47 ms against 72 ms, quarters the memory,
+   and the loss lands only on a page that is mid-curl.
+
+The fallback in the plan, where the reader keeps a simple turn and only the
+journal curls, is **not needed on this evidence**. Confirm on a mid-range phone
+before treating it as settled.
+
+## What was measured, for the record
 
 1. Time `takeScreenshot` with PNG quality 100 at full size. This is the baseline
    the plan assumed.
