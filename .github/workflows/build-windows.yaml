@@ -125,8 +125,8 @@ jobs:
       - name: Rename builds
         run: |
           cd build
-          mv windows/app.zip windows/Anx-Reader-windows-${{ inputs.version }}.zip
-          mv windows/app.exe windows/Anx-Reader-windows-${{ inputs.version }}.exe
+          mv windows/app.zip windows/Paperfold-windows-${{ inputs.version }}.zip
+          mv windows/app.exe windows/Paperfold-windows-${{ inputs.version }}.exe
         shell: bash
 
       - name: Upload artifacts

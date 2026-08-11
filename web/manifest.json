@@ -1,6 +1,6 @@
 {
-    "name": "anx_reader",
-    "short_name": "anx_reader",
+    "name": "Paperfold",
+    "short_name": "Paperfold",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#hexcode",
