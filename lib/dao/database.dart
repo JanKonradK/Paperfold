@@ -100,6 +100,7 @@ CREATE TABLE tb_groups (
 class DBHelper {
   static final DBHelper _instance = DBHelper._internal();
   static Database? _database;
+  static Future<Database>? _databaseFuture;
   static bool updatedDB = false;
 
   factory DBHelper() {
@@ -108,13 +109,35 @@ class DBHelper {
 
   DBHelper._internal();
 
-  Future<Database> get database async {
-    if (_database != null) return _database!;
-    _database = await initDB();
-    return _database!;
+  Future<Database> get database => initDB();
+
+  /// Starts database initialization or joins the initialization in progress.
+  ///
+  /// All startup callers share one future. This lets the first Flutter frame
+  /// render while database-backed providers wait without opening a second
+  /// connection or reading a null database. [after] lets startup finish the
+  /// storage paths before the database opens.
+  Future<Database> initDB({Future<void>? after}) {
+    final database = _database;
+    if (database != null) {
+      return Future.value(database);
+    }
+    return _databaseFuture ??= _openAndCacheDatabase(after: after);
   }
 
-  Future<Database> initDB() async {
+  Future<Database> _openAndCacheDatabase({Future<void>? after}) async {
+    try {
+      await after;
+      final database = await _openDatabase();
+      _database = database;
+      return database;
+    } catch (_) {
+      _databaseFuture = null;
+      rethrow;
+    }
+  }
+
+  Future<Database> _openDatabase() async {
     int dbVersion = currentDbVersion;
     switch (AnxPlatform.type) {
       case AnxPlatformEnum.macos:
@@ -153,8 +176,18 @@ class DBHelper {
   }
 
   static Future<void> close() async {
-    await _database?.close();
+    Database? database = _database;
+    final databaseFuture = _databaseFuture;
+    if (database == null && databaseFuture != null) {
+      try {
+        database = await databaseFuture;
+      } catch (_) {
+        // There is no open database to close when initialization failed.
+      }
+    }
+    await database?.close();
     _database = null;
+    _databaseFuture = null;
   }
 
   /// Checkpoint WAL to merge data into main database file
