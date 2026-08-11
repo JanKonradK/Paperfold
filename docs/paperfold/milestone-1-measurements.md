@@ -46,6 +46,44 @@ Two honest notes:
    skips the sequence and the home screen is already built beneath it. A user
    who taps is not waiting 1150 ms.
 
+## Curl frame time
+
+Harness: `lib/page/dev/curl_frame_bench.dart` through
+`lib/dev_curl_frame_main.dart`. Profile build. The curl is driven
+programmatically, not by a finger, so the numbers measure the shader and the
+widget rather than the timing of injected touch events.
+
+**The display runs at 120 Hz, so the budget is 8.3 ms, not 16 ms.** Section
+11.1 states both. The tighter one applies here.
+
+Twelve full turns, 1307 frames recorded:
+
+| Thread | Median | p95 | Worst | Frames over 8.3 ms |
+|---|---:|---:|---:|---:|
+| UI, build | 0.2 ms | 0.4 ms | 2.3 ms | **0** |
+| Raster | 1.5 ms | 2.6 ms | 4.8 ms | **0** |
+| Total span | 2.4 ms | 4.0 ms | 12.2 ms | 2 |
+
+### Reading this correctly
+
+Section 11.1 asks for the raster thread and the UI thread apart, because a
+shader that stutters shows on the raster thread. **The raster thread never
+exceeded 4.8 ms against an 8.3 ms budget**, so the shader has about 40 percent
+headroom at 120 Hz, and roughly 3.5 times headroom against the 16.7 ms budget
+at 60 Hz.
+
+`totalSpan` shows two frames over budget, but it includes time waiting for
+vsync, so it is not a count of dropped frames. Build and raster are the
+figures the plan asks for and both are clean.
+
+### What this suggests about a mid-range phone
+
+The raster worst case is 4.8 ms at 120 Hz. A mid-range GPU might be two or
+three times slower, which would put the worst case near 10 to 15 ms. That
+still fits inside the 16.7 ms budget at 60 Hz, which is the refresh rate most
+mid-range phones run. **This is an inference, not a measurement.** It is a
+reason to expect a pass, not a substitute for testing.
+
 ## Section 14 checks
 
 | Check | Result |
@@ -54,14 +92,19 @@ Two honest notes:
 | Sequence does not replay on resume | **Pass.** Home, then relaunch, shows the home screen with no cover |
 | Tap skips it | **Pass.** A tap one second into launch lands on the home screen |
 | Reduce-motion setting is obeyed | **Not tested on device.** The code reads `MediaQuery.disableAnimationsOf`. Testing it needs the system accessibility setting changed, which is the owner's to change |
-| Frame time across a full turn | **Not measured.** Needs a mid-range phone |
+| Frame time across a full turn | **Pass on this phone.** 1307 frames, zero over budget on UI or raster. Needs a mid-range phone to settle |
 
 ## Still open
 
-- Frame time in profile on a **mid-range** Android phone, watching the raster
-  thread and the UI thread apart (Section 11.1).
-- The WebView capture cost. See `docs/paperfold/webview-capture-cost.md`.
+- Frame time in profile on a **mid-range** Android phone. Everything here says
+  it should pass, and nothing here proves it.
 - The reduce-motion path, on a device with the setting switched on.
+- Frame time while a WebView capture runs. The capture bench recorded no jank
+  during the JPEG cases, but an idle app renders no frames, so nothing was
+  timed. Measuring that needs a capture taken while the curl animates.
+
+The WebView capture cost is answered. See
+`docs/paperfold/webview-capture-cost.md`.
 
 ## Unrelated observation
 
