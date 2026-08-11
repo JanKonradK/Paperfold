@@ -32,7 +32,17 @@ import 'package:url_launcher/url_launcher.dart';
 WebViewEnvironment? webViewEnvironment;
 
 class HomePage extends ConsumerStatefulWidget {
-  const HomePage({super.key});
+  const HomePage({
+    super.key,
+    required this.databaseReady,
+    this.startupRevealReady,
+  });
+
+  /// Completes after the shared startup database connection is ready.
+  final Future<void> databaseReady;
+
+  /// Completes after any cold-start cover has gone, including an early skip.
+  final Future<void>? startupRevealReady;
 
   @override
   ConsumerState<ConsumerStatefulWidget> createState() => _HomePageState();
@@ -98,6 +108,14 @@ class _HomePageState extends ConsumerState<HomePage> {
   }
 
   Future<void> initAnx() async {
+    await Future.wait([
+      widget.databaseReady,
+      if (widget.startupRevealReady case final revealReady?) revealReady,
+    ]);
+    if (!mounted) {
+      return;
+    }
+
     AnxToast.init(context);
     checkUpdate(false);
     InitializationCheck.check();

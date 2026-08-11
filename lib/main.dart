@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:paperfold/utils/platform_utils.dart';
@@ -10,6 +11,7 @@ import 'package:paperfold/l10n/generated/L10n.dart';
 import 'package:paperfold/models/window_info.dart';
 import 'package:paperfold/page/home_page.dart';
 import 'package:paperfold/page/migration_page.dart';
+import 'package:paperfold/page/opening/opening_sequence.dart';
 import 'package:paperfold/service/book_player/book_player_server.dart';
 import 'package:paperfold/service/network/http_proxy_overrides.dart';
 import 'package:paperfold/utils/get_path/macos_migration.dart';
@@ -33,6 +35,35 @@ final heroineController = HeroineController();
 bool _needsMigration = false;
 MigrationCheckResult? _migrationCheckResult;
 
+/// This process-level flag is set once in [main] and consumed once by MyApp.
+/// Widget rebuilds, configuration changes, and lifecycle resumes cannot reset
+/// it, so the opening sequence is cold-start-only.
+bool _coldStartOpeningPending = false;
+
+bool _takeColdStartOpening() {
+  final shouldPlay = _coldStartOpeningPending;
+  _coldStartOpeningPending = false;
+  return shouldPlay;
+}
+
+Future<void> _initializeStorage() async {
+  await initBasePath();
+  AnxLog.init();
+  AnxError.init();
+}
+
+Future<void> _startServerAfter(Future<void> storageReady) async {
+  await storageReady;
+  await Server().start();
+}
+
+Future<void> _startDataServices() {
+  final storageReady = _initializeStorage();
+  final databaseReady = DBHelper().initDB(after: storageReady);
+  unawaited(_startServerAfter(storageReady));
+  return databaseReady;
+}
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Prefs().initPrefs();
@@ -49,15 +80,15 @@ Future<void> main() async {
     _needsMigration = _migrationCheckResult?.needsMigration ?? false;
   }
 
-  // If no migration needed, initialize paths normally
+  Future<void>? databaseReady;
+
+  // Start storage, the database, and the local reader server without waiting
+  // for them before runApp. HomePage and all DAOs join databaseReady.
   if (!_needsMigration) {
-    initBasePath();
-    AnxLog.init();
-    AnxError.init();
-    await DBHelper().initDB();
+    databaseReady = _startDataServices();
   }
 
-  Server().start();
+  _coldStartOpeningPending = !_needsMigration && Prefs().openBookAnimation;
 
   SmartDialog.config.custom = SmartConfigCustom(
     maskColor: Colors.black.withAlpha(35),
@@ -66,14 +97,16 @@ Future<void> main() async {
   );
 
   runApp(
-    const ProviderScope(
-      child: MyApp(),
+    ProviderScope(
+      child: MyApp(databaseReady: databaseReady),
     ),
   );
 }
 
 class MyApp extends ConsumerStatefulWidget {
-  const MyApp({super.key});
+  const MyApp({super.key, required this.databaseReady});
+
+  final Future<void>? databaseReady;
 
   @override
   ConsumerState<ConsumerStatefulWidget> createState() => _MyAppState();
@@ -82,10 +115,17 @@ class MyApp extends ConsumerStatefulWidget {
 class _MyAppState extends ConsumerState<MyApp>
     with WidgetsBindingObserver, WindowListener {
   static const Locale _englishFallbackLocale = Locale('en');
+  late final bool _playColdStartOpening;
+  late final Completer<void> _openingFinished;
 
   @override
   void initState() {
     super.initState();
+    _playColdStartOpening = _takeColdStartOpening();
+    _openingFinished = Completer<void>();
+    if (!_playColdStartOpening) {
+      _openingFinished.complete();
+    }
     WidgetsBinding.instance.addObserver(this);
     windowManager.addListener(this);
   }
@@ -142,6 +182,12 @@ class _MyAppState extends ConsumerState<MyApp>
     AnxLog.info('onWindowClose: Offset: $windowOffset, Size: $windowSize');
   }
 
+  void _handleOpeningFinished() {
+    if (!_openingFinished.isCompleted) {
+      _openingFinished.complete();
+    }
+  }
+
   @override
   Future<void> didChangeAppLifecycleState(AppLifecycleState state) async {
     if (state == AppLifecycleState.paused ||
@@ -160,6 +206,26 @@ class _MyAppState extends ConsumerState<MyApp>
 
   @override
   Widget build(BuildContext context) {
+    final databaseReady = widget.databaseReady;
+    final Widget home;
+    if (_needsMigration) {
+      home = _MigrationWrapper(
+        migrationCheckResult: _migrationCheckResult!,
+      );
+    } else {
+      assert(databaseReady != null);
+      final homePage = HomePage(
+        databaseReady: databaseReady!,
+        startupRevealReady: _openingFinished.future,
+      );
+      home = _playColdStartOpening
+          ? OpeningSequence(
+              onFinished: _handleOpeningFinished,
+              child: homePage,
+            )
+          : homePage;
+    }
+
     return provider.MultiProvider(
       providers: [
         provider.ChangeNotifierProvider(
@@ -191,10 +257,7 @@ class _MyAppState extends ConsumerState<MyApp>
             themeMode: prefsNotifier.themeMode,
             theme: colorSchema(prefsNotifier, context, Brightness.light),
             darkTheme: colorSchema(prefsNotifier, context, Brightness.dark),
-            home: _needsMigration
-                ? _MigrationWrapper(
-                    migrationCheckResult: _migrationCheckResult!)
-                : const HomePage(),
+            home: home,
           );
         },
       ),
@@ -248,11 +311,7 @@ class _MigrationWrapperState extends State<_MigrationWrapper> {
   bool _migrationComplete = false;
 
   Future<void> _onMigrationComplete() async {
-    // Initialize paths and DB after migration
-    initBasePath();
-    AnxLog.init();
-    AnxError.init();
-    await DBHelper().initDB();
+    await _startDataServices();
 
     if (mounted) {
       setState(() {
@@ -264,7 +323,7 @@ class _MigrationWrapperState extends State<_MigrationWrapper> {
   @override
   Widget build(BuildContext context) {
     if (_migrationComplete) {
-      return const HomePage();
+      return HomePage(databaseReady: DBHelper().database);
     }
     return MigrationPage(onMigrationComplete: _onMigrationComplete);
   }
