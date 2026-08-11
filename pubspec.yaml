@@ -40,6 +40,9 @@ dependencies:
   webdav_client:
     git:
       url: https://github.com/Anxcye/webdav_client.git
+      # Pinned 2026-08-10. Without a ref this tracks the default branch of a
+      # single-maintainer fork, so the build is not reproducible.
+      ref: 3c6d0eb21baf593d8a0a10ba039b0b73ce891ad6
   fluttertoast: ^8.2.6
   dio: ^5.4.3+1
   pubspec_parse: ^1.2.3
@@ -73,6 +76,8 @@ dependencies:
   flutter_heatmap_calendar:
     git:
       url: https://github.com/Anxcye/flutter_heatmap_calendar
+      # Pinned 2026-08-10. See the note on webdav_client above.
+      ref: c14e6ebb29c209e318aea36cd715d5001bc26100
   csv: ^6.0.0
   fast_gbk: ^1.0.0
   window_manager: ^0.4.3
