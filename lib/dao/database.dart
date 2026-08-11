@@ -13,7 +13,7 @@ import 'package:path/path.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 // Current app database version
-const int currentDbVersion = 7;
+const int currentDbVersion = 8;
 
 const createBookSQL = '''
 CREATE TABLE tb_books (
@@ -96,6 +96,132 @@ CREATE TABLE tb_groups (
   FOREIGN KEY (parent_id) REFERENCES tb_groups(id)
 )
 ''';
+
+// ---------------------------------------------------------------------------
+// Migration version 8 — the journal schema. plan.md Section 3.2.
+//
+// tb_notes is anchored to an EPUB CFI. It is a highlight table, tied to a
+// location inside a book. Reviews and journal pages are book-level, so they
+// get their own tables. Do not overload tb_notes.
+// ---------------------------------------------------------------------------
+
+/// The review sheet. All six ratings are 0 to 5.
+///
+/// rating_spice is drawn with a chili mark rather than stars, but that is a
+/// view choice. The stored value is the number.
+const createReviewSQL = '''
+CREATE TABLE IF NOT EXISTS tb_reviews (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  book_id INTEGER,
+  genre TEXT,
+  format TEXT,
+  rating_overall INTEGER,
+  rating_plot INTEGER,
+  rating_ending INTEGER,
+  rating_world INTEGER,
+  rating_characters INTEGER,
+  rating_spice INTEGER,
+  favorite_character TEXT,
+  favorite_quote TEXT,
+  thoughts TEXT,
+  create_time TEXT,
+  update_time TEXT,
+  FOREIGN KEY (book_id) REFERENCES tb_books(id)
+)
+''';
+
+/// Free journal space. One row per dot page, ordered by page_index.
+const createJournalSQL = '''
+CREATE TABLE IF NOT EXISTS tb_journal (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  book_id INTEGER,
+  page_index INTEGER,
+  body TEXT,
+  create_time TEXT,
+  update_time TEXT,
+  FOREIGN KEY (book_id) REFERENCES tb_books(id)
+)
+''';
+
+const createShelfSQL = '''
+CREATE TABLE IF NOT EXISTS tb_shelves (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  name TEXT,
+  sort_order INTEGER,
+  create_time TEXT,
+  update_time TEXT
+)
+''';
+
+/// The reading challenge, one row per year.
+const createChallengeSQL = '''
+CREATE TABLE IF NOT EXISTS tb_challenge (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  year INTEGER UNIQUE,
+  target_count INTEGER,
+  create_time TEXT,
+  update_time TEXT
+)
+''';
+
+/// Books the reader wants to buy.
+///
+/// This is NOT the to-be-read list. To be read is intent to read, and lives on
+/// tb_books.status. This is a shopping list. plan.md Section 8 keeps them apart
+/// on purpose.
+const createWishlistSQL = '''
+CREATE TABLE IF NOT EXISTS tb_wishlist (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  title TEXT,
+  author TEXT,
+  bought INTEGER DEFAULT 0,
+  sort_order INTEGER,
+  create_time TEXT,
+  update_time TEXT
+)
+''';
+
+/// Pages read per day, for the circular month tracker.
+///
+/// tb_reading_time already stores MINUTES per day. This stores PAGES. They are
+/// different measures and both are needed. plan.md Section 3.2.
+const createDailyReadSQL = '''
+CREATE TABLE IF NOT EXISTS tb_daily_read (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  date TEXT UNIQUE,
+  pages_read INTEGER,
+  create_time TEXT,
+  update_time TEXT
+)
+''';
+
+/// OPDS catalogs. Used in Milestone 7.
+///
+/// NEVER store a password in this table. Only the authentication type and the
+/// user name belong here. Credentials go in the platform keystore through
+/// flutter_secure_storage. plan.md Section 9.2 calls this the one place where a
+/// shortcut creates a real security problem, because these are the user's own
+/// server passwords.
+const createCatalogSQL = '''
+CREATE TABLE IF NOT EXISTS tb_catalogs (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  name TEXT,
+  url TEXT,
+  auth_type TEXT,
+  username TEXT,
+  sort_order INTEGER,
+  create_time TEXT,
+  update_time TEXT
+)
+''';
+
+/// Reading status values stored in tb_books.status.
+///
+/// Kept as text so the column reads plainly in a database browser and survives
+/// reordering of any Dart enum.
+const bookStatusNotStarted = 'not_started';
+const bookStatusReading = 'reading';
+const bookStatusFinished = 'finished';
 
 class DBHelper {
   static final DBHelper _instance = DBHelper._internal();
@@ -363,11 +489,17 @@ class DBHelper {
       case 1:
         // add a column (rating) to tb_books
         await db.execute('ALTER TABLE tb_books ADD COLUMN rating REAL');
-        // remove '/data/user/0/com.anxcye.paperfold/app_flutter/' from file_path & cover_path
+        // Remove '/data/user/0/com.anxcye.anx_reader/app_flutter/' from
+        // file_path and cover_path.
+        //
+        // This package name is a historical fact about databases written by
+        // old Anx Reader builds. It is deliberately NOT renamed to Paperfold.
+        // Renaming it would make this statement match nothing, and the paths
+        // it exists to repair would stay broken.
         await db.execute(
-            "UPDATE tb_books SET file_path = REPLACE(file_path, '/data/user/0/com.anxcye.paperfold/app_flutter/', '')");
+            "UPDATE tb_books SET file_path = REPLACE(file_path, '/data/user/0/com.anxcye.anx_reader/app_flutter/', '')");
         await db.execute(
-            "UPDATE tb_books SET cover_path = REPLACE(cover_path, '/data/user/0/com.anxcye.paperfold/app_flutter/', '')");
+            "UPDATE tb_books SET cover_path = REPLACE(cover_path, '/data/user/0/com.anxcye.anx_reader/app_flutter/', '')");
         continue case2;
       case2:
       case 2:
@@ -458,6 +590,36 @@ class DBHelper {
             VALUES (?, '...', 0, datetime('now'), datetime('now'))
           ''', [groupId]);
         }
+        continue case7;
+      case7:
+      case 7:
+        // The journal schema. plan.md Section 3.2.
+        //
+        // These tables are additive. Nothing existing is dropped, renamed, or
+        // rewritten, so no reader data can be lost by this step.
+        await db.execute(createReviewSQL);
+        await db.execute(createJournalSQL);
+        await db.execute(createShelfSQL);
+        await db.execute(createChallengeSQL);
+        await db.execute(createWishlistSQL);
+        await db.execute(createDailyReadSQL);
+        await db.execute(createCatalogSQL);
+
+        // tb_books had no reading status. Without one the to-be-read list
+        // cannot work. plan.md Section 3.2.
+        await db.execute(
+            "ALTER TABLE tb_books ADD COLUMN status TEXT DEFAULT '$bookStatusNotStarted'");
+        await db.execute('ALTER TABLE tb_books ADD COLUMN started_on TEXT');
+        await db.execute('ALTER TABLE tb_books ADD COLUMN finished_on TEXT');
+
+        // Existing books already carry reading_percentage, so derive the
+        // status from it rather than marking a half-read library as unread.
+        await db.execute(
+            "UPDATE tb_books SET status = '$bookStatusNotStarted' WHERE status IS NULL");
+        await db.execute(
+            "UPDATE tb_books SET status = '$bookStatusReading' WHERE reading_percentage > 0 AND reading_percentage < 1");
+        await db.execute(
+            "UPDATE tb_books SET status = '$bookStatusFinished' WHERE reading_percentage >= 1");
     }
 
     if (oldVersion != 0 && Prefs().webdavStatus) {
