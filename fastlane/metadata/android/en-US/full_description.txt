@@ -1,46 +1,41 @@
-Anx Reader, a thoughtfully crafted e-book reader for book lovers. Featuring powerful AI capabilities and supporting various e-book formats, it makes reading smarter and more focused. With its modern interface design, we're committed to delivering pure reading pleasure.
+Paperfold is an e-book reader and note application. It keeps your books, your highlights, and your reading history on your own device.
 
-<p>📚 <strong>Rich Format Support</strong></p>
+Paperfold is a fork of Anx Reader by Anxcye. The upstream author does not endorse Paperfold.
+
+<p><strong>Read</strong></p>
 <ul>
-<li>Support for major e-book formats: EPUB, MOBI, AZW3, FB2, TXT</li>
-<li>Perfect parsing for optimal reading experience</li>
+<li>Open EPUB, MOBI, AZW3, FB2, TXT, CBZ, and PDF files</li>
+<li>Set the font, the size, the spacing, the margins, and the alignment</li>
+<li>Choose a theme, a background, and a page turn style</li>
+<li>Read left to right or right to left</li>
 </ul>
-<p>☁️ <strong>Seamless Sync</strong></p>
+
+<p><strong>Take notes</strong></p>
 <ul>
-<li>Cross-device synchronization of reading progress, notes, and books via WebDAV</li>
-<li>Continue your reading journey anywhere, anytime</li>
+<li>Highlight a passage and attach a note to it</li>
+<li>Sort notes by time or by chapter, and filter them by color</li>
+<li>Export notes to TXT, Markdown, or CSV</li>
+<li>Share a passage as a card</li>
 </ul>
-<p>🤖 <strong>Smart AI Assistant</strong></p>
+
+<p><strong>Track your reading</strong></p>
 <ul>
-<li>Integration with leading AI services: OpenAI, DeepSeek, Claude, Gemini</li>
-<li>Intelligent content summarization and reading position recall for enhanced efficiency</li>
+<li>See how long you read each day, week, month, and year</li>
+<li>See your reading habit as a heatmap</li>
 </ul>
-<p>🎨 <strong>Personalized Reading Experience</strong></p>
+
+<p><strong>Keep your data</strong></p>
 <ul>
-<li>Carefully designed theme colors with customization options</li>
-<li>Switch freely between scrolling and pagination modes</li>
-<li>Import custom fonts to create your personal reading space</li>
+<li>Sync books, notes, and progress through your own WebDAV server</li>
+<li>Export and import your data</li>
+<li>No account is necessary</li>
 </ul>
-<p>📊 <strong>Professional Reading Analytics</strong></p>
+
+<p><strong>What Paperfold does not do</strong></p>
 <ul>
-<li>Comprehensive reading statistics</li>
-<li>Weekly, monthly, and yearly reading reports</li>
-<li>Intuitive reading heatmap to track every moment of your reading journey</li>
+<li>Paperfold has no AI functions</li>
+<li>Paperfold has no text-to-speech</li>
+<li>Paperfold has no in-app purchases and no advertisements</li>
 </ul>
-<p>📝 <strong>Powerful Note System</strong></p>
-<ul>
-<li>Flexible text annotation features</li>
-<li>Export options in TXT, CSV, and Markdown formats</li>
-<li>Easily organize and share your reading insights</li>
-</ul>
-<p>🛠️ <strong>Practical Tools</strong></p>
-<ul>
-<li>Smart TTS reading to rest your eyes</li>
-<li>Full-text search for quick content location</li>
-<li>Instant word translation to enhance reading efficiency</li>
-</ul>
-<p>💻 <strong>Cross-Platform Support</strong></p>
-<ul>
-<li>Seamless experience on Android / Windows / MacOS / iOS</li>
-<li>Consistent user interface across devices</li>
-</ul>
+
+Paperfold is free software under the MIT License.
