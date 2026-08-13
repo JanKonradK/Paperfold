@@ -682,6 +682,7 @@
   "shelfLoadErrorTitle": "The shelves could not be opened.",
   "shelfLoadErrorBody": "Try again to open the shelves.",
   "shelfAddBooksTooltip": "Add books",
+  "shelfAddBooksFromDevice": "From this device",
   "bookSpineSemanticLabel": "{title} by {author}. Open book options.",
   "bookSpineSemanticLabelNoAuthor": "{title}. Open book options.",
   "wishlistSpineSemanticLabel": "{title} by {author}. Open books to buy.",
@@ -798,6 +799,7 @@
     "placeholders": { "language": { "type": "String" } }
   },
   "opdsCatalogs": "Catalogs",
+  "opdsFindBooksOnline": "Find books online",
   "opdsCatalogsEmpty": "No catalogs yet.",
   "opdsAddCatalog": "Add a catalog",
   "opdsCatalogName": "Name",
