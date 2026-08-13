@@ -1651,13 +1651,26 @@ const callFlutter = (name, data) => {
 const setStyle = (oldStyle) => {
   const turn = {
     scroll: false,
-    animated: true
+    animated: true,
+    style: 'slide'
   }
 
   switch (style.pageTurnStyle) {
     case 'slide':
       turn.scroll = false
       turn.animated = true
+      break
+    case 'fold':
+      turn.scroll = false
+      turn.animated = true
+      turn.style = 'fold'
+      break
+    case 'curl':
+      // The curl is drawn by Flutter over a captured page, so the WebView must
+      // already be showing the destination when the curl starts. Any animation
+      // here would run underneath the captured image and never be seen.
+      turn.scroll = false
+      turn.animated = false
       break
     case 'scroll':
       turn.scroll = true
@@ -1683,6 +1696,7 @@ const setStyle = (oldStyle) => {
 
   turn.animated ? reader.view.renderer.setAttribute('animated', 'true')
     : reader.view.renderer.removeAttribute('animated')
+  reader.view.renderer.setAttribute('turn', turn.style)
 
   const newStyle = {
     fontSize: style.fontSize,

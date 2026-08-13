@@ -96,6 +96,38 @@ class Server {
         content,
         headers: {'Content-Type': 'application/javascript'},
       );
+    } else if (uriPath.startsWith('/bundled-fonts/')) {
+      // The faces that ship with the application. They live in the asset
+      // bundle, not in the font directory that /fonts/ serves, and only the
+      // names this map lists are reachable, so a path cannot walk out of it.
+      const bundled = <String, String>{
+        'Philosopher-Regular.ttf': 'assets/fonts/Philosopher-Regular.ttf',
+        'Philosopher-Italic.ttf': 'assets/fonts/Philosopher-Italic.ttf',
+        'Philosopher-Bold.ttf': 'assets/fonts/Philosopher-Bold.ttf',
+        'Philosopher-BoldItalic.ttf': 'assets/fonts/Philosopher-BoldItalic.ttf',
+        'SourceSans3-Regular.ttf': 'assets/fonts/SourceSans3-Regular.ttf',
+        'SourceSans3-Italic.ttf': 'assets/fonts/SourceSans3-Italic.ttf',
+        'SourceSans3-SemiBold.ttf': 'assets/fonts/SourceSans3-SemiBold.ttf',
+        'SourceSans3-Bold.ttf': 'assets/fonts/SourceSans3-Bold.ttf',
+        'SourceHanSerifSC-Regular.otf':
+            'assets/fonts/SourceHanSerifSC-Regular.otf',
+        'SourceHanSerifSC-Bold.otf': 'assets/fonts/SourceHanSerifSC-Bold.otf',
+      };
+      final assetPath =
+          bundled[path.basename(Uri.decodeComponent(uriPath))];
+      if (assetPath == null) {
+        return shelf.Response.notFound('Font not found');
+      }
+      final data = await rootBundle.load(assetPath);
+      return shelf.Response.ok(
+        data.buffer.asUint8List(),
+        headers: {
+          'Content-Type':
+              assetPath.endsWith('.otf') ? 'font/otf' : 'font/ttf',
+          'Access-Control-Allow-Origin': '*',
+          'cache-control': 'public, max-age=31536000',
+        },
+      );
     } else if (uriPath.startsWith('/fonts/')) {
       Directory fontDir = getFontDir();
       final file = File(

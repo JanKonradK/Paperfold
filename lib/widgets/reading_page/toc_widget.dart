@@ -48,8 +48,11 @@ class _TocWidgetState extends State<TocWidget>
           ],
         ),
         Expanded(
+          // Horizontal inset only. Padding on all four sides put a dead band
+          // above and below the list, so chapters scrolled to a stop short of
+          // the drawer's own edges instead of running under them.
           child: Padding(
-            padding: const EdgeInsets.all(16.0),
+            padding: const EdgeInsetsDirectional.symmetric(horizontal: 16.0),
             child: TabBarView(
               controller: _tabController,
               children: [

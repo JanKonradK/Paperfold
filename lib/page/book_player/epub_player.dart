@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:ui';
+import 'dart:ui' as ui;
 
 import 'package:paperfold/config/shared_preference_provider.dart';
 import 'package:paperfold/dao/book.dart';
@@ -39,6 +40,7 @@ import 'package:paperfold/utils/webView/gererate_url.dart';
 import 'package:paperfold/utils/webView/webview_console_message.dart';
 import 'package:paperfold/widgets/bookshelf/book_cover.dart';
 import 'package:paperfold/widgets/context_menu/context_menu.dart';
+import 'package:paperfold/widgets/page_curl/page_curl.dart';
 import 'package:paperfold/widgets/reading_page/more_settings/page_turning/diagram.dart';
 import 'package:paperfold/widgets/reading_page/more_settings/page_turning/types_and_icons.dart';
 import 'package:paperfold/widgets/reading_page/style_widget.dart';
@@ -107,15 +109,56 @@ class EpubPlayerState extends ConsumerState<EpubPlayer>
   double _accumulatedScrollDelta = 0;
   static const double _scrollThreshold = 50.0;
 
+  // Write-behind for the reading position. See saveReadingProgress.
+  Timer? _progressSaveTimer;
+  bool _progressDirty = false;
+
+  // The page-curl turn.
+  //
+  // The shader needs pixels, and a WebView capture always stalls a frame
+  // (docs/paperfold/webview-capture-cost.md). So the page is captured while
+  // nothing is animating, and the turn itself spends nothing: the frozen
+  // capture curls away while the WebView, hidden underneath it, jumps to the
+  // destination with its own animation switched off. What the reader sees on
+  // the back of the leaf is the blank verso, which is what the back of a real
+  // page shows.
+  //
+  // A capture that no longer matches the reading position is not shown. Turning
+  // faster than the capture can keep up gives a plain turn for those pages
+  // rather than the wrong page curling away.
+  final PageCurlController _curlController = PageCurlController();
+  ui.Image? _curlFront;
+  ui.Image? _curlVerso;
+  String _curlFrontCfi = '';
+  bool _curlTurning = false;
+  bool _showCurl = false;
+  TextDirection _curlDirection = TextDirection.ltr;
+  Timer? _curlCaptureTimer;
+
+  // The footer battery reading. A FutureBuilder over Battery().batteryLevel
+  // asked the platform channel again on every rebuild, so every page turn paid
+  // a channel round trip and the glyph blinked out while the future was
+  // pending. A charge level does not change inside a page turn.
+  int? _batteryLevel;
+  Timer? _batteryTimer;
+
   // to know anytime if we are on top of navigation stack
   bool get _isTopOfNavigationStack =>
       ModalRoute.of(context)?.isCurrent ?? false;
 
   void prevPage() {
+    if (Prefs().pageTurnStyle.isShaderCurl) {
+      unawaited(_turnWithCurl(forward: false));
+      return;
+    }
     webViewController.evaluateJavascript(source: 'prevPage()');
   }
 
   void nextPage() {
+    if (Prefs().pageTurnStyle.isShaderCurl) {
+      unawaited(_turnWithCurl(forward: true));
+      return;
+    }
     webViewController.evaluateJavascript(source: 'nextPage()');
   }
 
@@ -249,6 +292,17 @@ class EpubPlayerState extends ConsumerState<EpubPlayer>
         pageTurnStyle: '${pageTurnStyle.name}',
       })
     ''');
+    if (pageTurnStyle.isShaderCurl) {
+      // Compile the shader now. Doing it on the first turn would stall the
+      // frame the curl starts on, which is the one frame it cannot afford.
+      unawaited(PageCurl.warmUp());
+      _scheduleCurlCapture();
+    } else {
+      _curlCaptureTimer?.cancel();
+      _curlFront?.dispose();
+      _curlFront = null;
+      _curlFrontCfi = '';
+    }
   }
 
   void goToHref(String href) =>
@@ -580,6 +634,7 @@ class EpubPlayerState extends ConsumerState<EpubPlayer>
               );
           widget.updateParent();
           saveReadingProgress();
+          _scheduleCurlCapture();
           readingPageKey.currentState?.resetAwakeTimer();
         });
     controller.addJavaScriptHandler(
@@ -836,10 +891,26 @@ class EpubPlayerState extends ConsumerState<EpubPlayer>
     }
   }
 
+  /// The reader URL, built once.
+  ///
+  /// It carries the whole style block as query parameters, so recomputing it
+  /// meant re-reading and re-encoding every preference. It was rebuilt on
+  /// every relocate, which is every page turn, and the WebView only ever reads
+  /// it at load.
+  late final String _readerUrl;
+
   @override
   void initState() {
     book = widget.book;
     getThemeColor();
+    _readerUrl = generateUrl(
+      'http://127.0.0.1:${Server().port}'
+      '/book/${Uri.encodeComponent(widget.book.fileFullPath)}',
+      widget.cfi ?? widget.book.lastReadPosition,
+      backgroundColor: backgroundColor,
+      textColor: textColor,
+      isDarkMode: isDarkMode,
+    );
 
     contextMenu = ContextMenu(
       settings: ContextMenuSettings(hideDefaultSystemContextMenuItems: true),
@@ -849,6 +920,11 @@ class EpubPlayerState extends ConsumerState<EpubPlayer>
       onHideContextMenu: () {
         // removeOverlay();
       },
+    );
+    _readBatteryLevel();
+    _batteryTimer = Timer.periodic(
+      const Duration(seconds: 60),
+      (_) => _readBatteryLevel(),
     );
     if (Prefs().openBookAnimation) {
       _animationController = AnimationController(
@@ -869,8 +945,153 @@ class EpubPlayerState extends ConsumerState<EpubPlayer>
     super.didChangeDependencies();
   }
 
-  Future<void> saveReadingProgress() async {
+  /// Records the reading position.
+  ///
+  /// A relocate arrives on every page turn. Writing the book row and then
+  /// rebuilding the whole library there cost a stutter exactly when the turn
+  /// animation needed the frame: `BookList.refresh` re-reads every book, reads
+  /// the tag tables, pinyin-sorts and regroups. None of that is visible while
+  /// the reader is on screen, so a turn now only marks the position dirty. The
+  /// row is written after the reader has been still for a moment, and the
+  /// library is rebuilt once, when the reader leaves.
+  /// Turns the page with the curl shader, or plainly when no usable capture is
+  /// on hand.
+  Future<void> _turnWithCurl({required bool forward}) async {
+    void turnInWebView() {
+      webViewController.evaluateJavascript(
+        source: forward ? 'nextPage()' : 'prevPage()',
+      );
+    }
+
+    final front = _curlFront;
+    if (_curlTurning || front == null || _curlFrontCfi != cfi || !mounted) {
+      turnInWebView();
+      return;
+    }
+
+    _curlTurning = true;
+    _curlFront = null;
+    _curlVerso ??= await _makeVerso();
+    if (!mounted) {
+      front.dispose();
+      _curlTurning = false;
+      return;
+    }
+
+    // A page turned in an RTL interface leaves from the other side.
+    final rtl = Directionality.of(context) == TextDirection.rtl;
+    setState(() {
+      _showCurl = true;
+      _curlFront = front;
+      _curlDirection = (forward != rtl) ? TextDirection.ltr : TextDirection.rtl;
+    });
+
+    // The capture must be on screen before the WebView jumps underneath it,
+    // or the reader sees the destination page for one frame.
+    await WidgetsBinding.instance.endOfFrame;
+    turnInWebView();
+
+    try {
+      if (_curlController.isAttached) {
+        await _curlController.animate(
+          to: 1.0,
+          duration: const Duration(milliseconds: 520),
+          curve: Curves.easeOutCubic,
+        );
+      }
+    } catch (e) {
+      AnxLog.warning('Page curl did not run: $e');
+    }
+
+    if (mounted) {
+      setState(() {
+        _showCurl = false;
+        _curlFront = null;
+      });
+    }
+    front.dispose();
+    _curlTurning = false;
+    _scheduleCurlCapture();
+  }
+
+  /// The blank back of the leaf, in the reading background colour.
+  Future<ui.Image> _makeVerso() async {
+    final recorder = ui.PictureRecorder();
+    final canvas = Canvas(recorder);
+    canvas.drawRect(
+      const Rect.fromLTWH(0, 0, 1, 1),
+      Paint()..color = Color(int.parse('0x${backgroundColor ?? 'ffFAF6EE'}')),
+    );
+    final picture = recorder.endRecording();
+    final image = await picture.toImage(1, 1);
+    picture.dispose();
+    return image;
+  }
+
+  /// Captures the page once the reader has been still for a moment.
+  ///
+  /// Idle is the only safe time: the capture stalls a frame, so taking it
+  /// during a turn would cost exactly the smoothness the curl is meant to add.
+  void _scheduleCurlCapture() {
+    _curlCaptureTimer?.cancel();
+    if (!Prefs().pageTurnStyle.isShaderCurl) return;
+    _curlCaptureTimer = Timer(const Duration(milliseconds: 400), _capturePage);
+  }
+
+  Future<void> _capturePage() async {
+    if (!mounted || _curlTurning || !Prefs().pageTurnStyle.isShaderCurl) return;
+    try {
+      final bytes = await webViewController.takeScreenshot(
+        screenshotConfiguration: ScreenshotConfiguration(
+          compressFormat: CompressFormat.JPEG,
+          quality: 80,
+        ),
+      );
+      if (bytes == null || !mounted) return;
+      final codec = await ui.instantiateImageCodec(bytes);
+      final frame = await codec.getNextFrame();
+      codec.dispose();
+      if (!mounted || _curlTurning) {
+        frame.image.dispose();
+        return;
+      }
+      _curlFront?.dispose();
+      _curlFront = frame.image;
+      _curlFrontCfi = cfi;
+    } catch (e) {
+      AnxLog.warning('Page capture for the curl failed: $e');
+    }
+  }
+
+  Future<void> _readBatteryLevel() async {
+    try {
+      final level = await Battery().batteryLevel;
+      if (!mounted || level == _batteryLevel) return;
+      setState(() => _batteryLevel = level);
+    } catch (e) {
+      AnxLog.warning('Battery level unavailable: $e');
+    }
+  }
+
+  Future<void> saveReadingProgress({bool immediate = false}) async {
     if (cfi == '' || widget.cfi != null) return;
+    _progressDirty = true;
+    if (!immediate) {
+      _progressSaveTimer?.cancel();
+      _progressSaveTimer = Timer(
+        const Duration(seconds: 3),
+        () => _flushReadingProgress(refreshLibrary: false),
+      );
+      return;
+    }
+    _progressSaveTimer?.cancel();
+    _progressSaveTimer = null;
+    await _flushReadingProgress(refreshLibrary: true);
+  }
+
+  Future<void> _flushReadingProgress({required bool refreshLibrary}) async {
+    if (!_progressDirty) return;
+    _progressDirty = false;
     Book book = widget.book;
     book.lastReadPosition = cfi;
     book.readingPercentage = percentage;
@@ -883,7 +1104,7 @@ class EpubPlayerState extends ConsumerState<EpubPlayer>
       book.startedOn ??= DateTime.now();
     }
     await bookDao.updateBook(book);
-    if (mounted) {
+    if (refreshLibrary && mounted) {
       ref.read(bookListProvider.notifier).refresh();
     }
   }
@@ -891,8 +1112,16 @@ class EpubPlayerState extends ConsumerState<EpubPlayer>
   @override
   void dispose() {
     _scrollDebounceTimer?.cancel();
+    _progressSaveTimer?.cancel();
+    _batteryTimer?.cancel();
+    _curlCaptureTimer?.cancel();
+    _curlFront?.dispose();
+    _curlVerso?.dispose();
     _animationController?.dispose();
-    saveReadingProgress();
+    // The library reload belongs to pushToReadingPage, which still holds a
+    // live ref once this route has gone. sqflite keeps queued work in order,
+    // so this write lands before the reload reads the row back.
+    _flushReadingProgress(refreshLibrary: false);
     removeOverlay();
     super.dispose();
   }
@@ -1022,29 +1251,23 @@ class EpubPlayerState extends ConsumerState<EpubPlayer>
 
       final timeWidget = MinuteClock(textStyle: textStyle);
 
-      final batteryWidget = FutureBuilder(
-          future: Battery().batteryLevel,
-          builder: (context, snapshot) {
-            if (snapshot.hasData) {
-              return Stack(
-                alignment: Alignment.center,
-                children: [
-                  Padding(
-                    padding: EdgeInsets.fromLTRB(
-                        0, (textStyle.fontSize ?? 10) * 0.08, 2, 0),
-                    child: Text('${snapshot.data}', style: batteryTextStyle),
-                  ),
-                  Icon(
-                    HeroIcons.battery_0,
-                    size: batteryIconSize,
-                    color: iconColor,
-                  ),
-                ],
-              );
-            } else {
-              return const SizedBox();
-            }
-          });
+      final batteryWidget = _batteryLevel == null
+          ? const SizedBox()
+          : Stack(
+              alignment: Alignment.center,
+              children: [
+                Padding(
+                  padding: EdgeInsets.fromLTRB(
+                      0, (textStyle.fontSize ?? 10) * 0.08, 2, 0),
+                  child: Text('$_batteryLevel', style: batteryTextStyle),
+                ),
+                Icon(
+                  HeroIcons.battery_0,
+                  size: batteryIconSize,
+                  color: iconColor,
+                ),
+              ],
+            );
 
       Widget batteryAndTimeWidget() => Row(
             mainAxisSize: MainAxisSize.min,
@@ -1126,21 +1349,10 @@ class EpubPlayerState extends ConsumerState<EpubPlayer>
     );
   }
 
-  Widget buildWebviewWithIOSWorkaround(
-      BuildContext context, String url, String initialCfi) {
+  Widget buildWebviewWithIOSWorkaround(BuildContext context) {
     final webView = InAppWebView(
       webViewEnvironment: webViewEnvironment,
-      initialUrlRequest: URLRequest(
-        url: WebUri(
-          generateUrl(
-            url,
-            initialCfi,
-            backgroundColor: backgroundColor,
-            textColor: textColor,
-            isDarkMode: Theme.of(context).brightness == Brightness.dark,
-          ),
-        ),
-      ),
+      initialUrlRequest: URLRequest(url: WebUri(_readerUrl)),
       initialSettings: initialSettings,
       contextMenu: contextMenu,
       onLoadStop: (controller, uri) => onWebViewCreated(controller),
@@ -1169,10 +1381,6 @@ class EpubPlayerState extends ConsumerState<EpubPlayer>
 
   @override
   Widget build(BuildContext context) {
-    String uri = Uri.encodeComponent(widget.book.fileFullPath);
-    String url = 'http://127.0.0.1:${Server().port}/book/$uri';
-    String initialCfi = widget.cfi ?? widget.book.lastReadPosition;
-
     return Listener(
       onPointerSignal: (event) {
         _handlePointerEvents(event);
@@ -1181,7 +1389,20 @@ class EpubPlayerState extends ConsumerState<EpubPlayer>
         resizeToAvoidBottomInset: false,
         body: Stack(
           children: [
-            buildWebviewWithIOSWorkaround(context, url, initialCfi),
+            buildWebviewWithIOSWorkaround(context),
+            if (_showCurl && _curlFront != null && _curlVerso != null)
+              Positioned.fill(
+                child: IgnorePointer(
+                  child: PageCurl(
+                    frontImage: _curlFront!,
+                    backImage: _curlVerso!,
+                    textDirection: _curlDirection,
+                    controller: _curlController,
+                    interactive: false,
+                    reduceMotion: MediaQuery.of(context).disableAnimations,
+                  ),
+                ),
+              ),
             readingInfoWidget(),
             if (showHistory) _buildHistoryCapsule(),
             if (Prefs().openBookAnimation)

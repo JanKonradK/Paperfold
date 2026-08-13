@@ -7,7 +7,6 @@ import 'package:paperfold/dao/theme.dart';
 import 'package:paperfold/enums/sync_direction.dart';
 import 'package:paperfold/enums/sync_trigger.dart';
 import 'package:paperfold/l10n/generated/L10n.dart';
-import 'package:paperfold/main.dart';
 import 'package:paperfold/models/book.dart';
 import 'package:paperfold/models/read_theme.dart';
 import 'package:paperfold/page/book_detail.dart';
@@ -16,6 +15,7 @@ import 'package:paperfold/providers/sync.dart';
 import 'package:paperfold/utils/toast/common.dart';
 import 'package:paperfold/utils/ui/status_bar.dart';
 import 'package:paperfold/widgets/reading_page/notes_widget.dart';
+import 'package:paperfold/widgets/reading_page/reader_chrome.dart';
 import 'package:paperfold/models/reading_time.dart';
 import 'package:paperfold/widgets/reading_page/progress_widget.dart';
 import 'package:paperfold/widgets/reading_page/style_widget.dart';
@@ -26,7 +26,6 @@ import 'package:flutter/services.dart';
 // import 'package:flutter/foundation.dart'
 // show debugPrint, defaultTargetPlatform, TargetPlatform;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:icons_plus/icons_plus.dart';
 import 'package:pointer_interceptor/pointer_interceptor.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 
@@ -62,6 +61,7 @@ class ReadingPageState extends ConsumerState<ReadingPage>
   DateTime? _sessionStart;
   Timer? _awakeTimer;
   bool bottomBarOffstage = true;
+  ReaderTool _activeTool = ReaderTool.none;
   late String heroTag;
   bool bookmarkExists = false;
 
@@ -260,7 +260,7 @@ class ReadingPageState extends ConsumerState<ReadingPage>
             state == AppLifecycleState.detached) {
           final elapsedSeconds = _readTimeWatch.elapsed.inSeconds;
           if (elapsedSeconds > 5) {
-            epubPlayerKey.currentState?.saveReadingProgress();
+            epubPlayerKey.currentState?.saveReadingProgress(immediate: true);
             readingTimeDao.insertReadingTime(
               ReadingTime(
                 bookId: _book.id,
@@ -302,6 +302,7 @@ class ReadingPageState extends ConsumerState<ReadingPage>
   void hideBottomBar() {
     setState(() {
       _currentPage = empty;
+      _activeTool = ReaderTool.none;
       bottomBarOffstage = true;
       if (Prefs().hideStatusBar) {
         hideStatusBar();
@@ -323,35 +324,53 @@ class ReadingPageState extends ConsumerState<ReadingPage>
     _scaffoldKey.currentState?.openDrawer();
   }
 
-  void noteHandler() {
+  /// Opens a tool, or closes it when it is already the open one.
+  void _showTool(ReaderTool tool, Widget panel) {
     setState(() {
-      _currentPage = ReadingNotes(book: _book);
+      if (_activeTool == tool) {
+        _activeTool = ReaderTool.none;
+        _currentPage = empty;
+        return;
+      }
+      _activeTool = tool;
+      _currentPage = panel;
     });
+  }
+
+  void noteHandler() {
+    _showTool(ReaderTool.notes, ReadingNotes(book: _book));
   }
 
   void progressHandler() {
-    setState(() {
-      _currentPage = ProgressWidget(
+    _showTool(
+      ReaderTool.progress,
+      ProgressWidget(
         epubPlayerKey: epubPlayerKey,
         showOrHideAppBarAndBottomBar: showOrHideAppBarAndBottomBar,
-      );
-    });
+      ),
+    );
   }
 
-  Future<void> styleHandler(StateSetter modalSetState) async {
+  Future<void> styleHandler() async {
+    if (_activeTool == ReaderTool.style) {
+      _showTool(ReaderTool.style, empty);
+      return;
+    }
     List<ReadTheme> themes = await themeDao.selectThemes();
-    setState(() {
-      _currentPage = StyleWidget(
+    if (!mounted) return;
+    _showTool(
+      ReaderTool.style,
+      StyleWidget(
         themes: themes,
         epubPlayerKey: epubPlayerKey,
         setCurrentPage: (Widget page) {
-          modalSetState(() {
+          setState(() {
             _currentPage = page;
           });
         },
         hideAppBarAndBottomBar: showOrHideAppBarAndBottomBar,
-      );
-    });
+      ),
+    );
   }
 
   void updateState() {
@@ -362,140 +381,55 @@ class ReadingPageState extends ConsumerState<ReadingPage>
     }
   }
 
+  Future<void> _copyChapter() async {
+    final l10n = L10n.of(context);
+    try {
+      var content = await epubPlayerKey.currentState?.theChapterContent();
+      var len = content?.length ?? 0;
+      if (len > 0) {
+        await Clipboard.setData(ClipboardData(text: content!));
+      }
+      AnxToast.show(l10n.readingPageCopiedCharacters(len));
+    } catch (e) {
+      AnxToast.show(l10n.readingPageErrorCopyingContent);
+    }
+  }
+
+  void _toggleBookmark() {
+    if (bookmarkExists) {
+      epubPlayerKey.currentState!.removeAnnotation(
+        epubPlayerKey.currentState!.bookmarkCfi,
+      );
+    } else {
+      epubPlayerKey.currentState!.addBookmarkHere();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    Offstage controller = Offstage(
-      offstage: bottomBarOffstage,
-      child: PointerInterceptor(
-        child: Stack(
-          children: [
-            Positioned.fill(
-              child: GestureDetector(
-                  onTap: () {
-                    showOrHideAppBarAndBottomBar(false);
-                  },
-                  behavior: HitTestBehavior.opaque,
-                  onVerticalDragUpdate: (details) {},
-                  onVerticalDragEnd: (details) {},
-                  child: Container(
-                    color: Colors.black.withAlpha(30),
-                  )),
-            ),
-            Column(
-              children: [
-                AppBar(
-                  title: Text(_book.title, overflow: TextOverflow.ellipsis),
-                  leading: IconButton(
-                    icon: const Icon(Icons.arrow_back),
-                    onPressed: () {
-                      // close reading page
-                      Navigator.pop(context);
-                    },
-                  ),
-                  actions: [
-                    IconButton(
-                      icon: const Icon(Icons.copy),
-                      tooltip: L10n.of(context).readingPageCopyChapterContent,
-                      onPressed: () async {
-                        try {
-                          var content = await epubPlayerKey.currentState
-                              ?.theChapterContent();
-                          var len = content?.length ?? 0;
-                          if (len > 0) {
-                            await Clipboard.setData(
-                                ClipboardData(text: content!));
-                          }
-                          AnxToast.show(L10n.of(context)
-                              .readingPageCopiedCharacters(len));
-                        } catch (e) {
-                          AnxToast.show(
-                              L10n.of(context).readingPageErrorCopyingContent);
-                        }
-                      },
-                    ),
-                    IconButton(
-                        tooltip: L10n.of(context).readingPageBookmark,
-                        onPressed: () {
-                          if (bookmarkExists) {
-                            epubPlayerKey.currentState!.removeAnnotation(
-                              epubPlayerKey.currentState!.bookmarkCfi,
-                            );
-                          } else {
-                            epubPlayerKey.currentState!.addBookmarkHere();
-                          }
-                        },
-                        icon: bookmarkExists
-                            ? const Icon(Icons.bookmark)
-                            : const Icon(Icons.bookmark_border)),
-                    IconButton(
-                      tooltip: L10n.of(context).readingPageBookDetails,
-                      icon: const Icon(EvaIcons.more_vertical),
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          CupertinoPageRoute(
-                            builder: (context) => BookDetail(book: widget.book),
-                          ),
-                        );
-                      },
-                    ),
-                  ],
-                ),
-                const Spacer(),
-                BottomSheet(
-                  onClosing: () {},
-                  enableDrag: false,
-                  builder: (context) => SafeArea(
-                    top: false,
-                    child: Container(
-                      constraints: const BoxConstraints(maxWidth: 600),
-                      child: StatefulBuilder(
-                        builder: (BuildContext context, StateSetter setState) {
-                          final hasContent = !identical(_currentPage, empty);
-                          return IntrinsicHeight(
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                if (hasContent)
-                                  Expanded(
-                                    child: _currentPage,
-                                  ),
-                                Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceAround,
-                                  children: [
-                                    IconButton(
-                                      icon: const Icon(Icons.toc),
-                                      onPressed: tocHandler,
-                                    ),
-                                    IconButton(
-                                      icon: const Icon(EvaIcons.edit),
-                                      onPressed: noteHandler,
-                                    ),
-                                    IconButton(
-                                      icon: const Icon(Icons.data_usage),
-                                      onPressed: progressHandler,
-                                    ),
-                                    IconButton(
-                                      icon: const Icon(Icons.color_lens),
-                                      onPressed: () {
-                                        styleHandler(setState);
-                                      },
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ],
+    final hasPanel = !identical(_currentPage, empty);
+    final controller = PointerInterceptor(
+      intercepting: !bottomBarOffstage,
+      child: ReaderChrome(
+        visible: !bottomBarOffstage,
+        title: _book.title,
+        bookmarkExists: bookmarkExists,
+        activeTool: _activeTool,
+        panel: hasPanel ? _currentPage : null,
+        onDismiss: () => showOrHideAppBarAndBottomBar(false),
+        onBack: () => Navigator.pop(context),
+        onBookmark: _toggleBookmark,
+        onCopyChapter: _copyChapter,
+        onBookDetails: () => Navigator.push(
+          context,
+          CupertinoPageRoute(
+            builder: (context) => BookDetail(book: widget.book),
+          ),
         ),
+        onContents: tocHandler,
+        onNotes: noteHandler,
+        onProgress: progressHandler,
+        onStyle: styleHandler,
       ),
     );
 
