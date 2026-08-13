@@ -787,5 +787,14 @@
   "@monthTrackerEditDay": {
     "placeholders": { "day": { "type": "int" } }
   },
-  "monthTrackerPagesLabel": "Pages"
+  "monthTrackerPagesLabel": "Pages",
+  "translateWorking": "Translating",
+  "translateFromLanguage": "Translate from {language}",
+  "@translateFromLanguage": {
+    "placeholders": { "language": { "type": "String" } }
+  },
+  "translateToLanguage": "Translate into {language}",
+  "@translateToLanguage": {
+    "placeholders": { "language": { "type": "String" } }
+  }
 }

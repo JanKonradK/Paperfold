@@ -91,7 +91,10 @@
     "monthTrackerRingSemanticLabel",
     "monthTrackerDaySemanticLabel",
     "monthTrackerEditDay",
-    "monthTrackerPagesLabel"
+    "monthTrackerPagesLabel",
+    "translateWorking",
+    "translateFromLanguage",
+    "translateToLanguage"
   ],
 
   "de": [
@@ -186,7 +189,10 @@
     "monthTrackerRingSemanticLabel",
     "monthTrackerDaySemanticLabel",
     "monthTrackerEditDay",
-    "monthTrackerPagesLabel"
+    "monthTrackerPagesLabel",
+    "translateWorking",
+    "translateFromLanguage",
+    "translateToLanguage"
   ],
 
   "es": [
@@ -281,7 +287,10 @@
     "monthTrackerRingSemanticLabel",
     "monthTrackerDaySemanticLabel",
     "monthTrackerEditDay",
-    "monthTrackerPagesLabel"
+    "monthTrackerPagesLabel",
+    "translateWorking",
+    "translateFromLanguage",
+    "translateToLanguage"
   ],
 
   "fr": [
@@ -376,7 +385,10 @@
     "monthTrackerRingSemanticLabel",
     "monthTrackerDaySemanticLabel",
     "monthTrackerEditDay",
-    "monthTrackerPagesLabel"
+    "monthTrackerPagesLabel",
+    "translateWorking",
+    "translateFromLanguage",
+    "translateToLanguage"
   ],
 
   "it": [
@@ -471,7 +483,10 @@
     "monthTrackerRingSemanticLabel",
     "monthTrackerDaySemanticLabel",
     "monthTrackerEditDay",
-    "monthTrackerPagesLabel"
+    "monthTrackerPagesLabel",
+    "translateWorking",
+    "translateFromLanguage",
+    "translateToLanguage"
   ],
 
   "ja": [
@@ -566,7 +581,10 @@
     "monthTrackerRingSemanticLabel",
     "monthTrackerDaySemanticLabel",
     "monthTrackerEditDay",
-    "monthTrackerPagesLabel"
+    "monthTrackerPagesLabel",
+    "translateWorking",
+    "translateFromLanguage",
+    "translateToLanguage"
   ],
 
   "ko": [
@@ -661,7 +679,10 @@
     "monthTrackerRingSemanticLabel",
     "monthTrackerDaySemanticLabel",
     "monthTrackerEditDay",
-    "monthTrackerPagesLabel"
+    "monthTrackerPagesLabel",
+    "translateWorking",
+    "translateFromLanguage",
+    "translateToLanguage"
   ],
 
   "pt": [
@@ -756,7 +777,10 @@
     "monthTrackerRingSemanticLabel",
     "monthTrackerDaySemanticLabel",
     "monthTrackerEditDay",
-    "monthTrackerPagesLabel"
+    "monthTrackerPagesLabel",
+    "translateWorking",
+    "translateFromLanguage",
+    "translateToLanguage"
   ],
 
   "ro": [
@@ -851,7 +875,10 @@
     "monthTrackerRingSemanticLabel",
     "monthTrackerDaySemanticLabel",
     "monthTrackerEditDay",
-    "monthTrackerPagesLabel"
+    "monthTrackerPagesLabel",
+    "translateWorking",
+    "translateFromLanguage",
+    "translateToLanguage"
   ],
 
   "ru": [
@@ -946,7 +973,10 @@
     "monthTrackerRingSemanticLabel",
     "monthTrackerDaySemanticLabel",
     "monthTrackerEditDay",
-    "monthTrackerPagesLabel"
+    "monthTrackerPagesLabel",
+    "translateWorking",
+    "translateFromLanguage",
+    "translateToLanguage"
   ],
 
   "tr": [
@@ -1041,7 +1071,10 @@
     "monthTrackerRingSemanticLabel",
     "monthTrackerDaySemanticLabel",
     "monthTrackerEditDay",
-    "monthTrackerPagesLabel"
+    "monthTrackerPagesLabel",
+    "translateWorking",
+    "translateFromLanguage",
+    "translateToLanguage"
   ],
 
   "zh": [
@@ -1122,7 +1155,10 @@
     "monthTrackerRingSemanticLabel",
     "monthTrackerDaySemanticLabel",
     "monthTrackerEditDay",
-    "monthTrackerPagesLabel"
+    "monthTrackerPagesLabel",
+    "translateWorking",
+    "translateFromLanguage",
+    "translateToLanguage"
   ],
 
   "zh_CN": [
@@ -1203,7 +1239,10 @@
     "monthTrackerRingSemanticLabel",
     "monthTrackerDaySemanticLabel",
     "monthTrackerEditDay",
-    "monthTrackerPagesLabel"
+    "monthTrackerPagesLabel",
+    "translateWorking",
+    "translateFromLanguage",
+    "translateToLanguage"
   ],
 
   "zh_LZH": [
@@ -1298,7 +1337,10 @@
     "monthTrackerRingSemanticLabel",
     "monthTrackerDaySemanticLabel",
     "monthTrackerEditDay",
-    "monthTrackerPagesLabel"
+    "monthTrackerPagesLabel",
+    "translateWorking",
+    "translateFromLanguage",
+    "translateToLanguage"
   ],
 
   "zh_TW": [
@@ -1393,6 +1435,9 @@
     "monthTrackerRingSemanticLabel",
     "monthTrackerDaySemanticLabel",
     "monthTrackerEditDay",
-    "monthTrackerPagesLabel"
+    "monthTrackerPagesLabel",
+    "translateWorking",
+    "translateFromLanguage",
+    "translateToLanguage"
   ]
 }

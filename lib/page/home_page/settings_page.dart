@@ -1,4 +1,5 @@
 import 'package:paperfold/page/settings_page/more_settings_page.dart';
+import 'package:paperfold/widgets/paperfold_logo_mark.dart';
 import 'package:paperfold/widgets/settings/about.dart';
 import 'package:paperfold/widgets/settings/theme_mode.dart';
 import 'package:paperfold/widgets/settings/webdav_switch.dart';
@@ -26,24 +27,26 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
           padding: const EdgeInsets.only(bottom: 80),
           child: Column(
             children: [
-              GestureDetector(
-                onTap: () {},
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(0, 60, 0, 20),
-                  child: FittedBox(
-                    fit: BoxFit.scaleDown,
-                    child: Container(
-                      constraints: const BoxConstraints(maxWidth: 500),
-                      child: Text(
-                        'Anx',
-                        style: TextStyle(
-                          fontSize: 130,
-                          fontWeight: FontWeight.bold,
-                          color: Theme.of(context).colorScheme.primary,
-                        ),
-                      ),
+              // The fork's own name was still here at 130 points. The mark
+              // carries the brand now, and the name sits at a size the page
+              // can hold in every language.
+              Padding(
+                padding: const EdgeInsets.fromLTRB(0, 48, 0, 20),
+                child: Column(
+                  children: [
+                    PaperfoldLogoMark(
+                      size: 96,
+                      tint: Theme.of(context).colorScheme.primary,
                     ),
-                  ),
+                    const SizedBox(height: 12),
+                    Text(
+                      'Paperfold',
+                      style:
+                          Theme.of(context).textTheme.headlineMedium?.copyWith(
+                                color: Theme.of(context).colorScheme.primary,
+                              ),
+                    ),
+                  ],
                 ),
               ),
               const Divider(),

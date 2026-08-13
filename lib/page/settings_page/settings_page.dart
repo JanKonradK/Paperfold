@@ -1,6 +1,5 @@
-import 'package:paperfold/widgets/settings/settings_title.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:paperfold/widgets/settings/settings_title.dart';
 
 class SettingsPageBuilder extends StatelessWidget {
   const SettingsPageBuilder(
@@ -17,10 +16,17 @@ class SettingsPageBuilder extends StatelessWidget {
   final bool isMobile;
   final int id;
   final int selectedIndex;
-  final void Function(Widget detail, int id) setDetail;
+  final void Function(WidgetBuilder detail, int id) setDetail;
   final Icon icon;
   final String title;
-  final Widget sections;
+
+  /// A builder, not a widget.
+  ///
+  /// plan.md Section 11.2 asks for the settings tree to open as lazy routes.
+  /// Passing the built section here made every settings screen exist as soon
+  /// as the list did, whether or not the reader ever opened it.
+  final WidgetBuilder sections;
+
   final List<String> subTitles;
 
   @override
@@ -32,7 +38,7 @@ class SettingsPageBuilder extends StatelessWidget {
       id: id,
       selectedIndex: selectedIndex,
       setDetail: setDetail,
-      subPage: SettingsPageBody(
+      subPage: (BuildContext context) => SettingsPageBody(
         title: title,
         isMobile: isMobile,
         sections: sections,
@@ -42,7 +48,7 @@ class SettingsPageBuilder extends StatelessWidget {
   }
 }
 
-class SettingsPageBody extends StatefulWidget {
+class SettingsPageBody extends StatelessWidget {
   const SettingsPageBody({
     super.key,
     required this.title,
@@ -52,32 +58,36 @@ class SettingsPageBody extends StatefulWidget {
 
   final String title;
   final bool isMobile;
-  final Widget sections;
+  final WidgetBuilder sections;
 
-  @override
-  State<SettingsPageBody> createState() => _SettingsPageBodyState();
-}
-
-class _SettingsPageBodyState extends State<SettingsPageBody> {
   @override
   Widget build(BuildContext context) {
-    return CupertinoPageScaffold(
-      child: NestedScrollView(
+    // Material, not Cupertino. The chrome rule in DESIGN.md is Material
+    // behaviour with a custom appearance, and an iOS navigation bar inside a
+    // Material application is neither. Behaviour that came free with
+    // CupertinoSliverNavigationBar, the large collapsing title, comes free
+    // from SliverAppBar.large as well.
+    return Scaffold(
+      body: NestedScrollView(
         headerSliverBuilder: (BuildContext context, bool innerBoxIsScrolled) {
-          return widget.isMobile
+          return isMobile
               ? <Widget>[
-                  CupertinoSliverNavigationBar(
-                    largeTitle: Text(widget.title),
-                    backgroundColor:
-                        Theme.of(context).appBarTheme.backgroundColor,
-                  )
+                  SliverOverlapAbsorber(
+                    handle: NestedScrollView.sliverOverlapAbsorberHandleFor(
+                      context,
+                    ),
+                    sliver: SliverAppBar.large(
+                      title: Text(title),
+                      forceElevated: innerBoxIsScrolled,
+                    ),
+                  ),
                 ]
               : <Widget>[];
         },
         body: MediaQuery.removePadding(
           removeTop: true,
           context: context,
-          child: widget.sections,
+          child: Builder(builder: sections),
         ),
       ),
     );
