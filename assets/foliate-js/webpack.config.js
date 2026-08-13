@@ -60,10 +60,17 @@ module.exports = {
     rules: [
       {
         test: /\.js$/,
+        // Webpack hands these matchers a native path, so a pattern written
+        // with forward slashes silently fails to match on Windows and Babel
+        // transpiles the whole vendored PDF engine to ES5. That builds, and it
+        // inflates `dist/pdf-legacy.js` by about half while making pdf.js
+        // slower - so the platform the bundle was built on changed what
+        // shipped. `[\\/]` matches either separator.
         exclude: [
           /node_modules/,
-          /src\/vendor\/pdfjs\/pdf\.js$/, // Exclude large PDF.js file from Babel processing
-          /src\/vendor\/pdfjs\/pdf\.worker\.js$/
+          // Exclude large PDF.js file from Babel processing
+          /src[\\/]vendor[\\/]pdfjs[\\/]pdf\.js$/,
+          /src[\\/]vendor[\\/]pdfjs[\\/]pdf\.worker\.js$/
         ],
         use: {
           loader: 'babel-loader',

@@ -493,8 +493,41 @@ const annotationLayerBuilderCSS = `
 }
 `
 
-const renderPage = async (page, getImageBlob) => {
+// How many rendered pages stay resident, and how far either side of the
+// current one to render ahead. Six live pages is comfortably more than a
+// two-page spread plus its neighbours, so the page being read is never the one
+// evicted.
+const pageCacheLimit = 10
+const prefetchRadius = 1
 
+// WebP where the engine has it, PNG where it does not.
+//
+// Encoding the page is the dominant cost in rendering one, and this project has
+// already measured the same trade for WebView capture: dropping PNG for a lossy
+// format took 165 ms down to 72 ms
+// (docs/paperfold/webview-capture-cost.md). A PDF page has no transparency to
+// lose - pdf.js fills the canvas white before it draws anything - so the lossy
+// format costs nothing that shows.
+let webPSupport = null
+const supportsWebP = () => {
+    if (webPSupport === null) {
+        const probe = document.createElement('canvas')
+        probe.width = probe.height = 1
+        webPSupport = probe.toDataURL('image/webp').startsWith('data:image/webp')
+    }
+    return webPSupport
+}
+
+const encodePage = canvas => new Promise(resolve => {
+    if (!supportsWebP()) return canvas.toBlob(resolve)
+    // A `toBlob` for a type the engine does not encode resolves null rather
+    // than throwing, so the PNG path is still the floor under a false probe.
+    canvas.toBlob(
+        blob => blob ? resolve(blob) : canvas.toBlob(resolve),
+        'image/webp', 0.92)
+})
+
+const rasterise = async page => {
     const naturalPdfSize = page.getViewport({ scale: 1 })
     const naturalPdfRatio = naturalPdfSize.width / naturalPdfSize.height
     const appRatio = innerWidth / innerHeight
@@ -508,8 +541,22 @@ const renderPage = async (page, getImageBlob) => {
     canvas.width = viewport.width
     const canvasContext = canvas.getContext('2d')
     await page.render({ canvasContext, viewport }).promise
-    const blob = await new Promise(resolve => canvas.toBlob(resolve))
-    if (getImageBlob) return blob
+    const blob = await encodePage(canvas)
+    // The canvas is the largest thing in this function - a full page at device
+    // resolution. Drop its backing store now instead of waiting for a
+    // collection that will land in the middle of a page turn.
+    canvas.width = canvas.height = 0
+    return { blob, viewport, scale }
+}
+
+const renderPageImage = async page => (await rasterise(page)).blob
+
+// Renders one page into a document and returns both blob URLs that hold it.
+// They belong together: the document URL is a few hundred bytes of HTML, the
+// image URL is the page itself, and dropping the first without the second
+// leaks a full-resolution image.
+const renderPage = async page => {
+    const { blob, viewport, scale } = await rasterise(page)
 
     /*
     // with the SVG backend
@@ -537,7 +584,7 @@ const renderPage = async (page, getImageBlob) => {
         },
     })
 
-    const src = URL.createObjectURL(blob)
+    const imageURL = URL.createObjectURL(blob)
     const url = URL.createObjectURL(new Blob([`
         <!DOCTYPE html>
         <meta charset="utf-8">
@@ -552,11 +599,11 @@ const renderPage = async (page, getImageBlob) => {
         ${textLayerBuilderCSS}
         ${annotationLayerBuilderCSS}
         </style>
-        <img src="${src}">
+        <img src="${imageURL}">
         ${container.outerHTML}
         ${div.outerHTML}
     `], { type: 'text/html' }))
-    return url
+    return { url, imageURL }
 }
 
 const makeTOCItem = item => ({
@@ -580,14 +627,79 @@ export const makePDF = async file => {
     const outline = await pdf.getOutline()
     book.toc = outline?.map(makeTOCItem)
 
+    // Rendered pages, least recently used first.
+    //
+    // This was an unbounded `Map` of page index to blob URL, and nothing was
+    // ever revoked. Every page a reader visited stayed resident for the life of
+    // the document, holding a full-resolution image of itself, so a long
+    // document grew heavier the further into it you read. That is why a
+    // 400-page file degraded as it was read rather than being slow from the
+    // first turn - the page count was never the problem, the accumulation was.
     const cache = new Map()
+
+    // Renders in flight, so that the reader arriving at a page a prefetch is
+    // already rendering waits for that render instead of starting a second one.
+    const pending = new Map()
+
+    const release = entry => {
+        URL.revokeObjectURL(entry.url)
+        URL.revokeObjectURL(entry.imageURL)
+    }
+
+    const evict = () => {
+        while (cache.size > pageCacheLimit) {
+            const [index, entry] = cache.entries().next().value
+            cache.delete(index)
+            release(entry)
+        }
+    }
+
+    const render = index => {
+        const cached = cache.get(index)
+        if (cached) {
+            // Re-insert to move it to the young end. The page being read must
+            // never be the one evicted out from under its own iframe.
+            cache.delete(index)
+            cache.set(index, cached)
+            return Promise.resolve(cached.url)
+        }
+        const inFlight = pending.get(index)
+        if (inFlight) return inFlight
+        const job = pdf.getPage(index + 1)
+            .then(renderPage)
+            .then(entry => {
+                cache.set(index, entry)
+                evict()
+                return entry.url
+            })
+            .finally(() => pending.delete(index))
+        pending.set(index, job)
+        return job
+    }
+
+    // Renders the neighbours once the engine has a free moment, so that the
+    // common turn is a document swap rather than a rasterise, an encode, a text
+    // layer and an annotation layer. `requestIdleCallback` is what keeps this
+    // off the turn itself: it will not fire while frames are busy, so a fast
+    // flick does the prefetching after it stops rather than during.
+    const whenIdle = globalThis.requestIdleCallback
+        ? fn => globalThis.requestIdleCallback(fn, { timeout: 2000 })
+        : fn => setTimeout(fn, 300)
+
+    const prefetch = index => whenIdle(() => {
+        for (let offset = 1; offset <= prefetchRadius; offset++)
+            for (const neighbour of [index + offset, index - offset]) {
+                if (neighbour < 0 || neighbour >= pdf.numPages) continue
+                if (cache.has(neighbour) || pending.has(neighbour)) continue
+                render(neighbour).catch(e => console.error(e))
+            }
+    })
+
     book.sections = Array.from({ length: pdf.numPages }).map((_, i) => ({
         id: i,
         load: async () => {
-            const cached = cache.get(i)
-            if (cached) return cached
-            const url = await renderPage(await pdf.getPage(i + 1))
-            cache.set(i, url)
+            const url = await render(i)
+            prefetch(i)
             return url
         },
         size: 1000,
@@ -611,6 +723,13 @@ export const makePDF = async file => {
         return [index, null]
     }
     book.getTOCFragment = doc => doc.documentElement
-    book.getCover = async () => renderPage(await pdf.getPage(1), true)
+    book.getCover = async () => renderPageImage(await pdf.getPage(1))
+    // Matches the teardown `comic-book.js` and `fb2.js` already provide. Every
+    // page still resident goes back, along with pdf.js's own worker.
+    book.destroy = () => {
+        for (const entry of cache.values()) release(entry)
+        cache.clear()
+        pdf.destroy()
+    }
     return book
 }

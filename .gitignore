@@ -71,3 +71,8 @@ google_service_account.json
 # FVM Version Cache
 .fvm/
 .fvmrc
+
+# The reader's JavaScript build dependencies. `assets/foliate-js/dist/` is the
+# bundle the WebView actually loads and stays tracked; the tree that produces it
+# does not.
+node_modules/

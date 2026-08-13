@@ -1,3 +1,9 @@
+// How many recently shown sections keep hold of their resources before being
+// asked to give them back. Wide enough that turning a page and turning straight
+// back is free, narrow enough that reading a 400-page document does not end
+// with all 400 pages resident.
+const unloadKeepWindow = 6
+
 const parseViewport = str => str
     ?.split(/[,;\s]/) // NOTE: technically, only the comma is valid
     ?.filter(x => x)
@@ -41,6 +47,20 @@ export class FixedLayout extends HTMLElement {
     #right
     #center
     #side
+    // Two persistent frame slots, in DOM order. Every page turn used to call
+    // `replaceChildren` and build two fresh iframes, so a turn cost an element
+    // teardown and two document creations on top of loading the page itself.
+    // The slots are made once and navigated instead.
+    #slots = []
+    // Bumped by each `#showSpread`. A turn that arrives while an earlier one is
+    // still loading takes ownership of the slots, and the earlier one must not
+    // then announce a document that is no longer on screen.
+    #generation = 0
+    // Recently shown section indices, oldest first, so the ones left behind can
+    // be unloaded. `Paginator` already does this (paginator.js:1373); nothing
+    // here ever did, so a format whose sections hold resources - a CBZ holds a
+    // blob URL per page - never gave any of them back.
+    #shown = []
     constructor() {
         super()
 
@@ -56,7 +76,9 @@ export class FixedLayout extends HTMLElement {
 
         this.#observer.observe(this)
     }
-    async #createFrame(position, { index, src }) {
+    #slot(position) {
+        let slot = this.#slots[position]
+        if (slot) return slot
         const element = document.createElement('div')
         const iframe = document.createElement('iframe')
         element.append(iframe)
@@ -71,16 +93,29 @@ export class FixedLayout extends HTMLElement {
         iframe.setAttribute('scrolling', 'no')
         iframe.setAttribute('part', 'filter')
         this.#root.append(element)
-        if (!src) return { blank: true, element, iframe }
+        slot = { element, iframe }
+        this.#slots[position] = slot
+        return slot
+    }
+    // Navigates one slot and resolves once its document is up. Resolves null if
+    // a newer turn took the slots while this one was loading; every caller
+    // checks the generation immediately afterwards.
+    async #loadFrame(position, side, { index, src }, generation) {
+        const { element, iframe } = this.#slot(position)
+        if (!src) {
+            element.style.display = 'none'
+            return { blank: true, element, iframe }
+        }
         return new Promise(resolve => {
             const onload = () => {
                 iframe.removeEventListener('load', onload)
+                if (generation !== this.#generation) return resolve(null)
                 const doc = iframe.contentDocument
-                doc.position = position
+                doc.position = side
                 this.dispatchEvent(new CustomEvent('load', { detail: { doc, index } }))
                 const { width, height } = getViewport(doc, this.defaultViewport)
                 resolve({
-                    element, iframe,
+                    element, iframe, index,
                     width: parseFloat(width),
                     height: parseFloat(height),
                 })
@@ -88,6 +123,25 @@ export class FixedLayout extends HTMLElement {
             iframe.addEventListener('load', onload)
             iframe.src = src
         })
+    }
+    // Gives back sections that have been off screen for a while.
+    //
+    // A section that does not define `unload` - a PDF page, held by the bounded
+    // cache in pdf.js - keeps whatever policy it set for itself. One that does
+    // is unloaded, but not the instant it leaves: a CBZ page costs a decode out
+    // of the archive to bring back, and turning one page forward and one back
+    // should not pay for two of them. It is released once
+    // [unloadKeepWindow] other pages have been visited since.
+    #unloadDeparted(shown) {
+        for (const index of shown) {
+            const seen = this.#shown.indexOf(index)
+            if (seen !== -1) this.#shown.splice(seen, 1)
+            this.#shown.push(index)
+        }
+        while (this.#shown.length > unloadKeepWindow) {
+            const index = this.#shown.shift()
+            if (!shown.includes(index)) this.book?.sections?.[index]?.unload?.()
+        }
     }
     #render(side = this.#side) {
         if (!side) return
@@ -139,20 +193,31 @@ export class FixedLayout extends HTMLElement {
         }
     }
     async #showSpread({ left, right, center, side }) {
-        this.#root.replaceChildren()
-        this.#left = null
-        this.#right = null
-        this.#center = null
+        const generation = ++this.#generation
         if (center) {
-            this.#center = await this.#createFrame('center', center)
+            const frame = await this.#loadFrame(0, 'center', center, generation)
+            if (generation !== this.#generation) return
+            this.#slot(1).element.style.display = 'none'
+            this.#left = null
+            this.#right = null
+            this.#center = frame
             this.#side = 'center'
             this.#render()
+            this.#unloadDeparted([center.index])
         } else {
-            this.#left = await this.#createFrame('left', left)
-            this.#right = await this.#createFrame('right', right)
-            this.#side = this.#left.blank ? 'right'
-                : this.#right.blank ? 'left' : side
+            const first = await this.#loadFrame(0, 'left', left, generation)
+            if (generation !== this.#generation) return
+            const second = await this.#loadFrame(1, 'right', right, generation)
+            if (generation !== this.#generation) return
+            this.#center = null
+            this.#left = first
+            this.#right = second
+            this.#side = first.blank ? 'right'
+                : second.blank ? 'left' : side
             this.#render()
+            this.#unloadDeparted(
+                [left.src ? left.index : null, right.src ? right.index : null]
+                    .filter(index => index != null))
         }
     }
     #goLeft() {
@@ -221,7 +286,12 @@ export class FixedLayout extends HTMLElement {
     }
     get index() {
         const spread = this.#spreads[this.#index]
-        const section = spread?.center ?? (this.side === 'left'
+        // `this.side` was never a property - the field is private - so this
+        // read was always undefined and every spread reported its right-hand
+        // page. On a phone, where the two halves of a spread are shown one at
+        // a time, that is the page number being off by one for the whole of
+        // the left-hand page.
+        const section = spread?.center ?? (this.#side === 'left'
             ? spread.left ?? spread.right : spread.right ?? spread.left)
         return this.book.sections.indexOf(section)
     }
@@ -284,13 +354,24 @@ export class FixedLayout extends HTMLElement {
         else return this.goToSpread(this.#index - 1, this.rtl ? 'left' : 'right', 'page')
     }
     getContents() {
-        return Array.from(this.#root.querySelectorAll('iframe'), frame => ({
-            doc: frame.contentDocument,
-            // TODO: index, overlayer
-        }))
+        // Only what is actually on screen. The slots persist now, so a hidden
+        // one still holds the document it last showed, and handing that back
+        // would make `getContents()[0]` the page the reader has left.
+        return [this.#center, this.#left, this.#right]
+            .filter(frame => frame && !frame.blank && frame.iframe.contentDocument)
+            .map(({ iframe, index }) => ({
+                doc: iframe.contentDocument,
+                index,
+                // TODO: overlayer
+            }))
     }
     destroy() {
         this.#observer.unobserve(this)
+        for (const index of this.#shown)
+            this.book?.sections?.[index]?.unload?.()
+        this.#shown = []
+        this.#slots = []
+        this.#root.replaceChildren()
     }
 }
 
