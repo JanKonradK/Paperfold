@@ -1,5 +1,6 @@
 import 'package:paperfold/dao/base_dao.dart';
 import 'package:paperfold/dao/shelf.dart';
+import 'package:paperfold/enums/book_status.dart';
 import 'package:paperfold/models/book.dart';
 
 class BookDao extends BaseDao {
@@ -59,6 +60,24 @@ class BookDao extends BaseDao {
 
   Future<List<Book>> selectNotDeleteBooks() {
     return selectBooks(includeDeleted: false);
+  }
+
+  /// Books finished during [year], oldest first.
+  ///
+  /// The reading challenge counts these, and it fills its spines in the order
+  /// the reader finished them, so the order is part of the answer.
+  ///
+  /// `finished_on` holds an ISO 8601 string, so a year is a prefix match. A
+  /// book marked finished before migration version 8 has no date and is not
+  /// counted, because there is no year to count it in.
+  Future<List<Book>> selectFinishedInYear(int year) {
+    return queryList(
+      table,
+      mapper: Book.fromDb,
+      where: 'is_deleted = 0 AND status = ? AND finished_on LIKE ?',
+      whereArgs: [bookStatusFinished, '$year-%'],
+      orderBy: 'finished_on ASC, id ASC',
+    );
   }
 
   Future<Book> selectBookById(int id) async {
