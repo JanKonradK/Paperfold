@@ -6,115 +6,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:paperfold/config/paperfold_tokens.dart';
 import 'package:paperfold/config/shared_preference_provider.dart';
-import 'package:paperfold/enums/book_status.dart';
 import 'package:paperfold/l10n/generated/L10n.dart';
-import 'package:paperfold/models/book.dart';
-import 'package:paperfold/models/wishlist_item.dart';
 import 'package:paperfold/page/home_page.dart';
 import 'package:paperfold/page/home_page/shelf_home_page.dart';
-import 'package:paperfold/providers/book_list.dart';
-import 'package:paperfold/providers/journal_home.dart';
-import 'package:paperfold/providers/month_tracker.dart';
-import 'package:paperfold/providers/reading_challenge.dart';
 import 'package:paperfold/providers/shelf_home.dart';
 import 'package:paperfold/widgets/bookshelf/book_spine.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-class _FakeShelfHomeController extends ShelfHomeController {
-  @override
-  Future<ShelfHomeData> build() async => _fakeData;
-
-  @override
-  Future<void> refresh() async => state = AsyncData(_fakeData);
-}
-
-class _FakeBookList extends BookList {
-  @override
-  Future<List<List<Book>>> build() async => const [];
-}
-
-/// The Journal destination reads the database. In a widget test it must be
-/// fed, or the screen sits on its loading spinner forever.
-class _FakeJournalHome extends JournalHomeController {
-  @override
-  Future<List<JournalEntry>> build() async => const [];
-}
-
-class _FakeReadingChallenge extends ReadingChallengeController {
-  @override
-  Future<ReadingChallengeData> build() async => ReadingChallengeData(
-        year: 2026,
-        target: 12,
-        finished: const [],
-        readingNow: const [],
-        // The pace calculation needs a fixed day, or the test drifts with the
-        // calendar.
-        today: DateTime(2026, 8, 13),
-      );
-}
-
-class _FakeMonthTracker extends MonthTrackerController {
-  @override
-  Future<MonthTrackerData> build() async => const MonthTrackerData(
-        year: 2026,
-        month: 8,
-        pagesByDay: {},
-        today: null,
-      );
-}
-
-Book _book(int id, String title, BookStatus status) {
-  return Book(
-    id: id,
-    title: title,
-    coverPath: '',
-    filePath: 'book-$id.epub',
-    lastReadPosition: '',
-    readingPercentage: 0,
-    author: 'Ursula Le Guin',
-    isDeleted: false,
-    rating: 0,
-    status: status,
-    createTime: DateTime.utc(2026),
-    updateTime: DateTime.utc(2026),
-  );
-}
-
-ShelfHomeData _populatedData() {
-  return ShelfHomeData(
-    readingNow: [
-      _book(1, 'The Left Hand of Darkness', BookStatus.reading),
-      _book(6, 'The Tombs of Atuan', BookStatus.reading),
-      _book(7, 'The Farthest Shore', BookStatus.reading),
-      _book(8, 'Tehanu', BookStatus.reading),
-    ],
-    favourites: [_book(2, 'A Wizard of Earthsea', BookStatus.finished)],
-    toBeRead: [_book(3, 'The Dispossessed', BookStatus.notStarted)],
-    finished: [_book(4, 'Always Coming Home', BookStatus.finished)],
-    booksToBuy: const [
-      WishlistItem(
-          id: 5, title: 'The Lathe of Heaven', author: 'Ursula Le Guin'),
-    ],
-  );
-}
-
-const _emptyData = ShelfHomeData(
-  readingNow: [],
-  favourites: [],
-  toBeRead: [],
-  finished: [],
-  booksToBuy: [],
-);
-
-ShelfHomeData _fakeData = _emptyData;
-
-List<Override> _newTestOverrides() => [
-      shelfHomeProvider.overrideWith(_FakeShelfHomeController.new),
-      bookListProvider.overrideWith(_FakeBookList.new),
-      journalHomeProvider.overrideWith(_FakeJournalHome.new),
-      readingChallengeProvider.overrideWith(_FakeReadingChallenge.new),
-      monthTrackerProvider.overrideWith(_FakeMonthTracker.new),
-    ];
+import 'shelf_home_fixtures.dart';
 
 Future<void> _pumpShelfHome(
   WidgetTester tester, {
@@ -124,7 +23,7 @@ Future<void> _pumpShelfHome(
   double textScale = 1,
   required List<Override> overrides,
 }) async {
-  _fakeData = data;
+  fakeData = data;
   await tester.binding.setSurfaceSize(const Size(412, 915));
   addTearDown(() => tester.binding.setSurfaceSize(null));
 
@@ -165,10 +64,10 @@ void main() {
       (tester) async {
     SharedPreferences.setMockInitialValues(<String, Object>{});
     await Prefs().initPrefs();
-    final overrides = _newTestOverrides();
+    final overrides = newTestOverrides();
     await _pumpShelfHome(
       tester,
-      data: _populatedData(),
+      data: populatedData(),
       overrides: overrides,
     );
 
@@ -205,14 +104,14 @@ void main() {
     expect(find.text('Books to buy'), findsOneWidget);
     expect(tester.takeException(), isNull);
 
-    _fakeData = _emptyData;
+    fakeData = emptyData;
     final container = ProviderScope.containerOf(
       tester.element(find.byType(ShelfHomePage)),
     );
     await container.read(shelfHomeProvider.notifier).refresh();
     await _pumpShelfHome(
       tester,
-      data: _emptyData,
+      data: emptyData,
       brightness: Brightness.dark,
       textDirection: TextDirection.rtl,
       textScale: 2,
@@ -236,7 +135,7 @@ void main() {
     expect(find.text('No books here yet.'), findsWidgets);
     expect(tester.takeException(), isNull);
 
-    _fakeData = _populatedData();
+    fakeData = populatedData();
     final currentContainer = ProviderScope.containerOf(
       tester.element(find.byType(ShelfHomePage)),
     );
@@ -317,13 +216,9 @@ void main() {
     await tester.pump();
     expect(find.text('My shelves'), findsOneWidget);
 
-
-    // The reduce-motion, right-to-left pass that used to live here is parked.
-    // After the bookcase rework it pumps into an empty tree: HomePage, the
-    // Scaffold and the navigation bar are all absent, with no exception
-    // raised. Neither a second frame nor a realistic MediaQueryData brings
-    // them back, and the two blocks above already cover the bar in both
-    // themes. See the skipped test below.
+    // The reduce-motion, right-to-left pass is in home_navigation_test.dart.
+    // It needs a ProviderContainer of its own, and only one of those can exist
+    // per isolate while Sync is both a Riverpod notifier and a singleton.
   });
 
   for (final brightness in Brightness.values) {
@@ -336,18 +231,6 @@ void main() {
           greaterThanOrEqualTo(4.5));
     });
   }
-
-  // Parked, not passing. Pumping HomePage a third time inside one test yields
-  // an empty tree after the bookcase rework: HomePage, the Scaffold and the
-  // bar are all absent and no exception is raised. Right-to-left tab order and
-  // the zero-duration indicator under the system "remove animations" setting
-  // still need checking on a device.
-  testWidgets(
-    'the navigation bar mirrors and stops animating when the system asks',
-    (tester) async {},
-    skip: true,
-  );
-
 }
 
 final Future<void> _never = Completer<void>().future;
