@@ -31,11 +31,6 @@ class ContinueReadingTile extends StatisticsDashboardTileBase {
   bool get canFlip => false;
 
   @override
-  Widget buildCorner(BuildContext context, WidgetRef ref) {
-    return cornerIcon(context, Icons.play_circle_outline);
-  }
-
-  @override
   Widget buildContent(BuildContext context, WidgetRef ref) {
     final asyncValue = ref.watch(lastReadBookProvider);
 

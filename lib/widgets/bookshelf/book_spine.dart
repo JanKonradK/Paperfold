@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:paperfold/config/paperfold_tokens.dart';
+import 'package:paperfold/service/spine_art.dart';
 import 'package:paperfold/utils/log/common.dart';
 
 class BookSpineVisual {
@@ -32,7 +33,7 @@ class BookSpineVisual {
   final double leanRadians;
 }
 
-class BookSpine extends StatelessWidget {
+class BookSpine extends StatefulWidget {
   const BookSpine({
     super.key,
     required this.stableId,
@@ -43,7 +44,13 @@ class BookSpine extends StatelessWidget {
     this.onLongPress,
     this.longPressHint,
     this.uniform = false,
+    this.coverPath,
   });
+
+  /// The book's cover file. A spine with one wears a strip of its own art; a
+  /// spine without one - a wishlist entry, or a book whose cover failed to
+  /// extract - falls back to the derived bookcloth.
+  final String? coverPath;
 
   static const double minimumWidth = 48;
   static const double maximumWidth = 64;
@@ -154,6 +161,9 @@ class BookSpine extends StatelessWidget {
   final VoidCallback? onLongPress;
   final String? longPressHint;
   final bool uniform;
+
+  @override
+  State<BookSpine> createState() => _BookSpineState();
 
   static int stableHash(String value) {
     var hash = 2166136261;
@@ -276,10 +286,74 @@ class BookSpine extends StatelessWidget {
     return fixedFurniture + maximumHeight * layoutScale(textScaler);
   }
 
+}
+
+class _BookSpineState extends State<BookSpine> {
+  SpineArt? _art;
+
+  String get stableId => widget.stableId;
+  String get title => widget.title;
+  String get author => widget.author;
+  String get semanticLabel => widget.semanticLabel;
+  VoidCallback get onTap => widget.onTap;
+  VoidCallback? get onLongPress => widget.onLongPress;
+  String? get longPressHint => widget.longPressHint;
+  bool get uniform => widget.uniform;
+
+  @override
+  void initState() {
+    super.initState();
+    _resolveArt();
+  }
+
+  @override
+  void didUpdateWidget(covariant BookSpine oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.coverPath != widget.coverPath) {
+      _art = null;
+      _resolveArt();
+    }
+  }
+
+  /// A cover already decoded is taken synchronously, so a shelf that has been
+  /// seen once never blinks back to the fallback cloth while it scrolls.
+  void _resolveArt() {
+    final path = widget.coverPath;
+    if (path == null || path.isEmpty) return;
+    final ready = SpineArtCache.peek(path);
+    if (ready != null) {
+      _art = ready;
+      return;
+    }
+    SpineArtCache.load(path).then((art) {
+      if (!mounted || art == null || widget.coverPath != path) return;
+      setState(() => _art = art);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final visual = resolveVisual(stableId, theme.colorScheme);
+    final art = _art;
+    // The cover, when there is one, decides both the field and the title
+    // colour. The hashed cloth stays as the fallback and still supplies every
+    // structural detail: the bands, the hubs, the lean, the grain seed.
+    final base = BookSpine.resolveVisual(stableId, theme.colorScheme);
+    final visual = art == null
+        ? base
+        : BookSpineVisual(
+            width: base.width,
+            height: base.height,
+            background: art.average,
+            foreground: art.foreground,
+            contrastRatio: SpineArtCache.contrast(art.foreground, art.average),
+            hasBands: base.hasBands,
+            hasRoundedHead: base.hasRoundedHead,
+            hasFoilRules: base.hasFoilRules,
+            hubCount: base.hubCount,
+            grainSeed: base.grainSeed,
+            leanRadians: base.leanRadians,
+          );
     final isRtl = Directionality.of(context) == TextDirection.rtl;
     final textScaler = MediaQuery.textScalerOf(context);
     final titleStyle = (theme.textTheme.titleSmall ?? const TextStyle())
@@ -288,10 +362,13 @@ class BookSpine extends StatelessWidget {
         .copyWith(color: visual.foreground, fontWeight: FontWeight.w600);
     final authorSize = authorStyle.fontSize ?? 11;
     final showAuthor = author.trim().isNotEmpty;
-    final dimensionScale = layoutScale(textScaler);
-    final height = (uniform ? uniformHeight : visual.height) * dimensionScale;
-    final metadataTextScaler = legibleTextScaler(textScaler, authorSize);
-    final baseWidth = (uniform ? uniformWidth : visual.width) * dimensionScale;
+    final dimensionScale = BookSpine.layoutScale(textScaler);
+    final height =
+        (uniform ? BookSpine.uniformHeight : visual.height) * dimensionScale;
+    final metadataTextScaler =
+        BookSpine.legibleTextScaler(textScaler, authorSize);
+    final baseWidth =
+        (uniform ? BookSpine.uniformWidth : visual.width) * dimensionScale;
     final width = baseWidth;
     final lean = uniform ? 0.0 : visual.leanRadians * (isRtl ? -1 : 1);
     final leanInset = lean == 0 ? 0.0 : 8.0 * dimensionScale;
@@ -341,6 +418,7 @@ class BookSpine extends StatelessWidget {
             painter: _BookSpinePainter(
               visual: visual,
               isRtl: isRtl,
+              art: art,
             ),
             child: text,
           ),
@@ -359,10 +437,13 @@ class BookSpine extends StatelessWidget {
           message: semanticLabel,
           child: SizedBox(
             width: width + leanInset * 2,
-            height: height + contactShadowDepth,
+            height: height + BookSpine.contactShadowDepth,
             child: CustomPaint(
               painter: _BookContactShadowPainter(
-                color: PaperfoldTokens.wood(theme.brightness).back,
+                // The shadow the book drops onto the glass it stands on. It
+                // used to take the colour of the walnut carcass behind it,
+                // which no longer exists.
+                color: theme.colorScheme.shadow,
                 spineWidth: width,
               ),
               child: Align(
@@ -385,6 +466,7 @@ class _BookSpinePainter extends CustomPainter {
   _BookSpinePainter({
     required this.visual,
     required this.isRtl,
+    this.art,
   })  : edgePaint = Paint()
           ..color = visual.foreground.withValues(alpha: 0.14)
           ..strokeWidth = 2,
@@ -413,6 +495,7 @@ class _BookSpinePainter extends CustomPainter {
 
   final BookSpineVisual visual;
   final bool isRtl;
+  final SpineArt? art;
   final Paint edgePaint;
   final Paint highlightPaint;
   final Paint detailPaint;
@@ -424,7 +507,46 @@ class _BookSpinePainter extends CustomPainter {
     _paintUpright(canvas, size);
   }
 
+  /// Wraps the cover's leading edge around onto the spine.
+  ///
+  /// The slice is a fifth of the cover, stretched across the spine's width, so
+  /// what shows is the part of the jacket that really does wrap around a
+  /// hardback's hinge. Stretching a handful of pixels this far is soft on
+  /// purpose: it reads as printed cloth rather than as a thumbnail.
+  ///
+  /// A veil of the slice's own average colour goes over it afterwards. It
+  /// keeps the hue and the banding of the art while pulling every pixel toward
+  /// the colour the title was tested against, so a busy cover cannot leave the
+  /// title below 4.5:1 in one corner.
+  bool _paintCoverStrip(Canvas canvas, Size size) {
+    final source = art;
+    if (source == null) return false;
+    final image = source.strip;
+    final sliceWidth =
+        (image.width * SpineArtCache.stripFraction).clamp(1.0, image.width * 1.0);
+    final src = isRtl
+        ? Rect.fromLTWH(
+            image.width - sliceWidth, 0, sliceWidth, image.height.toDouble())
+        : Rect.fromLTWH(0, 0, sliceWidth, image.height.toDouble());
+
+    canvas.drawImageRect(
+      image,
+      src,
+      Offset.zero & size,
+      Paint()..filterQuality = FilterQuality.low,
+    );
+    canvas.drawRect(
+      Offset.zero & size,
+      Paint()..color = source.average.withValues(alpha: 0.52),
+    );
+    return true;
+  }
+
   void _paintUpright(Canvas canvas, Size size) {
+    if (_paintCoverStrip(canvas, size)) {
+      _paintSpineDetail(canvas, size);
+      return;
+    }
     // A spine is a curved surface, not a card. One gradient across the width
     // does more for that read than any amount of line work: the outer edges
     // fall away, and a soft band of light sits just off centre.
@@ -449,6 +571,13 @@ class _BookSpinePainter extends CustomPainter {
         ).createShader(sheenRect),
     );
 
+    _paintSpineDetail(canvas, size);
+  }
+
+  /// Everything that is not the field: the label, the bands, the hubs, the
+  /// foil and the edges. Shared, so a spine wearing cover art keeps exactly
+  /// the same construction as one wearing the fallback cloth.
+  void _paintSpineDetail(Canvas canvas, Size size) {
     // A label pasted on the spine, behind the title. Two books in three carry
     // one, chosen from the same stable seed so it never changes between runs.
     if (visual.grainSeed % 3 != 0) {

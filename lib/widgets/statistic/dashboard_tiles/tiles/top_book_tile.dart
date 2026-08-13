@@ -26,11 +26,6 @@ class TopBookTile extends StatisticsDashboardTileBase {
       );
 
   @override
-  Widget buildCorner(BuildContext context, WidgetRef ref) {
-    return cornerIcon(context, Icons.favorite);
-  }
-
-  @override
   Widget buildContent(
     BuildContext context,
     WidgetRef ref,

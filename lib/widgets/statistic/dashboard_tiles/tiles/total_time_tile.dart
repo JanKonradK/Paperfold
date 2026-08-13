@@ -23,11 +23,6 @@ class TotalTimeTile extends StatisticsDashboardTileBase {
       );
 
   @override
-  Widget buildCorner(BuildContext context, WidgetRef ref) {
-    return cornerIcon(context, metadata.icon);
-  }
-
-  @override
   String get title => metadata.title;
 
   @override
