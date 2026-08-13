@@ -883,8 +883,23 @@ Do not optimize a screen that meets one.
 **Milestone 6 — Settings and translate: the inherited screens**
 - These screens work. They do not look like Paperfold. Restyle, do not rewrite.
 - Split `lib/page/settings_page` (204 KB) into lazy routes (Section 11.2).
+  **Done.** Each row carries a `WidgetBuilder`, not a built screen, so a
+  settings screen exists only after the reader opens it.
+- **The settings shell was iOS.** `CupertinoPageScaffold`,
+  `CupertinoSliverNavigationBar` and `CupertinoPageRoute` inside a Material
+  application. Replaced with `Scaffold`, `SliverAppBar.large` and
+  `MaterialPageRoute`. Section 5.3 asks for Material behaviour, and an iOS
+  navigation bar is not a custom appearance, it is another platform.
+- **The settings page still said "Anx" at 130 points.** It now carries the
+  Paperfold mark and name.
+- The six settings section screens keep their own inherited layouts. Only the
+  shell around them changed.
 - Give translate the book treatment: a reading control that belongs on
-  a page, not a floating panel from another application.
+  a page, not a floating panel from another application. **Done at the panel.**
+  The passage now takes the book's own voice and the reader's text size, the
+  two language pickers are real buttons with 48 dp targets instead of bare
+  text in a gesture detector, and a translation in flight says so instead of
+  showing three dots that a screen reader passes over.
 - Run `/impeccable critique` on each inherited screen before you touch it.
   It tells you what to change. Restyling without that step reproduces the
   original layout in new colors.

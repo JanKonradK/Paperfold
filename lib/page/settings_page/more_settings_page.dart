@@ -9,9 +9,7 @@ import 'package:paperfold/page/settings_page/storege.dart';
 import 'package:paperfold/page/settings_page/sync.dart';
 import 'package:paperfold/page/settings_page/translate.dart';
 import 'package:paperfold/widgets/settings/about.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:icons_plus/icons_plus.dart';
 
 class MoreSettings extends StatelessWidget {
   const MoreSettings({super.key});
@@ -25,9 +23,9 @@ class MoreSettings extends StatelessWidget {
       onTap: () {
         Navigator.push(
           context,
-          CupertinoPageRoute(
-              fullscreenDialog: false,
-              builder: (context) => const SubMoreSettings()),
+          MaterialPageRoute<void>(
+            builder: (context) => const SubMoreSettings(),
+          ),
         );
       },
     );
@@ -43,7 +41,7 @@ class SubMoreSettings extends StatefulWidget {
 
 class _SubMoreSettingsState extends State<SubMoreSettings> {
   int selectedIndex = 0;
-  Widget? settingsDetail;
+  WidgetBuilder? settingsDetail;
 
   @override
   void didChangeDependencies() {
@@ -71,7 +69,7 @@ class _SubMoreSettingsState extends State<SubMoreSettings> {
               {
                 "title": L10n.of(context).settingsAppearance,
                 "icon": Icons.color_lens_outlined,
-                "sections": const AppearanceSetting(),
+                "sections": (BuildContext context) => const AppearanceSetting(),
                 "subtitles": [
                   L10n.of(context).settingsAppearanceTheme,
                   L10n.of(context).settingsAppearanceDisplay,
@@ -81,7 +79,7 @@ class _SubMoreSettingsState extends State<SubMoreSettings> {
               {
                 "title": L10n.of(context).settingsReading,
                 "icon": Icons.book_rounded,
-                "sections": const ReadingSettings(),
+                "sections": (BuildContext context) => const ReadingSettings(),
                 "subtitles": [
                   L10n.of(context).readingPageReading,
                   L10n.of(context).downloadFonts,
@@ -92,7 +90,7 @@ class _SubMoreSettingsState extends State<SubMoreSettings> {
               {
                 "title": L10n.of(context).settingsSync,
                 "icon": Icons.sync_outlined,
-                "sections": const SyncSetting(),
+                "sections": (BuildContext context) => const SyncSetting(),
                 "subtitles": [
                   L10n.of(context).settingsSyncWebdav,
                   L10n.of(context).exportAndImport,
@@ -101,7 +99,7 @@ class _SubMoreSettingsState extends State<SubMoreSettings> {
               {
                 "title": L10n.of(context).settingsTranslate,
                 "icon": Icons.translate_outlined,
-                "sections": const TranslateSetting(),
+                "sections": (BuildContext context) => const TranslateSetting(),
                 "subtitles": [
                   L10n.of(context).settingsTranslate,
                 ],
@@ -109,7 +107,7 @@ class _SubMoreSettingsState extends State<SubMoreSettings> {
               {
                 "title": L10n.of(context).storage,
                 "icon": Icons.storage_outlined,
-                "sections": const StorageSettings(),
+                "sections": (BuildContext context) => const StorageSettings(),
                 "subtitles": [
                   L10n.of(context).storageInfo,
                   L10n.of(context).storageDataFileDetails,
@@ -118,7 +116,7 @@ class _SubMoreSettingsState extends State<SubMoreSettings> {
               {
                 "title": L10n.of(context).settingsAdvanced,
                 "icon": Icons.shield_outlined,
-                "sections": const AdvancedSetting(),
+                "sections": (BuildContext context) => const AdvancedSetting(),
                 "subtitles": [
                   L10n.of(context).chapterSplitting,
                   L10n.of(context).settingsAdvancedLog,
@@ -129,13 +127,15 @@ class _SubMoreSettingsState extends State<SubMoreSettings> {
               },
             ];
 
-            settingsDetail ??= SettingsPageBody(
-              isMobile: false,
-              title: settings[0]["title"],
-              sections: settings[0]["sections"],
-            );
+            // The wide layout still shows one screen at a time, so it holds
+            // the builder rather than a built screen.
+            settingsDetail ??= (BuildContext context) => SettingsPageBody(
+                  isMobile: false,
+                  title: settings[0]["title"],
+                  sections: settings[0]["sections"],
+                );
 
-            void setDetail(Widget detail, int id) {
+            void setDetail(WidgetBuilder detail, int id) {
               setState(() {
                 settingsDetail = detail;
                 selectedIndex = id;
@@ -167,7 +167,7 @@ class _SubMoreSettingsState extends State<SubMoreSettings> {
                     onTap: () {
                       Navigator.push(
                         context,
-                        CupertinoPageRoute(
+                        MaterialPageRoute<void>(
                           builder: (context) => const DeveloperOptionsPage(),
                         ),
                       );
@@ -191,7 +191,7 @@ class _SubMoreSettingsState extends State<SubMoreSettings> {
                   const VerticalDivider(thickness: 1, width: 1),
                   Expanded(
                     flex: 2,
-                    child: settingsDetail!,
+                    child: Builder(builder: settingsDetail!),
                   ),
                 ],
               );
