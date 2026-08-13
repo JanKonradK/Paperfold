@@ -94,6 +94,43 @@ class OpdsClient {
     }
   }
 
+  /// Downloads [url] to [savePath] and returns the file.
+  ///
+  /// The caller hands the result to the existing import path, which already
+  /// knows how to read a book file. plan.md Section 9.2: the import path
+  /// exists, so point it at a downloaded file.
+  Future<void> download(
+    OpdsCatalog catalog,
+    Uri url,
+    String savePath, {
+    void Function(int received, int total)? onProgress,
+  }) async {
+    try {
+      final Response<dynamic> response = await _dio.downloadUri(
+        url,
+        savePath,
+        onReceiveProgress: onProgress,
+        options: Options(
+          headers: await _authorization(catalog),
+          validateStatus: (int? status) => true,
+        ),
+      );
+
+      final int status = response.statusCode ?? 0;
+      if (status == 401 || status == 403) {
+        throw OpdsException(OpdsFailure.unauthorized, statusCode: status);
+      }
+      if (status == 404 || status == 410) {
+        throw OpdsException(OpdsFailure.notFound, statusCode: status);
+      }
+      if (status < 200 || status >= 300) {
+        throw OpdsException(OpdsFailure.server, statusCode: status);
+      }
+    } on DioException catch (error) {
+      throw OpdsException(OpdsFailure.network, detail: error.message);
+    }
+  }
+
   /// The Authorization header for [catalog], or nothing.
   ///
   /// A catalog set to Basic with no stored password sends no header. The
