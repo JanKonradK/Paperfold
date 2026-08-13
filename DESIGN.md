@@ -226,9 +226,11 @@ The shelf list uses a 12dp directional gutter, an 8dp top inset, and a 32dp end 
 
 Each section has 16dp inner side padding. The first section has 20dp top padding. The 48dp-minimum header has a 6dp gap before the shelf stage.
 
-The shelf stage is 318dp high. The painter uses 14dp side panels, a 20dp top rail, and a 28dp shelf board. The front lip is 8dp high.
+The shelf stage is the sum of its parts, not a round number: a 10dp top inset, an 11dp top board, the tallest spine, a 12dp reflection, and a 2dp bottom inset. It grows only with accessibility text.
 
-Spines scroll horizontally and stay on the shelf board. Separate spine targets have an 8dp gap.
+The glass is 14dp deep at the foot of the stage. It has an 11dp receding deck, a 9dp plate, a 4dp metal nosing along its front edge, and two hairlines. A book's base sits on the plate's top line and its reflection runs down into the glass.
+
+Spines scroll horizontally and stand on the plate. Adjacent spines are separated by a 2dp hairline rather than the usual 8dp, which is recorded with its reasoning in `book_spine.dart`.
 
 The collection uses a responsive grid. Its maximum item width is 190dp and its item height is 310dp. The cross-axis gap is 16dp. The main-axis gap is 24dp.
 
@@ -278,7 +280,7 @@ Material controls, menus, sheets, and dialogs can use standard Material elevatio
 
 The system combines grounded books with softly rounded modern chrome.
 
-- An upright spine is square or has only 5dp top corners.
+- An upright spine is square. It has a painted top board above it instead of a rounded head.
 - A horizontal spine and a shelf rail use a 3dp radius.
 - Cover art uses a 10dp radius.
 - Shelf headers, count badges, wishlist covers, and cover-tile targets use a 12dp radius.
@@ -291,7 +293,7 @@ The ornament set contains an oval floral frame, a rectangular vine frame, a corn
 
 Decorative ornaments are excluded from semantics. Add a semantic label only when the ornament gives information.
 
-**The Grounded-Spine Rule.** Round the top of a spine. Keep the bottom flush with the shelf.
+**The Grounded-Spine Rule.** Give a spine a top board, not a rounded head. Stand its base on the glass and let it throw a reflection.
 
 **The Single-Tint Rule.** Apply one semantic color to each ornament. Do not put a background into the SVG asset.
 
@@ -299,13 +301,26 @@ Decorative ornaments are excluded from semantics. Add a semantic label only when
 
 ### Bookshelf section
 
-A shelf section contains one glass header and one bookcase bay. The five bays join to make one piece of furniture.
+A shelf section contains one glass header and one sheet of shelf glass. The five sheets join to make one piece of furniture.
 
 The header is one semantic button. It combines the shelf name, count, and directional chevron in its semantic label.
 
 The header has a 12dp radius and a blur sigma of 10. Its internal padding is 8dp horizontally and 6dp vertically.
 
 The count uses `primaryContainer`, `onPrimaryContainer`, a 12dp radius, and 9dp by 4dp padding.
+
+### Leading book
+
+The first book on every shelf stands face out: its front cover, a 20dp slice of
+its spine, and the top board across both, drawn as a real corner view rather
+than a flat thumbnail. A row of nothing but spines shows no cover art at all,
+and cover art is most of how a book is recognised.
+
+The projection is oblique rather than perspective, so the two faces meet along
+their shared edge exactly. A book with no extracted art takes the same cloth and
+tested title colour its spine would have taken, never the hashed colour the
+cover-thumbnail component generates: that belongs to a grid of thumbnails, not
+to this row.
 
 ### Book spine
 

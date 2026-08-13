@@ -13,7 +13,6 @@ class BookSpineVisual {
     required this.foreground,
     required this.contrastRatio,
     required this.hasBands,
-    required this.hasRoundedHead,
     required this.hasFoilRules,
     required this.hubCount,
     required this.grainSeed,
@@ -26,7 +25,6 @@ class BookSpineVisual {
   final Color foreground;
   final double contrastRatio;
   final bool hasBands;
-  final bool hasRoundedHead;
   final bool hasFoilRules;
   final int hubCount;
   final int grainSeed;
@@ -73,7 +71,39 @@ class BookSpine extends StatefulWidget {
   static const double uniformHeight = maximumHeight;
   static const double contactShadowDepth = 6;
   static const double minimumEffectiveTextSize = 11;
-  static const double _baseShelfStageHeight = 318;
+
+  /// The shelf is seen from slightly above and slightly to the leading side,
+  /// and every book on it shares that one camera.
+  ///
+  /// A true vanishing point per shelf would make each book's projection depend
+  /// on where it sits along the row, so a spine would visibly rotate as it
+  /// scrolled past. A single fixed angle - an axonometric projection, not a
+  /// perspective one - is stable under scroll, costs one parallelogram per
+  /// book, and is what a shelf photographed from one spot actually looks like.
+  ///
+  /// [topFaceDepth] is the pitch: how much of the book's top board shows.
+  /// [topFaceShear] is the yaw: how far the far edge slides toward the
+  /// trailing side. Adjacent top faces are parallel, so they tile along the
+  /// row the way real books do.
+  static const double topFaceDepth = 11;
+  static const double topFaceShear = 7;
+
+  /// How far a book's reflection reaches down into the glass it stands on.
+  static const double reflectionDepth = 12;
+
+  /// The whole vertical extent a spine occupies beyond its own face: its top
+  /// board above and its reflection below. The contact shadow is not here
+  /// because it is painted over the foot of the book rather than under it.
+  static const double verticalFurniture = topFaceDepth + reflectionDepth;
+
+  /// The stage's own insets, above the top board and below the reflection.
+  ///
+  /// These two, [reflectionDepth] and `GlassShelfPainter.plateInset` are one
+  /// arrangement and have to agree: the bottom inset is the plate inset less
+  /// the reach of the reflection, which puts a book's base exactly on the
+  /// plate's top line with its reflection running down into the glass.
+  static const double stageTopInset = 10;
+  static const double stageBottomInset = 2;
 
   static final List<Color> _bookclothBackgrounds = List<Color>.unmodifiable([
     PaperfoldTokens.cover.ground,
@@ -255,7 +285,6 @@ class BookSpine extends StatefulWidget {
         foreground: foreground,
         contrastRatio: bestContrast,
         hasBands: ((hash >> 3) & 1) == 0,
-        hasRoundedHead: ((hash >> 4) & 1) == 0,
         hasFoilRules: ((hash >> 5) & 3) != 0,
         hubCount: ((hash >> 12) % 4) == 0 ? 3 : 0,
         grainSeed: (hash >> 16) & 255,
@@ -280,9 +309,12 @@ class BookSpine extends StatefulWidget {
     return math.max(1, textScaler.scale(16) / 16);
   }
 
-  /// The standard 318 dp bay grows only when accessibility text grows.
+  /// The bay a shelf's books stand in. It grows only when accessibility text
+  /// grows, and it is the sum of its parts rather than a round number: the
+  /// insets, the top board, the tallest spine and the reflection.
   static double shelfStageHeight(TextScaler textScaler) {
-    final fixedFurniture = _baseShelfStageHeight - maximumHeight;
+    final fixedFurniture =
+        stageTopInset + verticalFurniture + stageBottomInset;
     return fixedFurniture + maximumHeight * layoutScale(textScaler);
   }
 
@@ -348,7 +380,6 @@ class _BookSpineState extends State<BookSpine> {
             foreground: art.foreground,
             contrastRatio: SpineArtCache.contrast(art.foreground, art.average),
             hasBands: base.hasBands,
-            hasRoundedHead: base.hasRoundedHead,
             hasFoilRules: base.hasFoilRules,
             hubCount: base.hubCount,
             grainSeed: base.grainSeed,
@@ -405,11 +436,11 @@ class _BookSpineState extends State<BookSpine> {
         key: ValueKey('book-spine-surface-$stableId'),
         color: visual.background,
         clipBehavior: Clip.antiAlias,
-        shape: RoundedRectangleBorder(
-          borderRadius: visual.hasRoundedHead
-              ? const BorderRadius.vertical(top: Radius.circular(5))
-              : BorderRadius.zero,
-        ),
+        // Square, always. A rounded head was the old way of suggesting that a
+        // spine had a top; there is a real top board above it now, and a
+        // rounded corner under a flat board reads as a gap rather than as
+        // craft.
+        shape: const RoundedRectangleBorder(),
         child: InkWell(
           onTap: onTap,
           onLongPress: onLongPress,
@@ -437,21 +468,29 @@ class _BookSpineState extends State<BookSpine> {
           message: semanticLabel,
           child: SizedBox(
             width: width + leanInset * 2,
-            height: height + BookSpine.contactShadowDepth,
+            height: height + BookSpine.verticalFurniture,
             child: CustomPaint(
-              painter: _BookContactShadowPainter(
-                // The shadow the book drops onto the glass it stands on. It
-                // used to take the colour of the walnut carcass behind it,
-                // which no longer exists.
-                color: theme.colorScheme.shadow,
+              painter: _BookPresencePainter(
+                // Everything the book is beyond its spine: the top board it is
+                // seen slightly above, the shadow it drops where it meets the
+                // glass, and what the glass gives back.
+                shadow: theme.colorScheme.shadow,
+                surface: theme.colorScheme.surface,
                 spineWidth: width,
+                spineHeight: height,
+                visual: visual,
+                art: art,
+                isRtl: isRtl,
               ),
               child: Align(
                 alignment: Alignment.topCenter,
-                child: Transform.rotate(
-                  angle: lean,
-                  alignment: Alignment.bottomCenter,
-                  child: paintedSpine,
+                child: Padding(
+                  padding: const EdgeInsets.only(top: BookSpine.topFaceDepth),
+                  child: Transform.rotate(
+                    angle: lean,
+                    alignment: Alignment.bottomCenter,
+                    child: paintedSpine,
+                  ),
                 ),
               ),
             ),
@@ -671,21 +710,200 @@ class _BookSpinePainter extends CustomPainter {
   }
 }
 
-class _BookContactShadowPainter extends CustomPainter {
-  const _BookContactShadowPainter({
-    required this.color,
+/// The book beyond its spine face: the top board, the contact shadow, and the
+/// reflection in the glass.
+///
+/// All three are drawn by one painter over the whole widget box, so a book
+/// costs one extra painter rather than three, and the reflection can reach
+/// below the book's base into the plate without any of it being clipped.
+class _BookPresencePainter extends CustomPainter {
+  const _BookPresencePainter({
+    required this.shadow,
+    required this.surface,
     required this.spineWidth,
+    required this.spineHeight,
+    required this.visual,
+    required this.isRtl,
+    this.art,
   });
 
-  final Color color;
+  final Color shadow;
+  final Color surface;
   final double spineWidth;
+  final double spineHeight;
+  final BookSpineVisual visual;
+  final bool isRtl;
+  final SpineArt? art;
 
   @override
   void paint(Canvas canvas, Size size) {
-    final left = (size.width - spineWidth) / 2 + 3;
+    final left = (size.width - spineWidth) / 2;
+    _paintTopBoard(canvas, left);
+    _paintReflection(canvas, left);
+    _paintContactShadow(canvas, size, left);
+  }
+
+  /// The top of a closed book is its page block, bound at the spine edge by
+  /// the top board of the cover. Seen from slightly above and slightly to one
+  /// side it is a parallelogram, and every book on the shelf shares the angle,
+  /// so the boards tile along the row.
+  void _paintTopBoard(Canvas canvas, double left) {
+    final shear = isRtl ? -BookSpine.topFaceShear : BookSpine.topFaceShear;
+    final near = BookSpine.topFaceDepth;
+    final board = Path()
+      ..moveTo(left, near)
+      ..lineTo(left + spineWidth, near)
+      ..lineTo(left + spineWidth + shear, 0)
+      ..lineTo(left + shear, 0)
+      ..close();
+
+    // Page edges. Tinted toward the book's own cloth and kept well down the
+    // luminance range: a board is a surface angled away from the light, and a
+    // bright cream cap on every book turns a shelf into a row of lidded boxes.
+    final paper = Color.lerp(_pageBlock, visual.background, 0.34)!;
+    final bounds = Rect.fromLTWH(
+      left + math.min(0.0, shear),
+      0,
+      spineWidth + shear.abs(),
+      near,
+    );
+    canvas.drawPath(
+      board,
+      Paint()
+        ..shader = LinearGradient(
+          begin: Alignment.bottomCenter,
+          end: Alignment.topCenter,
+          colors: [
+            Color.lerp(paper, Colors.black, 0.42)!,
+            Color.lerp(paper, Colors.black, 0.12)!,
+          ],
+        ).createShader(bounds),
+    );
+
+    // The leaves. A handful of hairlines running the depth of the board is
+    // enough to read as paper rather than as a blank facet.
+    final leaves = Paint()
+      ..color = Color.lerp(paper, Colors.black, 0.52)!.withValues(alpha: 0.5)
+      ..strokeWidth = 0.6;
+    canvas.save();
+    canvas.clipPath(board);
+    for (var index = 1; index < 5; index++) {
+      final x = left + spineWidth * index / 5;
+      canvas.drawLine(Offset(x, near), Offset(x + shear, 0), leaves);
+    }
+    canvas.restore();
+  }
+
+  /// What the glass gives back.
+  ///
+  /// A mirrored slice of the book's own base rather than a generic sheen, so a
+  /// red book throws back red. It fades into the page ground rather than into
+  /// transparency, which keeps it to one draw with no save layer: an
+  /// intermediate buffer per spine is the kind of cost that only shows up as a
+  /// dropped frame while the shelf is being flung.
+  void _paintReflection(Canvas canvas, double left) {
+    final base = BookSpine.topFaceDepth + spineHeight;
     final rect = Rect.fromLTWH(
       left,
-      size.height - BookSpine.contactShadowDepth,
+      base,
+      spineWidth,
+      BookSpine.reflectionDepth,
+    );
+
+    canvas.save();
+    canvas.clipRect(rect);
+    // Mirror about the book's base. The clip above is in the untransformed
+    // space, so it still bounds the reflection to the glass below the book.
+    canvas.translate(0, base * 2);
+    canvas.scale(1, -1);
+
+    final source = art;
+    // Drawn where the foot of the book is, not where the reflection goes: the
+    // mirror above is what carries it down into the glass.
+    final mirrored = Rect.fromLTWH(
+      left,
+      base - BookSpine.reflectionDepth,
+      spineWidth,
+      BookSpine.reflectionDepth,
+    );
+    if (source != null) {
+      final image = source.strip;
+      final sliceWidth =
+          (image.width * SpineArtCache.stripFraction).clamp(1.0, image.width * 1.0);
+      // The bottom of the strip, which is the bottom of the spine.
+      final sliceHeight = image.height *
+          (BookSpine.reflectionDepth / math.max(1.0, spineHeight));
+      canvas.drawImageRect(
+        image,
+        Rect.fromLTWH(
+          isRtl ? image.width - sliceWidth : 0,
+          image.height - sliceHeight,
+          sliceWidth,
+          sliceHeight,
+        ),
+        mirrored,
+        Paint()
+          ..filterQuality = FilterQuality.low
+          // The paint's alpha modulates the image.
+          ..color = const Color(0xFFFFFFFF).withValues(alpha: _strength),
+      );
+    } else {
+      // No cover to mirror, so mirror the sheen the spine paints instead. A
+      // flat rectangle of the background colour is not a reflection of
+      // anything - it reads as the book having a skirt.
+      canvas.drawRect(
+        mirrored,
+        Paint()
+          ..shader = LinearGradient(
+            begin: isRtl ? Alignment.centerRight : Alignment.centerLeft,
+            end: isRtl ? Alignment.centerLeft : Alignment.centerRight,
+            colors: [
+              Color.lerp(visual.background, visual.foreground, 0.14)!
+                  .withValues(alpha: _strength),
+              visual.background.withValues(alpha: _strength),
+              Color.lerp(visual.background, PaperfoldTokens.cover.foil, 0.06)!
+                  .withValues(alpha: _strength),
+              Color.lerp(visual.background, visual.foreground, 0.10)!
+                  .withValues(alpha: _strength),
+            ],
+            stops: const [0, 0.3, 0.63, 1],
+          ).createShader(mirrored),
+      );
+    }
+    canvas.restore();
+
+    // Fade it into the ground. Painting the ground colour over the top is the
+    // same result as fading to transparent, without the layer. It stays clear
+    // for the first third so the reflection has somewhere to be at full
+    // strength - a fade that starts at the book's foot leaves nothing to see.
+    canvas.drawRect(
+      rect,
+      Paint()
+        ..shader = LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            surface.withValues(alpha: 0),
+            surface.withValues(alpha: 0.35),
+            surface,
+          ],
+          stops: const [0, 0.35, 1],
+        ).createShader(rect),
+    );
+  }
+
+  /// How present the reflection is against the book itself.
+  ///
+  /// The glass is dark in the dark theme and warm paper in the light one, and
+  /// at a fifth the reflection disappeared into both. This is a surface
+  /// treatment, never a text background, so it carries no contrast duty.
+  static const double _strength = 0.42;
+
+  void _paintContactShadow(Canvas canvas, Size size, double left) {
+    final base = BookSpine.topFaceDepth + spineHeight;
+    final rect = Rect.fromLTWH(
+      left + 3,
+      base - BookSpine.contactShadowDepth,
       math.max(0, spineWidth - 6),
       BookSpine.contactShadowDepth,
     );
@@ -696,15 +914,23 @@ class _BookContactShadowPainter extends CustomPainter {
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
           colors: [
-            color.withValues(alpha: 0.5),
-            color.withValues(alpha: 0),
+            shadow.withValues(alpha: 0),
+            shadow.withValues(alpha: 0.5),
           ],
         ).createShader(rect),
     );
   }
 
+  static const Color _pageBlock = Color(0xFFEFE6D4);
+
   @override
-  bool shouldRepaint(covariant _BookContactShadowPainter oldDelegate) {
-    return color != oldDelegate.color || spineWidth != oldDelegate.spineWidth;
+  bool shouldRepaint(covariant _BookPresencePainter oldDelegate) {
+    return shadow != oldDelegate.shadow ||
+        surface != oldDelegate.surface ||
+        spineWidth != oldDelegate.spineWidth ||
+        spineHeight != oldDelegate.spineHeight ||
+        visual != oldDelegate.visual ||
+        art != oldDelegate.art ||
+        isRtl != oldDelegate.isRtl;
   }
 }

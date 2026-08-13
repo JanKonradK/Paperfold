@@ -11,6 +11,7 @@ import 'package:paperfold/page/home_page.dart';
 import 'package:paperfold/page/home_page/shelf_home_page.dart';
 import 'package:paperfold/providers/shelf_home.dart';
 import 'package:paperfold/widgets/bookshelf/book_spine.dart';
+import 'package:paperfold/widgets/bookshelf/leading_book.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'shelf_home_fixtures.dart';
@@ -84,9 +85,15 @@ void main() {
       matching: find.byType(BookSpine),
     );
     final viewportRect = tester.getRect(spineViewport);
-    expect(firstShelfSpines, findsNWidgets(4));
+    // The first book on the shelf stands face out, so the row is one
+    // [LeadingBook] followed by spines.
+    expect(
+      find.descendant(of: spineViewport, matching: find.byType(LeadingBook)),
+      findsOneWidget,
+    );
+    expect(firstShelfSpines, findsNWidgets(3));
     expect(tester.widget<ListView>(spineViewport).clipBehavior, Clip.hardEdge);
-    for (var index = 0; index < 4; index++) {
+    for (var index = 0; index < 3; index++) {
       final spineRect = tester.getRect(firstShelfSpines.at(index));
       expect(spineRect.left, greaterThanOrEqualTo(viewportRect.left + 0.01));
       expect(spineRect.right, lessThanOrEqualTo(viewportRect.right - 0.01));

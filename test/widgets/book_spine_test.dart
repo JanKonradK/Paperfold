@@ -23,15 +23,22 @@ void main() {
     expect(identical(BookSpine.backgrounds(), BookSpine.backgrounds()), isTrue);
   });
 
-  test('stable spine craft includes square and rounded heads', () {
+  // The head used to be square on some books and rounded on others, which was
+  // the old way of suggesting that a spine had a top. There is a real top
+  // board above it now, so every head is square and the variation that field
+  // carried is supplied by the board instead.
+  test('stable spine craft still varies between books', () {
     final scheme = PaperfoldTokens.colorScheme(Brightness.light);
     final visuals = [
       for (var index = 0; index < 32; index++)
         BookSpine.resolveVisual('head-$index', scheme),
     ];
 
-    expect(visuals.any((visual) => visual.hasRoundedHead), isTrue);
-    expect(visuals.any((visual) => !visual.hasRoundedHead), isTrue);
+    expect(visuals.any((visual) => visual.hasBands), isTrue);
+    expect(visuals.any((visual) => !visual.hasBands), isTrue);
+    expect(visuals.any((visual) => visual.hubCount > 0), isTrue);
+    expect(visuals.map((visual) => visual.grainSeed).toSet().length,
+        greaterThan(1));
   });
 
   test('light and dark draw from different bookcloth', () {
@@ -283,6 +290,100 @@ void main() {
         expect(text.textScaler!.scale(fontSize), greaterThanOrEqualTo(11));
       }
     }
+  });
+  // A book seen from slightly above has a top, and it stands on glass that
+  // gives something back. Both are painted rather than laid out, so nothing
+  // else in this file would notice if either stopped arriving - the first
+  // version of the reflection was drawn onto the spine instead of below it,
+  // and looked exactly like no reflection at all.
+  testWidgets('a book has a top board and throws a reflection',
+      (tester) async {
+    const ground = Color(0xFF000000);
+    final visual = BookSpine.resolveVisual(
+      'book-depth',
+      PaperfoldTokens.colorScheme(Brightness.dark),
+    );
+    final boundaryKey = GlobalKey();
+
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: ThemeData(
+          colorScheme: PaperfoldTokens.colorScheme(Brightness.dark),
+          useMaterial3: true,
+        ),
+        home: Scaffold(
+          backgroundColor: ground,
+          body: Center(
+            child: RepaintBoundary(
+              key: boundaryKey,
+              child: ColoredBox(
+                color: ground,
+                child: Padding(
+                  // Room either side, so a column of ground pixels is
+                  // available to compare the book's own against.
+                  padding: const EdgeInsets.symmetric(horizontal: 40),
+                  child: BookSpine(
+                    stableId: 'book-depth',
+                    title: 'Piranesi',
+                    author: 'Clarke',
+                    semanticLabel: 'Piranesi',
+                    onTap: _noop,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final boundary =
+        boundaryKey.currentContext!.findRenderObject()! as RenderRepaintBoundary;
+
+    await tester.runAsync(() async {
+      final image = await boundary.toImage();
+      final pixels = (await image.toByteData())!;
+      final width = image.width;
+
+      Color at(int x, int y) {
+        final i = (y * width + x) * 4;
+        final bytes = pixels.buffer.asUint8List();
+        return Color.fromARGB(
+          bytes[i + 3],
+          bytes[i],
+          bytes[i + 1],
+          bytes[i + 2],
+        );
+      }
+
+      final centre = width ~/ 2;
+
+      // The top board sits in the band above the spine face.
+      final board = at(centre, (BookSpine.topFaceDepth / 2).round());
+      expect(board, isNot(ground),
+          reason: 'nothing was painted where the top board should be');
+
+      // The reflection sits in the band below the book's base. Sample just
+      // inside it, before the fade into the ground has taken hold.
+      final base = BookSpine.topFaceDepth + visual.height;
+      final reflection = at(centre, (base + 3).round());
+      expect(reflection, isNot(ground),
+          reason: 'the glass gave nothing back below the book');
+
+      // And it is the book being reflected, not a stray shadow: it has to be
+      // lighter than the black ground it is drawn over.
+      expect(
+        reflection.computeLuminance(),
+        greaterThan(ground.computeLuminance() + 0.002),
+        reason: 'the reflection is too faint to be seen',
+      );
+
+      // Ground beside the book stays ground.
+      expect(at(4, (base + 3).round()), ground);
+
+      image.dispose();
+    });
   });
 }
 

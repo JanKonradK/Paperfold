@@ -10,6 +10,7 @@ import 'package:paperfold/page/home_page/shelf_home_page.dart';
 import 'package:paperfold/providers/book_list.dart';
 import 'package:paperfold/providers/shelf_home.dart';
 import 'package:paperfold/widgets/bookshelf/book_spine.dart';
+import 'package:paperfold/widgets/bookshelf/leading_book.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class _ShelfController extends ShelfHomeController {
@@ -90,11 +91,17 @@ void main() {
       of: viewport,
       matching: find.byType(BookSpine),
     );
+    final leading = find.descendant(
+      of: viewport,
+      matching: find.byType(LeadingBook),
+    );
     final viewportRect = tester.getRect(viewport);
 
-    expect(spines, findsNWidgets(4));
+    // Four books: the first stands face out, the other three are spine-on.
+    expect(leading, findsOneWidget);
+    expect(spines, findsNWidgets(3));
     expect(tester.widget<ListView>(viewport).clipBehavior, Clip.hardEdge);
-    for (var index = 0; index < 4; index++) {
+    for (var index = 0; index < 3; index++) {
       final spine = tester.widget<BookSpine>(spines.at(index));
       final rect = tester.getRect(spines.at(index));
       expect(spine.uniform, isFalse);
@@ -102,6 +109,18 @@ void main() {
       expect(rect.right, lessThanOrEqualTo(viewportRect.right - 0.01));
       expect(rect.height, greaterThan(rect.width * 3));
     }
+
+    // The face-out book stands on the same line as the spines beside it, so
+    // the row does not step. Its base is its box less the reflection.
+    final leadingRect = tester.getRect(leading);
+    final neighbourRect = tester.getRect(spines.at(0));
+    expect(
+      leadingRect.bottom - BookSpine.reflectionDepth,
+      moreOrLessEquals(neighbourRect.bottom - BookSpine.reflectionDepth,
+          epsilon: 0.5),
+      reason: 'the face-out book does not stand on the shelf line',
+    );
+    expect(leadingRect.left, greaterThanOrEqualTo(viewportRect.left + 0.01));
 
     Prefs().shelfUniformSpines = true;
     await tester.pump();

@@ -8,7 +8,6 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the fini
 */
 
 import 'dart:io';
-import 'dart:math' as math;
 
 import 'package:desktop_drop/desktop_drop.dart';
 import 'package:file_picker/file_picker.dart';
@@ -31,6 +30,8 @@ import 'package:paperfold/utils/platform_utils.dart';
 import 'package:paperfold/widgets/bookshelf/book_bottom_sheet.dart';
 import 'package:paperfold/widgets/bookshelf/book_cover.dart';
 import 'package:paperfold/widgets/bookshelf/book_spine.dart';
+import 'package:paperfold/widgets/bookshelf/glass_shelf.dart';
+import 'package:paperfold/widgets/bookshelf/leading_book.dart';
 import 'package:paperfold/widgets/bookshelf/continue_reading_bar.dart';
 import 'package:paperfold/widgets/bookshelf/sync_button.dart';
 import 'package:paperfold/widgets/ornament.dart';
@@ -530,7 +531,7 @@ class _BookshelfSection extends StatelessWidget {
     return Semantics(
       container: true,
       child: CustomPaint(
-        painter: _GlassShelfPainter(
+        painter: GlassShelfPainter(
           sheen: scheme.onSurface,
           edge: scheme.outlineVariant,
           shadow: scheme.shadow,
@@ -620,13 +621,14 @@ class _BookshelfSection extends StatelessWidget {
                   MediaQuery.textScalerOf(context),
                 ),
                 child: Padding(
-                  // The bottom inset is the thickness of the glass, so the
-                  // books stand on the plate the painter draws.
+                  // The bottom inset puts a book's base on the plate's top
+                  // line, so what it throws back runs down into the glass
+                  // rather than needing room of its own.
                   padding: const EdgeInsetsDirectional.fromSTEB(
                     4,
-                    10,
+                    BookSpine.stageTopInset,
                     4,
-                    _GlassShelfPainter.plateInset,
+                    BookSpine.stageBottomInset,
                   ),
                   child: section.count == 0
                       ? _EmptyShelf(
@@ -676,6 +678,20 @@ class _ShelfSpineList extends StatelessWidget {
     Widget spineAt(int sourceIndex) {
       if (sourceIndex < section.books.length) {
         final book = section.books[sourceIndex];
+        // The first book on the shelf stands face out. A row of nothing but
+        // spines shows the reader no cover art at all, and cover art is most
+        // of how a book is recognised.
+        if (sourceIndex == 0 && !uniformSpines) {
+          return LeadingBook(
+            book: book,
+            semanticLabel: book.author.trim().isEmpty
+                ? l10n.bookSpineSemanticLabelNoAuthor(book.title)
+                : l10n.bookSpineSemanticLabel(book.author, book.title),
+            onTap: () => onOpenBook(book),
+            onLongPress: () => onBookOptions(book),
+            longPressHint: l10n.shelfBookOptionsHint,
+          );
+        }
         return BookSpine(
           stableId: 'book-${book.id}',
           title: book.title,
@@ -772,105 +788,6 @@ class _EmptyShelf extends StatelessWidget {
   }
 }
 
-/// The shelf the books stand on.
-///
-/// The bookcase used to be the loudest object on the screen: a walnut carcass
-/// with uprights, a grained back panel and a thick board, filling every bay
-/// with brown. It buried the books it was meant to hold, and it made the whole
-/// application read as antique when only the books were supposed to.
-///
-/// What is left is a single sheet of glass. It is almost nothing: a lit front
-/// edge, a faint body, and the shadow the books drop onto it. The page ground
-/// shows through, the books supply every colour on the screen, and the
-/// furniture stops competing with them.
-///
-/// Solid colour and linear gradients only, no blur or image, and
-/// [shouldRepaint] is false unless the palette changes.
-class _GlassShelfPainter extends CustomPainter {
-  _GlassShelfPainter({
-    required this.sheen,
-    required this.edge,
-    required this.shadow,
-  });
-
-  final Color sheen;
-  final Color edge;
-  final Color shadow;
-
-  /// The height the glass occupies at the foot of a shelf stage. The stage
-  /// pads its books by the same amount, so the books stand on the plate rather
-  /// than floating above it or sinking through it.
-  static const double plateInset = 14;
-  static const double _plateThickness = 9;
-  static const double _contactHeight = 20;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final plateTop = size.height - plateInset;
-    if (plateTop <= 0) return;
-
-    // The books darken the glass where they touch it. This band is what makes
-    // them stand on the shelf rather than in front of it.
-    final contact = Rect.fromLTWH(
-      0,
-      math.max(0, plateTop - _contactHeight),
-      size.width,
-      math.min(_contactHeight, plateTop),
-    );
-    canvas.drawRect(
-      contact,
-      Paint()
-        ..shader = LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            shadow.withValues(alpha: 0),
-            shadow.withValues(alpha: 0.34),
-          ],
-        ).createShader(contact),
-    );
-
-    // The plate itself: bright where the light catches its top face, fading
-    // through the thickness of the glass.
-    final plate = Rect.fromLTWH(0, plateTop, size.width, _plateThickness);
-    canvas.drawRect(
-      plate,
-      Paint()
-        ..shader = LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            sheen.withValues(alpha: 0.16),
-            sheen.withValues(alpha: 0.04),
-          ],
-        ).createShader(plate),
-    );
-
-    // Two hairlines carry the whole illusion: the lit top face, and the ground
-    // edge underneath it.
-    canvas.drawLine(
-      Offset(0, plateTop),
-      Offset(size.width, plateTop),
-      Paint()
-        ..color = sheen.withValues(alpha: 0.58)
-        ..strokeWidth = 1,
-    );
-    canvas.drawLine(
-      Offset(0, plateTop + _plateThickness),
-      Offset(size.width, plateTop + _plateThickness),
-      Paint()
-        ..color = edge.withValues(alpha: 0.42)
-        ..strokeWidth = 1,
-    );
-  }
-
-  @override
-  bool shouldRepaint(covariant _GlassShelfPainter oldDelegate) {
-    return sheen != oldDelegate.sheen ||
-        edge != oldDelegate.edge ||
-        shadow != oldDelegate.shadow;
-  }
-}
 
 class _ShelfLoadingView extends StatelessWidget {
   const _ShelfLoadingView({required this.controller});
@@ -900,7 +817,7 @@ class _ShelfLoadingView extends StatelessWidget {
         itemCount: labels.length,
         itemBuilder: (context, index) => ExcludeSemantics(
           child: CustomPaint(
-            painter: _GlassShelfPainter(
+            painter: GlassShelfPainter(
               sheen: scheme.onSurface,
               edge: scheme.outlineVariant,
               shadow: scheme.shadow,

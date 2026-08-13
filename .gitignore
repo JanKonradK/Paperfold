@@ -76,3 +76,7 @@ google_service_account.json
 # bundle the WebView actually loads and stays tracked; the tree that produces it
 # does not.
 node_modules/
+
+# Renders written by tool/render_shelf_preview.dart, for looking at while
+# working on the shelf. Regenerated on demand and never shipped.
+tool/preview/
