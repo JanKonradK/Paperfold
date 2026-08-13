@@ -27,6 +27,9 @@ dependencies:
   intl: 0.20.2
   flutter_colorpicker: ^1.0.3
   html: ^0.15.4
+  # OPDS 1.2 feeds are Atom XML. html parses HTML, not namespaced XML, and the
+  # OPDS extensions live in their own namespaces. plan.md Section 9.
+  xml: ^6.5.0
   flutter_html: ^3.0.0-beta.2
   archive: ^3.6.1
   flutter_inappwebview:
