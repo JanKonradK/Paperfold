@@ -911,8 +911,20 @@ Do not optimize a screen that meets one.
   and OPDS 2.0 JSON. It reads publications, navigation, facet groups, search
   and pagination, and it resolves every link against the feed it came from.
   `test/service/opds_test.dart` holds it, with fixtures that carry the
-  differences Section 9.3 warns about. **The fetch, the storage and the browse
-  screen are not built.**
+  differences Section 9.3 warns about.
+  `CatalogDao` stores the catalogs, `OpdsClient` fetches a feed with optional
+  Basic authentication, and each failure is told apart: a wrong password, a
+  server that is down, an address that points at a web page. **The browse
+  screen is not built.**
+- Authentication with `flutter_secure_storage`. Never store a password in
+  SQLite. **Done.** `OpdsCredentials` is an interface, so the keystore is the
+  only path to a password and a test can prove the contract without a
+  platform. `opds_client_test.dart` reads every column of every catalog row
+  and looks for the password, because the database is copied by the export
+  path and by WebDAV sync.
+- Ship Standard Ebooks and Project Gutenberg as defaults. **Done in the data
+  layer.** They seed once, and a reader who deletes them does not get them
+  back on the next start.
 - Download, then hand the file to the existing import path.
 - Authentication with `flutter_secure_storage`. Never store a password in SQLite.
 - Test against four real catalogs. Two of them must need authentication.
