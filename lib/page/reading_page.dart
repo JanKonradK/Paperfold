@@ -529,7 +529,17 @@ class ReadingPageState extends ConsumerState<ReadingPage>
                   ),
                 ),
               ),
+              // A Scaffold gives its body loose constraints, so this Stack must
+              // be told to fill them. Every child here is either positioned or
+              // an Offstage that reports zero size while the toolbar is hidden,
+              // which is the state the reader opens in. Without expand the Stack
+              // collapses to nothing, Positioned.fill fills nothing, and the
+              // WebView is laid out at 0x0: the book loads and no pixel of it is
+              // ever on screen. Upstream got its size from the AI panel's
+              // AxisFlex, which was a non-positioned child; removing the AI
+              // subsystem removed the only thing sizing this Stack.
               body: Stack(
+                fit: StackFit.expand,
                 children: [
                   Positioned.fill(
                     child: MouseRegion(
