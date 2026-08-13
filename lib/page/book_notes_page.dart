@@ -6,7 +6,7 @@ import 'package:paperfold/service/notes/export_notes.dart';
 import 'package:paperfold/widgets/bookshelf/book_cover.dart';
 import 'package:paperfold/widgets/book_notes/book_notes_list.dart';
 import 'package:paperfold/models/book.dart';
-import 'package:paperfold/page/book_detail.dart';
+import 'package:paperfold/page/book_cover_page.dart';
 import 'package:paperfold/widgets/common/container/filled_container.dart';
 import 'package:paperfold/widgets/highlight_digit.dart';
 import 'package:paperfold/widgets/icon_and_text.dart';
@@ -364,7 +364,7 @@ class _BookNotesPageState extends ConsumerState<BookNotesPage> {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => BookDetail(book: book),
+                builder: (context) => BookCoverPage(book: book),
               ),
             );
           }),

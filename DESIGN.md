@@ -260,6 +260,16 @@ The collection page uses 16dp horizontal padding, 12dp top padding, and 32dp bot
 
 **The Shelf-First Rule.** The bookshelf is the home. The cover grid is a shelf detail view.
 
+**The One-Book-Screen Rule.** A book has exactly one destination: its cover
+screen. Tapping the book anywhere - a spine, a face-out book, a cover tile, a
+log row - goes there, and `Open` is the only filled control on it. On the home
+shelf a long press goes straight to the reader.
+
+Not yet true of the file-level actions. Deleting a book, replacing its file and
+releasing its local copy still live in the options sheet, which the Library view
+opens on a long press. They belong on the cover screen behind an overflow, and
+until they are there the rule above has an exception.
+
 ## Elevation & Depth
 
 The system has no custom shadow scale. The bookcase uses drawn geometry, tonal layers, and fine rules for depth.
@@ -346,7 +356,7 @@ Selected labels use weight 700. Unselected labels use weight 600. Icons are 18dp
 
 ### Collection tile
 
-A book tile uses the cover, a two-line title, and an optional one-line author. A tap opens the reader. A long press or secondary tap opens book options.
+A book tile uses the cover, a two-line title, and an optional one-line author. A tap opens the book's cover screen. A long press or secondary tap opens the reader.
 
 A wishlist tile uses its deterministic bookcloth color. It puts a rectangular vine frame around a centered title.
 

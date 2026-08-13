@@ -9,7 +9,7 @@ import 'package:paperfold/enums/sync_trigger.dart';
 import 'package:paperfold/l10n/generated/L10n.dart';
 import 'package:paperfold/models/book.dart';
 import 'package:paperfold/models/read_theme.dart';
-import 'package:paperfold/page/book_detail.dart';
+import 'package:paperfold/page/book_cover_page.dart';
 import 'package:paperfold/page/book_player/epub_player.dart';
 import 'package:paperfold/providers/sync.dart';
 import 'package:paperfold/utils/toast/common.dart';
@@ -430,7 +430,7 @@ class ReadingPageState extends ConsumerState<ReadingPage>
         onBookDetails: () => Navigator.push(
           context,
           CupertinoPageRoute(
-            builder: (context) => BookDetail(book: widget.book),
+            builder: (context) => BookCoverPage(book: widget.book),
           ),
         ),
         onContents: tocHandler,

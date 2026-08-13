@@ -4,7 +4,7 @@ import 'package:paperfold/enums/chart_mode.dart';
 import 'package:paperfold/enums/hint_key.dart';
 import 'package:paperfold/l10n/generated/L10n.dart';
 import 'package:paperfold/models/book.dart';
-import 'package:paperfold/page/book_detail.dart';
+import 'package:paperfold/page/book_cover_page.dart';
 import 'package:paperfold/page/journal/month_tracker_page.dart';
 import 'package:paperfold/page/journal/reading_challenge_page.dart';
 import 'package:paperfold/providers/month_tracker.dart';
@@ -634,7 +634,7 @@ class BookStatisticItem extends StatelessWidget {
               Navigator.push(
                   context,
                   MaterialPageRoute(
-                      builder: (context) => BookDetail(book: snapshot.data!)));
+                      builder: (context) => BookCoverPage(book: snapshot.data!)));
             },
             child: FilledContainer(
               margin: const EdgeInsets.only(bottom: 10),

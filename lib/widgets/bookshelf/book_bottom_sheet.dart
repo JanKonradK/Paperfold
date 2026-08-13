@@ -8,7 +8,7 @@ import 'package:paperfold/dao/shelf.dart';
 import 'package:paperfold/enums/hint_key.dart';
 import 'package:paperfold/l10n/generated/L10n.dart';
 import 'package:paperfold/models/book.dart';
-import 'package:paperfold/page/book_detail.dart';
+import 'package:paperfold/page/book_cover_page.dart';
 import 'package:paperfold/providers/sync.dart';
 import 'package:paperfold/providers/book_list.dart';
 import 'package:paperfold/enums/sync_direction.dart';
@@ -54,7 +54,7 @@ class BookBottomSheet extends ConsumerWidget {
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => BookDetail(book: book),
+          builder: (context) => BookCoverPage(book: book),
         ),
       );
     }

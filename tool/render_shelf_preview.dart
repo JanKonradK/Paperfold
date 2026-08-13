@@ -63,6 +63,9 @@ void main() {
   testWidgets('writes the shelf previews', (WidgetTester tester) async {
     // `BookCover` reads the two "show title / author on the generated cover"
     // preferences, so the face-out book needs Prefs standing up.
+    // This file runs under `flutter test`, but it lives in tool/ so the
+    // analyzer does not treat it as a test.
+    // ignore: invalid_use_of_visible_for_testing_member
     SharedPreferences.setMockInitialValues(<String, Object>{});
     await Prefs().initPrefs();
 

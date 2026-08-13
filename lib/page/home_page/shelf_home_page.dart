@@ -19,6 +19,7 @@ import 'package:paperfold/l10n/generated/L10n.dart';
 import 'package:paperfold/dao/wishlist.dart';
 import 'package:paperfold/models/book.dart';
 import 'package:paperfold/models/wishlist_item.dart';
+import 'package:paperfold/page/book_cover_page.dart';
 import 'package:paperfold/page/opds/opds_catalogs_page.dart';
 import 'package:paperfold/page/search/search_page.dart';
 import 'package:paperfold/providers/book_list.dart';
@@ -166,13 +167,17 @@ class _ShelfHomePageState extends ConsumerState<ShelfHomePage>
     }
   }
 
-  Future<void> _openBookOptions(Book book) async {
-    final controller = showBottomSheet(
-      context: context,
-      showDragHandle: true,
-      builder: (context) => BookBottomSheet(book: book),
+  /// The book's own screen: its cover, and everything a reader wants to do
+  /// with a book that is not reading it.
+  ///
+  /// `f7e86aa3` made a tap open the reader, on the grounds that reaching a book
+  /// meant finding the right shelf and then the right spine. The continue
+  /// reading bar solved that, and a tap now goes here instead - the reader is
+  /// one filled button away, and a long press still opens it directly.
+  Future<void> _openBookCover(Book book) async {
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute(builder: (context) => BookCoverPage(book: book)),
     );
-    await controller.closed;
     if (mounted) {
       await ref.read(shelfHomeProvider.notifier).refresh();
     }
@@ -408,8 +413,8 @@ class _ShelfHomePageState extends ConsumerState<ShelfHomePage>
                       isLast: index == sections.length - 1,
                       uniformSpines: Prefs().shelfUniformSpines,
                       onOpenShelf: () => _openShelf(section),
-                      onOpenBook: _openBook,
-                      onBookOptions: _openBookOptions,
+                      onOpenCover: _openBookCover,
+                      onOpenReader: _openBook,
                       emptyAction: section.count > 0
                           ? null
                           : index == 0
@@ -500,8 +505,8 @@ class _BookshelfSection extends StatelessWidget {
     required this.isLast,
     required this.uniformSpines,
     required this.onOpenShelf,
-    required this.onOpenBook,
-    required this.onBookOptions,
+    required this.onOpenCover,
+    required this.onOpenReader,
     this.emptyAction,
     this.emptyActionLabel,
   });
@@ -512,8 +517,8 @@ class _BookshelfSection extends StatelessWidget {
   final bool isLast;
   final bool uniformSpines;
   final VoidCallback onOpenShelf;
-  final ValueChanged<Book> onOpenBook;
-  final ValueChanged<Book> onBookOptions;
+  final ValueChanged<Book> onOpenCover;
+  final ValueChanged<Book> onOpenReader;
   final VoidCallback? emptyAction;
   final String? emptyActionLabel;
 
@@ -640,8 +645,8 @@ class _BookshelfSection extends StatelessWidget {
                           section: section,
                           shelfIndex: shelfIndex,
                           uniformSpines: uniformSpines,
-                          onOpenBook: onOpenBook,
-                          onBookOptions: onBookOptions,
+                          onOpenCover: onOpenCover,
+                          onOpenReader: onOpenReader,
                           onOpenWishlist: onOpenShelf,
                         ),
                 ),
@@ -659,16 +664,16 @@ class _ShelfSpineList extends StatelessWidget {
     required this.section,
     required this.shelfIndex,
     required this.uniformSpines,
-    required this.onOpenBook,
-    required this.onBookOptions,
+    required this.onOpenCover,
+    required this.onOpenReader,
     required this.onOpenWishlist,
   });
 
   final _ShelfSection section;
   final int shelfIndex;
   final bool uniformSpines;
-  final ValueChanged<Book> onOpenBook;
-  final ValueChanged<Book> onBookOptions;
+  final ValueChanged<Book> onOpenCover;
+  final ValueChanged<Book> onOpenReader;
   final VoidCallback onOpenWishlist;
 
   @override
@@ -687,8 +692,8 @@ class _ShelfSpineList extends StatelessWidget {
             semanticLabel: book.author.trim().isEmpty
                 ? l10n.bookSpineSemanticLabelNoAuthor(book.title)
                 : l10n.bookSpineSemanticLabel(book.author, book.title),
-            onTap: () => onOpenBook(book),
-            onLongPress: () => onBookOptions(book),
+            onTap: () => onOpenCover(book),
+            onLongPress: () => onOpenReader(book),
             longPressHint: l10n.shelfBookOptionsHint,
           );
         }
@@ -699,8 +704,8 @@ class _ShelfSpineList extends StatelessWidget {
           semanticLabel: book.author.trim().isEmpty
               ? l10n.bookSpineSemanticLabelNoAuthor(book.title)
               : l10n.bookSpineSemanticLabel(book.author, book.title),
-          onTap: () => onOpenBook(book),
-          onLongPress: () => onBookOptions(book),
+          onTap: () => onOpenCover(book),
+          onLongPress: () => onOpenReader(book),
           longPressHint: l10n.shelfBookOptionsHint,
           uniform: uniformSpines,
           coverPath: book.coverFullPath,
@@ -966,6 +971,17 @@ class _ShelfCollectionPageState extends ConsumerState<ShelfCollectionPage> {
     }
   }
 
+  /// The same destination a spine reaches, so a book behaves the same way
+  /// whichever of the two views of the shelf the reader is looking at.
+  Future<void> _openBookCover(Book book) async {
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute(builder: (context) => BookCoverPage(book: book)),
+    );
+    if (mounted) {
+      await ref.read(shelfHomeProvider.notifier).refresh();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final isEmpty = widget.books.isEmpty && widget.wishlistItems.isEmpty;
@@ -1017,7 +1033,7 @@ class _ShelfCollectionPageState extends ConsumerState<ShelfCollectionPage> {
                     books: widget.books,
                     wishlistItems: widget.wishlistItems,
                     columns: _columns,
-                    onOpenBook: (book) => pushToReadingPage(ref, context, book),
+                    onOpenCover: _openBookCover,
                     onOpenOptions: _openBookOptions,
                   )
                 : GridView.builder(
@@ -1035,11 +1051,7 @@ class _ShelfCollectionPageState extends ConsumerState<ShelfCollectionPage> {
                     return _ShelfCoverTile(
                       book: book,
                       onOpenOptions: () => _openBookOptions(book),
-                      onOpenBook: () => pushToReadingPage(
-                        ref,
-                        context,
-                        book,
-                      ),
+                      onOpenCover: () => _openBookCover(book),
                     );
                   }
                   final item =
@@ -1059,14 +1071,14 @@ class _ShelfLogView extends StatelessWidget {
     required this.books,
     required this.wishlistItems,
     required this.columns,
-    required this.onOpenBook,
+    required this.onOpenCover,
     required this.onOpenOptions,
   });
 
   final List<Book> books;
   final List<WishlistItem> wishlistItems;
   final Set<_LogColumn> columns;
-  final void Function(Book) onOpenBook;
+  final void Function(Book) onOpenCover;
   final void Function(Book) onOpenOptions;
 
   String _statusLabel(BookStatus status, L10n l10n) => switch (status) {
@@ -1121,7 +1133,7 @@ class _ShelfLogView extends StatelessWidget {
           trailing: columns.contains(_LogColumn.rating) && book.rating > 0
               ? _LogRating(rating: book.rating)
               : null,
-          onTap: () => onOpenBook(book),
+          onTap: () => onOpenCover(book),
           onLongPress: () => onOpenOptions(book),
         );
       },
@@ -1160,12 +1172,12 @@ class _LogRating extends StatelessWidget {
 class _ShelfCoverTile extends StatelessWidget {
   const _ShelfCoverTile({
     required this.book,
-    required this.onOpenBook,
+    required this.onOpenCover,
     required this.onOpenOptions,
   });
 
   final Book book;
-  final VoidCallback onOpenBook;
+  final VoidCallback onOpenCover;
   final VoidCallback onOpenOptions;
 
   @override
@@ -1174,14 +1186,14 @@ class _ShelfCoverTile extends StatelessWidget {
     return Semantics(
       button: true,
       label: l10n.bookCoverSemanticLabel(book.title),
-      onTap: onOpenBook,
+      onTap: onOpenCover,
       onLongPress: onOpenOptions,
       onLongPressHint: l10n.bookOptionsSemanticHint,
       child: ExcludeSemantics(
         child: Material(
           color: Theme.of(context).colorScheme.surface,
           child: InkWell(
-            onTap: onOpenBook,
+            onTap: onOpenCover,
             onLongPress: onOpenOptions,
             onSecondaryTap: onOpenOptions,
             borderRadius: BorderRadius.circular(12),
