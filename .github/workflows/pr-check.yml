@@ -17,6 +17,54 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # `assets/foliate-js/dist/` is a committed build artifact and it is what the
+  # WebView loads. Nothing in the Flutter build produces it, so a change under
+  # `src/` that is not rebuilt and committed alongside simply never runs. That
+  # is not hypothetical: between 2026-04-19 and 2026-08-13 every reader change
+  # Paperfold made sat in `src/` and never reached a device, including a whole
+  # measured page-turn performance pass. See docs/paperfold/reader-stutter.md.
+  reader-bundle:
+    name: Reader bundle is current
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Checkout pull request
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.pr_number != '' }}
+        uses: actions/checkout@v4
+        with:
+          ref: refs/pull/${{ inputs.pr_number }}/merge
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: assets/foliate-js/package-lock.json
+
+      - name: Install reader dependencies
+        working-directory: assets/foliate-js
+        run: npm ci
+
+      - name: Test the reader
+        working-directory: assets/foliate-js
+        run: npm test
+
+      - name: Rebuild the bundle
+        working-directory: assets/foliate-js
+        run: npm run build
+
+      - name: Fail if the committed bundle is stale
+        run: |
+          if ! git diff --exit-code -- assets/foliate-js/dist/; then
+            echo "::error::assets/foliate-js/dist/ is out of date with src/."
+            echo "The WebView loads dist/, so these changes would never run."
+            echo "Run 'npm run build' in assets/foliate-js and commit dist/."
+            exit 1
+          fi
+
   test:
     name: Flutter Test
     runs-on: ubuntu-latest

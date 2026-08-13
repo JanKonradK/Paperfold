@@ -63,7 +63,16 @@ class ReadingPageState extends ConsumerState<ReadingPage>
   bool bottomBarOffstage = true;
   ReaderTool _activeTool = ReaderTool.none;
   late String heroTag;
-  bool bookmarkExists = false;
+
+  /// Whether the current page carries a bookmark.
+  ///
+  /// A notifier rather than a field, because this changes on every relocate -
+  /// which is to say on every page turn - and the only thing that reads it is
+  /// one toggle in the top bar, which is off screen while the reader is
+  /// actually turning pages. Held as state it rebuilt the whole reading page,
+  /// WebView subtree and all, once per turn on top of the rebuild `EpubPlayer`
+  /// was already doing for itself.
+  final ValueNotifier<bool> bookmarkExists = ValueNotifier<bool>(false);
 
   late final FocusNode _readerFocusNode;
   // late final VolumeKeyBoard _volumeKeyBoard;
@@ -129,6 +138,7 @@ class ReadingPageState extends ConsumerState<ReadingPage>
     //   unawaited(_volumeKeyBoard.removeListener());
     // }
     _readerFocusNode.dispose();
+    bookmarkExists.dispose();
     super.dispose();
   }
 
@@ -374,11 +384,8 @@ class ReadingPageState extends ConsumerState<ReadingPage>
   }
 
   void updateState() {
-    if (mounted) {
-      setState(() {
-        bookmarkExists = epubPlayerKey.currentState!.bookmarkExists;
-      });
-    }
+    if (!mounted) return;
+    bookmarkExists.value = epubPlayerKey.currentState!.bookmarkExists;
   }
 
   Future<void> _copyChapter() async {
@@ -396,7 +403,7 @@ class ReadingPageState extends ConsumerState<ReadingPage>
   }
 
   void _toggleBookmark() {
-    if (bookmarkExists) {
+    if (bookmarkExists.value) {
       epubPlayerKey.currentState!.removeAnnotation(
         epubPlayerKey.currentState!.bookmarkCfi,
       );

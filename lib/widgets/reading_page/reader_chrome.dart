@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:paperfold/l10n/generated/L10n.dart';
 import 'package:paperfold/widgets/paperfold_glass_surface.dart';
@@ -41,7 +42,12 @@ class ReaderChrome extends StatelessWidget {
 
   final bool visible;
   final String title;
-  final bool bookmarkExists;
+
+  /// Listened to rather than passed by value: it changes on every page turn,
+  /// and only the one toggle below depends on it. Rebuilding the chrome - let
+  /// alone the reading page that owns it - for a control that is off screen
+  /// while the reader turns pages is work no frame should be doing.
+  final ValueListenable<bool> bookmarkExists;
   final ReaderTool activeTool;
   final VoidCallback onDismiss;
   final VoidCallback onBack;
@@ -143,12 +149,15 @@ class ReaderChrome extends StatelessWidget {
                   style: Theme.of(context).textTheme.titleMedium,
                 ),
               ),
-              IconButton(
-                tooltip: l10n.readingPageBookmark,
-                isSelected: bookmarkExists,
-                icon: const Icon(Icons.bookmark_border),
-                selectedIcon: const Icon(Icons.bookmark),
-                onPressed: onBookmark,
+              ValueListenableBuilder<bool>(
+                valueListenable: bookmarkExists,
+                builder: (context, exists, child) => IconButton(
+                  tooltip: l10n.readingPageBookmark,
+                  isSelected: exists,
+                  icon: const Icon(Icons.bookmark_border),
+                  selectedIcon: const Icon(Icons.bookmark),
+                  onPressed: onBookmark,
+                ),
               ),
               PopupMenuButton<VoidCallback>(
                 icon: const Icon(Icons.more_vert),

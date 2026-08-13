@@ -39,7 +39,7 @@ void main() {
     return ReaderChrome(
       visible: visible,
       title: 'The Left Hand of Darkness',
-      bookmarkExists: false,
+      bookmarkExists: ValueNotifier<bool>(false),
       activeTool: activeTool,
       panel: panel,
       onDismiss: () {},
@@ -75,7 +75,7 @@ void main() {
       ReaderChrome(
         visible: false,
         title: 'A book',
-        bookmarkExists: false,
+        bookmarkExists: ValueNotifier<bool>(false),
         activeTool: ReaderTool.none,
         onDismiss: () => dismissed = true,
         onBack: () {},
@@ -177,5 +177,48 @@ void main() {
           .every((slide) => slide.duration > Duration.zero),
       isTrue,
     );
+  });
+
+  // A bookmark appearing or disappearing is a page turn, and a page turn must
+  // not rebuild the chrome to say so - let alone the reading page above it,
+  // which is what used to happen, WebView subtree and all, once per turn.
+  testWidgets('the bookmark toggle follows its notifier without a rebuild',
+      (tester) async {
+    final exists = ValueNotifier<bool>(false);
+    addTearDown(exists.dispose);
+    var chromeBuilds = 0;
+
+    await tester.pumpWidget(host(
+      Builder(builder: (context) {
+        chromeBuilds++;
+        return ReaderChrome(
+          visible: true,
+          title: 'A book',
+          bookmarkExists: exists,
+          activeTool: ReaderTool.none,
+          onDismiss: () {},
+          onBack: () {},
+          onBookmark: () {},
+          onCopyChapter: () {},
+          onBookDetails: () {},
+          onContents: () {},
+          onNotes: () {},
+          onProgress: () {},
+          onStyle: () {},
+        );
+      }),
+    ));
+    await tester.pumpAndSettle();
+
+    expect(find.byIcon(Icons.bookmark_border), findsOneWidget);
+    final buildsBefore = chromeBuilds;
+
+    exists.value = true;
+    await tester.pump();
+
+    expect(find.byIcon(Icons.bookmark), findsOneWidget,
+        reason: 'the toggle did not follow the notifier');
+    expect(chromeBuilds, buildsBefore,
+        reason: 'the whole chrome rebuilt for one icon');
   });
 }
