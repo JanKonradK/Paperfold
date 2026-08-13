@@ -914,8 +914,11 @@ Do not optimize a screen that meets one.
   differences Section 9.3 warns about.
   `CatalogDao` stores the catalogs, `OpdsClient` fetches a feed with optional
   Basic authentication, and each failure is told apart: a wrong password, a
-  server that is down, an address that points at a web page. **The browse
-  screen is not built.**
+  server that is down, an address that points at a web page. The browse screen
+  walks a catalog with the system Back, page by page rather than by infinite
+  scroll, and it opens from More.
+- Download, then hand the file to the existing import path. **Done.** The
+  download goes to the temporary directory and then to `importBook`.
 - Authentication with `flutter_secure_storage`. Never store a password in
   SQLite. **Done.** `OpdsCredentials` is an interface, so the keystore is the
   only path to a password and a test can prove the contract without a
@@ -928,6 +931,8 @@ Do not optimize a screen that meets one.
 - Download, then hand the file to the existing import path.
 - Authentication with `flutter_secure_storage`. Never store a password in SQLite.
 - Test against four real catalogs. Two of them must need authentication.
+  **Not done.** Everything so far is tested against fixtures. This is the step
+  that needs a phone, a network, and two servers that ask for a password.
 - Ship Standard Ebooks and Project Gutenberg as defaults, so a new shelf is
   never empty. **This milestone is the first-run fix** (Section 9.4).
 

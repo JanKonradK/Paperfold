@@ -796,5 +796,40 @@
   "translateToLanguage": "Translate into {language}",
   "@translateToLanguage": {
     "placeholders": { "language": { "type": "String" } }
-  }
+  },
+  "opdsCatalogs": "Catalogs",
+  "opdsCatalogsEmpty": "No catalogs yet.",
+  "opdsAddCatalog": "Add a catalog",
+  "opdsCatalogName": "Name",
+  "opdsCatalogUrl": "Address",
+  "opdsCatalogUsername": "User name",
+  "opdsCatalogPassword": "Password",
+  "opdsCatalogNeedsSignIn": "Needs a sign-in",
+  "opdsRemoveCatalog": "Remove catalog",
+  "opdsRemoveCatalogBody": "Remove {name} and its password?",
+  "@opdsRemoveCatalogBody": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "opdsSignIn": "Sign in",
+  "opdsSignInBody": "{name} needs a user name and a password.",
+  "@opdsSignInBody": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "opdsFeedEmpty": "This shelf is empty.",
+  "opdsNextPage": "More",
+  "opdsDownload": "Download",
+  "opdsDownloading": "Downloading {title}",
+  "@opdsDownloading": {
+    "placeholders": { "title": { "type": "String" } }
+  },
+  "opdsDownloaded": "{title} is on your shelf.",
+  "@opdsDownloaded": {
+    "placeholders": { "title": { "type": "String" } }
+  },
+  "opdsErrorNetwork": "The catalog could not be reached.",
+  "opdsErrorUnauthorized": "The user name or the password is wrong.",
+  "opdsErrorNotFound": "The catalog has no feed at that address.",
+  "opdsErrorServer": "The catalog answered with an error.",
+  "opdsErrorNotAFeed": "That address is a web page, not a catalog feed.",
+  "opdsInvalidUrl": "Enter a full address, such as https://example.org/opds"
 }
