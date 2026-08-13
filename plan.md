@@ -906,6 +906,13 @@ Do not optimize a screen that meets one.
 
 **Milestone 7 — OPDS and the first run** (Section 9)
 - Catalog table, feed fetch, and the browse screen.
+  **Started.** `lib/service/opds/opds.dart` is the Dart port of
+  `assets/foliate-js/src/opds.js`, covering both generations: OPDS 1.2 Atom
+  and OPDS 2.0 JSON. It reads publications, navigation, facet groups, search
+  and pagination, and it resolves every link against the feed it came from.
+  `test/service/opds_test.dart` holds it, with fixtures that carry the
+  differences Section 9.3 warns about. **The fetch, the storage and the browse
+  screen are not built.**
 - Download, then hand the file to the existing import path.
 - Authentication with `flutter_secure_storage`. Never store a password in SQLite.
 - Test against four real catalogs. Two of them must need authentication.
