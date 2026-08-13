@@ -833,6 +833,15 @@ class Prefs extends ChangeNotifier {
     return prefs.getDouble('bookCoverWidth') ?? 120;
   }
 
+  set shelfUniformSpines(bool value) {
+    prefs.setBool('shelfUniformSpines', value);
+    notifyListeners();
+  }
+
+  bool get shelfUniformSpines {
+    return prefs.getBool('shelfUniformSpines') ?? false;
+  }
+
   set bookshelfFolderStyle(BookshelfFolderStyle style) {
     prefs.setString('bookshelfFolderStyle', style.code);
     notifyListeners();

@@ -831,5 +831,45 @@
   "opdsErrorNotFound": "The catalog has no feed at that address.",
   "opdsErrorServer": "The catalog answered with an error.",
   "opdsErrorNotAFeed": "That address is a web page, not a catalog feed.",
-  "opdsInvalidUrl": "Enter a full address, such as https://example.org/opds"
+  "opdsInvalidUrl": "Enter a full address, such as https://example.org/opds",
+  "settingsBookshelfUniformSpines": "Uniform spines",
+  "settingsBookshelfUniformSpinesDescription": "Make every home shelf spine the same thickness and height.",
+  "challengePreviousYear": "Previous year",
+  "challengeNextYear": "Next year",
+  "challengePaceAhead": "{count, plural, =1{Ahead of pace by 1 book} other{Ahead of pace by {count} books}}",
+  "@challengePaceAhead": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "challengePaceBehind": "{count, plural, =1{Behind pace by 1 book} other{Behind pace by {count} books}}",
+  "@challengePaceBehind": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "challengePaceOnTrack": "On pace for the year",
+  "challengePaceExpected": "A steady pace is {count, plural, =1{1 book} other{{count} books}} by this point.",
+  "@challengePaceExpected": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "challengeEmptyTitle": "No books on this shelf yet",
+  "challengeEmptyBody": "Mark a book as Reading or finish a book to start filling the challenge.",
+  "challengeTargetRange": "Enter 1 to 999 books.",
+  "monthTrackerPagesPerDay": "Pages per day",
+  "monthTrackerLegendNoPages": "No pages",
+  "monthTrackerLegendFewerPages": "Fewer pages",
+  "monthTrackerLegendMorePages": "More pages",
+  "monthTrackerLegendToday": "Today",
+  "monthTrackerEmptyTitle": "No pages recorded this month",
+  "monthTrackerEmptyBody": "Tap a day number to add the page total for that day.",
+  "monthTrackerDayCurrentPages": "{count, plural, =0{This day has 0 pages.} =1{This day has 1 page.} other{This day has {count} pages.}}",
+  "@monthTrackerDayCurrentPages": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "monthTrackerDayNotRecorded": "No page total is recorded for this day.",
+  "monthTrackerNewPagesLabel": "New page total",
+  "monthTrackerCentreUnit": "pages",
+  "statisticTrackersTitle": "Reading trackers",
+  "statisticReadingTimeUnit": "Reading-time charts · minutes per day",
+  "statisticMeasureNote": "The charts use reading time in minutes. The month ring uses pages. These measures are separate.",
+  "statisticOpenChallenge": "Open challenge",
+  "statisticOpenMonthTracker": "Open month tracker",
+  "statisticTrackerLoadError": "Tracker data is not available."
 }

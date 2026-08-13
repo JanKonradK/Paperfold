@@ -11,6 +11,7 @@ class ReadingChallengeData {
     required this.target,
     required this.finished,
     required this.readingNow,
+    required this.today,
   });
 
   final int year;
@@ -26,11 +27,41 @@ class ReadingChallengeData {
   /// the page shows the reader where they stand, not only where they have been.
   final List<Book> readingNow;
 
+  /// The local calendar day used to judge the reader's pace.
+  ///
+  /// Keeping this in the data makes the pace stable while the page is open
+  /// and lets tests cover leap years and year boundaries.
+  final DateTime today;
+
   int get finishedCount => finished.length;
 
   /// Above one when the reader passes the target. The page shows the overflow
   /// as a number rather than painting spines it has no room for.
   double get progress => target <= 0 ? 0 : finishedCount / target;
+
+  /// How many books a steady reader would have finished by this point.
+  ///
+  /// A past year is judged at 31 December. The page does not navigate into
+  /// future years, but zero is still a safe answer if another caller does.
+  int get expectedFinished {
+    if (year < today.year) {
+      return target;
+    }
+    if (year > today.year || target <= 0) {
+      return 0;
+    }
+
+    final DateTime firstDay = DateTime(year);
+    final int daysInYear = DateTime(year + 1).difference(firstDay).inDays;
+    final int daysElapsed = DateTime(today.year, today.month, today.day)
+            .difference(firstDay)
+            .inDays +
+        1;
+    return (target * daysElapsed / daysInYear).floor();
+  }
+
+  /// Positive is ahead of pace, negative is behind, and zero is on pace.
+  int get paceDelta => finishedCount - expectedFinished;
 
   /// The book on a one-based spine, or null when the spine is still empty.
   Book? bookForSlot(int slot) {
@@ -74,27 +105,37 @@ final readingChallengeProvider =
   ReadingChallengeController.new,
 );
 
+/// The year shown by the full challenge page.
+///
+/// The Journal and Statistics summaries watch the same value, so both entry
+/// points describe the year the reader last chose instead of disagreeing.
+final trackedChallengeYearProvider = StateProvider<int>((ref) {
+  return DateTime.now().year;
+});
+
 class ReadingChallengeController extends AsyncNotifier<ReadingChallengeData> {
   @override
-  Future<ReadingChallengeData> build() => _load();
+  Future<ReadingChallengeData> build() {
+    final int year = ref.watch(trackedChallengeYearProvider);
+    return _load(year);
+  }
 
   Future<void> refresh() async {
-    state = await AsyncValue.guard(_load);
+    final int year = ref.read(trackedChallengeYearProvider);
+    state = await AsyncValue.guard(() => _load(year));
   }
 
   /// Stores a new target and repaints. Returns the value that was stored,
   /// which the DAO may have clamped.
   Future<int> setTarget(int target) async {
-    final int year = _currentYear;
+    final int year = ref.read(trackedChallengeYearProvider);
     final int stored = await challengeDao.setTarget(year, target);
     await refresh();
     return stored;
   }
 
-  int get _currentYear => DateTime.now().year;
-
-  Future<ReadingChallengeData> _load() async {
-    final int year = _currentYear;
+  Future<ReadingChallengeData> _load(int year) async {
+    final DateTime today = DateTime.now();
     final Future<int> targetFuture = challengeDao.targetForYear(year);
     final Future<List<Book>> finishedFuture =
         bookDao.selectFinishedInYear(year);
@@ -108,9 +149,14 @@ class ReadingChallengeController extends AsyncNotifier<ReadingChallengeData> {
       year: year,
       target: target,
       finished: finished,
-      readingNow: all
-          .where((book) => book.status == BookStatus.reading)
-          .toList(growable: false),
+      // A past challenge is a historical record. Books being read now do not
+      // belong on its shelf.
+      readingNow: year == today.year
+          ? all
+              .where((book) => book.status == BookStatus.reading)
+              .toList(growable: false)
+          : const <Book>[],
+      today: today,
     );
   }
 }

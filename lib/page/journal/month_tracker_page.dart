@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter/semantics.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:paperfold/config/paperfold_tokens.dart';
@@ -21,6 +22,8 @@ class MonthTrackerPage extends ConsumerWidget {
     final AsyncValue<MonthTrackerData> tracker =
         ref.watch(monthTrackerProvider);
     final DateTime month = ref.watch(trackedMonthProvider);
+    final DateTime now = DateTime.now();
+    final DateTime currentMonth = DateTime(now.year, now.month);
 
     void step(int months) {
       ref.read(trackedMonthProvider.notifier).state =
@@ -32,21 +35,26 @@ class MonthTrackerPage extends ConsumerWidget {
         title: Text(l10n.monthTrackerTitle),
         actions: <Widget>[
           IconButton(
+            key: const ValueKey<String>('month-tracker-previous'),
             icon: const Icon(Icons.chevron_left),
             tooltip: l10n.monthTrackerPreviousMonth,
             onPressed: () => step(-1),
           ),
           IconButton(
+            key: const ValueKey<String>('month-tracker-next'),
             icon: const Icon(Icons.chevron_right),
             tooltip: l10n.monthTrackerNextMonth,
-            onPressed: () => step(1),
+            onPressed: month.isBefore(currentMonth) ? () => step(1) : null,
           ),
         ],
       ),
       body: tracker.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (Object error, StackTrace stackTrace) => Center(
-          child: Text(l10n.shelfLoadErrorTitle),
+        error: (Object error, StackTrace stackTrace) => _MonthMessage(
+          title: l10n.shelfLoadErrorTitle,
+          body: l10n.statisticTrackerLoadError,
+          actionLabel: l10n.commonRetry,
+          onAction: () => ref.read(monthTrackerProvider.notifier).refresh(),
         ),
         data: (MonthTrackerData data) => _MonthTrackerView(data: data),
       ),
@@ -65,40 +73,63 @@ class _MonthTrackerView extends ConsumerWidget {
     final ThemeData theme = Theme.of(context);
     final MaterialLocalizations material = MaterialLocalizations.of(context);
 
-    return ListView(
-      padding: EdgeInsets.only(
-        left: 16,
-        right: 16,
-        top: 16,
-        bottom: 96 + MediaQuery.viewPaddingOf(context).bottom,
+    return RefreshIndicator(
+      onRefresh: () => ref.read(monthTrackerProvider.notifier).refresh(),
+      child: ListView(
+        padding: EdgeInsets.only(
+          left: 16,
+          right: 16,
+          top: 16,
+          bottom: 96 + MediaQuery.viewPaddingOf(context).bottom,
+        ),
+        children: <Widget>[
+          Text(
+            material.formatMonthYear(DateTime(data.year, data.month)),
+            style: theme.textTheme.headlineSmall,
+          ),
+          const SizedBox(height: 4),
+          Text(
+            l10n.monthTrackerPagesTotal(data.totalPages),
+            style: theme.textTheme.bodyLarge,
+          ),
+          Text(
+            l10n.monthTrackerDaysRead(data.daysRead),
+            style: theme.textTheme.bodyMedium
+                ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+          ),
+          const SizedBox(height: 20),
+          Text(
+            l10n.monthTrackerPagesPerDay,
+            style: theme.textTheme.titleMedium,
+          ),
+          const SizedBox(height: 12),
+          if (data.daysRead == 0) ...<Widget>[
+            _MonthEmptyState(
+              title: l10n.monthTrackerEmptyTitle,
+              body: l10n.monthTrackerEmptyBody,
+            ),
+            const SizedBox(height: 20),
+          ],
+          MonthTrackerRing(data: data),
+          const SizedBox(height: 20),
+          const _RingLegend(),
+        ],
       ),
-      children: <Widget>[
-        Text(
-          material.formatMonthYear(DateTime(data.year, data.month)),
-          style: theme.textTheme.headlineSmall,
-        ),
-        const SizedBox(height: 4),
-        Text(
-          l10n.monthTrackerPagesTotal(data.totalPages),
-          style: theme.textTheme.bodyLarge,
-        ),
-        Text(
-          l10n.monthTrackerDaysRead(data.daysRead),
-          style: theme.textTheme.bodyMedium
-              ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
-        ),
-        const SizedBox(height: 24),
-        _MonthRing(data: data),
-      ],
     );
   }
 }
 
-class _MonthRing extends ConsumerWidget {
-  const _MonthRing({required this.data});
+/// The painted ring shared by the tracker page and the Statistics section.
+/// One canvas holds all day segments and labels.
+class MonthTrackerRing extends ConsumerWidget {
+  const MonthTrackerRing({
+    super.key,
+    required this.data,
+    this.maximumDiameter = 360,
+  });
 
   @visibleForTesting
-  static const double maximumDiameter = 320;
+  final double maximumDiameter;
 
   final MonthTrackerData data;
 
@@ -106,22 +137,30 @@ class _MonthRing extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final L10n l10n = L10n.of(context);
     final ColorScheme scheme = Theme.of(context).colorScheme;
+    final TextDirection textDirection = Directionality.of(context);
+    final double scale =
+        MediaQuery.textScalerOf(context).scale(1).clamp(1.0, 1.6);
 
     return LayoutBuilder(
       builder: (BuildContext context, BoxConstraints constraints) {
-        final double diameter =
-            math.min(constraints.maxWidth, maximumDiameter);
+        final double diameter = math.min(
+          constraints.maxWidth,
+          maximumDiameter * scale,
+        );
         final _RingLayout layout = _RingLayout(
           diameter: diameter,
           days: data.dayCount,
+          scale: scale,
         );
+
+        void openDay(int day) => _editDay(context, ref, day);
 
         return Center(
           child: GestureDetector(
             onTapUp: (TapUpDetails details) {
               final int? day = layout.dayAt(details.localPosition);
               if (day != null) {
-                _editDay(context, ref, day);
+                openDay(day);
               }
             },
             child: CustomPaint(
@@ -130,14 +169,17 @@ class _MonthRing extends ConsumerWidget {
                 data: data,
                 layout: layout,
                 scheme: scheme,
+                textDirection: textDirection,
                 ringLabel: l10n.monthTrackerRingSemanticLabel(
                   data.daysRead,
                   data.totalPages,
                 ),
                 dayLabel: (int day) => l10n.monthTrackerDaySemanticLabel(
                   day,
-                  data.pagesByDay[day] ?? 0,
+                  data.pagesFor(day),
                 ),
+                centreUnit: l10n.monthTrackerCentreUnit,
+                onDayTap: openDay,
               ),
             ),
           ),
@@ -148,21 +190,44 @@ class _MonthRing extends ConsumerWidget {
 
   Future<void> _editDay(BuildContext context, WidgetRef ref, int day) async {
     final L10n l10n = L10n.of(context);
+    final MaterialLocalizations material = MaterialLocalizations.of(context);
+    final int currentPages = data.pagesFor(day);
+    final bool wasRecorded = data.isRecorded(day);
     final TextEditingController controller = TextEditingController(
-      text: (data.pagesByDay[day] ?? 0).toString(),
+      text: wasRecorded ? currentPages.toString() : '',
     );
 
     final int? pages = await showDialog<int>(
       context: context,
       builder: (BuildContext context) => AlertDialog(
-        title: Text(l10n.monthTrackerEditDay(day)),
-        content: TextField(
-          controller: controller,
-          autofocus: true,
-          keyboardType: TextInputType.number,
-          decoration: InputDecoration(labelText: l10n.monthTrackerPagesLabel),
-          onSubmitted: (String value) =>
-              Navigator.of(context).pop(int.tryParse(value.trim())),
+        title: Text(
+          material.formatFullDate(DateTime(data.year, data.month, day)),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Text(
+              wasRecorded
+                  ? l10n.monthTrackerDayCurrentPages(currentPages)
+                  : l10n.monthTrackerDayNotRecorded,
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: controller,
+              autofocus: true,
+              keyboardType: TextInputType.number,
+              inputFormatters: <TextInputFormatter>[
+                FilteringTextInputFormatter.digitsOnly,
+              ],
+              decoration: InputDecoration(
+                labelText: l10n.monthTrackerNewPagesLabel,
+                suffixText: l10n.monthTrackerPagesLabel,
+              ),
+              onSubmitted: (String value) =>
+                  Navigator.of(context).pop(int.tryParse(value.trim())),
+            ),
+          ],
         ),
         actions: <Widget>[
           TextButton(
@@ -170,8 +235,8 @@ class _MonthRing extends ConsumerWidget {
             child: Text(l10n.commonCancel),
           ),
           TextButton(
-            onPressed: () => Navigator.of(context)
-                .pop(int.tryParse(controller.text.trim())),
+            onPressed: () =>
+                Navigator.of(context).pop(int.tryParse(controller.text.trim())),
             child: Text(l10n.commonSave),
           ),
         ],
@@ -190,7 +255,11 @@ class _MonthRing extends ConsumerWidget {
 
 /// Where every day segment sits. Shared by the painter and by hit testing.
 class _RingLayout {
-  _RingLayout({required this.diameter, required this.days});
+  _RingLayout({
+    required this.diameter,
+    required this.days,
+    required this.scale,
+  });
 
   /// The ring starts at the top and runs clockwise, the way a clock and a
   /// printed month wheel both do.
@@ -198,16 +267,21 @@ class _RingLayout {
 
   final double diameter;
   final int days;
+  final double scale;
 
   double get radius => diameter / 2;
   Offset get centre => Offset(radius, radius);
 
-  /// Thick enough to read a fill level in, thin enough to leave the middle for
-  /// the month total.
-  double get thickness => diameter * 0.17;
+  /// Room for the day numbers outside the segments.
+  double get labelBand => 22 * scale;
 
-  double get outerRadius => radius - 2;
-  double get innerRadius => outerRadius - thickness;
+  /// Thick enough to read a fill level and to give the ring a 48 dp radial
+  /// touch band.
+  double get thickness => math.max(48, diameter * 0.16);
+
+  double get outerRadius => radius - labelBand - 2;
+  double get innerRadius => math.max(20, outerRadius - thickness);
+  double get labelRadius => outerRadius + 13 * scale;
 
   double get sweepPerDay => 2 * math.pi / days;
 
@@ -220,7 +294,9 @@ class _RingLayout {
   int? dayAt(Offset position) {
     final Offset fromCentre = position - centre;
     final double distance = fromCentre.distance;
-    if (distance < innerRadius || distance > outerRadius) {
+    // Include the day labels in the target. The painted segment and its number
+    // act as one control.
+    if (distance < innerRadius || distance > radius) {
       return null;
     }
     // atan2 returns -pi..pi measured from the positive x axis. Shift it so the
@@ -238,29 +314,39 @@ class _RingLayout {
   Rect boundsFor(int day) {
     final double middle = angleFor(day) + sweepPerDay / 2;
     final double middleRadius = (innerRadius + outerRadius) / 2;
-    final Offset point = centre +
-        Offset(math.cos(middle), math.sin(middle)) * middleRadius;
-    final double side = math.max(thickness, 24);
+    final Offset point =
+        centre + Offset(math.cos(middle), math.sin(middle)) * middleRadius;
+    final double side = math.max(thickness, 48);
     return Rect.fromCenter(center: point, width: side, height: side);
   }
 }
 
 typedef _DayLabel = String Function(int day);
+typedef _DayTap = void Function(int day);
 
 class _MonthRingPainter extends CustomPainter {
   const _MonthRingPainter({
     required this.data,
     required this.layout,
     required this.scheme,
+    required this.textDirection,
     required this.ringLabel,
     required this.dayLabel,
+    required this.centreUnit,
+    required this.onDayTap,
   });
 
   final MonthTrackerData data;
   final _RingLayout layout;
   final ColorScheme scheme;
+  final TextDirection textDirection;
   final String ringLabel;
   final _DayLabel dayLabel;
+  final String centreUnit;
+  final _DayTap onDayTap;
+
+  static final Map<(String, Color, double, FontWeight), TextPainter>
+      _dayNumberCache = <(String, Color, double, FontWeight), TextPainter>{};
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -303,9 +389,41 @@ class _MonthRingPainter extends CustomPainter {
           stroke: 1.5,
         );
       }
+
+      _paintDayNumber(canvas, day);
     }
 
     _paintCentre(canvas);
+  }
+
+  void _paintDayNumber(Canvas canvas, int day) {
+    final double angle = layout.angleFor(day) + layout.sweepPerDay / 2;
+    final Offset centre = layout.centre +
+        Offset(math.cos(angle), math.sin(angle)) * layout.labelRadius;
+    final double fontSize = 10 * layout.scale;
+    final String label = '$day';
+    final FontWeight weight =
+        day == data.today ? FontWeight.w700 : FontWeight.w600;
+    final TextPainter number = _dayNumberCache.putIfAbsent(
+      (label, scheme.onSurface, fontSize, weight),
+      () => TextPainter(
+        text: TextSpan(
+          text: label,
+          style: TextStyle(
+            color: scheme.onSurface,
+            fontSize: fontSize,
+            fontFamily: PaperfoldTypeTokens.chromeFamily,
+            fontWeight: weight,
+            height: 1,
+          ),
+        ),
+        textDirection: TextDirection.ltr,
+      )..layout(),
+    );
+    number.paint(
+      canvas,
+      centre - Offset(number.width / 2, number.height / 2),
+    );
   }
 
   void _drawSegment(
@@ -341,24 +459,70 @@ class _MonthRingPainter extends CustomPainter {
   }
 
   void _paintCentre(Canvas canvas) {
-    final TextPainter total = TextPainter(
-      text: TextSpan(
-        text: '${data.totalPages}',
-        style: TextStyle(
-          color: scheme.onSurface,
-          fontSize: layout.diameter * 0.15,
-          fontFamily: PaperfoldTypeTokens.journalFamily,
-          height: 1,
-        ),
-      ),
-      textDirection: TextDirection.ltr,
-    )..layout();
+    final double maximumWidth = layout.innerRadius * 1.65;
+    double totalSize = 38 * layout.scale;
+    TextPainter total = _centreText(
+      '${data.totalPages}',
+      scheme.onSurface,
+      totalSize,
+      PaperfoldTypeTokens.journalFamily,
+    );
+    if (total.width > maximumWidth && total.width > 0) {
+      totalSize *= maximumWidth / total.width;
+      total.dispose();
+      total = _centreText(
+        '${data.totalPages}',
+        scheme.onSurface,
+        totalSize,
+        PaperfoldTypeTokens.journalFamily,
+      );
+    }
+    final TextPainter unit = _centreText(
+      centreUnit,
+      scheme.onSurfaceVariant,
+      12 * layout.scale,
+      PaperfoldTypeTokens.chromeFamily,
+    );
+    final double gap = 3 * layout.scale;
+    final double groupHeight = total.height + gap + unit.height;
 
     total.paint(
       canvas,
-      layout.centre - Offset(total.width / 2, total.height / 2),
+      Offset(
+        layout.centre.dx - total.width / 2,
+        layout.centre.dy - groupHeight / 2,
+      ),
+    );
+    unit.paint(
+      canvas,
+      Offset(
+        layout.centre.dx - unit.width / 2,
+        layout.centre.dy - groupHeight / 2 + total.height + gap,
+      ),
     );
     total.dispose();
+    unit.dispose();
+  }
+
+  TextPainter _centreText(
+    String text,
+    Color color,
+    double size,
+    String family,
+  ) {
+    return TextPainter(
+      text: TextSpan(
+        text: text,
+        style: TextStyle(
+          color: color,
+          fontSize: size,
+          fontFamily: family,
+          fontWeight: FontWeight.w600,
+          height: 1,
+        ),
+      ),
+      textDirection: textDirection,
+    )..layout();
   }
 
   @override
@@ -369,7 +533,7 @@ class _MonthRingPainter extends CustomPainter {
           rect: Offset.zero & size,
           properties: SemanticsProperties(
             label: ringLabel,
-            textDirection: TextDirection.ltr,
+            textDirection: textDirection,
           ),
         ),
       ];
@@ -380,7 +544,8 @@ class _MonthRingPainter extends CustomPainter {
             properties: SemanticsProperties(
               label: dayLabel(day),
               button: true,
-              textDirection: TextDirection.ltr,
+              onTap: () => onDayTap(day),
+              textDirection: textDirection,
             ),
           ),
         );
@@ -394,10 +559,200 @@ class _MonthRingPainter extends CustomPainter {
     return oldDelegate.data != data ||
         oldDelegate.scheme != scheme ||
         oldDelegate.layout.diameter != layout.diameter ||
-        oldDelegate.layout.days != layout.days;
+        oldDelegate.layout.days != layout.days ||
+        oldDelegate.layout.scale != layout.scale ||
+        oldDelegate.textDirection != textDirection;
   }
 
   @override
   bool shouldRebuildSemantics(covariant _MonthRingPainter oldDelegate) =>
       shouldRepaint(oldDelegate);
+}
+
+class _RingLegend extends StatelessWidget {
+  const _RingLegend();
+
+  @override
+  Widget build(BuildContext context) {
+    final L10n l10n = L10n.of(context);
+    final ColorScheme scheme = Theme.of(context).colorScheme;
+
+    return Wrap(
+      spacing: 16,
+      runSpacing: 10,
+      children: <Widget>[
+        _RingLegendKey(
+          label: l10n.monthTrackerLegendNoPages,
+          track: scheme.surfaceContainerHighest,
+          fill: scheme.primary,
+          fillFraction: 0,
+        ),
+        _RingLegendKey(
+          label: l10n.monthTrackerLegendFewerPages,
+          track: scheme.surfaceContainerHighest,
+          fill: scheme.primary,
+          fillFraction: 0.4,
+        ),
+        _RingLegendKey(
+          label: l10n.monthTrackerLegendMorePages,
+          track: scheme.surfaceContainerHighest,
+          fill: scheme.primary,
+          fillFraction: 1,
+        ),
+        _RingLegendKey(
+          label: l10n.monthTrackerLegendToday,
+          track: scheme.surfaceContainerHighest,
+          fill: scheme.primary,
+          fillFraction: 0,
+          outline: scheme.secondary,
+        ),
+      ],
+    );
+  }
+}
+
+class _RingLegendKey extends StatelessWidget {
+  const _RingLegendKey({
+    required this.label,
+    required this.track,
+    required this.fill,
+    required this.fillFraction,
+    this.outline,
+  });
+
+  final String label;
+  final Color track;
+  final Color fill;
+  final double fillFraction;
+  final Color? outline;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: <Widget>[
+        SizedBox(
+          width: 24,
+          height: 16,
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              color: track,
+              borderRadius: BorderRadius.circular(3),
+              border: outline == null
+                  ? null
+                  : Border.all(color: outline!, width: 1.5),
+            ),
+            child: Align(
+              alignment: Alignment.bottomCenter,
+              child: FractionallySizedBox(
+                widthFactor: 1,
+                heightFactor: fillFraction,
+                child: ColoredBox(color: fill),
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Text(label, style: Theme.of(context).textTheme.labelLarge),
+      ],
+    );
+  }
+}
+
+class _MonthEmptyState extends StatelessWidget {
+  const _MonthEmptyState({required this.title, required this.body});
+
+  final String title;
+  final String body;
+
+  @override
+  Widget build(BuildContext context) {
+    final ThemeData theme = Theme.of(context);
+
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainer,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Icon(
+              Icons.edit_calendar_outlined,
+              color: theme.colorScheme.primary,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(title, style: theme.textTheme.titleMedium),
+                  const SizedBox(height: 4),
+                  Text(
+                    body,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _MonthMessage extends StatelessWidget {
+  const _MonthMessage({
+    required this.title,
+    required this.body,
+    required this.actionLabel,
+    required this.onAction,
+  });
+
+  final String title;
+  final String body;
+  final String actionLabel;
+  final VoidCallback onAction;
+
+  @override
+  Widget build(BuildContext context) {
+    final ThemeData theme = Theme.of(context);
+
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 420),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              Icon(
+                Icons.donut_large_outlined,
+                size: 48,
+                color: theme.colorScheme.primary,
+              ),
+              const SizedBox(height: 16),
+              Text(title, style: theme.textTheme.titleMedium),
+              const SizedBox(height: 8),
+              Text(
+                body,
+                textAlign: TextAlign.center,
+                style: theme.textTheme.bodyMedium,
+              ),
+              const SizedBox(height: 16),
+              FilledButton.tonal(
+                onPressed: onAction,
+                child: Text(actionLabel),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }
