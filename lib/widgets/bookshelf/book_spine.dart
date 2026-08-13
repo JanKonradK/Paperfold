@@ -4,8 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:paperfold/config/paperfold_tokens.dart';
 import 'package:paperfold/utils/log/common.dart';
 
-enum BookSpineOrientation { upright, horizontal }
-
 class BookSpineVisual {
   const BookSpineVisual({
     required this.width,
@@ -44,11 +42,12 @@ class BookSpine extends StatelessWidget {
     required this.onTap,
     this.onLongPress,
     this.longPressHint,
-    this.orientation = BookSpineOrientation.upright,
+    this.uniform = false,
   });
 
   static const double minimumWidth = 48;
   static const double maximumWidth = 64;
+
   /// Books on a real shelf touch. An 8 dp gap between every spine is what made
   /// the first two builds read as a bar chart rather than a bookcase, so the
   /// gap is a hairline instead.
@@ -62,7 +61,12 @@ class BookSpine extends StatelessWidget {
   static const double spacing = 2;
   static const double minimumHeight = 220;
   static const double maximumHeight = 280;
+  static const double fullLengthMinimumHeight = 264;
+  static const double uniformWidth = maximumWidth;
+  static const double uniformHeight = maximumHeight;
+  static const double contactShadowDepth = 6;
   static const double minimumEffectiveTextSize = 11;
+  static const double _baseShelfStageHeight = 318;
 
   static final List<Color> _bookclothBackgrounds = List<Color>.unmodifiable([
     PaperfoldTokens.cover.ground,
@@ -149,7 +153,7 @@ class BookSpine extends StatelessWidget {
   final VoidCallback onTap;
   final VoidCallback? onLongPress;
   final String? longPressHint;
-  final BookSpineOrientation orientation;
+  final bool uniform;
 
   static int stableHash(String value) {
     var hash = 2166136261;
@@ -222,9 +226,12 @@ class BookSpine extends StatelessWidget {
       }
 
       final width = minimumWidth + (hash % 17);
-      final variedHeight = minimumHeight + ((hash >> 8) % 61);
+      final variedHeight = fullLengthMinimumHeight + ((hash >> 8) % 17);
       final height = variedHeight
-          .clamp(width * 4, math.min(maximumHeight, width * 6))
+          .clamp(
+            math.max(fullLengthMinimumHeight, width * 4),
+            math.min(maximumHeight, width * 6),
+          )
           .toDouble();
       final leanStep = (hash >> 19) % 7;
       final leanRadians = leanStep == 0 || leanStep == 6
@@ -257,80 +264,74 @@ class BookSpine extends StatelessWidget {
     return TextScaler.linear(minimumEffectiveTextSize / fontSize);
   }
 
+  /// Spine dimensions grow with accessibility text. This keeps the visible
+  /// title at the requested scale instead of shrinking it or clipping it.
+  static double layoutScale(TextScaler textScaler) {
+    return math.max(1, textScaler.scale(16) / 16);
+  }
+
+  /// The standard 318 dp bay grows only when accessibility text grows.
+  static double shelfStageHeight(TextScaler textScaler) {
+    final fixedFurniture = _baseShelfStageHeight - maximumHeight;
+    return fixedFurniture + maximumHeight * layoutScale(textScaler);
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final visual = resolveVisual(stableId, theme.colorScheme);
     final isRtl = Directionality.of(context) == TextDirection.rtl;
-    final isHorizontal = orientation == BookSpineOrientation.horizontal;
     final textScaler = MediaQuery.textScalerOf(context);
-    final titleStyle = (theme.textTheme.titleMedium ?? const TextStyle())
+    final titleStyle = (theme.textTheme.titleSmall ?? const TextStyle())
         .copyWith(color: visual.foreground, fontWeight: FontWeight.w700);
     final authorStyle = (theme.textTheme.labelSmall ?? const TextStyle())
         .copyWith(color: visual.foreground, fontWeight: FontWeight.w600);
-    final titleSize = titleStyle.fontSize ?? 16;
     final authorSize = authorStyle.fontSize ?? 11;
-    final showAuthor = !isHorizontal &&
-        author.trim().isNotEmpty &&
-        visual.width >= 56 &&
-        textScaler.scale(authorSize) <= 24;
-    final width = isHorizontal ? 112.0 + (visual.grainSeed % 37) : visual.width;
-    final height = isHorizontal ? 48.0 + (visual.grainSeed % 9) : visual.height;
-    final lean = isHorizontal ? 0.0 : visual.leanRadians * (isRtl ? -1 : 1);
-    final horizontalLeanInset = lean == 0 ? 0.0 : 8.0;
+    final showAuthor = author.trim().isNotEmpty;
+    final dimensionScale = layoutScale(textScaler);
+    final height = (uniform ? uniformHeight : visual.height) * dimensionScale;
+    final metadataTextScaler = legibleTextScaler(textScaler, authorSize);
+    final baseWidth = (uniform ? uniformWidth : visual.width) * dimensionScale;
+    final width = baseWidth;
+    final lean = uniform ? 0.0 : visual.leanRadians * (isRtl ? -1 : 1);
+    final leanInset = lean == 0 ? 0.0 : 8.0 * dimensionScale;
 
-    Widget titleLine() => Text(
-          title,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          textAlign: TextAlign.center,
-          textScaler: legibleTextScaler(textScaler, titleSize),
-          style: titleStyle,
-        );
-
-    Widget authorLine() => Text(
-          author,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          textAlign: TextAlign.center,
-          textScaler: legibleTextScaler(textScaler, authorSize),
-          style: authorStyle,
-        );
-
-    final text = isHorizontal
-        ? Padding(
-            padding: const EdgeInsetsDirectional.fromSTEB(14, 5, 14, 5),
-            child: Center(child: titleLine()),
-          )
-        : Padding(
-            padding: const EdgeInsets.fromLTRB(7, 18, 7, 16),
-            child: RotatedBox(
-              quarterTurns: isRtl ? 1 : 3,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Flexible(flex: 3, child: titleLine()),
-                  if (showAuthor) ...[
-                    const SizedBox(width: 8),
-                    Flexible(child: authorLine()),
-                  ],
-                ],
-              ),
+    final text = Padding(
+      padding: const EdgeInsets.fromLTRB(2, 16, 2, 14),
+      child: RotatedBox(
+        quarterTurns: isRtl ? 1 : 3,
+        child: Center(
+          child: Text.rich(
+            TextSpan(
+              children: [
+                TextSpan(text: title, style: titleStyle.copyWith(height: 1)),
+                if (showAuthor)
+                  TextSpan(
+                    text: '\n$author',
+                    style: authorStyle.copyWith(height: 1),
+                  ),
+              ],
             ),
-          );
+            key: ValueKey('book-spine-metadata-$stableId'),
+            textAlign: TextAlign.center,
+            softWrap: true,
+            textScaler: metadataTextScaler,
+          ),
+        ),
+      ),
+    );
 
     final paintedSpine = SizedBox(
       width: width,
       height: height,
       child: Material(
+        key: ValueKey('book-spine-surface-$stableId'),
         color: visual.background,
         clipBehavior: Clip.antiAlias,
         shape: RoundedRectangleBorder(
-          borderRadius: isHorizontal
-              ? BorderRadius.circular(3)
-              : visual.hasRoundedHead
-                  ? const BorderRadius.vertical(top: Radius.circular(5))
-                  : BorderRadius.zero,
+          borderRadius: visual.hasRoundedHead
+              ? const BorderRadius.vertical(top: Radius.circular(5))
+              : BorderRadius.zero,
         ),
         child: InkWell(
           onTap: onTap,
@@ -339,7 +340,6 @@ class BookSpine extends StatelessWidget {
           child: CustomPaint(
             painter: _BookSpinePainter(
               visual: visual,
-              isHorizontal: isHorizontal,
               isRtl: isRtl,
             ),
             child: text,
@@ -358,14 +358,20 @@ class BookSpine extends StatelessWidget {
         child: Tooltip(
           message: semanticLabel,
           child: SizedBox(
-            width: width + horizontalLeanInset * 2,
-            height: height,
-            child: Align(
-              alignment: Alignment.bottomCenter,
-              child: Transform.rotate(
-                angle: lean,
-                alignment: Alignment.bottomCenter,
-                child: paintedSpine,
+            width: width + leanInset * 2,
+            height: height + contactShadowDepth,
+            child: CustomPaint(
+              painter: _BookContactShadowPainter(
+                color: PaperfoldTokens.wood(theme.brightness).back,
+                spineWidth: width,
+              ),
+              child: Align(
+                alignment: Alignment.topCenter,
+                child: Transform.rotate(
+                  angle: lean,
+                  alignment: Alignment.bottomCenter,
+                  child: paintedSpine,
+                ),
               ),
             ),
           ),
@@ -378,7 +384,6 @@ class BookSpine extends StatelessWidget {
 class _BookSpinePainter extends CustomPainter {
   _BookSpinePainter({
     required this.visual,
-    required this.isHorizontal,
     required this.isRtl,
   })  : edgePaint = Paint()
           ..color = visual.foreground.withValues(alpha: 0.14)
@@ -390,24 +395,33 @@ class _BookSpinePainter extends CustomPainter {
           ..color = visual.foreground.withValues(alpha: 0.56)
           ..strokeWidth = 1,
         grainPaint = Paint()
-          ..color = visual.foreground.withValues(alpha: 0.07)
-          ..strokeWidth = 0.7;
+          ..color = Color.lerp(
+            visual.background,
+            visual.foreground,
+            0.12,
+          )!
+          ..strokeWidth = 0.7,
+        foilPaint = Paint()
+          ..color = (BookSpine.contrast(
+                    PaperfoldTokens.cover.foil,
+                    visual.background,
+                  ) >=
+                  3
+              ? PaperfoldTokens.cover.foil
+              : visual.foreground)
+          ..strokeWidth = 1;
 
   final BookSpineVisual visual;
-  final bool isHorizontal;
   final bool isRtl;
   final Paint edgePaint;
   final Paint highlightPaint;
   final Paint detailPaint;
   final Paint grainPaint;
+  final Paint foilPaint;
 
   @override
   void paint(Canvas canvas, Size size) {
-    if (isHorizontal) {
-      _paintHorizontal(canvas, size);
-    } else {
-      _paintUpright(canvas, size);
-    }
+    _paintUpright(canvas, size);
   }
 
   void _paintUpright(Canvas canvas, Size size) {
@@ -422,10 +436,14 @@ class _BookSpinePainter extends CustomPainter {
           begin: isRtl ? Alignment.centerRight : Alignment.centerLeft,
           end: isRtl ? Alignment.centerLeft : Alignment.centerRight,
           colors: [
-            Colors.black.withValues(alpha: 0.24),
-            Colors.black.withValues(alpha: 0.05),
-            Colors.white.withValues(alpha: 0.10),
-            Colors.black.withValues(alpha: 0.18),
+            Color.lerp(visual.background, visual.foreground, 0.14)!,
+            visual.background,
+            Color.lerp(
+              visual.background,
+              PaperfoldTokens.cover.foil,
+              0.06,
+            )!,
+            Color.lerp(visual.background, visual.foreground, 0.10)!,
           ],
           stops: const [0, 0.3, 0.63, 1],
         ).createShader(sheenRect),
@@ -445,7 +463,12 @@ class _BookSpinePainter extends CustomPainter {
       );
       canvas.drawRRect(
         block,
-        Paint()..color = visual.foreground.withValues(alpha: 0.08),
+        Paint()
+          ..color = Color.lerp(
+            visual.background,
+            visual.foreground,
+            0.035,
+          )!,
       );
       canvas.drawRRect(
         block,
@@ -477,12 +500,12 @@ class _BookSpinePainter extends CustomPainter {
       canvas.drawLine(
         const Offset(7, 20),
         Offset(size.width - 7, 20),
-        detailPaint,
+        foilPaint,
       );
       canvas.drawLine(
         Offset(7, size.height - 20),
         Offset(size.width - 7, size.height - 20),
-        detailPaint,
+        foilPaint,
       );
     }
     if (visual.hubCount > 0) {
@@ -513,38 +536,46 @@ class _BookSpinePainter extends CustomPainter {
     }
   }
 
-  void _paintHorizontal(Canvas canvas, Size size) {
-    canvas.drawLine(const Offset(8, 4), Offset(size.width - 8, 4), edgePaint);
-    canvas.drawLine(
-      Offset(8, size.height - 4),
-      Offset(size.width - 8, size.height - 4),
-      highlightPaint,
+  @override
+  bool shouldRepaint(covariant _BookSpinePainter oldDelegate) {
+    return visual != oldDelegate.visual || isRtl != oldDelegate.isRtl;
+  }
+}
+
+class _BookContactShadowPainter extends CustomPainter {
+  const _BookContactShadowPainter({
+    required this.color,
+    required this.spineWidth,
+  });
+
+  final Color color;
+  final double spineWidth;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final left = (size.width - spineWidth) / 2 + 3;
+    final rect = Rect.fromLTWH(
+      left,
+      size.height - BookSpine.contactShadowDepth,
+      math.max(0, spineWidth - 6),
+      BookSpine.contactShadowDepth,
     );
-    if (visual.hasBands) {
-      canvas.drawRect(Rect.fromLTWH(7, 0, 5, size.height), detailPaint);
-      canvas.drawRect(
-        Rect.fromLTWH(size.width - 12, 0, 5, size.height),
-        detailPaint,
-      );
-    }
-    if (visual.hasFoilRules) {
-      canvas.drawLine(
-        const Offset(18, 7),
-        Offset(18, size.height - 7),
-        detailPaint,
-      );
-      canvas.drawLine(
-        Offset(size.width - 18, 7),
-        Offset(size.width - 18, size.height - 7),
-        detailPaint,
-      );
-    }
+    canvas.drawRect(
+      rect,
+      Paint()
+        ..shader = LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            color.withValues(alpha: 0.5),
+            color.withValues(alpha: 0),
+          ],
+        ).createShader(rect),
+    );
   }
 
   @override
-  bool shouldRepaint(covariant _BookSpinePainter oldDelegate) {
-    return visual != oldDelegate.visual ||
-        isHorizontal != oldDelegate.isHorizontal ||
-        isRtl != oldDelegate.isRtl;
+  bool shouldRepaint(covariant _BookContactShadowPainter oldDelegate) {
+    return color != oldDelegate.color || spineWidth != oldDelegate.spineWidth;
   }
 }

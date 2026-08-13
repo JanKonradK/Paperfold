@@ -24,10 +24,16 @@ class MonthTrackerData {
   /// the ring paints one segment per real day.
   int get dayCount => DateTime(year, month + 1, 0).day;
 
-  int get totalPages =>
-      pagesByDay.values.fold(0, (sum, pages) => sum + pages);
+  int get totalPages => pagesByDay.values.fold(0, (sum, pages) => sum + pages);
 
   int get daysRead => pagesByDay.values.where((pages) => pages > 0).length;
+
+  int pagesFor(int day) => pagesByDay[day] ?? 0;
+
+  bool isRecorded(int day) => pagesByDay.containsKey(day);
+
+  double get averagePagesOnReadDays =>
+      daysRead == 0 ? 0 : totalPages / daysRead;
 
   /// The busiest day, used to scale every other day against it. Never zero, so
   /// callers can divide by it.
@@ -43,7 +49,7 @@ class MonthTrackerData {
 
   /// How full a day's segment is drawn, from 0 to 1.
   double fillFor(int day) {
-    final int pages = pagesByDay[day] ?? 0;
+    final int pages = pagesFor(day);
     if (pages <= 0) {
       return 0;
     }

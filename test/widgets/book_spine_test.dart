@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/semantics.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:paperfold/config/paperfold_tokens.dart';
 import 'package:paperfold/widgets/bookshelf/book_spine.dart';
@@ -16,6 +16,8 @@ void main() {
     expect(first.width, greaterThanOrEqualTo(BookSpine.minimumWidth));
     expect(first.width, lessThanOrEqualTo(BookSpine.maximumWidth));
     expect(first.height, greaterThanOrEqualTo(BookSpine.minimumHeight));
+    expect(
+        first.height, greaterThanOrEqualTo(BookSpine.fullLengthMinimumHeight));
     expect(first.height, lessThanOrEqualTo(BookSpine.maximumHeight));
     expect(first.height / first.width, inInclusiveRange(4, 6));
     expect(identical(BookSpine.backgrounds(), BookSpine.backgrounds()), isTrue);
@@ -115,6 +117,101 @@ void main() {
     expect(tester.widget<RotatedBox>(find.byType(RotatedBox)).quarterTurns, 1);
   });
 
+  testWidgets('long title and author stay complete and wrap on the spine',
+      (tester) async {
+    const title =
+        'Rascal Does Not Dream of a Nightingale and the Long Road Home';
+    const author = 'Hajime Kamoshida';
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: ThemeData(
+          useMaterial3: true,
+          colorScheme: PaperfoldTokens.colorScheme(Brightness.light),
+        ),
+        home: const Scaffold(
+          body: Center(
+            child: BookSpine(
+              stableId: 'long-title',
+              title: title,
+              author: author,
+              semanticLabel: '$title by $author',
+              onTap: _noop,
+            ),
+          ),
+        ),
+      ),
+    );
+
+    final titleFinder =
+        find.byKey(const ValueKey('book-spine-metadata-long-title'));
+    final titleWidget = tester.widget<Text>(titleFinder);
+    final titleParagraph = tester.renderObject<RenderParagraph>(titleFinder);
+    final visibleMetadata = titleWidget.textSpan!.toPlainText();
+    final titleBoxes = titleParagraph.getBoxesForSelection(
+      TextSelection(baseOffset: 0, extentOffset: visibleMetadata.length),
+    );
+
+    expect(visibleMetadata, '$title\n$author');
+    expect(titleWidget.maxLines, isNull);
+    expect(titleParagraph.didExceedMaxLines, isFalse);
+    // Two title lines plus the author line prove that the title itself wraps.
+    expect(titleBoxes.length, greaterThanOrEqualTo(3));
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('uniform spines have identical width and height', (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: ThemeData(
+          useMaterial3: true,
+          colorScheme: PaperfoldTokens.colorScheme(Brightness.dark),
+        ),
+        home: const Scaffold(
+          body: Row(
+            children: [
+              BookSpine(
+                stableId: 'uniform-a',
+                title: 'Dune',
+                author: 'Frank Herbert',
+                semanticLabel: 'Dune by Frank Herbert',
+                onTap: _noop,
+                uniform: true,
+              ),
+              BookSpine(
+                stableId: 'uniform-b',
+                title: 'The Left Hand of Darkness',
+                author: 'Ursula Le Guin',
+                semanticLabel: 'The Left Hand of Darkness by Ursula Le Guin',
+                onTap: _noop,
+                uniform: true,
+              ),
+              BookSpine(
+                stableId: 'uniform-c',
+                title: 'Piranesi',
+                author: 'Susanna Clarke',
+                semanticLabel: 'Piranesi by Susanna Clarke',
+                onTap: _noop,
+                uniform: true,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    final sizes = [
+      for (final id in ['uniform-a', 'uniform-b', 'uniform-c'])
+        tester.getSize(find.byKey(ValueKey('book-spine-surface-$id'))),
+    ];
+
+    expect(sizes.map((size) => size.width).toSet(), {BookSpine.uniformWidth});
+    expect(
+      sizes.map((size) => size.height).toSet(),
+      {BookSpine.uniformHeight},
+    );
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('spine semantics exposes and performs its tap action',
       (tester) async {
     var tapCount = 0;
@@ -176,7 +273,10 @@ void main() {
       ),
     );
 
-    expect(find.text('Ursula Le Guin'), findsOneWidget);
+    final metadata = tester.widget<Text>(
+      find.byKey(const ValueKey('book-spine-metadata-lean-2')),
+    );
+    expect(metadata.textSpan!.toPlainText(), 'Earthsea\nUrsula Le Guin');
     for (final text in tester.widgetList<Text>(find.byType(Text))) {
       final fontSize = text.style?.fontSize;
       if (fontSize != null) {

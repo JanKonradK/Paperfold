@@ -1,4 +1,7 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter/semantics.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:paperfold/config/paperfold_tokens.dart';
@@ -23,11 +26,30 @@ class ReadingChallengePage extends ConsumerWidget {
     final L10n l10n = L10n.of(context);
     final AsyncValue<ReadingChallengeData> challenge =
         ref.watch(readingChallengeProvider);
+    final int selectedYear = ref.watch(trackedChallengeYearProvider);
+    final int currentYear = DateTime.now().year;
+
+    void stepYear(int amount) {
+      ref.read(trackedChallengeYearProvider.notifier).state =
+          selectedYear + amount;
+    }
 
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.challengeTitle),
         actions: <Widget>[
+          IconButton(
+            key: const ValueKey<String>('challenge-previous-year'),
+            icon: const Icon(Icons.chevron_left),
+            tooltip: l10n.challengePreviousYear,
+            onPressed: selectedYear > 1 ? () => stepYear(-1) : null,
+          ),
+          IconButton(
+            key: const ValueKey<String>('challenge-next-year'),
+            icon: const Icon(Icons.chevron_right),
+            tooltip: l10n.challengeNextYear,
+            onPressed: selectedYear < currentYear ? () => stepYear(1) : null,
+          ),
           IconButton(
             icon: const Icon(Icons.flag_outlined),
             tooltip: l10n.challengeSetTarget,
@@ -42,6 +64,8 @@ class ReadingChallengePage extends ConsumerWidget {
         error: (Object error, StackTrace stackTrace) => _ChallengeMessage(
           title: l10n.shelfLoadErrorTitle,
           body: l10n.shelfLoadErrorBody,
+          actionLabel: l10n.commonRetry,
+          onAction: () => ref.read(readingChallengeProvider.notifier).refresh(),
         ),
         data: (ReadingChallengeData data) => _ChallengeView(data: data),
       ),
@@ -65,7 +89,14 @@ class ReadingChallengePage extends ConsumerWidget {
           controller: controller,
           autofocus: true,
           keyboardType: TextInputType.number,
-          decoration: InputDecoration(labelText: l10n.challengeTargetLabel),
+          inputFormatters: <TextInputFormatter>[
+            FilteringTextInputFormatter.digitsOnly,
+            LengthLimitingTextInputFormatter(3),
+          ],
+          decoration: InputDecoration(
+            labelText: l10n.challengeTargetLabel,
+            helperText: l10n.challengeTargetRange,
+          ),
           onSubmitted: (String value) =>
               Navigator.of(context).pop(int.tryParse(value.trim())),
         ),
@@ -75,8 +106,8 @@ class ReadingChallengePage extends ConsumerWidget {
             child: Text(l10n.commonCancel),
           ),
           TextButton(
-            onPressed: () => Navigator.of(context)
-                .pop(int.tryParse(controller.text.trim())),
+            onPressed: () =>
+                Navigator.of(context).pop(int.tryParse(controller.text.trim())),
             child: Text(l10n.commonSave),
           ),
         ],
@@ -100,6 +131,12 @@ class _ChallengeView extends ConsumerWidget {
     final L10n l10n = L10n.of(context);
     final ThemeData theme = Theme.of(context);
     final int over = data.finishedCount - data.target;
+    final int pace = data.paceDelta;
+    final String paceLabel = pace > 0
+        ? l10n.challengePaceAhead(pace)
+        : pace < 0
+            ? l10n.challengePaceBehind(-pace)
+            : l10n.challengePaceOnTrack;
 
     return RefreshIndicator(
       onRefresh: () => ref.read(readingChallengeProvider.notifier).refresh(),
@@ -122,6 +159,45 @@ class _ChallengeView extends ConsumerWidget {
             l10n.challengeProgress(data.finishedCount, data.target),
             style: theme.textTheme.bodyLarge,
           ),
+          const SizedBox(height: 12),
+          DecoratedBox(
+            decoration: BoxDecoration(
+              color: theme.colorScheme.surfaceContainer,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(12),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Icon(
+                    pace < 0
+                        ? Icons.trending_down
+                        : pace > 0
+                            ? Icons.trending_up
+                            : Icons.trending_flat,
+                    color: theme.colorScheme.primary,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        Text(paceLabel, style: theme.textTheme.titleSmall),
+                        const SizedBox(height: 2),
+                        Text(
+                          l10n.challengePaceExpected(data.expectedFinished),
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
           if (over > 0) ...<Widget>[
             const SizedBox(height: 4),
             Text(
@@ -133,6 +209,13 @@ class _ChallengeView extends ConsumerWidget {
           const SizedBox(height: 16),
           const _ChallengeLegend(),
           const SizedBox(height: 20),
+          if (data.finished.isEmpty && data.readingNow.isEmpty) ...<Widget>[
+            _ChallengeEmptyState(
+              title: l10n.challengeEmptyTitle,
+              body: l10n.challengeEmptyBody,
+            ),
+            const SizedBox(height: 20),
+          ],
           _ChallengeShelf(data: data),
         ],
       ),
@@ -166,6 +249,53 @@ class _ChallengeLegend extends StatelessWidget {
           label: l10n.challengeLegendEmpty,
         ),
       ],
+    );
+  }
+}
+
+class _ChallengeEmptyState extends StatelessWidget {
+  const _ChallengeEmptyState({required this.title, required this.body});
+
+  final String title;
+  final String body;
+
+  @override
+  Widget build(BuildContext context) {
+    final ThemeData theme = Theme.of(context);
+
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainer,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Icon(
+              Icons.auto_stories_outlined,
+              color: theme.colorScheme.primary,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(title, style: theme.textTheme.titleMedium),
+                  const SizedBox(height: 4),
+                  Text(
+                    body,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -216,6 +346,7 @@ class _ChallengeShelf extends StatelessWidget {
   Widget build(BuildContext context) {
     final L10n l10n = L10n.of(context);
     final ColorScheme scheme = Theme.of(context).colorScheme;
+    final TextDirection textDirection = Directionality.of(context);
     // The whole shelf grows with the system text setting, because the numbers
     // are painted into the spines and cannot grow on their own.
     final double scale =
@@ -229,21 +360,25 @@ class _ChallengeShelf extends StatelessWidget {
           scale: scale,
         );
 
+        void openSlot(int slot) {
+          final Book? book = data.bookForSlot(slot);
+          if (book == null) {
+            return;
+          }
+          Navigator.of(context).push(
+            MaterialPageRoute<void>(
+              builder: (BuildContext context) => BookReviewPage(book: book),
+            ),
+          );
+        }
+
         return GestureDetector(
           onTapUp: (TapUpDetails details) {
             final int? slot = layout.slotAt(details.localPosition);
             if (slot == null) {
               return;
             }
-            final Book? book = data.bookForSlot(slot);
-            if (book == null) {
-              return;
-            }
-            Navigator.of(context).push(
-              MaterialPageRoute<void>(
-                builder: (BuildContext context) => BookReviewPage(book: book),
-              ),
-            );
+            openSlot(slot);
           },
           child: CustomPaint(
             size: Size(constraints.maxWidth, layout.height),
@@ -251,6 +386,7 @@ class _ChallengeShelf extends StatelessWidget {
               data: data,
               layout: layout,
               scheme: scheme,
+              textDirection: textDirection,
               wood: PaperfoldTokens.wood(scheme.brightness),
               shelfLabel: l10n.challengeShelfSemanticLabel(
                 data.finishedCount,
@@ -263,6 +399,7 @@ class _ChallengeShelf extends StatelessWidget {
                     ? l10n.challengeSlotEmpty(slot)
                     : l10n.challengeSlotFilled(slot, book.title);
               },
+              onSlotTap: openSlot,
             ),
           ),
         );
@@ -282,15 +419,14 @@ class _ChallengeLayout {
           ChallengeDao.minimumTarget,
           ChallengeDao.maximumTarget,
         ) {
-    final double stride = spineWidth + spineGap;
-    columns = ((width + spineGap) / stride).floor().clamp(1, this.slots);
+    columns = (width / touchExtent).floor().clamp(1, this.slots);
     rows = (this.slots / columns).ceil();
-    final double rowWidth = columns * stride - spineGap;
+    final double rowWidth = columns * touchExtent;
     leftPadding = (width - rowWidth) / 2;
   }
 
   static const double _baseSpineWidth = 26;
-  static const double _baseSpineGap = 3;
+  static const double _baseTouchExtent = 48;
   static const double _baseSpineHeight = 78;
   static const double _baseBoardThickness = 6;
   static const double _baseRowGap = 18;
@@ -304,7 +440,7 @@ class _ChallengeLayout {
   late final double leftPadding;
 
   double get spineWidth => _baseSpineWidth * scale;
-  double get spineGap => _baseSpineGap * scale;
+  double get touchExtent => _baseTouchExtent * scale;
   double get spineHeight => _baseSpineHeight * scale;
   double get boardThickness => _baseBoardThickness * scale;
   double get rowGap => _baseRowGap * scale;
@@ -317,9 +453,24 @@ class _ChallengeLayout {
     final int index = slot - 1;
     final int row = index ~/ columns;
     final int column = index % columns;
-    final double left = leftPadding + column * (spineWidth + spineGap);
+    final double cellLeft = leftPadding + column * touchExtent;
+    final double left = cellLeft + (touchExtent - spineWidth) / 2;
     final double top = row * rowHeight;
     return Rect.fromLTWH(left, top, spineWidth, spineHeight);
+  }
+
+  /// The logical target for a one-based [slot]. It stays at least 48 dp wide
+  /// even though the painted spine is narrow.
+  Rect touchRect(int slot) {
+    final int index = slot - 1;
+    final int row = index ~/ columns;
+    final int column = index % columns;
+    return Rect.fromLTWH(
+      leftPadding + column * touchExtent,
+      row * rowHeight,
+      touchExtent,
+      math.max(spineHeight, touchExtent),
+    );
   }
 
   /// The board under [row], zero-based.
@@ -335,9 +486,7 @@ class _ChallengeLayout {
   /// The one-based slot under [position], or null.
   int? slotAt(Offset position) {
     for (int slot = 1; slot <= slots; slot++) {
-      // The touch target is the spine plus half the gap on each side, so the
-      // gaps between spines are not dead space.
-      if (spineRect(slot).inflate(spineGap / 2).contains(position)) {
+      if (touchRect(slot).contains(position)) {
         return slot;
       }
     }
@@ -346,15 +495,18 @@ class _ChallengeLayout {
 }
 
 typedef _SlotLabel = String Function(int slot);
+typedef _SlotTap = void Function(int slot);
 
 class _ChallengeShelfPainter extends CustomPainter {
   const _ChallengeShelfPainter({
     required this.data,
     required this.layout,
     required this.scheme,
+    required this.textDirection,
     required this.wood,
     required this.shelfLabel,
     required this.slotLabel,
+    required this.onSlotTap,
   });
 
   /// Painted number labels are the same handful of glyphs on every repaint, so
@@ -365,9 +517,11 @@ class _ChallengeShelfPainter extends CustomPainter {
   final ReadingChallengeData data;
   final _ChallengeLayout layout;
   final ColorScheme scheme;
+  final TextDirection textDirection;
   final PaperfoldWoodPalette wood;
   final String shelfLabel;
   final _SlotLabel slotLabel;
+  final _SlotTap onSlotTap;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -376,8 +530,7 @@ class _ChallengeShelfPainter extends CustomPainter {
       canvas.drawRect(layout.boardRect(row), board);
     }
 
-    final List<Color> cloth =
-        BookSpine.backgroundsFor(scheme.brightness);
+    final List<Color> cloth = BookSpine.backgroundsFor(scheme.brightness);
     final double numberSize = 9 * layout.scale;
 
     for (int slot = 1; slot <= layout.slots; slot++) {
@@ -432,8 +585,7 @@ class _ChallengeShelfPainter extends CustomPainter {
       final Color numberColor = state == ChallengeSlotState.empty
           ? scheme.onSurfaceVariant
           : scheme.onSurface;
-      final TextPainter number =
-          _number('$slot', numberColor, numberSize);
+      final TextPainter number = _number('$slot', numberColor, numberSize);
       number.paint(
         canvas,
         Offset(
@@ -474,18 +626,20 @@ class _ChallengeShelfPainter extends CustomPainter {
           rect: Offset.zero & size,
           properties: SemanticsProperties(
             label: shelfLabel,
-            textDirection: TextDirection.ltr,
+            textDirection: textDirection,
           ),
         ),
       ];
       for (int slot = 1; slot <= layout.slots; slot++) {
         nodes.add(
           CustomPainterSemantics(
-            rect: layout.spineRect(slot),
+            rect: layout.touchRect(slot),
             properties: SemanticsProperties(
               label: slotLabel(slot),
               button: data.bookForSlot(slot) != null,
-              textDirection: TextDirection.ltr,
+              onTap:
+                  data.bookForSlot(slot) == null ? null : () => onSlotTap(slot),
+              textDirection: textDirection,
             ),
           ),
         );
@@ -500,7 +654,8 @@ class _ChallengeShelfPainter extends CustomPainter {
         oldDelegate.scheme != scheme ||
         oldDelegate.layout.slots != layout.slots ||
         oldDelegate.layout.width != layout.width ||
-        oldDelegate.layout.scale != layout.scale;
+        oldDelegate.layout.scale != layout.scale ||
+        oldDelegate.textDirection != textDirection;
   }
 
   @override
@@ -509,10 +664,17 @@ class _ChallengeShelfPainter extends CustomPainter {
 }
 
 class _ChallengeMessage extends StatelessWidget {
-  const _ChallengeMessage({required this.title, required this.body});
+  const _ChallengeMessage({
+    required this.title,
+    required this.body,
+    this.actionLabel,
+    this.onAction,
+  });
 
   final String title;
   final String body;
+  final String? actionLabel;
+  final VoidCallback? onAction;
 
   @override
   Widget build(BuildContext context) {
@@ -537,6 +699,13 @@ class _ChallengeMessage extends StatelessWidget {
               textAlign: TextAlign.center,
               style: theme.textTheme.bodyMedium,
             ),
+            if (actionLabel != null && onAction != null) ...<Widget>[
+              const SizedBox(height: 16),
+              FilledButton.tonal(
+                onPressed: onAction,
+                child: Text(actionLabel!),
+              ),
+            ],
           ],
         ),
       ),

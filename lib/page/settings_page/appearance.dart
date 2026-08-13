@@ -148,8 +148,39 @@ class _AppearanceSettingState extends State<AppearanceSetting> {
               ),
             ]),
         SettingsSection(
-            title: Text(L10n.of(context).settingsBookshelfCover),
+            title: Text(L10n.of(context).settingsBookshelf),
             tiles: [
+              CustomSettingsTile(
+                child: Semantics(
+                  label: L10n.of(context).settingsBookshelfUniformSpines,
+                  hint: L10n.of(context)
+                      .settingsBookshelfUniformSpinesDescription,
+                  toggled: Prefs().shelfUniformSpines,
+                  onTap: () {
+                    setState(() {
+                      Prefs().shelfUniformSpines = !Prefs().shelfUniformSpines;
+                    });
+                  },
+                  child: ExcludeSemantics(
+                    child: SettingsTile.switchTile(
+                      title: Text(
+                        L10n.of(context).settingsBookshelfUniformSpines,
+                      ),
+                      description: Text(
+                        L10n.of(context)
+                            .settingsBookshelfUniformSpinesDescription,
+                      ),
+                      leading: const Icon(Icons.view_column_outlined),
+                      initialValue: Prefs().shelfUniformSpines,
+                      onToggle: (bool value) {
+                        setState(() {
+                          Prefs().shelfUniformSpines = value;
+                        });
+                      },
+                    ),
+                  ),
+                ),
+              ),
               CustomSettingsTile(
                   child: ListTile(
                 title: Text(L10n.of(context).settingsBookshelfCoverWidth),
