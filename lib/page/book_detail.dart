@@ -489,6 +489,11 @@ class _BookDetailState extends ConsumerState<BookDetail> {
         padding: const EdgeInsets.all(12),
         child: AsyncSkeletonWrapper(
           asyncValue: ref.watch(bookTagEditorProvider(widget.book.id)),
+          // Without a mock the wrapper logs a SEVERE and drops to a spinner,
+          // so every rebuild of this section flashed a loading circle where
+          // the tags had just been. An empty state is the honest skeleton:
+          // no tags are known yet.
+          mock: const BookTagState(tags: [], attachedIds: {}),
           builder: (state, _) {
             final notifier =
                 ref.read(bookTagEditorProvider(widget.book.id).notifier);
