@@ -1,6 +1,7 @@
 import 'package:paperfold/page/settings_page/appearance.dart';
 import 'package:flutter/material.dart';
 import 'package:introduction_screen/introduction_screen.dart';
+import 'package:paperfold/config/paperfold_tokens.dart';
 import 'package:paperfold/l10n/generated/L10n.dart';
 import 'package:paperfold/config/shared_preference_provider.dart';
 import 'package:provider/provider.dart';
@@ -234,22 +235,27 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     }
 
     Widget buildThemeColorSelector() {
-      final List<Color> themeColors = [
-        Colors.purple,
-        Colors.indigo,
-        Colors.blue,
-        Colors.cyan,
-        Colors.teal,
-        Colors.green,
-        Colors.lime,
-        Colors.amber,
-        Colors.orange,
-        Colors.deepOrange,
-        Colors.pink,
-        Colors.red,
-      ]..reversed.toList();
+      final Color paperfoldColor = PaperfoldTokens.colorScheme(
+        Theme.of(context).brightness,
+      ).primary;
+      final List<({Color color, bool isPaperfold})> themeColors = [
+        (color: paperfoldColor, isPaperfold: true),
+        (color: Colors.purple, isPaperfold: false),
+        (color: Colors.indigo, isPaperfold: false),
+        (color: Colors.blue, isPaperfold: false),
+        (color: Colors.cyan, isPaperfold: false),
+        (color: Colors.teal, isPaperfold: false),
+        (color: Colors.green, isPaperfold: false),
+        (color: Colors.lime, isPaperfold: false),
+        (color: Colors.amber, isPaperfold: false),
+        (color: Colors.orange, isPaperfold: false),
+        (color: Colors.deepOrange, isPaperfold: false),
+        (color: Colors.pink, isPaperfold: false),
+        (color: Colors.red, isPaperfold: false),
+      ];
 
-      final currentThemeColor = Prefs().themeColor;
+      final prefs = Prefs();
+      final currentThemeColor = prefs.themeColor;
 
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -284,51 +290,74 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             ),
             itemCount: themeColors.length,
             itemBuilder: (context, index) {
-              final color = themeColors[index];
-              final isSelected =
-                  color.toARGB32() == currentThemeColor.toARGB32();
+              final option = themeColors[index];
+              final color = option.color;
+              final isSelected = option.isPaperfold
+                  ? prefs.useBrandTheme
+                  : !prefs.useBrandTheme &&
+                      color.toARGB32() == currentThemeColor.toARGB32();
 
-              return GestureDetector(
-                onTap: () {
-                  setState(() {
-                    Prefs().saveThemeToPrefs(color.toARGB32());
-                  });
-                },
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: color,
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: isSelected
-                          ? Theme.of(context).colorScheme.onSurface
-                          : Colors.transparent,
-                      width: 2,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withAlpha(30),
-                        blurRadius: 2,
-                        offset: const Offset(0, 1),
+              final swatch = GestureDetector(
+                  onTap: () async {
+                    if (option.isPaperfold) {
+                      prefs.useBrandTheme = true;
+                    } else {
+                      await prefs.saveThemeToPrefs(color.toARGB32());
+                    }
+                    if (mounted) {
+                      setState(() {});
+                    }
+                  },
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: color,
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: isSelected
+                            ? Theme.of(context).colorScheme.onSurface
+                            : Colors.transparent,
+                        width: 2,
                       ),
-                      if (isSelected)
+                      boxShadow: [
                         BoxShadow(
-                          color: color.withAlpha(100),
-                          blurRadius: 8,
-                          spreadRadius: 1,
+                          color: Colors.black.withAlpha(30),
+                          blurRadius: 2,
+                          offset: const Offset(0, 1),
                         ),
-                    ],
-                  ),
-                  child: isSelected
-                      ? Icon(
-                          Icons.check,
-                          color: color.computeLuminance() > 0.5
-                              ? Colors.black
-                              : Colors.white,
-                          size: 20,
-                        )
-                      : null,
-                ),
-              );
+                        if (isSelected)
+                          BoxShadow(
+                            color: color.withAlpha(100),
+                            blurRadius: 8,
+                            spreadRadius: 1,
+                          ),
+                      ],
+                    ),
+                    child: isSelected
+                        ? Icon(
+                            Icons.check,
+                            color: color.computeLuminance() > 0.5
+                                ? Colors.black
+                                : Colors.white,
+                            size: 20,
+                          )
+                        : option.isPaperfold
+                            ? Icon(
+                                Icons.auto_stories_outlined,
+                                color: color.computeLuminance() > 0.5
+                                    ? Colors.black
+                                    : Colors.white,
+                                size: 20,
+                              )
+                            : null,
+                  ));
+
+              return option.isPaperfold
+                  ? Tooltip(
+                      message:
+                          L10n.of(context).settingsAppearanceUsePaperfoldTheme,
+                      child: swatch,
+                    )
+                  : swatch;
             },
           ),
         ],

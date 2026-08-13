@@ -125,6 +125,25 @@ follows later. The capture path is proven viable; the integration is Milestone 5
   embedding.
 - Bundled Source Han Serif stays; it is OFL 1.1 and its licence text now ships
   at `assets/fonts/OFL.txt`.
+- **Type: Philosopher and Source Sans 3**, both SIL Open Font License, both
+  bundled with their licence text. Chosen 2026-08-11. Philosopher italic is the
+  display voice; body text is Philosopher upright, never italic, because italic
+  at 14 sp on a phone in the dark fails this product's own primary reading scene.
+- **A modern interface wrapped around an antique library.** Confirmed
+  2026-08-12, in the owner's words: the chrome is modern glass, while "the
+  natural ancient side of the books and shelves and scrolls and notes" carries
+  the period character. The contrast between the two IS the design. Custom
+  appearance never buys an exemption from Material behaviour — touch targets,
+  insets, system Back, screen-reader semantics and reduced-motion all still bind.
+- **Dark theme is true black `#000000` by default**, with near-black `#0E0E10`
+  as the alternative on the existing `trueDarkMode` preference. Confirmed
+  2026-08-12, replacing the "candlelight" warm brown, which was built, run on
+  hardware and rejected. On an OLED phone true black is both the intended look
+  and the lower-power one.
+- **The named craft bar is Bookology (iOS).** The owner identified it as a
+  design they like. It is a tracker, not a reader, so it is a standard to meet,
+  never a thing to copy — the reader and the journal living together is the
+  whole point of Paperfold and is exactly what Bookology does not do.
 
 ## Evidence on Hand
 

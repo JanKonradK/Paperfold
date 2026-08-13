@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Paperfold grounds for the window the system draws before the first Flutter
+     frame. They match PaperfoldTokens: Paper in light, True Black in dark.
+     Keep them out of colors.xml, which flutter_launcher_icons owns. -->
+<resources>
+    <color name="paperfold_launch_ground">#FAF6EE</color>
+</resources>

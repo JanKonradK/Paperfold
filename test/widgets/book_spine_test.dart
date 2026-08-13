@@ -1,0 +1,189 @@
+import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:paperfold/config/paperfold_tokens.dart';
+import 'package:paperfold/widgets/bookshelf/book_spine.dart';
+
+void main() {
+  test('spine dimensions are stable and keep the minimum touch width', () {
+    final scheme = PaperfoldTokens.colorScheme(Brightness.light);
+    final first = BookSpine.resolveVisual('book-42', scheme);
+    final second = BookSpine.resolveVisual('book-42', scheme);
+
+    expect(first.width, second.width);
+    expect(first.height, second.height);
+    expect(first.background, second.background);
+    expect(first.width, greaterThanOrEqualTo(BookSpine.minimumWidth));
+    expect(first.width, lessThanOrEqualTo(BookSpine.maximumWidth));
+    expect(first.height, greaterThanOrEqualTo(BookSpine.minimumHeight));
+    expect(first.height, lessThanOrEqualTo(BookSpine.maximumHeight));
+    expect(first.height / first.width, inInclusiveRange(4, 6));
+    expect(identical(BookSpine.backgrounds(), BookSpine.backgrounds()), isTrue);
+  });
+
+  test('stable spine craft includes square and rounded heads', () {
+    final scheme = PaperfoldTokens.colorScheme(Brightness.light);
+    final visuals = [
+      for (var index = 0; index < 32; index++)
+        BookSpine.resolveVisual('head-$index', scheme),
+    ];
+
+    expect(visuals.any((visual) => visual.hasRoundedHead), isTrue);
+    expect(visuals.any((visual) => !visual.hasRoundedHead), isTrue);
+  });
+
+  test('light and dark draw from different bookcloth', () {
+    final light = BookSpine.backgroundsFor(Brightness.light);
+    final dark = BookSpine.backgroundsFor(Brightness.dark);
+
+    // The light theme is the printed keepsake page: pale, near-uniform spines.
+    // The dark theme is the saturated cover world, where the books are the only
+    // colour on a black screen. One shared table cannot be both.
+    expect(light, isNot(same(dark)));
+    expect(
+      identical(
+        BookSpine.backgroundsFor(Brightness.light),
+        BookSpine.backgroundsFor(Brightness.light),
+      ),
+      isTrue,
+      reason: 'each table is built once, never per frame',
+    );
+
+    double meanLuminance(List<Color> colors) =>
+        colors.map((c) => c.computeLuminance()).reduce((a, b) => a + b) /
+        colors.length;
+
+    expect(
+      meanLuminance(light),
+      greaterThan(meanLuminance(dark)),
+      reason: 'light spines must be pale and dark spines saturated',
+    );
+
+    // A pale spine must still separate from the paper ground, or the shelf
+    // dissolves into the page.
+    for (final colour in light) {
+      expect(
+        BookSpine.contrast(colour, PaperfoldTokens.light.ground),
+        greaterThan(1.05),
+        reason: 'a light spine must be visible against paper',
+      );
+    }
+  });
+
+  for (final brightness in Brightness.values) {
+    test('every spine color has 4.5 to 1 contrast in ${brightness.name}', () {
+      final scheme = PaperfoldTokens.colorScheme(brightness);
+      for (var index = 0; index < 200; index++) {
+        final visual = BookSpine.resolveVisual('book-$index', scheme);
+        expect(visual.contrastRatio, greaterThanOrEqualTo(4.5));
+        expect(visual.background, isNot(PaperfoldTokens.light.ground));
+      }
+    });
+  }
+
+  testWidgets('spine survives large text and mirrors its title in RTL',
+      (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: ThemeData(
+          useMaterial3: true,
+          colorScheme: PaperfoldTokens.colorScheme(Brightness.light),
+        ),
+        home: MediaQuery(
+          data: const MediaQueryData(textScaler: TextScaler.linear(2)),
+          child: const Directionality(
+            textDirection: TextDirection.rtl,
+            child: Scaffold(
+              body: Center(
+                child: BookSpine(
+                  stableId: 'lean-4',
+                  title: 'A title that is deliberately much too long',
+                  author: 'An author with a long name',
+                  semanticLabel: 'Accessible full title and author',
+                  onTap: _noop,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    expect(tester.takeException(), isNull);
+    expect(find.bySemanticsLabel('Accessible full title and author'),
+        findsOneWidget);
+    expect(tester.widget<RotatedBox>(find.byType(RotatedBox)).quarterTurns, 1);
+  });
+
+  testWidgets('spine semantics exposes and performs its tap action',
+      (tester) async {
+    var tapCount = 0;
+    final semantics = tester.ensureSemantics();
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: ThemeData(
+          useMaterial3: true,
+          colorScheme: PaperfoldTokens.colorScheme(Brightness.light),
+        ),
+        home: Scaffold(
+          body: Center(
+            child: BookSpine(
+              stableId: 'semantic-book',
+              title: 'The Dispossessed',
+              author: 'Ursula Le Guin',
+              semanticLabel: 'The Dispossessed by Ursula Le Guin',
+              onTap: () => tapCount++,
+            ),
+          ),
+        ),
+      ),
+    );
+
+    const label = 'The Dispossessed by Ursula Le Guin';
+    // getSemantics resolves an Element, so it takes a widget Finder, while
+    // SemanticsController.tap resolves a node and takes a SemanticsFinder.
+    // The two calls need the two different finder types.
+    final node = tester.getSemantics(find.bySemanticsLabel(label));
+    expect(node.getSemanticsData().hasAction(SemanticsAction.tap), isTrue);
+    // Drive the action through SemanticsController rather than the deprecated
+    // pipelineOwner.semanticsOwner. This is the path a screen reader takes.
+    tester.semantics.tap(find.semantics.byLabel(label));
+    await tester.pump();
+
+    expect(tapCount, 1);
+    semantics.dispose();
+  });
+
+  testWidgets('spine text keeps an effective 11 sp floor', (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: ThemeData(
+          useMaterial3: true,
+          colorScheme: PaperfoldTokens.colorScheme(Brightness.dark),
+        ),
+        home: MediaQuery(
+          data: const MediaQueryData(textScaler: TextScaler.linear(0.5)),
+          child: const Scaffold(
+            body: BookSpine(
+              stableId: 'lean-2',
+              title: 'Earthsea',
+              author: 'Ursula Le Guin',
+              semanticLabel: 'Earthsea by Ursula Le Guin',
+              onTap: _noop,
+            ),
+          ),
+        ),
+      ),
+    );
+
+    expect(find.text('Ursula Le Guin'), findsOneWidget);
+    for (final text in tester.widgetList<Text>(find.byType(Text))) {
+      final fontSize = text.style?.fontSize;
+      if (fontSize != null) {
+        expect(text.textScaler!.scale(fontSize), greaterThanOrEqualTo(11));
+      }
+    }
+  });
+}
+
+void _noop() {}

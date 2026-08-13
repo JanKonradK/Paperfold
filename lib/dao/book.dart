@@ -1,8 +1,9 @@
 import 'package:paperfold/dao/base_dao.dart';
+import 'package:paperfold/dao/shelf.dart';
 import 'package:paperfold/models/book.dart';
 
 class BookDao extends BaseDao {
-  BookDao();
+  BookDao({super.database});
 
   static const String table = 'tb_books';
 
@@ -24,6 +25,27 @@ class BookDao extends BaseDao {
       where: 'id = ?',
       whereArgs: [book.id],
     );
+  }
+
+  /// Soft-deletes a book and removes it from every shelf atomically.
+  Future<void> deleteBook(int bookId) async {
+    final db = await database;
+    await db.transaction((txn) async {
+      await txn.delete(
+        ShelfDao.membershipTable,
+        where: 'book_id = ?',
+        whereArgs: [bookId],
+      );
+      await txn.update(
+        table,
+        {
+          'is_deleted': 1,
+          'update_time': DateTime.now().toIso8601String(),
+        },
+        where: 'id = ?',
+        whereArgs: [bookId],
+      );
+    });
   }
 
   Future<List<Book>> selectBooks({bool includeDeleted = true}) {

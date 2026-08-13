@@ -3,6 +3,8 @@ import 'dart:math';
 
 import 'package:paperfold/config/shared_preference_provider.dart';
 import 'package:paperfold/dao/book.dart';
+import 'package:paperfold/dao/database.dart';
+import 'package:paperfold/dao/shelf.dart';
 import 'package:paperfold/enums/hint_key.dart';
 import 'package:paperfold/l10n/generated/L10n.dart';
 import 'package:paperfold/models/book.dart';
@@ -11,7 +13,9 @@ import 'package:paperfold/providers/sync.dart';
 import 'package:paperfold/providers/book_list.dart';
 import 'package:paperfold/enums/sync_direction.dart';
 import 'package:paperfold/providers/sync_status.dart';
+import 'package:paperfold/providers/shelf_home.dart';
 import 'package:paperfold/service/convert_to_epub/txt/convert_from_txt.dart';
+import 'package:paperfold/page/journal/book_review_page.dart';
 import 'package:paperfold/service/md5_service.dart';
 import 'package:paperfold/service/book.dart';
 import 'package:paperfold/utils/get_path/get_base_path.dart';
@@ -39,21 +43,7 @@ class BookBottomSheet extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     Future<void> handleDelete(BuildContext context) async {
       Navigator.pop(context);
-      await bookDao.updateBook(Book(
-        id: book.id,
-        title: book.title,
-        coverPath: book.coverPath,
-        filePath: book.filePath,
-        lastReadPosition: book.lastReadPosition,
-        readingPercentage: book.readingPercentage,
-        author: book.author,
-        isDeleted: true,
-        description: book.description,
-        rating: book.rating,
-        md5: book.md5,
-        createTime: book.createTime,
-        updateTime: DateTime.now(),
-      ));
+      await bookDao.deleteBook(book.id);
       ref.read(bookListProvider.notifier).refresh();
       File(book.fileFullPath).delete();
       File(book.coverFullPath).delete();
@@ -261,7 +251,24 @@ class BookBottomSheet extends ConsumerWidget {
       }
     }
 
+    // The journal has to be reachable from the book itself. The Journal
+    // destination lists only books that already hold writing, so without this
+    // route a book could never get its first review.
+    void handleJournal(BuildContext context) {
+      Navigator.of(context).pop();
+      Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          builder: (context) => BookReviewPage(book: book),
+        ),
+      );
+    }
+
     final actions = [
+      {
+        "icon": EvaIcons.book_open,
+        "text": L10n.of(context).navJournal,
+        "onTap": () => handleJournal(context)
+      },
       {
         "icon": EvaIcons.share,
         "text": L10n.of(context).shareFile,
@@ -315,6 +322,7 @@ class BookBottomSheet extends ConsumerWidget {
               text: L10n.of(context).commonConfirm,
             ),
           ),
+          _FavouriteButton(bookId: book.id),
           PopupMenuButton(
               itemBuilder: (context) {
                 return actions.map((action) {
@@ -337,6 +345,71 @@ class BookBottomSheet extends ConsumerWidget {
               ))
         ],
       ),
+    );
+  }
+}
+
+class _FavouriteButton extends ConsumerStatefulWidget {
+  const _FavouriteButton({required this.bookId});
+
+  final int bookId;
+
+  @override
+  ConsumerState<_FavouriteButton> createState() => _FavouriteButtonState();
+}
+
+class _FavouriteButtonState extends ConsumerState<_FavouriteButton> {
+  bool? _isFavourite;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    final value = await shelfDao.containsBook(
+      shelfId: builtInFavouritesShelfId,
+      bookId: widget.bookId,
+    );
+    if (mounted) {
+      setState(() => _isFavourite = value);
+    }
+  }
+
+  Future<void> _toggle() async {
+    final isFavourite = _isFavourite;
+    if (isFavourite == null) {
+      return;
+    }
+    if (isFavourite) {
+      await shelfDao.removeBookFromShelf(
+        shelfId: builtInFavouritesShelfId,
+        bookId: widget.bookId,
+      );
+    } else {
+      await shelfDao.addBookToShelf(
+        shelfId: builtInFavouritesShelfId,
+        bookId: widget.bookId,
+      );
+    }
+    if (mounted) {
+      setState(() => _isFavourite = !isFavourite);
+      ref.invalidate(shelfHomeProvider);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = L10n.of(context);
+    final isFavourite = _isFavourite ?? false;
+    final label = isFavourite
+        ? l10n.removeFromAllTimeFavourites
+        : l10n.addToAllTimeFavourites;
+    return IconButton(
+      tooltip: label,
+      onPressed: _isFavourite == null ? null : _toggle,
+      icon: Icon(isFavourite ? Icons.favorite : Icons.favorite_border),
     );
   }
 }

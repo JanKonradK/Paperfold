@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:paperfold/dao/book.dart';
 import 'package:paperfold/dao/theme.dart';
+import 'package:paperfold/enums/book_status.dart';
 import 'package:paperfold/enums/sync_direction.dart';
 import 'package:paperfold/enums/sync_trigger.dart';
 import 'package:paperfold/l10n/generated/L10n.dart';
@@ -524,6 +525,9 @@ Future<void> saveBook(
       isDeleted: false,
       rating: provideBook?.rating ?? 0.0,
       md5: md5,
+      status: provideBook?.status ?? BookStatus.notStarted,
+      startedOn: provideBook?.startedOn,
+      finishedOn: provideBook?.finishedOn,
       createTime: provideBook?.createTime ?? DateTime.now(),
       updateTime: DateTime.now());
 

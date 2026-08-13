@@ -7,7 +7,12 @@ import 'database.dart';
 typedef RowMapper<T> = T Function(Map<String, dynamic> row);
 
 abstract class BaseDao {
-  Future<Database> get _database async => DBHelper().database;
+  BaseDao({Database? database}) : _databaseOverride = database;
+
+  final Database? _databaseOverride;
+
+  Future<Database> get _database async =>
+      _databaseOverride ?? DBHelper().database;
 
   Future<Database> get database async => _database;
 

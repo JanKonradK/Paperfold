@@ -10,6 +10,7 @@ import 'package:provider/provider.dart';
 import 'package:paperfold/widgets/settings/settings_section.dart';
 import 'package:paperfold/widgets/settings/settings_tile.dart';
 import 'package:paperfold/enums/bookshelf_folder_style.dart';
+import 'package:paperfold/widgets/paperfold_glass_slider.dart';
 
 const List<Map<String, String>> languageOptions = [
   {'system': 'System'},
@@ -156,7 +157,7 @@ class _AppearanceSettingState extends State<AppearanceSetting> {
                   children: [
                     Text(Prefs().bookCoverWidth.toStringAsFixed(0)),
                     Expanded(
-                      child: Slider(
+                      child: PaperfoldGlassSlider(
                         value: Prefs().bookCoverWidth,
                         onChanged: (value) {
                           setState(() {
@@ -166,6 +167,10 @@ class _AppearanceSettingState extends State<AppearanceSetting> {
                         max: 260,
                         min: 80,
                         divisions: 18,
+                        semanticLabel:
+                            L10n.of(context).settingsBookshelfCoverWidth,
+                        semanticFormatterCallback: (value) =>
+                            value.toStringAsFixed(0),
                       ),
                     ),
                   ],
@@ -297,6 +302,16 @@ Future<void> showColorPickerDialog(BuildContext context) async {
           ),
         ),
         actions: <Widget>[
+          TextButton.icon(
+            icon: const Icon(Icons.auto_stories_outlined),
+            label: Text(
+              L10n.of(context).settingsAppearanceUsePaperfoldTheme,
+            ),
+            onPressed: () {
+              prefsProvider.useBrandTheme = true;
+              Navigator.of(context).pop();
+            },
+          ),
           TextButton(
             child: Text(L10n.of(context).commonCancel),
             onPressed: () {
@@ -306,7 +321,7 @@ Future<void> showColorPickerDialog(BuildContext context) async {
           TextButton(
             child: Text(L10n.of(context).commonOk),
             onPressed: () {
-              prefsProvider.saveThemeToPrefs(pickedColor.value);
+              prefsProvider.saveThemeToPrefs(pickedColor.toARGB32());
               Navigator.of(context).pop();
             },
           ),
