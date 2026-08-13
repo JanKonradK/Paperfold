@@ -42,9 +42,14 @@ void main() {
   testWidgets('writes the master application icons', (WidgetTester tester) async {
     // A widget test ships no fonts, so the monogram would render as boxes and
     // the failure would only show in the written file.
-    final FontLoader loader = FontLoader(PaperfoldTypeTokens.journalFamily)
-      ..addFont(rootBundle.load('assets/fonts/Philosopher-Bold.ttf'));
-    await loader.load();
+    await (FontLoader(PaperfoldTypeTokens.journalFamily)
+          ..addFont(rootBundle.load('assets/fonts/Philosopher-Bold.ttf')))
+        .load();
+    // The wordmark is Source Sans 3. Without it the name renders as tofu, and
+    // the only place that shows is the written file.
+    await (FontLoader(PaperfoldTypeTokens.chromeFamily)
+          ..addFont(rootBundle.load('assets/fonts/SourceSans3-SemiBold.ttf')))
+        .load();
 
     tester.view.physicalSize = const Size(_masterSide, _masterSide);
     tester.view.devicePixelRatio = 1;
