@@ -869,9 +869,16 @@ Do not optimize a screen that meets one.
 
 **Milestone 5 — Library, shelves, and logs**
 - Bookshelf challenge with 100 spines. Book tracker shelf with the legend.
+  **Built as one page, not two.** They are one shelf: the spines are the
+  challenge, and the three-state legend is what the tracker shelf added.
 - Book library grid. Reading log table. Month tracker ring.
+  The grid, the log and the column switches are the shelf collection page.
 - To-be-read list and the separate books-to-buy list.
+- The month ring takes pages by hand. It has no automatic capture from the
+  reader, because foliate-js reports a percentage and not a page count.
+  Physical books need manual entry in any case.
 - Open Library metadata lookup. Optional. Manual entry always works.
+  **Not built.** The plan marks it optional, and manual entry works.
 
 **Milestone 6 — Settings and translate: the inherited screens**
 - These screens work. They do not look like Paperfold. Restyle, do not rewrite.

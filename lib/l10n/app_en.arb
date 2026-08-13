@@ -717,5 +717,75 @@
   "addToAllTimeFavourites": "Add to All time favourites",
   "removeFromAllTimeFavourites": "Remove from All time favourites",
   "addBookToBuyTitle": "Add a book to buy",
-  "addBookToBuyAction": "Add book"
+  "addBookToBuyAction": "Add book",
+  "challengeTitle": "Reading challenge",
+  "challengeYearTitle": "{year} reading challenge",
+  "@challengeYearTitle": {
+    "placeholders": { "year": { "type": "String" } }
+  },
+  "challengeProgress": "{finished} of {target} books",
+  "@challengeProgress": {
+    "placeholders": {
+      "finished": { "type": "int" },
+      "target": { "type": "int" }
+    }
+  },
+  "challengeOverTarget": "{count, plural, =1{1 book past the target} other{{count} books past the target}}",
+  "@challengeOverTarget": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "challengeLegendFinished": "Read",
+  "challengeLegendReading": "Reading",
+  "challengeLegendEmpty": "Want to read",
+  "challengeSetTarget": "Change the target",
+  "challengeTargetLabel": "Books this year",
+  "challengeShelfSemanticLabel": "Reading challenge shelf. {finished} of {target} books read, {reading} being read now.",
+  "@challengeShelfSemanticLabel": {
+    "placeholders": {
+      "finished": { "type": "int" },
+      "target": { "type": "int" },
+      "reading": { "type": "int" }
+    }
+  },
+  "challengeSlotFilled": "Spine {slot}: {title}",
+  "@challengeSlotFilled": {
+    "placeholders": {
+      "slot": { "type": "int" },
+      "title": { "type": "String" }
+    }
+  },
+  "challengeSlotEmpty": "Spine {slot} is empty.",
+  "@challengeSlotEmpty": {
+    "placeholders": { "slot": { "type": "int" } }
+  },
+  "monthTrackerTitle": "Month tracker",
+  "monthTrackerPagesTotal": "{count, plural, =0{No pages this month} =1{1 page this month} other{{count} pages this month}}",
+  "@monthTrackerPagesTotal": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "monthTrackerDaysRead": "{count, plural, =0{No days read} =1{1 day read} other{{count} days read}}",
+  "@monthTrackerDaysRead": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "monthTrackerPreviousMonth": "Previous month",
+  "monthTrackerNextMonth": "Next month",
+  "monthTrackerRingSemanticLabel": "Pages read each day. {days} days read, {pages} pages in total.",
+  "@monthTrackerRingSemanticLabel": {
+    "placeholders": {
+      "days": { "type": "int" },
+      "pages": { "type": "int" }
+    }
+  },
+  "monthTrackerDaySemanticLabel": "Day {day}: {count, plural, =0{no pages} =1{1 page} other{{count} pages}}",
+  "@monthTrackerDaySemanticLabel": {
+    "placeholders": {
+      "day": { "type": "int" },
+      "count": { "type": "int" }
+    }
+  },
+  "monthTrackerEditDay": "Pages read on day {day}",
+  "@monthTrackerEditDay": {
+    "placeholders": { "day": { "type": "int" } }
+  },
+  "monthTrackerPagesLabel": "Pages"
 }

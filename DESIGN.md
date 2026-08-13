@@ -361,6 +361,24 @@ The icon is a widget, not stored artwork. `tool/generate_app_icons.dart` writes 
 
 The launch window is the page ground: Paper in light, True Black in dark. It shows no artwork, because the launcher already animates the icon and the opening sequence follows immediately.
 
+### The trackers
+
+The reading challenge and the month tracker are painted, not laid out. One canvas holds every spine and every day segment.
+
+A painted control has no widgets, so it supplies its own semantics. Each spine and each day is a node, not one summary label for the whole shape. A painted control with no semantics is unusable.
+
+The challenge shelf grows with the system text size, because its numbers are painted into the spines and cannot grow alone.
+
+| Slot state | Paint |
+|---|---|
+| Read | The book's own bookcloth, with a `primary` outline |
+| Reading | `secondary` at 55 percent, with a `secondary` outline |
+| Want to read | An `outlineVariant` outline only |
+
+The month ring keys on pages, not on minutes. The statistics page already draws minutes. A day that was read is never drawn as nothing, or a light day beside a heavy one disappears.
+
+Both trackers open from the Journal destination. They are not destinations themselves.
+
 ### Empty, loading, error, and drag states
 
 - An empty shelf keeps the complete 318dp bay.
