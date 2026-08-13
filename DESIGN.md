@@ -345,9 +345,11 @@ Keep these objects outside book hit areas. Reverse the directional bookends in R
 
 ### The mark, the application icon, and the launch window
 
-The Paperfold mark is the wreath ornament with a `P` monogram in its inner ring. It is one tint, like every other ornament. `PaperfoldLogoMark` draws it, and it takes `primary` unless the caller gives a tint.
+The Paperfold mark is the wreath ornament with the initials `HJ` in its inner ring. It is one tint, like every other ornament. `PaperfoldLogoMark` draws it, and it takes `primary` unless the caller gives a tint.
 
-The letter sits on its cap height, not on its line box. A letter that centers on the line box looks low inside the wreath.
+The name goes under the initials on the application icon only. It measures less than six percent of the mark, so below 160 dp the mark drops it. A smear is worse than no name.
+
+The initials sit on their cap height, not on their line box, and the initials and the name center as one block. Letters that center on the line box look low inside the wreath.
 
 The application icon is Foil Gold on Cover Burgundy. It does not read the theme, because a launcher shows one icon.
 
