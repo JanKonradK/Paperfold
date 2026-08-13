@@ -463,20 +463,43 @@ So the palette needs an ink color it does not have. Add these:
 `#3A2E28` is a deep warm brown-black. It reads as sepia ink, not as black,
 so it keeps the mood while passing at AAA.
 
-**Dark theme ("candlelight") on ground `#241C17`:**
-the palette inverts well, with one exception.
+**Dark theme — superseded 2026-08-12. "Candlelight" is dead.**
 
-| Color | Ratio | Verdict |
+The warm dark brown ground `#241C17` was built, run on the owner's phone, and
+rejected: "the brown of the dark mode etc is just bad". Every reference the
+owner supplied is near-black, and the named craft bar is Bookology (iOS), which
+is near-black with a warm metallic accent. Do not reintroduce the brown ground.
+
+**Dark theme on black, two variants, both first class.** The choice rides on the
+existing `trueDarkMode` preference, whose default is now on.
+
+| Variant | Ground | Why |
 |---|---|---|
-| Cream ink `#EDE0CE` | 12.89:1 | AAA — the dark-theme body text |
-| Warm Beige `#DFCCB1` | 10.70:1 | AAA |
-| Golden Tan `#C4A071` | 6.87:1 | AA — **the dark-theme accent** |
-| Sage Green `#98A086` | 6.15:1 | AA |
-| Dusty Rose `#A76D5E` | 3.98:1 | Large and UI only |
-| Terracotta Brown `#846044` | 2.98:1 | **Fails.** Do not use for text in dark. |
+| **Default** | `#000000` true black | On an OLED phone those pixels are off, so it is both the look the owner wants and the lower-power one |
+| Alternative | `#0E0E10` near-black | Neutral, not brown, for anyone who finds true black harsh |
+
+| Color | on `#000000` | on `#0E0E10` | Verdict |
+|---|---|---|---|
+| Cream ink `#EDE6DA` | 16.93:1 | 15.55:1 | AAA — the dark-theme body text |
+| Warm Beige `#DFCCB1` | 13.41:1 | 12.31:1 | AAA |
+| Golden Tan `#C4A071` | 8.61:1 | 7.91:1 | AAA — **the dark-theme accent** |
+| Sage Green `#98A086` | 7.71:1 | 7.08:1 | AAA |
+| Dusty Rose `#A76D5E` | 4.99:1 | 4.58:1 | AA — **body text, newly usable** |
+| Terracotta Brown `#846044` | 3.74:1 | 3.43:1 | Large and UI only. **Still fails body text.** |
+
+**The palette got more usable, not less.** On the brown ground Dusty Rose failed
+body text at 3.98:1; on black it passes. Only Terracotta still fails, so the
+accent swap below is still load-bearing.
+
+**Black has no tonal elevation for free.** Material's surface ramp assumes a
+tinted ground. The five surface steps are built upward from black in near-neutral
+greys with only a faint warm cast, or a card, a dialog and a menu stop separating.
 
 **Rule: the accent swaps between themes.** Terracotta in light, Golden Tan in dark.
 Bind both to one Material color role so this happens once, not per screen.
+
+`test/paperfold_tokens_test.dart` is the authority on every ratio above, and it
+covers both dark variants. The numbers here are convenience; the test is truth.
 
 ### 5.2 Cover and pages are two different worlds
 
@@ -499,17 +522,33 @@ Anx Reader already uses `flex_color_scheme`, so the theming hook exists.
 
 | Layer | Rule |
 |---|---|
-| **The book** — paper, curl, floral frames, script type | Full expression. This is the artifact. |
-| **The chrome** — navigation, sheets, dialogs, pickers, keyboard, Back | Material 3. No exceptions. |
+| **The book** — paper, curl, floral frames, script type, shelves, scrolls, notes | Full expression. This is the artifact. |
+| **The chrome** — navigation, sheets, dialogs, sliders, pickers, keyboard, Back | Modern glass. Material *behaviour*, custom *appearance*. |
 
-Non-negotiable:
+**Revised 2026-08-12.** The chrome rule used to read "Material 3, no exceptions".
+The owner's direction is a modern interface wrapped around "the natural ancient
+side of the books and shelves and scrolls and notes" — the contrast between the
+two is the design, not a compromise. So the chrome takes a custom liquid-glass
+appearance: a floating translucent tab bar with a sliding selected pill, and
+sliders whose round bubble handle appears only while dragging.
+
+**Appearance is custom. Behaviour is not.** Everything below still binds, and a
+custom-looking control that drops one of them is a defect, not a style choice:
 
 - System Back always works, including the predictive Back gesture.
 - Edge-to-edge layout with correct insets, **including the keyboard inset**.
-- Touch targets 48 x 48 dp minimum, 8 dp apart.
+- Touch targets 48 x 48 dp minimum, 8 dp apart — visual height and touch height
+  are separate, so a bar that *looks* thin still hits 48.
 - Text scales with the system font-size setting.
-- Dark theme is a first-class scheme, not an inverted light theme.
-  Proposal: "candlelight" — warm dark brown paper, cream ink, burgundy accent.
+- Full screen-reader semantics, including on controls with no visible thumb.
+- The system "remove animations" setting is obeyed.
+- Dark theme is a first-class scheme, not an inverted light theme. See 5.1:
+  true black by default, near-black as the alternative.
+
+**Glass costs frames.** Blur is bounded, never nested, and never applied to a
+whole scrolling viewport; a solid fallback exists and is used automatically under
+high-contrast or reduced-animation settings. Translucent chrome must meet
+contrast against the **worst-case** backdrop it can sit over, not the best case.
 
 ### 5.4 The ornament set — first-party assets
 
@@ -815,6 +854,10 @@ Do not optimize a screen that meets one.
 - Build the color tokens from Section 5.1 **first**, including the light and dark
   accent swap. Every later screen reads tokens, never raw hex.
 - Replace the theme through `flex_color_scheme`. Replace icons and branding assets.
+  The icon is a widget, not stored artwork: `tool/generate_app_icons.dart` writes
+  the master files and flutter_launcher_icons cuts every platform from them, so
+  the icon keeps the same wreath and cover colors as the rest of the application.
+  The native launch window becomes the page ground, Paper or True Black.
 - Cut your ornaments from their ground and export them to SVG (Section 5.4).
   Add `flutter_svg`. Prove one ornament tints correctly in both themes.
 - Welcome page and spread navigation.
@@ -847,20 +890,39 @@ Do not optimize a screen that meets one.
 - Ship Standard Ebooks and Project Gutenberg as defaults, so a new shelf is
   never empty. **This milestone is the first-run fix** (Section 9.4).
 
-**Milestone 8 — Language**
+**Milestone 7 is the last active milestone.** Milestones 8 and 9 were deferred
+by the owner on 2026-08-12: "no need right now". They are recorded below rather
+than deleted, because two items inside them are accessibility duties rather
+than polish, and those must not be lost with the rest.
+
+---
+
+## Deferred, not cancelled
+
+**Deferred — Language**
 - Write `app_pl.arb` from `app_en.arb` (Section 3.4). About 48 KB of strings.
 - Rebuild the interface strings that Milestones 3 to 7 changed. Watch
   `docs/untranslated_messages.txt`.
-- **Test the mirrored curl in Arabic** (Section 3.4.1). Set the device to Arabic
-  and turn a page. The book must open from the other side.
 - Check the longest language for clipped labels. German and Russian break layouts
   that English fits.
 
-**Milestone 9 — Polish and release**
-- Export and import, empty states, printable bookmarks and the coloring page.
-- The "turn off the opening animation" switch (Section 6.2).
+**Deferred — Polish and release**
+- Export and import, printable bookmarks and the coloring page.
 - Meet every budget in Section 11.1. Fix what misses. Leave what passes.
 - `/impeccable audit`, then `/impeccable polish`.
+
+**NOT deferred, moved into the active work.** These sat inside Milestones 8 and
+9 but are accessibility commitments PRODUCT.md already makes, so they do not
+wait for a release push:
+
+- **Test the mirrored curl in Arabic** (Section 3.4.1). Set the device to
+  Arabic and turn a page. The book must open from the other side. PRODUCT.md
+  states right to left is a design constraint, not a translation task.
+- **The "turn off the opening animation" switch** (Section 6.2). Product
+  principle 3 is that delight must be skippable; an animation the reader cannot
+  escape turns hostile by about the fifth launch.
+- **Empty states.** Already built for the shelves and the journal, and they are
+  the first thing a new reader sees, not a finishing touch.
 
 ---
 

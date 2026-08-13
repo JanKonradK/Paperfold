@@ -1,7 +1,70 @@
 import 'package:paperfold/config/shared_preference_provider.dart';
+import 'package:paperfold/config/paperfold_tokens.dart';
 import 'package:chinese_font_library/chinese_font_library.dart';
 import 'package:flex_color_scheme/flex_color_scheme.dart';
 import 'package:flutter/material.dart';
+
+TextStyle? _journalStyle(
+  TextStyle? style, {
+  FontStyle fontStyle = FontStyle.normal,
+  FontWeight fontWeight = FontWeight.w400,
+}) {
+  return style?.copyWith(
+    fontFamily: PaperfoldTypeTokens.journalFamily,
+    fontStyle: fontStyle,
+    fontWeight: fontWeight,
+  );
+}
+
+TextTheme _paperfoldTextTheme(TextTheme base) {
+  return base.copyWith(
+    displayLarge: _journalStyle(
+      base.displayLarge,
+      fontStyle: FontStyle.italic,
+    ),
+    displayMedium: _journalStyle(
+      base.displayMedium,
+      fontStyle: FontStyle.italic,
+    ),
+    displaySmall: _journalStyle(
+      base.displaySmall,
+      fontStyle: FontStyle.italic,
+    ),
+    headlineLarge: _journalStyle(
+      base.headlineLarge,
+      fontStyle: FontStyle.italic,
+    ),
+    headlineMedium: _journalStyle(
+      base.headlineMedium,
+      fontStyle: FontStyle.italic,
+    ),
+    headlineSmall: _journalStyle(
+      base.headlineSmall,
+      fontStyle: FontStyle.italic,
+    ),
+    titleLarge: _journalStyle(base.titleLarge),
+    titleMedium: _journalStyle(base.titleMedium),
+    titleSmall: _journalStyle(base.titleSmall),
+    bodyLarge: _journalStyle(base.bodyLarge),
+    bodyMedium: _journalStyle(base.bodyMedium),
+    bodySmall: _journalStyle(base.bodySmall),
+    labelLarge: base.labelLarge?.copyWith(
+      fontFamily: PaperfoldTypeTokens.chromeFamily,
+      fontStyle: FontStyle.normal,
+      fontWeight: FontWeight.w600,
+    ),
+    labelMedium: base.labelMedium?.copyWith(
+      fontFamily: PaperfoldTypeTokens.chromeFamily,
+      fontStyle: FontStyle.normal,
+      fontWeight: FontWeight.w600,
+    ),
+    labelSmall: base.labelSmall?.copyWith(
+      fontFamily: PaperfoldTypeTokens.chromeFamily,
+      fontStyle: FontStyle.normal,
+      fontWeight: FontWeight.w600,
+    ),
+  );
+}
 
 ThemeData colorSchema(
   Prefs prefsNotifier,
@@ -15,13 +78,22 @@ ThemeData colorSchema(
           ThemeMode.dark => Brightness.dark,
           ThemeMode.system => MediaQuery.platformBrightnessOf(context),
         };
-  Color seedColor = prefsNotifier.themeColor;
+  final Color seedColor = prefsNotifier.themeColor;
   final isDark = brightness == Brightness.dark;
   final isEinkMode = prefsNotifier.eInkMode;
+  final hasCustomSeed = !prefsNotifier.useBrandTheme;
 
-  final lightGropedBackground = const Color(0xFFF2F2F7);
-  final darkGropedBackground =
-      prefsNotifier.trueDarkMode ? Color(0xFF000000) : Color(0xFF1C1C1E);
+  final lightGropedBackground =
+      hasCustomSeed ? const Color(0xFFF2F2F7) : PaperfoldTokens.light.ground;
+  // trueDarkMode picks between Paperfold's two dark variants, and it defaults
+  // on. A custom seed keeps the inherited iOS-grey backgrounds instead.
+  final trueBlack = prefsNotifier.trueDarkMode;
+  final darkGropedBackground = hasCustomSeed
+      ? (trueBlack ? Colors.black : const Color(0xFF1C1C1E))
+      : PaperfoldTokens.pagePalette(
+          Brightness.dark,
+          trueBlack: trueBlack,
+        ).ground;
   final gropedBackgroundColor = isEinkMode
       ? Colors.white
       : isDark
@@ -41,20 +113,27 @@ ThemeData colorSchema(
           surface: Colors.white,
           onSurface: Colors.black,
         )
-      : switch (brightness) {
-          Brightness.light => ColorScheme.fromSeed(
-              seedColor: seedColor,
-              brightness: Brightness.light,
-              surfaceContainer: Color(0xFFFFFFFF),
-              surface: lightGropedBackground,
-            ),
-          Brightness.dark => ColorScheme.fromSeed(
-              seedColor: seedColor,
-              brightness: Brightness.dark,
-              surfaceContainer: Color(0xFF2C2C2E),
-              surface: darkGropedBackground,
-            ),
-        };
+      : hasCustomSeed
+          ? switch (brightness) {
+              Brightness.light => ColorScheme.fromSeed(
+                  seedColor: seedColor,
+                  brightness: Brightness.light,
+                  surfaceContainer: const Color(0xFFFFFFFF),
+                  surface: lightGropedBackground,
+                ),
+              Brightness.dark => ColorScheme.fromSeed(
+                  seedColor: seedColor,
+                  brightness: Brightness.dark,
+                  surfaceContainer: const Color(0xFF2C2C2E),
+                  surface: darkGropedBackground,
+                ),
+            }
+          : PaperfoldTokens.colorScheme(
+              brightness,
+              trueBlack: trueBlack,
+            ).copyWith(
+              surface: gropedBackgroundColor,
+            );
 
   ThemeData themeData = isEinkMode
       ? FlexThemeData.light(
@@ -80,6 +159,9 @@ ThemeData colorSchema(
           sliderTheme: const SliderThemeData(year2023: false),
           progressIndicatorTheme:
               const ProgressIndicatorThemeData(year2023: false),
+          textTheme: _paperfoldTextTheme(themeData.textTheme),
+          primaryTextTheme: _paperfoldTextTheme(themeData.primaryTextTheme)
+              .useSystemChineseFont(brightness),
           scaffoldBackgroundColor: gropedBackgroundColor,
           bottomSheetTheme: BottomSheetThemeData()
               .copyWith(backgroundColor: gropedBackgroundColor),

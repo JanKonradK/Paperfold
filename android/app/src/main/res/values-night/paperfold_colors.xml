@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- True Black is the default dark ground. On an OLED panel these pixels are
+     off, so the launch window costs nothing and matches the first frame. -->
+<resources>
+    <color name="paperfold_launch_ground">#000000</color>
+</resources>

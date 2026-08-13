@@ -5,6 +5,7 @@ import 'dart:ui';
 import 'package:paperfold/config/shared_preference_provider.dart';
 import 'package:paperfold/dao/book.dart';
 import 'package:paperfold/dao/book_note.dart';
+import 'package:paperfold/enums/book_status.dart';
 import 'package:paperfold/enums/page_turn_mode.dart';
 import 'package:paperfold/enums/reading_info.dart';
 import 'package:paperfold/enums/translation_mode.dart';
@@ -873,6 +874,14 @@ class EpubPlayerState extends ConsumerState<EpubPlayer>
     Book book = widget.book;
     book.lastReadPosition = cfi;
     book.readingPercentage = percentage;
+    if (percentage >= 1) {
+      book.status = BookStatus.finished;
+      book.startedOn ??= DateTime.now();
+      book.finishedOn ??= DateTime.now();
+    } else if (percentage > 0 && book.status == BookStatus.notStarted) {
+      book.status = BookStatus.reading;
+      book.startedOn ??= DateTime.now();
+    }
     await bookDao.updateBook(book);
     if (mounted) {
       ref.read(bookListProvider.notifier).refresh();

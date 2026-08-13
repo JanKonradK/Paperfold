@@ -163,6 +163,16 @@ class Prefs extends ChangeNotifier {
 
   Future<void> saveThemeToPrefs(int colorValue) async {
     await prefs.setInt('themeColor', colorValue);
+    await prefs.setBool('useBrandTheme', false);
+    notifyListeners();
+  }
+
+  bool get useBrandTheme {
+    return prefs.getBool('useBrandTheme') ?? true;
+  }
+
+  set useBrandTheme(bool value) {
+    prefs.setBool('useBrandTheme', value);
     notifyListeners();
   }
 
@@ -463,7 +473,9 @@ class Prefs extends ChangeNotifier {
   }
 
   bool get trueDarkMode {
-    return prefs.getBool('trueDarkMode') ?? false;
+    // Defaults ON. Paperfold's dark scheme is true black; switching this off
+    // gives the near-black variant instead. plan.md Section 5.1.
+    return prefs.getBool('trueDarkMode') ?? true;
   }
 
   set eInkMode(bool status) {

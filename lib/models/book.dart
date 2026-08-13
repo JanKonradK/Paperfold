@@ -1,3 +1,4 @@
+import 'package:paperfold/enums/book_status.dart';
 import 'package:paperfold/utils/get_path/get_base_path.dart';
 
 class Book {
@@ -13,6 +14,9 @@ class Book {
   double rating;
   int groupId;
   String? md5;
+  BookStatus status;
+  DateTime? startedOn;
+  DateTime? finishedOn;
   DateTime createTime;
   DateTime updateTime;
 
@@ -29,6 +33,9 @@ class Book {
       required this.rating,
       this.groupId = 0,
       this.md5,
+      required this.status,
+      this.startedOn,
+      this.finishedOn,
       required this.createTime,
       required this.updateTime});
 
@@ -43,6 +50,7 @@ class Book {
       author: 'Anx',
       isDeleted: false,
       rating: 0,
+      status: BookStatus.notStarted,
       createTime: DateTime.now(),
       updateTime: DateTime.now(),
     );
@@ -69,6 +77,9 @@ class Book {
       'rating': rating,
       'group_id': groupId,
       'file_md5': md5,
+      'status': status.databaseValue,
+      'started_on': startedOn?.toIso8601String(),
+      'finished_on': finishedOn?.toIso8601String(),
       'create_time': createTime.toIso8601String(),
       'update_time': updateTime.toIso8601String(),
     };
@@ -87,6 +98,9 @@ class Book {
     double? rating,
     int? groupId,
     String? md5,
+    BookStatus? status,
+    DateTime? startedOn,
+    DateTime? finishedOn,
     DateTime? createTime,
     DateTime? updateTime,
   }) {
@@ -103,6 +117,9 @@ class Book {
       rating: rating ?? this.rating,
       groupId: groupId ?? this.groupId,
       md5: md5 ?? this.md5,
+      status: status ?? this.status,
+      startedOn: startedOn ?? this.startedOn,
+      finishedOn: finishedOn ?? this.finishedOn,
       createTime: createTime ?? this.createTime,
       updateTime: updateTime ?? this.updateTime,
     );
@@ -122,6 +139,13 @@ class Book {
       rating: (map['rating'] as num?)?.toDouble() ?? 0.0,
       groupId: map['group_id'] as int? ?? 0,
       md5: map['file_md5'] as String?,
+      status: BookStatus.fromDatabase(map['status'] as String?),
+      startedOn: (map['started_on'] as String?) == null
+          ? null
+          : DateTime.parse(map['started_on'] as String),
+      finishedOn: (map['finished_on'] as String?) == null
+          ? null
+          : DateTime.parse(map['finished_on'] as String),
       createTime: DateTime.parse(map['create_time'] as String),
       updateTime: DateTime.parse(map['update_time'] as String),
     );

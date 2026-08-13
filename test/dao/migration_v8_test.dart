@@ -225,18 +225,17 @@ void main() {
 
   // NOTE ON THE FRESH-INSTALL PATH
   //
-  // A version 0 database cannot be migrated inside a unit test. Migration
-  // case 2, inherited from upstream, renames files on disk with
-  // Directory(...).listSync() against the application's data directory, which
-  // does not exist off-device. That is a property of the upstream migration,
-  // not of version 8.
+  // This fixture does not prepare the application data directories needed by
+  // migration case 2, which renames files on disk. The version 9 migration
+  // test creates those directories and proves the complete version 0 path.
   //
   // The fresh-install path is covered on-device instead: a clean install logs
   // "create database version 8" and the app runs. The test below starts at
   // version 6, which reaches version 8 through the new step without touching
   // the filesystem.
 
-  test('currentDbVersion is 8 and the step creates all seven tables', () async {
+  test('currentDbVersion is 9 and the version 8 step creates seven tables',
+      () async {
     final db = await databaseFactory.openDatabase(inMemoryDatabasePath);
 
     await db.execute(_v7Books);
@@ -255,8 +254,8 @@ void main() {
 
     await DBHelper().onUpgradeDatabase(db, 7, 8);
 
-    expect(currentDbVersion, 8,
-        reason: 'the app must ask for version 8 or the step never runs');
+    expect(currentDbVersion, 9,
+        reason: 'the app must ask for version 9 or the latest step never runs');
     expect(await _count(db, 'tb_books'), 1);
 
     final tables = (await db.rawQuery(

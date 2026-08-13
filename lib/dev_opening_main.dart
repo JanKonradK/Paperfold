@@ -6,6 +6,7 @@
 //   flutter run -t lib/dev_opening_main.dart --profile
 
 import 'package:flutter/material.dart';
+import 'package:paperfold/config/paperfold_tokens.dart';
 import 'package:paperfold/page/opening/opening_sequence.dart';
 
 void main() {
@@ -72,10 +73,10 @@ class _PreviewHome extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFFAF6EE),
+      backgroundColor: PaperfoldTokens.light.ground,
       appBar: AppBar(
-        backgroundColor: const Color(0xFFFAF6EE),
-        foregroundColor: const Color(0xFF3A2E28),
+        backgroundColor: PaperfoldTokens.light.ground,
+        foregroundColor: PaperfoldTokens.light.ink,
         title: const Text(
           'Paperfold',
           style: TextStyle(fontFamily: 'SourceHanSerif'),
@@ -94,17 +95,17 @@ class _PreviewHome extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(
+              Icon(
                 Icons.auto_stories_outlined,
-                color: Color(0xFF846044),
+                color: PaperfoldTokens.light.accent,
                 size: 42.0,
               ),
               const SizedBox(height: 18.0),
-              const Text(
+              Text(
                 'Your reading journal is ready.',
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  color: Color(0xFF3A2E28),
+                  color: PaperfoldTokens.light.ink,
                   fontFamily: 'SourceHanSerif',
                   fontSize: 22.0,
                 ),

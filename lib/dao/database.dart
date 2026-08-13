@@ -1,10 +1,12 @@
 import 'dart:async';
 import 'dart:io';
+
+import 'package:paperfold/enums/book_status.dart';
+import 'package:paperfold/models/book.dart';
 import 'package:paperfold/utils/get_path/get_cache_dir.dart';
 import 'package:paperfold/utils/platform_utils.dart';
 
 import 'package:paperfold/config/shared_preference_provider.dart';
-import 'package:paperfold/dao/book.dart';
 import 'package:paperfold/service/book.dart';
 import 'package:paperfold/utils/get_path/get_base_path.dart';
 import 'package:paperfold/utils/get_path/databases_path.dart';
@@ -12,8 +14,10 @@ import 'package:paperfold/utils/log/common.dart';
 import 'package:path/path.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
+export 'package:paperfold/enums/book_status.dart';
+
 // Current app database version
-const int currentDbVersion = 8;
+const int currentDbVersion = 9;
 
 const createBookSQL = '''
 CREATE TABLE tb_books (
@@ -215,13 +219,47 @@ CREATE TABLE IF NOT EXISTS tb_catalogs (
 )
 ''';
 
-/// Reading status values stored in tb_books.status.
+// ---------------------------------------------------------------------------
+// Migration version 9 — shelf membership.
+//
+// Shelves existed in version 8, but there was no relation between a shelf and
+// a book. This table adds that relation without changing either parent table.
+// ---------------------------------------------------------------------------
+
+/// SQLite foreign-key enforcement stays off for inherited databases.
 ///
-/// Kept as text so the column reads plainly in a database browser and survives
-/// reordering of any Dart enum.
-const bookStatusNotStarted = 'not_started';
-const bookStatusReading = 'reading';
-const bookStatusFinished = 'finished';
+/// The cascade declarations in this table are inert unless a connection
+/// enables enforcement. Application deletion paths must remove membership
+/// rows explicitly.
+const createShelfBooksSQL = '''
+CREATE TABLE IF NOT EXISTS tb_shelf_books (
+  shelf_id INTEGER NOT NULL,
+  book_id INTEGER NOT NULL,
+  sort_order INTEGER NOT NULL DEFAULT 0,
+  create_time TEXT NOT NULL,
+  PRIMARY KEY (shelf_id, book_id),
+  FOREIGN KEY (shelf_id) REFERENCES tb_shelves(id) ON DELETE CASCADE,
+  FOREIGN KEY (book_id) REFERENCES tb_books(id) ON DELETE CASCADE
+)
+''';
+
+/// Stable identity of the built-in All time favourites shelf.
+///
+/// Normal shelves use positive auto-incremented IDs. This reserved negative ID
+/// lets code identify the built-in shelf without its translated display name.
+const builtInFavouritesShelfId = -1;
+
+const seedBuiltInFavouritesShelfSQL = '''
+INSERT OR IGNORE INTO tb_shelves (
+  id, name, sort_order, create_time, update_time
+) VALUES (
+  $builtInFavouritesShelfId,
+  'All time favourites',
+  $builtInFavouritesShelfId,
+  datetime('now'),
+  datetime('now')
+)
+''';
 
 class DBHelper {
   static final DBHelper _instance = DBHelper._internal();
@@ -545,13 +583,12 @@ class DBHelper {
       case 3:
         // remove former book style
         Prefs().removeBookStyle();
-        bookDao.selectBooks().then((books) {
-          for (var book in books) {
-            if (!File(book.coverFullPath).existsSync()) {
-              resetBookCover(book);
-            }
+        final books = (await db.query('tb_books')).map(Book.fromDb);
+        for (final book in books) {
+          if (!File(book.coverFullPath).existsSync()) {
+            await resetBookCover(book);
           }
-        });
+        }
         continue case4;
       case4:
       case 4:
@@ -620,6 +657,21 @@ class DBHelper {
             "UPDATE tb_books SET status = '$bookStatusReading' WHERE reading_percentage > 0 AND reading_percentage < 1");
         await db.execute(
             "UPDATE tb_books SET status = '$bookStatusFinished' WHERE reading_percentage >= 1");
+        if (newVersion >= 9) {
+          continue case8;
+        }
+        break;
+      case8:
+      case 8:
+        // Version 8 created shelves without a membership mechanism. The
+        // junction table is additive and keeps all existing shelf and book
+        // rows unchanged.
+        await db.execute(createShelfBooksSQL);
+
+        // INSERT OR IGNORE makes this seed safe to replay after an interrupted
+        // migration. The reserved negative ID is the identity; the name is a
+        // display fallback and must never be used for lookup.
+        await db.execute(seedBuiltInFavouritesShelfSQL);
     }
 
     if (oldVersion != 0 && Prefs().webdavStatus) {

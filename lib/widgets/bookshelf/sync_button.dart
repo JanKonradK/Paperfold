@@ -34,18 +34,24 @@ class _SyncButtonState extends ConsumerState<SyncButton>
 
   @override
   Widget build(BuildContext context) {
-    ref.listen(syncProvider.select((value) => value.isSyncing), (_, isSyncing) {
-      if (isSyncing) {
-        _syncAnimationController.repeat();
-      } else {
-        _syncAnimationController.stop();
-      }
-    });
+    final disableAnimations = MediaQuery.disableAnimationsOf(context);
+    // Read through select so the button rebuilds only when the syncing flag
+    // itself changes, not on every field of the sync state.
+    final isSyncing = ref.watch(syncProvider.select((value) => value.isSyncing));
 
-    final isSyncing = ref.watch(syncProvider.select((s) => s.isSyncing));
+    // Drive the controller from the flag directly. Starting it from a
+    // post-frame callback re-entered the provider subscription and threw
+    // LateInitializationError while the shelf home was building.
+    if (isSyncing && !disableAnimations) {
+      if (!_syncAnimationController.isAnimating) {
+        _syncAnimationController.repeat();
+      }
+    } else if (_syncAnimationController.isAnimating) {
+      _syncAnimationController.stop();
+    }
 
     return IconButton(
-      icon: isSyncing
+      icon: isSyncing && !disableAnimations
           ? RepaintBoundary(
               child: RotationTransition(
                 turns: _animation,
