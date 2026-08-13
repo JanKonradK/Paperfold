@@ -29,48 +29,40 @@ abstract class StatisticsDashboardTileBase {
   /// Override this method to perform cleanup or additional actions.
   void onRemove(BuildContext context, WidgetRef ref) {}
 
-  /// Builds an optional icon widget for the tile.
-  /// Override this method to provide a custom icon.
-  Widget buildCorner(BuildContext context, WidgetRef ref) => SizedBox.shrink();
-
   L10n get l10nLocal => L10n.of(navigatorKey.currentContext!);
 
+  /// One statistic, in as little furniture as it takes to hold it.
+  ///
+  /// Two things went. The filled block, which made a screen of tiles read as a
+  /// wall of boxes rather than as a set of numbers; it is a quiet surface with
+  /// a hairline now, so the figures carry the contrast. And the giant rotated
+  /// icon bleeding out of the bottom corner at ten percent opacity, which was
+  /// decoration standing where content should be, and which every tile paid
+  /// for in a second layer and a clip.
   Widget buildTile(BuildContext context, WidgetRef ref) {
+    final scheme = Theme.of(context).colorScheme;
     return FilledContainer(
       width: double.infinity,
       height: double.infinity,
       radius: 16,
-      color: Theme.of(context).colorScheme.surfaceContainer,
-      child: Stack(
+      color: scheme.surfaceContainerLow,
+      padding: const EdgeInsets.all(12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Positioned(
-            bottom: -20,
-            right: -20,
-            child: Opacity(
-              opacity: 0.1,
-              child: Transform.rotate(
-                angle: -0.2,
-                child: buildCorner(context, ref),
-              ),
-            ),
-          ),
-          Container(
-            color: Colors.transparent,
-            padding: const EdgeInsets.all(6),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                if (title.isNotEmpty)
-                  Text(
-                    title,
-                    style: Theme.of(context).textTheme.titleMedium,
+          if (title.isNotEmpty) ...[
+            Text(
+              title,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                    color: scheme.onSurfaceVariant,
                   ),
-                Expanded(
-                  child: buildContent(context, ref),
-                ),
-              ],
             ),
+            const SizedBox(height: 8),
+          ],
+          Expanded(
+            child: ClipRect(child: buildContent(context, ref)),
           ),
         ],
       ),
@@ -85,19 +77,31 @@ abstract class StatisticsDashboardTileBase {
 
   double get flipTitleSize => 100;
 
+  /// How much taller a tile must be to hold text at the reader's size.
+  ///
+  /// Every tile box here is a fixed number of logical pixels. Raising the
+  /// system font size grows the text inside those boxes but not the boxes, so
+  /// the content ran past the bottom edge. The cap keeps a tile from eating
+  /// the screen at the largest settings.
+  double _textScale(BuildContext context) =>
+      MediaQuery.textScalerOf(context).scale(1).clamp(1.0, 1.6);
+
   Size tileSize(BuildContext context) {
+    final scale = _textScale(context);
     final width = min(flipSquareSize * metadata.columnSpan,
         MediaQuery.sizeOf(context).width * 0.9);
-    final height = min(flipSquareSize * metadata.rowSpan,
+    final height = min(flipSquareSize * metadata.rowSpan * scale,
         MediaQuery.sizeOf(context).height * 0.8);
     return Size(width, height);
   }
 
   Size flipSize(BuildContext context) {
+    final scale = _textScale(context);
     final width = min(max(flipSquareSize * metadata.columnSpan, 300.0),
         MediaQuery.sizeOf(context).width * 0.9);
 
-    final height = min(flipSquareSize * metadata.rowSpan + flipTitleSize,
+    final height = min(
+        (flipSquareSize * metadata.rowSpan + flipTitleSize) * scale,
         MediaQuery.sizeOf(context).height * 0.8);
 
     return Size(width, height);
@@ -113,25 +117,6 @@ abstract class StatisticsDashboardTileBase {
 
   void onTap(BuildContext context, WidgetRef ref) {}
 
-  Widget cornerIcon(BuildContext context, IconData iconData) {
-    return Icon(
-      iconData,
-      size: 90,
-      color: Theme.of(context).colorScheme.primary,
-    );
-  }
-
-  Widget cornerText(BuildContext context, String text) {
-    return Text(
-      text,
-      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            color: Theme.of(context).colorScheme.primary,
-            fontSize: 80,
-            fontWeight: FontWeight.bold,
-          ),
-    );
-  }
-
   Widget flipScaffold(BuildContext context, WidgetRef ref, Widget flipContent) {
     final theme = Theme.of(context);
     final spacing = 8.0;
@@ -140,16 +125,18 @@ abstract class StatisticsDashboardTileBase {
       color: theme.scaffoldBackgroundColor,
       width: flipSize(context).width,
       height: flipSize(context).height,
+      // The content takes whatever the header leaves rather than a fixed
+      // number of pixels, so a tile clips its own overflow instead of
+      // painting past its edge.
       child: Column(
-        mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           FilledContainer(
             radius: 29,
-            height: flipTitleSize - spacing - 5,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
             color: theme.colorScheme.primaryContainer,
             child: Column(
+              mainAxisSize: MainAxisSize.min,
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -182,16 +169,11 @@ abstract class StatisticsDashboardTileBase {
             ),
           ),
           SizedBox(height: spacing),
-          Row(
-            children: [
-              Expanded(
-                child: Container(
-                    margin: const EdgeInsets.all(12),
-                    height: flipSquareSize * metadata.rowSpan -
-                        12 * 2, // minus margin
-                    child: flipContent),
-              ),
-            ],
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.all(12),
+              child: ClipRect(child: flipContent),
+            ),
           ),
         ],
       ),

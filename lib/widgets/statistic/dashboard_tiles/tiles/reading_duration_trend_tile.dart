@@ -28,11 +28,6 @@ abstract class _BaseReadingDurationTile extends StatisticsDashboardTileBase {
   }
 
   @override
-  Widget buildCorner(BuildContext context, WidgetRef ref) {
-    return cornerText(context, '$days ');
-  }
-
-  @override
   StatisticsDashboardTileMetadata get metadata {
     final l10n = l10nLocal;
     return StatisticsDashboardTileMetadata(

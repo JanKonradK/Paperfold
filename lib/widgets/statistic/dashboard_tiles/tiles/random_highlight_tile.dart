@@ -26,11 +26,6 @@ class RandomHighlightTile extends StatisticsDashboardTileBase {
   }
 
   @override
-  Widget buildCorner(BuildContext context, WidgetRef ref) {
-    return cornerIcon(context, Icons.format_quote);
-  }
-
-  @override
   Widget buildContent(BuildContext context, WidgetRef ref) {
     final asyncValue = ref.watch(randomHighlightProvider);
     return AsyncSkeletonWrapper<RandomHighlightData?>(

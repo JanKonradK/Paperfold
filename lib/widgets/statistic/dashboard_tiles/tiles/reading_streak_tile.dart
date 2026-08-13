@@ -57,20 +57,28 @@ class _ReadingStreakContent extends StatelessWidget {
         ? l10n.tileReadingStreakSubtitleActive
         : l10n.tileReadingStreakSubtitleInactive;
 
+    // Every child states how it gives way when the tile is short. A Spacer
+    // here took the remaining space before the encouragement had been laid
+    // out, so at a raised font size the tile overflowed its own box.
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisAlignment: MainAxisAlignment.center,
+      mainAxisAlignment: MainAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
       children: [
         Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Icon(Icons.local_fire_department, color: fireColor),
             const SizedBox(width: 8),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
                     l10n.tileReadingStreakCurrent(data.currentStreak),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                     style: theme.textTheme.titleMedium?.copyWith(
                       color: fireColor,
                       fontWeight: FontWeight.bold,
@@ -78,6 +86,8 @@ class _ReadingStreakContent extends StatelessWidget {
                   ),
                   Text(
                     subtitle,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                     style: theme.textTheme.bodySmall,
                   ),
                 ],
@@ -86,19 +96,18 @@ class _ReadingStreakContent extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 8),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            _StatPill(
-              label: l10n.tileReadingStreakBestLabel,
-              value: l10n.tileReadingStreakCurrent(data.longestStreak),
-            ),
-          ],
+        _StatPill(
+          label: l10n.tileReadingStreakBestLabel,
+          value: l10n.tileReadingStreakCurrent(data.longestStreak),
         ),
-        const Spacer(),
-        Text(
-          encouragement,
-          style: theme.textTheme.bodyMedium,
+        const SizedBox(height: 8),
+        Flexible(
+          child: Text(
+            encouragement,
+            maxLines: 3,
+            overflow: TextOverflow.ellipsis,
+            style: theme.textTheme.bodySmall,
+          ),
         ),
       ],
     );
@@ -129,10 +138,16 @@ class _StatPill extends StatelessWidget {
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Text(label, style: theme.textTheme.labelSmall),
+          Text(label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.labelSmall),
           Text(
             value,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: theme.textTheme.titleMedium
                 ?.copyWith(fontWeight: FontWeight.bold),
           ),

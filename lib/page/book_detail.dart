@@ -62,105 +62,55 @@ class _BookDetailState extends ConsumerState<BookDetail> {
 
   @override
   Widget build(BuildContext context) {
+    /// A short wash of the book's own cover behind the header.
+    ///
+    /// It used to blur the cover across eighty percent of the page, which put
+    /// a moving, low-contrast image behind every line of text and broke the
+    /// rule that a blur stays clipped to one small surface. Bounded to the
+    /// header it does the one job worth doing: the page takes the colour of
+    /// the book it is about.
     Widget buildBackground() {
-      var bg = ShaderMask(
-        shaderCallback: (rect) {
-          return LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Theme.of(context).colorScheme.surface.withAlpha(200),
-              Theme.of(context).colorScheme.surface.withAlpha(150),
-              Theme.of(context).colorScheme.surface.withAlpha(10),
-              // Colors.transparent,
-            ],
-          ).createShader(
-            Rect.fromLTRB(0, 0, rect.width, rect.height),
-          );
-        },
-        blendMode: BlendMode.dstATop,
-        child: BookCover(
-          book: _book,
-          height: MediaQuery.of(context).size.height * 0.8,
-          width: MediaQuery.of(context).size.width,
-        ),
-      );
-      return Transform.scale(
-        scale: 1.1,
-        child: ImageFiltered(
-          imageFilter: ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0),
-          child: bg,
+      return IgnorePointer(
+        child: SizedBox(
+          height: 260,
+          child: ShaderMask(
+            shaderCallback: (rect) => LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Theme.of(context).colorScheme.surface.withValues(alpha: 0.55),
+                Theme.of(context).colorScheme.surface,
+              ],
+            ).createShader(Rect.fromLTRB(0, 0, rect.width, rect.height)),
+            blendMode: BlendMode.dstATop,
+            child: ImageFiltered(
+              imageFilter: ImageFilter.blur(sigmaX: 28, sigmaY: 28),
+              child: BookCover(
+                book: _book,
+                height: 260,
+                width: MediaQuery.of(context).size.width,
+              ),
+            ),
+          ),
         ),
       );
     }
 
+    /// Cover, title, author, rating, progress, and the one action the page
+    /// exists for.
+    ///
+    /// This was a Stack of absolutely positioned children at fixed offsets: a
+    /// card at 150+60, a cover at 0+60, a rating at 240+60, inside a box of a
+    /// fixed 340 dp. None of it survived a longer title or a larger system
+    /// font. It is a column and a row now, so it lays itself out.
+    ///
+    /// It also gained a Read button. The page a reader reaches by tapping
+    /// their own book had no way to open that book.
     Widget buildBookBaseDetail(double width) {
-      TextStyle bookTitleStyle = TextStyle(
-        fontSize: 24,
-        fontFamily: 'SourceHanSerif',
-        fontWeight: FontWeight.bold,
-        color: Theme.of(context).textTheme.bodyLarge!.color,
-      );
-      TextStyle bookAuthorStyle = TextStyle(
-        fontSize: 15,
-        fontFamily: 'SourceHanSerif',
-        color: Theme.of(context).textTheme.bodyLarge!.color,
-      );
-      double top = 60;
+      final theme = Theme.of(context);
+      final percent = widget.book.readingPercentage.clamp(0.0, 1.0).toDouble();
 
-      return SizedBox(
-        height: 280 + top,
-        child: Stack(
-          children: [
-            // background card
-            Positioned(
-              left: 0,
-              top: 150 + top,
-              child: SizedBox(
-                  height: 120,
-                  width: width,
-                  child: FilledContainer(
-                    margin: const EdgeInsets.only(bottom: 3),
-                    child: Row(
-                      children: [
-                        const Spacer(),
-                        // progress ring
-                        Stack(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(20),
-                              width: 100,
-                              height: 100,
-                              child: CircularProgressIndicator(
-                                value: widget.book.readingPercentage,
-                                strokeWidth: 6,
-                                backgroundColor: Colors.grey[400],
-                                valueColor: AlwaysStoppedAnimation<Color>(
-                                    Theme.of(context).colorScheme.primary),
-                              ),
-                            ),
-                            Positioned.fill(
-                              child: Center(
-                                child: Text(
-                                  "${(widget.book.readingPercentage * 100).toStringAsFixed(0)}%",
-                                  style: const TextStyle(
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  )),
-            ),
-            // book cover
-            Positioned(
-              left: 20,
-              top: 0 + top,
-              child: GestureDetector(
+      final Widget cover = GestureDetector(
                 onTap: () async {
                   if (!isEditing) {
                     return;
@@ -214,99 +164,125 @@ class _BookDetailState extends ConsumerState<BookDetail> {
                     ref.read(bookListProvider.notifier).refresh();
                   });
                 },
-                child: Container(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(10),
-                    boxShadow: [
-                      // Set the shadow
-                      BoxShadow(
-                        color: Colors.grey.withAlpha(128),
-                        spreadRadius: 6,
-                        blurRadius: 30,
-                        offset: const Offset(0, 3),
-                      ),
-                    ],
-                  ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(10),
                   child: Hero(
                     tag: widget.book.coverFullPath,
                     child:
-                        BookCover(book: widget.book, height: 230, width: 160),
+                        BookCover(book: widget.book, height: 186, width: 128),
+                  ),
+                ),
+              );
+
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SizedBox(height: 8),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              cover,
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextFormField(
+                      initialValue: widget.book.title,
+                      enabled: isEditing,
+                      style: theme.textTheme.titleLarge,
+                      maxLines: null,
+                      minLines: 1,
+                      decoration: const InputDecoration(
+                        border: InputBorder.none,
+                        isCollapsed: true,
+                      ),
+                      onChanged: (value) {
+                        widget.book.title = value.replaceAll('\n', ' ');
+                      },
+                    ),
+                    const SizedBox(height: 4),
+                    TextFormField(
+                      initialValue: widget.book.author,
+                      enabled: isEditing,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                      maxLines: null,
+                      minLines: 1,
+                      decoration: const InputDecoration(
+                        border: InputBorder.none,
+                        isCollapsed: true,
+                      ),
+                      onChanged: (value) {
+                        widget.book.author = value;
+                      },
+                    ),
+                    const SizedBox(height: 10),
+                    RatingBar.builder(
+                      initialRating: rating,
+                      minRating: 0,
+                      direction: Axis.horizontal,
+                      allowHalfRating: true,
+                      itemCount: 5,
+                      itemSize: 22,
+                      itemPadding: const EdgeInsetsDirectional.only(end: 6),
+                      itemBuilder: (context, _) => Icon(
+                        Icons.star,
+                        color: theme.colorScheme.primary,
+                      ),
+                      onRatingUpdate: (value) {
+                        setState(() {
+                          rating = value;
+                          updateBookRating(widget.book, value);
+                        });
+                      },
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(2),
+                  child: LinearProgressIndicator(
+                    value: percent,
+                    minHeight: 4,
+                    backgroundColor: theme.colorScheme.surfaceContainerHighest,
                   ),
                 ),
               ),
-            ),
-            // rating bar
-            Positioned(
-              left: 30,
-              top: 240 + top,
-              child: RatingBar.builder(
-                initialRating: rating,
-                minRating: 0,
-                direction: Axis.horizontal,
-                allowHalfRating: true,
-                itemCount: 5,
-                itemSize: 20,
-                itemPadding: const EdgeInsets.symmetric(horizontal: 4.0),
-                itemBuilder: (context, _) => const Icon(
-                  Icons.star,
-                  color: Colors.amber,
-                ),
-                onRatingUpdate: (rating) {
-                  setState(() {
-                    this.rating = rating;
-                    updateBookRating(widget.book, rating);
-                  });
-                },
-              ),
-            ),
-            // book title and author
-            Positioned(
-              left: 190,
-              top: 5 + top,
-              child: SizedBox(
-                width: width - 190,
-                height: 140,
-                child: SingleChildScrollView(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      TextFormField(
-                        autofocus: true,
-                        initialValue: widget.book.title,
-                        enabled: isEditing,
-                        style: bookTitleStyle,
-                        maxLines: null,
-                        minLines: 1,
-                        decoration: const InputDecoration(
-                          border: InputBorder.none,
-                          isCollapsed: true,
-                        ),
-                        onChanged: (value) {
-                          widget.book.title = value.replaceAll('\n', ' ');
-                        },
-                      ),
-                      const SizedBox(height: 5),
-                      TextFormField(
-                        initialValue: widget.book.author,
-                        enabled: isEditing,
-                        style: bookAuthorStyle,
-                        maxLines: null,
-                        minLines: 1,
-                        decoration: const InputDecoration(
-                          border: InputBorder.none,
-                          isCollapsed: true,
-                        ),
-                        onChanged: (value) {
-                          widget.book.author = value;
-                        },
-                      ),
-                    ],
-                  ),
+              const SizedBox(width: 10),
+              Text(
+                '${(percent * 100).round()}%',
+                style: theme.textTheme.labelMedium?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
                 ),
               ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton.icon(
+              onPressed: () => pushToReadingPage(ref, context, widget.book),
+              icon: const Icon(Icons.play_arrow_rounded),
+              label: Text(
+                percent > 0
+                    ? L10n.of(context).tileContinueReadingTitle
+                    : L10n.of(context).readingPageReading,
+              ),
+              style: FilledButton.styleFrom(
+                minimumSize: const Size(0, 48),
+              ),
             ),
-          ],
-        ),
+          ),
+        ],
       );
     }
 

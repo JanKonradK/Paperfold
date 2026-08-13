@@ -1,9 +1,9 @@
 /*
-THESIS: A modern interface wrapped around an antique library. The chrome is thin, quiet and contemporary so the bookcase - its spines, its clutter, its plants - is the only ornate thing on screen. It refuses both the cover-grid home every reading app ships and the all-over cosy-vintage skin the subject invites.
-OWN-WORLD: Warm paper ground, candlelight dark; the five-colour nature palette as SURFACES only; terracotta ink accent swapping to golden tan in dark; Philosopher italic for display, Source Sans 3 for labels; single-tint SVG ornaments; bookcloth saturation reserved for spines, covers and the bookcase itself.
-STORY: The reader opens the app onto their own bookcase, recognises a book by its spine the way they would at home, and reaches into it.
-FIRST VIEWPORT: One bookcase - side panels, top rail, a recessed back panel and shelf boards with real thickness - holding tall vertical spines, some leaning, with plants and bookends between them; Reading now at the top; a thin sliding tab bar below carrying Journal, Library, More.
-FORM: Bookcase. Chosen by the owner from a running three-model prototype and then directed by their own feedback on hardware.
+THESIS: A modern interface wrapped around an antique library. The furniture is glass and hairlines; the books are the only ornate thing on screen. The walnut carcass, the plants and the bookends were built, run on hardware and rejected: they made every screen brown and the whole application read as antique, when only the books were ever meant to. It still refuses both the cover-grid home every reading app ships and the all-over cosy-vintage skin the subject invites.
+OWN-WORLD: Warm paper ground, true-black dark; the five-colour nature palette as SURFACES only; terracotta ink accent swapping to golden tan in dark; Philosopher italic for display, Source Sans 3 for labels; each spine carries a strip of its own cover, so the colour on screen belongs to the books and to nothing else.
+STORY: The reader opens the app onto their own books, recognises one by its spine the way they would at home, and reaches into it.
+FIRST VIEWPORT: A continue-reading bar, then sheets of glass holding tall vertical spines, each wearing its own cover art; Reading now at the top; a thin sliding tab bar below carrying Journal, Library, More.
+FORM: Glass shelving. Chosen by the owner on hardware, replacing the walnut bookcase.
 FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, and DESIGN.md.
 */
 
@@ -14,7 +14,6 @@ import 'package:desktop_drop/desktop_drop.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:paperfold/config/paperfold_tokens.dart';
 import 'package:paperfold/config/shared_preference_provider.dart';
 import 'package:paperfold/enums/book_status.dart';
 import 'package:paperfold/l10n/generated/L10n.dart';
@@ -32,6 +31,7 @@ import 'package:paperfold/utils/platform_utils.dart';
 import 'package:paperfold/widgets/bookshelf/book_bottom_sheet.dart';
 import 'package:paperfold/widgets/bookshelf/book_cover.dart';
 import 'package:paperfold/widgets/bookshelf/book_spine.dart';
+import 'package:paperfold/widgets/bookshelf/continue_reading_bar.dart';
 import 'package:paperfold/widgets/bookshelf/sync_button.dart';
 import 'package:paperfold/widgets/ornament.dart';
 import 'package:paperfold/widgets/paperfold_glass_surface.dart';
@@ -155,6 +155,13 @@ class _ShelfHomePageState extends ConsumerState<ShelfHomePage>
         if (mounted) {
           await ref.read(shelfHomeProvider.notifier).refresh();
         }
+    }
+  }
+
+  Future<void> _openBook(Book book) async {
+    await pushToReadingPage(ref, context, book);
+    if (mounted) {
+      await ref.read(shelfHomeProvider.notifier).refresh();
     }
   }
 
@@ -362,6 +369,12 @@ class _ShelfHomePageState extends ConsumerState<ShelfHomePage>
         child: shelves.when(
           data: (data) {
             final sections = _sections(context, data);
+            // The book most recently opened leads the screen. Without one -
+            // an empty library, or nothing started yet - the shelves simply
+            // start at the top.
+            final current =
+                data.readingNow.isEmpty ? null : data.readingNow.first;
+            final leadingItems = current == null ? 0 : 1;
             return ListenableBuilder(
               listenable: Prefs(),
               builder: (context, child) => RefreshIndicator(
@@ -369,8 +382,23 @@ class _ShelfHomePageState extends ConsumerState<ShelfHomePage>
                 child: ListView.builder(
                   controller: _scrollController,
                   padding: const EdgeInsetsDirectional.fromSTEB(12, 8, 12, 32),
-                  itemCount: sections.length,
-                  itemBuilder: (context, index) {
+                  itemCount: sections.length + leadingItems,
+                  itemBuilder: (context, rawIndex) {
+                    if (current != null && rawIndex == 0) {
+                      return Padding(
+                        padding: const EdgeInsetsDirectional.fromSTEB(
+                          4,
+                          4,
+                          4,
+                          16,
+                        ),
+                        child: ContinueReadingBar(
+                          book: current,
+                          onOpen: () => _openBook(current),
+                        ),
+                      );
+                    }
+                    final index = rawIndex - leadingItems;
                     final section = sections[index];
                     return _BookshelfSection(
                       section: section,
@@ -379,7 +407,8 @@ class _ShelfHomePageState extends ConsumerState<ShelfHomePage>
                       isLast: index == sections.length - 1,
                       uniformSpines: Prefs().shelfUniformSpines,
                       onOpenShelf: () => _openShelf(section),
-                      onOpenBook: _openBookOptions,
+                      onOpenBook: _openBook,
+                      onBookOptions: _openBookOptions,
                       emptyAction: section.count > 0
                           ? null
                           : index == 0
@@ -471,6 +500,7 @@ class _BookshelfSection extends StatelessWidget {
     required this.uniformSpines,
     required this.onOpenShelf,
     required this.onOpenBook,
+    required this.onBookOptions,
     this.emptyAction,
     this.emptyActionLabel,
   });
@@ -482,6 +512,7 @@ class _BookshelfSection extends StatelessWidget {
   final bool uniformSpines;
   final VoidCallback onOpenShelf;
   final ValueChanged<Book> onOpenBook;
+  final ValueChanged<Book> onBookOptions;
   final VoidCallback? emptyAction;
   final String? emptyActionLabel;
 
@@ -495,23 +526,19 @@ class _BookshelfSection extends StatelessWidget {
     );
 
     final scheme = theme.colorScheme;
-    final wood = PaperfoldTokens.wood(theme.brightness);
     final glass = PaperfoldGlassStyle.fromScheme(scheme);
     return Semantics(
       container: true,
       child: CustomPaint(
-        painter: _BookcaseBayPainter(
-          back: wood.back,
-          board: wood.board,
-          edge: wood.edge,
-          detail: wood.onWood,
-          showTopRail: isFirst,
-          showPlinth: isLast,
+        painter: _GlassShelfPainter(
+          sheen: scheme.onSurface,
+          edge: scheme.outlineVariant,
+          shadow: scheme.shadow,
         ),
         child: Padding(
           padding: EdgeInsetsDirectional.fromSTEB(
             16,
-            isFirst ? 20 : 0,
+            isFirst ? 12 : 16,
             16,
             0,
           ),
@@ -593,7 +620,14 @@ class _BookshelfSection extends StatelessWidget {
                   MediaQuery.textScalerOf(context),
                 ),
                 child: Padding(
-                  padding: const EdgeInsetsDirectional.fromSTEB(4, 10, 4, 22),
+                  // The bottom inset is the thickness of the glass, so the
+                  // books stand on the plate the painter draws.
+                  padding: const EdgeInsetsDirectional.fromSTEB(
+                    4,
+                    10,
+                    4,
+                    _GlassShelfPainter.plateInset,
+                  ),
                   child: section.count == 0
                       ? _EmptyShelf(
                           label: l10n.emptyShelf,
@@ -605,6 +639,7 @@ class _BookshelfSection extends StatelessWidget {
                           shelfIndex: shelfIndex,
                           uniformSpines: uniformSpines,
                           onOpenBook: onOpenBook,
+                          onBookOptions: onBookOptions,
                           onOpenWishlist: onOpenShelf,
                         ),
                 ),
@@ -623,6 +658,7 @@ class _ShelfSpineList extends StatelessWidget {
     required this.shelfIndex,
     required this.uniformSpines,
     required this.onOpenBook,
+    required this.onBookOptions,
     required this.onOpenWishlist,
   });
 
@@ -630,54 +666,12 @@ class _ShelfSpineList extends StatelessWidget {
   final int shelfIndex;
   final bool uniformSpines;
   final ValueChanged<Book> onOpenBook;
+  final ValueChanged<Book> onBookOptions;
   final VoidCallback onOpenWishlist;
-
-  List<_ShelfSlot> _arrangement() {
-    final slots = <_ShelfSlot>[
-      for (var index = 0; index < section.count; index++) _SpineSlot(index),
-    ];
-
-    switch (shelfIndex) {
-      case 0:
-        slots.insert(
-          math.min(2, slots.length),
-          const _DecorationSlot(_ShelfDecorationKind.plant),
-        );
-      case 1 when section.count >= 2:
-        slots
-          ..insert(
-            0,
-            const _DecorationSlot(_ShelfDecorationKind.leadingBookend),
-          )
-          ..add(
-            const _DecorationSlot(_ShelfDecorationKind.trailingBookend),
-          );
-      // One object per shelf, and a different one on each, so five shelves do
-      // not read as the same vase repeated. The slot index is the shelf index,
-      // so the arrangement is identical on every launch.
-      case 2:
-        slots.insert(
-          math.min(1, slots.length),
-          const _DecorationSlot(_ShelfDecorationKind.curio),
-        );
-      case 3 when section.count >= 3:
-        slots.insert(
-          math.min(3, slots.length),
-          const _DecorationSlot(_ShelfDecorationKind.plant),
-        );
-      case 4 when section.count >= 4:
-        slots.insert(
-          math.min(1, slots.length),
-          const _DecorationSlot(_ShelfDecorationKind.candle),
-        );
-    }
-    return slots;
-  }
 
   @override
   Widget build(BuildContext context) {
     final l10n = L10n.of(context);
-    final arrangement = _arrangement();
 
     Widget spineAt(int sourceIndex) {
       if (sourceIndex < section.books.length) {
@@ -690,7 +684,10 @@ class _ShelfSpineList extends StatelessWidget {
               ? l10n.bookSpineSemanticLabelNoAuthor(book.title)
               : l10n.bookSpineSemanticLabel(book.author, book.title),
           onTap: () => onOpenBook(book),
+          onLongPress: () => onBookOptions(book),
+          longPressHint: l10n.shelfBookOptionsHint,
           uniform: uniformSpines,
+          coverPath: book.coverFullPath,
         );
       }
 
@@ -712,112 +709,12 @@ class _ShelfSpineList extends StatelessWidget {
       scrollDirection: Axis.horizontal,
       clipBehavior: Clip.hardEdge,
       padding: const EdgeInsetsDirectional.symmetric(horizontal: 8),
-      itemCount: arrangement.length,
+      itemCount: section.count,
       separatorBuilder: (context, index) =>
           const SizedBox(width: BookSpine.spacing),
-      itemBuilder: (context, index) {
-        final slot = arrangement[index];
-        return Align(
-          alignment: Alignment.bottomCenter,
-          child: switch (slot) {
-            _SpineSlot(:final sourceIndex) => spineAt(sourceIndex),
-            _DecorationSlot(:final kind) => Padding(
-                padding: const EdgeInsets.only(
-                  bottom: BookSpine.contactShadowDepth,
-                ),
-                child: _ShelfDecoration(kind: kind),
-              ),
-          },
-        );
-      },
-    );
-  }
-}
-
-sealed class _ShelfSlot {
-  const _ShelfSlot();
-}
-
-class _SpineSlot extends _ShelfSlot {
-  const _SpineSlot(this.sourceIndex);
-
-  final int sourceIndex;
-}
-
-class _DecorationSlot extends _ShelfSlot {
-  const _DecorationSlot(this.kind);
-
-  final _ShelfDecorationKind kind;
-}
-
-enum _ShelfDecorationKind {
-  plant,
-  leadingBookend,
-  trailingBookend,
-  urn,
-  curio,
-  candle,
-}
-
-class _ShelfDecoration extends StatelessWidget {
-  const _ShelfDecoration({required this.kind});
-
-  final _ShelfDecorationKind kind;
-
-  @override
-  Widget build(BuildContext context) {
-    final isRtl = Directionality.of(context) == TextDirection.rtl;
-    final scheme = Theme.of(context).colorScheme;
-    // The two reference worlds dress differently. The printed keepsake page is
-    // a teacup, a candle and a jug of flowers; the dark shelf is a classical
-    // bust. Same slots, resolved by brightness.
-    final isDark = scheme.brightness == Brightness.dark;
-    final (ornament, width, height, flipX) = switch (kind) {
-      _ShelfDecorationKind.curio => isDark
-          ? (PaperfoldOrnament.classicalBust, 52.0, 76.0, false)
-          : (PaperfoldOrnament.teacup, 60.0, 46.0, isRtl),
-      _ShelfDecorationKind.candle => isDark
-          ? (PaperfoldOrnament.smallUrn, 46.0, 66.0, false)
-          : (PaperfoldOrnament.candle, 36.0, 70.0, false),
-      _ShelfDecorationKind.plant => (
-          PaperfoldOrnament.pottedPlant,
-          58.0,
-          94.0,
-          false
-        ),
-      _ShelfDecorationKind.leadingBookend => (
-          PaperfoldOrnament.bookend,
-          38.0,
-          82.0,
-          isRtl
-        ),
-      _ShelfDecorationKind.trailingBookend => (
-          PaperfoldOrnament.bookend,
-          38.0,
-          82.0,
-          !isRtl
-        ),
-      _ShelfDecorationKind.urn => (
-          PaperfoldOrnament.smallUrn,
-          46.0,
-          66.0,
-          false
-        ),
-    };
-
-    return ExcludeSemantics(
-      child: SizedBox(
-        width: width,
-        height: height,
-        child: Transform.flip(
-          flipX: flipX,
-          child: Ornament(
-            ornament: ornament,
-            width: width,
-            height: height,
-            tint: scheme.primary,
-          ),
-        ),
+      itemBuilder: (context, index) => Align(
+        alignment: Alignment.bottomCenter,
+        child: spineAt(index),
       ),
     );
   }
@@ -875,220 +772,103 @@ class _EmptyShelf extends StatelessWidget {
   }
 }
 
-class _BookcaseBayPainter extends CustomPainter {
-  _BookcaseBayPainter({
-    required this.back,
-    required this.board,
+/// The shelf the books stand on.
+///
+/// The bookcase used to be the loudest object on the screen: a walnut carcass
+/// with uprights, a grained back panel and a thick board, filling every bay
+/// with brown. It buried the books it was meant to hold, and it made the whole
+/// application read as antique when only the books were supposed to.
+///
+/// What is left is a single sheet of glass. It is almost nothing: a lit front
+/// edge, a faint body, and the shadow the books drop onto it. The page ground
+/// shows through, the books supply every colour on the screen, and the
+/// furniture stops competing with them.
+///
+/// Solid colour and linear gradients only, no blur or image, and
+/// [shouldRepaint] is false unless the palette changes.
+class _GlassShelfPainter extends CustomPainter {
+  _GlassShelfPainter({
+    required this.sheen,
     required this.edge,
-    required this.detail,
-    required this.showTopRail,
-    required this.showPlinth,
-  }) : outlinePaint = Paint()
-          ..color = detail.withValues(alpha: 0.34)
-          ..strokeWidth = 1;
+    required this.shadow,
+  });
 
-  final Color back;
-  final Color board;
+  final Color sheen;
   final Color edge;
-  final Color detail;
-  final bool showTopRail;
-  final bool showPlinth;
-  final Paint outlinePaint;
+  final Color shadow;
 
-  /// Drawn as furniture rather than as rectangles. The depth comes from four
-  /// cheap things: a vignette inside the bay, an occlusion band under the shelf
-  /// above, a lit gradient across each board, and a contact shadow where the
-  /// books meet the timber. Flat fills were what made the first two builds look
-  /// drawn instead of built.
-  ///
-  /// Everything here uses solid colour and linear gradients. There is no blur,
-  /// noise, or image. [shouldRepaint] is false unless the palette changes, so
-  /// this runs on theme change and resize, not per scrolled frame.
+  /// The height the glass occupies at the foot of a shelf stage. The stage
+  /// pads its books by the same amount, so the books stand on the plate rather
+  /// than floating above it or sinking through it.
+  static const double plateInset = 14;
+  static const double _plateThickness = 9;
+  static const double _contactHeight = 20;
+
   @override
   void paint(Canvas canvas, Size size) {
-    const sideWidth = 14.0;
-    const boardThickness = 28.0;
-    final shade = Color.lerp(edge, back, 0.48)!;
-    final deepShade = Color.lerp(back, edge, 0.16)!;
-    final sheen = Color.lerp(board, PaperfoldTokens.cover.foil, 0.24)!;
+    final plateTop = size.height - plateInset;
+    if (plateTop <= 0) return;
 
-    // The back panel sits deepest, so it is darkest at the top of the bay
-    // where least light reaches.
-    final backRect = Rect.fromLTWH(
-      sideWidth,
+    // The books darken the glass where they touch it. This band is what makes
+    // them stand on the shelf rather than in front of it.
+    final contact = Rect.fromLTWH(
       0,
-      math.max(0, size.width - sideWidth * 2),
-      size.height,
+      math.max(0, plateTop - _contactHeight),
+      size.width,
+      math.min(_contactHeight, plateTop),
     );
     canvas.drawRect(
-      backRect,
-      Paint()
-        ..shader = LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [deepShade, back],
-        ).createShader(backRect),
-    );
-
-    // The recessed panel has vertical walnut grain and two quiet join lines.
-    // Stable geometry keeps this cheaper than a texture image or noise shader.
-    final backGrainPaint = Paint()
-      ..color = edge.withValues(alpha: 0.24)
-      ..strokeWidth = 1;
-    for (final t in <double>[0.17, 0.34, 0.58, 0.79]) {
-      final x = sideWidth + backRect.width * t;
-      canvas.drawLine(
-          Offset(x, 22), Offset(x, size.height - 28), backGrainPaint);
-    }
-    for (final t in <double>[0.33, 0.67]) {
-      final x = sideWidth + backRect.width * t;
-      canvas.drawLine(
-        Offset(x, 0),
-        Offset(x, size.height - boardThickness),
-        Paint()
-          ..color = shade.withValues(alpha: 0.42)
-          ..strokeWidth = 1,
-      );
-    }
-
-    // Ambient occlusion under the shelf above.
-    canvas.drawRect(
-      Rect.fromLTWH(0, 0, size.width, 18),
+      contact,
       Paint()
         ..shader = LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
           colors: [
-            deepShade.withValues(alpha: 0.55),
-            deepShade.withValues(alpha: 0)
+            shadow.withValues(alpha: 0),
+            shadow.withValues(alpha: 0.34),
           ],
-        ).createShader(Rect.fromLTWH(0, 0, size.width, 18)),
+        ).createShader(contact),
     );
 
-    // Uprights, lit on their inner faces so the carcass reads as having sides.
-    for (final left in <double>[0, size.width - sideWidth]) {
-      final rect = Rect.fromLTWH(left, 0, sideWidth, size.height);
-      final inner = left == 0;
-      canvas.drawRect(
-        rect,
-        Paint()
-          ..shader = LinearGradient(
-            begin: Alignment.centerLeft,
-            end: Alignment.centerRight,
-            colors: inner ? [edge, board] : [board, edge],
-          ).createShader(rect),
-      );
-    }
-    canvas.drawLine(
-      const Offset(sideWidth, 0),
-      Offset(sideWidth, size.height),
-      outlinePaint,
-    );
-    canvas.drawLine(
-      Offset(size.width - sideWidth, 0),
-      Offset(size.width - sideWidth, size.height),
-      outlinePaint,
-    );
-
-    if (showTopRail) {
-      final railRect = Rect.fromLTWH(0, 0, size.width, 20);
-      canvas.drawRRect(
-        RRect.fromRectAndRadius(railRect, const Radius.circular(3)),
-        Paint()
-          ..shader = LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [sheen, edge],
-          ).createShader(railRect),
-      );
-      canvas.drawLine(
-        const Offset(0, 19),
-        Offset(size.width, 19),
-        outlinePaint,
-      );
-    }
-
-    final boardTop = size.height - boardThickness;
-
-    // The books cast onto the board they stand on.
-    final contactRect = Rect.fromLTWH(0, boardTop - 14, size.width, 14);
+    // The plate itself: bright where the light catches its top face, fading
+    // through the thickness of the glass.
+    final plate = Rect.fromLTWH(0, plateTop, size.width, _plateThickness);
     canvas.drawRect(
-      contactRect,
+      plate,
       Paint()
         ..shader = LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
           colors: [
-            deepShade.withValues(alpha: 0),
-            deepShade.withValues(alpha: 0.5)
+            sheen.withValues(alpha: 0.16),
+            sheen.withValues(alpha: 0.04),
           ],
-        ).createShader(contactRect),
+        ).createShader(plate),
     );
 
-    // The board top catches light; the front lip below it falls into shadow.
-    final boardRect =
-        Rect.fromLTWH(0, boardTop, size.width, boardThickness - 8);
-    canvas.drawRect(
-      boardRect,
-      Paint()
-        ..shader = LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [sheen, board],
-        ).createShader(boardRect),
-    );
-
-    // Grain: a few long, faint strokes along the board. Deterministic offsets,
-    // not noise, so the timber looks the same on every launch.
-    final grainPaint = Paint()
-      ..color = shade.withValues(alpha: 0.34)
-      ..strokeWidth = 1;
-    for (final t in <double>[0.18, 0.34, 0.55, 0.76]) {
-      final y = boardTop + (boardThickness - 8) * t;
-      canvas.drawLine(
-          Offset(sideWidth, y), Offset(size.width - sideWidth, y), grainPaint);
-    }
-
-    final lipRect = Rect.fromLTWH(
-      4,
-      boardTop + boardThickness - 8,
-      size.width - 8,
-      8,
-    );
-    canvas.drawRect(
-      lipRect,
-      Paint()
-        ..shader = LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [edge, shade],
-        ).createShader(lipRect),
-    );
-    // A hairline highlight along the front top edge is what reads as an edge.
+    // Two hairlines carry the whole illusion: the lit top face, and the ground
+    // edge underneath it.
     canvas.drawLine(
-      Offset(0, boardTop),
-      Offset(size.width, boardTop),
+      Offset(0, plateTop),
+      Offset(size.width, plateTop),
       Paint()
-        ..color = sheen
+        ..color = sheen.withValues(alpha: 0.58)
         ..strokeWidth = 1,
     );
-    if (showPlinth) {
-      canvas.drawLine(
-        Offset(8, size.height - 2),
-        Offset(size.width - 8, size.height - 2),
-        outlinePaint,
-      );
-    }
+    canvas.drawLine(
+      Offset(0, plateTop + _plateThickness),
+      Offset(size.width, plateTop + _plateThickness),
+      Paint()
+        ..color = edge.withValues(alpha: 0.42)
+        ..strokeWidth = 1,
+    );
   }
 
   @override
-  bool shouldRepaint(covariant _BookcaseBayPainter oldDelegate) {
-    return back != oldDelegate.back ||
-        board != oldDelegate.board ||
+  bool shouldRepaint(covariant _GlassShelfPainter oldDelegate) {
+    return sheen != oldDelegate.sheen ||
         edge != oldDelegate.edge ||
-        detail != oldDelegate.detail ||
-        showTopRail != oldDelegate.showTopRail ||
-        showPlinth != oldDelegate.showPlinth;
+        shadow != oldDelegate.shadow;
   }
 }
 
@@ -1109,7 +889,6 @@ class _ShelfLoadingView extends StatelessWidget {
     ];
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
-    final wood = PaperfoldTokens.wood(theme.brightness);
     final glass = PaperfoldGlassStyle.fromScheme(scheme);
 
     return Semantics(
@@ -1121,18 +900,15 @@ class _ShelfLoadingView extends StatelessWidget {
         itemCount: labels.length,
         itemBuilder: (context, index) => ExcludeSemantics(
           child: CustomPaint(
-            painter: _BookcaseBayPainter(
-              back: wood.back,
-              board: wood.board,
-              edge: wood.edge,
-              detail: wood.onWood,
-              showTopRail: index == 0,
-              showPlinth: index == labels.length - 1,
+            painter: _GlassShelfPainter(
+              sheen: scheme.onSurface,
+              edge: scheme.outlineVariant,
+              shadow: scheme.shadow,
             ),
             child: Padding(
               padding: EdgeInsetsDirectional.fromSTEB(
                 16,
-                index == 0 ? 20 : 0,
+                index == 0 ? 12 : 16,
                 16,
                 0,
               ),

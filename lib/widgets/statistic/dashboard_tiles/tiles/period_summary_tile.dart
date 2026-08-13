@@ -1,5 +1,4 @@
 import 'package:paperfold/enums/chart_mode.dart';
-import 'package:paperfold/l10n/generated/L10n.dart';
 import 'package:paperfold/models/statistic_data_model.dart';
 import 'package:paperfold/widgets/statistic/dashboard_tiles/dashboard_tile_registry.dart';
 import 'package:paperfold/providers/statistic_data.dart';
@@ -23,31 +22,6 @@ class PeriodSummaryTile extends StatisticsDashboardTileBase {
         rowSpan: 1,
         icon: Icons.bar_chart_rounded,
       );
-
-  @override
-  Widget buildCorner(BuildContext context, WidgetRef ref) {
-    final l10n = L10n.of(context);
-
-    return Consumer(builder: (context, ref, _) {
-      return AsyncSkeletonWrapper(
-          asyncValue: ref.watch(statisticDataProvider),
-          mock: StatisticDataModel.mock(),
-          builder: (data, _) {
-            final periodLabel = data.mode == ChartMode.week
-                ? l10n.statisticWeek
-                : data.mode == ChartMode.month
-                    ? l10n.statisticMonth
-                    : data.mode == ChartMode.year
-                        ? l10n.statisticYear
-                        : l10n.statisticAll;
-
-            return cornerText(
-              context,
-              periodLabel,
-            );
-          });
-    });
-  }
 
   @override
   Widget buildContent(
