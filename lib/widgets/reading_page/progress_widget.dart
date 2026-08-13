@@ -30,37 +30,40 @@ class _ProgressWidgetState extends State<ProgressWidget> {
   }
 
   @override
+  void dispose() {
+    _sliderTimer?.cancel();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+    final l10n = L10n.of(context);
+    final player = widget.epubPlayerKey.currentState!;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          const SizedBox(height: 10),
           Text(
-            widget.epubPlayerKey.currentState!.chapterTitle,
+            player.chapterTitle,
             textAlign: TextAlign.center,
-            style: const TextStyle(
-              fontSize: 20,
-              fontFamily: 'SourceHanSerif',
-              fontWeight: FontWeight.bold,
-            ),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: Theme.of(context).textTheme.titleMedium,
           ),
-          const Divider(),
+          const SizedBox(height: 4),
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
               IconButton(
-                icon: const Icon(Icons.arrow_back),
-                onPressed: () {
-                  setState(() {
-                    widget.epubPlayerKey.currentState!.prevChapter();
-                  });
-                },
+                icon: const Icon(Icons.chevron_left),
+                tooltip: l10n.pageTurnActionPrev,
+                onPressed: () => setState(player.prevChapter),
               ),
               Expanded(
                 child: Slider(
-                  inactiveColor: Colors.grey.shade300,
                   value: _readProgress,
+                  semanticFormatterCallback: (value) =>
+                      '${(value * 100).round()}%',
                   onChanged: (value) {
                     setState(() {
                       _readProgress = value;
@@ -69,10 +72,9 @@ class _ProgressWidgetState extends State<ProgressWidget> {
                     _sliderTimer = Timer(
                       const Duration(milliseconds: 100),
                       () async {
-                        await widget.epubPlayerKey.currentState!
-                            .goToPercentage(value);
+                        await player.goToPercentage(value);
                         Timer(const Duration(milliseconds: 300), () {
-                          setState(() {});
+                          if (mounted) setState(() {});
                         });
                       },
                     );
@@ -80,41 +82,38 @@ class _ProgressWidgetState extends State<ProgressWidget> {
                 ),
               ),
               IconButton(
-                icon: const Icon(Icons.arrow_forward),
-                onPressed: () {
-                  setState(() {
-                    widget.epubPlayerKey.currentState!.nextChapter();
-                  });
-                },
+                icon: const Icon(Icons.chevron_right),
+                tooltip: l10n.pageTurnActionNext,
+                onPressed: () => setState(player.nextChapter),
               ),
             ],
           ),
           Row(
             children: [
               ProgressDisplay(
-                mainText: widget.epubPlayerKey.currentState!.chapterCurrentPage
-                    .toString(),
-                subText: L10n.of(context).readingPageCurrentPage,
+                mainText: player.chapterCurrentPage.toString(),
+                subText: l10n.readingPageCurrentPage,
               ),
               ProgressDisplay(
-                mainText: widget.epubPlayerKey.currentState!.chapterTotalPages
-                    .toString(),
-                subText: L10n.of(context).readingPageChapterPages,
+                mainText: player.chapterTotalPages.toString(),
+                subText: l10n.readingPageChapterPages,
               ),
               ProgressDisplay(
-                mainText: (widget.epubPlayerKey.currentState!.percentage * 100)
-                    .toStringAsFixed(2),
+                mainText: (player.percentage * 100).toStringAsFixed(1),
                 subText: '%',
               ),
             ],
           ),
-          const SizedBox(height: 10),
         ],
       ),
     );
   }
 }
 
+/// One figure with its caption.
+///
+/// The figure takes the title role and the caption the label role, so both
+/// follow the system text scale instead of a size fixed here.
 class ProgressDisplay extends StatelessWidget {
   const ProgressDisplay({
     super.key,
@@ -127,28 +126,29 @@ class ProgressDisplay extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Expanded(
-      child: Column(
-        children: [
-          Text(
-            mainText,
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              fontSize: 20,
-              fontFamily: 'SourceHanSerif',
-              fontWeight: FontWeight.bold,
+      child: Semantics(
+        label: '$subText $mainText',
+        excludeSemantics: true,
+        child: Column(
+          children: [
+            Text(
+              mainText,
+              textAlign: TextAlign.center,
+              style: theme.textTheme.titleMedium,
             ),
-          ),
-          Text(
-            subText,
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              fontSize: 10,
-              fontFamily: 'SourceHanSerif',
-              fontWeight: FontWeight.w300,
+            Text(
+              subText,
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.labelSmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
             ),
-          )
-        ],
+          ],
+        ),
       ),
     );
   }

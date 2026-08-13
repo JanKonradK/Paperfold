@@ -1,6 +1,14 @@
 {
   "ar": [
     "settingsAppearanceUsePaperfoldTheme",
+    "shelfBookOptionsHint",
+    "pageTurnFold",
+    "pageTurnCurl",
+    "pageTurnNoneDescription",
+    "pageTurnSlideDescription",
+    "pageTurnFoldDescription",
+    "pageTurnCurlDescription",
+    "pageTurnScrollDescription",
     "settingsAdvancedNetwork",
     "settingsAdvancedHttpProxyEnabled",
     "settingsAdvancedHttpProxyConfig",
@@ -152,6 +160,14 @@
 
   "de": [
     "settingsAppearanceUsePaperfoldTheme",
+    "shelfBookOptionsHint",
+    "pageTurnFold",
+    "pageTurnCurl",
+    "pageTurnNoneDescription",
+    "pageTurnSlideDescription",
+    "pageTurnFoldDescription",
+    "pageTurnCurlDescription",
+    "pageTurnScrollDescription",
     "settingsAdvancedNetwork",
     "settingsAdvancedHttpProxyEnabled",
     "settingsAdvancedHttpProxyConfig",
@@ -303,6 +319,14 @@
 
   "es": [
     "settingsAppearanceUsePaperfoldTheme",
+    "shelfBookOptionsHint",
+    "pageTurnFold",
+    "pageTurnCurl",
+    "pageTurnNoneDescription",
+    "pageTurnSlideDescription",
+    "pageTurnFoldDescription",
+    "pageTurnCurlDescription",
+    "pageTurnScrollDescription",
     "settingsAdvancedNetwork",
     "settingsAdvancedHttpProxyEnabled",
     "settingsAdvancedHttpProxyConfig",
@@ -454,6 +478,14 @@
 
   "fr": [
     "settingsAppearanceUsePaperfoldTheme",
+    "shelfBookOptionsHint",
+    "pageTurnFold",
+    "pageTurnCurl",
+    "pageTurnNoneDescription",
+    "pageTurnSlideDescription",
+    "pageTurnFoldDescription",
+    "pageTurnCurlDescription",
+    "pageTurnScrollDescription",
     "settingsAdvancedNetwork",
     "settingsAdvancedHttpProxyEnabled",
     "settingsAdvancedHttpProxyConfig",
@@ -605,6 +637,14 @@
 
   "it": [
     "settingsAppearanceUsePaperfoldTheme",
+    "shelfBookOptionsHint",
+    "pageTurnFold",
+    "pageTurnCurl",
+    "pageTurnNoneDescription",
+    "pageTurnSlideDescription",
+    "pageTurnFoldDescription",
+    "pageTurnCurlDescription",
+    "pageTurnScrollDescription",
     "settingsAdvancedNetwork",
     "settingsAdvancedHttpProxyEnabled",
     "settingsAdvancedHttpProxyConfig",
@@ -756,6 +796,14 @@
 
   "ja": [
     "settingsAppearanceUsePaperfoldTheme",
+    "shelfBookOptionsHint",
+    "pageTurnFold",
+    "pageTurnCurl",
+    "pageTurnNoneDescription",
+    "pageTurnSlideDescription",
+    "pageTurnFoldDescription",
+    "pageTurnCurlDescription",
+    "pageTurnScrollDescription",
     "settingsAdvancedNetwork",
     "settingsAdvancedHttpProxyEnabled",
     "settingsAdvancedHttpProxyConfig",
@@ -907,6 +955,14 @@
 
   "ko": [
     "settingsAppearanceUsePaperfoldTheme",
+    "shelfBookOptionsHint",
+    "pageTurnFold",
+    "pageTurnCurl",
+    "pageTurnNoneDescription",
+    "pageTurnSlideDescription",
+    "pageTurnFoldDescription",
+    "pageTurnCurlDescription",
+    "pageTurnScrollDescription",
     "settingsAdvancedNetwork",
     "settingsAdvancedHttpProxyEnabled",
     "settingsAdvancedHttpProxyConfig",
@@ -1058,6 +1114,14 @@
 
   "pt": [
     "settingsAppearanceUsePaperfoldTheme",
+    "shelfBookOptionsHint",
+    "pageTurnFold",
+    "pageTurnCurl",
+    "pageTurnNoneDescription",
+    "pageTurnSlideDescription",
+    "pageTurnFoldDescription",
+    "pageTurnCurlDescription",
+    "pageTurnScrollDescription",
     "settingsAdvancedNetwork",
     "settingsAdvancedHttpProxyEnabled",
     "settingsAdvancedHttpProxyConfig",
@@ -1209,6 +1273,14 @@
 
   "ro": [
     "settingsAppearanceUsePaperfoldTheme",
+    "shelfBookOptionsHint",
+    "pageTurnFold",
+    "pageTurnCurl",
+    "pageTurnNoneDescription",
+    "pageTurnSlideDescription",
+    "pageTurnFoldDescription",
+    "pageTurnCurlDescription",
+    "pageTurnScrollDescription",
     "settingsAdvancedNetwork",
     "settingsAdvancedHttpProxyEnabled",
     "settingsAdvancedHttpProxyConfig",
@@ -1360,6 +1432,14 @@
 
   "ru": [
     "settingsAppearanceUsePaperfoldTheme",
+    "shelfBookOptionsHint",
+    "pageTurnFold",
+    "pageTurnCurl",
+    "pageTurnNoneDescription",
+    "pageTurnSlideDescription",
+    "pageTurnFoldDescription",
+    "pageTurnCurlDescription",
+    "pageTurnScrollDescription",
     "settingsAdvancedNetwork",
     "settingsAdvancedHttpProxyEnabled",
     "settingsAdvancedHttpProxyConfig",
@@ -1511,6 +1591,14 @@
 
   "tr": [
     "settingsAppearanceUsePaperfoldTheme",
+    "shelfBookOptionsHint",
+    "pageTurnFold",
+    "pageTurnCurl",
+    "pageTurnNoneDescription",
+    "pageTurnSlideDescription",
+    "pageTurnFoldDescription",
+    "pageTurnCurlDescription",
+    "pageTurnScrollDescription",
     "settingsAdvancedNetwork",
     "settingsAdvancedHttpProxyEnabled",
     "settingsAdvancedHttpProxyConfig",
@@ -1662,6 +1750,14 @@
 
   "zh": [
     "settingsAppearanceUsePaperfoldTheme",
+    "shelfBookOptionsHint",
+    "pageTurnFold",
+    "pageTurnCurl",
+    "pageTurnNoneDescription",
+    "pageTurnSlideDescription",
+    "pageTurnFoldDescription",
+    "pageTurnCurlDescription",
+    "pageTurnScrollDescription",
     "navShelf",
     "navLibrary",
     "navJournal",
@@ -1799,6 +1895,14 @@
 
   "zh_CN": [
     "settingsAppearanceUsePaperfoldTheme",
+    "shelfBookOptionsHint",
+    "pageTurnFold",
+    "pageTurnCurl",
+    "pageTurnNoneDescription",
+    "pageTurnSlideDescription",
+    "pageTurnFoldDescription",
+    "pageTurnCurlDescription",
+    "pageTurnScrollDescription",
     "navShelf",
     "navLibrary",
     "navJournal",
@@ -1936,6 +2040,14 @@
 
   "zh_LZH": [
     "settingsAppearanceUsePaperfoldTheme",
+    "shelfBookOptionsHint",
+    "pageTurnFold",
+    "pageTurnCurl",
+    "pageTurnNoneDescription",
+    "pageTurnSlideDescription",
+    "pageTurnFoldDescription",
+    "pageTurnCurlDescription",
+    "pageTurnScrollDescription",
     "settingsAdvancedNetwork",
     "settingsAdvancedHttpProxyEnabled",
     "settingsAdvancedHttpProxyConfig",
@@ -2087,6 +2199,14 @@
 
   "zh_TW": [
     "settingsAppearanceUsePaperfoldTheme",
+    "shelfBookOptionsHint",
+    "pageTurnFold",
+    "pageTurnCurl",
+    "pageTurnNoneDescription",
+    "pageTurnSlideDescription",
+    "pageTurnFoldDescription",
+    "pageTurnCurlDescription",
+    "pageTurnScrollDescription",
     "settingsAdvancedNetwork",
     "settingsAdvancedHttpProxyEnabled",
     "settingsAdvancedHttpProxyConfig",

@@ -21,10 +21,20 @@ import 'package:paperfold/widgets/reading_page/widgets/bgimg_selector.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 
+/// How a page leaves the screen.
+///
+/// Slide and fold are drawn by the WebView and stay on its compositor. Curl is
+/// drawn by Flutter with the page-curl shader over a captured page, which
+/// costs one WebView capture per turn, taken while nothing is animating.
 enum PageTurn {
   noAnimation,
   slide,
+  fold,
+  curl,
   scroll;
+
+  /// Whether Flutter, rather than the WebView, animates this turn.
+  bool get isShaderCurl => this == PageTurn.curl;
 
   String getLabel(BuildContext context) {
     switch (this) {
@@ -32,8 +42,27 @@ enum PageTurn {
         return L10n.of(context).noAnimation;
       case PageTurn.slide:
         return L10n.of(context).slide;
+      case PageTurn.fold:
+        return L10n.of(context).pageTurnFold;
+      case PageTurn.curl:
+        return L10n.of(context).pageTurnCurl;
       case PageTurn.scroll:
         return L10n.of(context).scroll;
+    }
+  }
+
+  String getDescription(BuildContext context) {
+    switch (this) {
+      case PageTurn.noAnimation:
+        return L10n.of(context).pageTurnNoneDescription;
+      case PageTurn.slide:
+        return L10n.of(context).pageTurnSlideDescription;
+      case PageTurn.fold:
+        return L10n.of(context).pageTurnFoldDescription;
+      case PageTurn.curl:
+        return L10n.of(context).pageTurnCurlDescription;
+      case PageTurn.scroll:
+        return L10n.of(context).pageTurnScrollDescription;
     }
   }
 }
@@ -62,26 +91,35 @@ class StyleWidgetState extends State<StyleWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+    // The shell bounds this panel, so the content scrolls inside it rather
+    // than overflowing when the reader raises the system text size.
+    return SingleChildScrollView(
+      padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          widgetTitle(L10n.of(context).readingPageStyle, ReadingSettings.theme),
+          widgetTitle(
+            context,
+            L10n.of(context).readingPageStyle,
+            ReadingSettings.theme,
+          ),
           sliders(),
-          const SizedBox(height: 10),
+          const SizedBox(height: 12),
           fontAndPageTurn(),
-          const Divider(),
+          const SizedBox(height: 12),
           Row(
             children: [
               Expanded(child: themeSelector()),
+              const SizedBox(width: 8),
               OutlinedButton.icon(
                 style: OutlinedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(horizontal: 10),
+                  minimumSize: const Size(0, 48),
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
                 ),
                 onPressed: () {
                   widget.setCurrentPage(const BgimgSelector());
                 },
-                icon: const Icon(Icons.arrow_forward_ios),
+                icon: const Icon(Icons.chevron_right),
                 iconAlignment: IconAlignment.end,
                 label: Text(L10n.of(context).readingPageStyleBackground),
               )
@@ -92,40 +130,37 @@ class StyleWidgetState extends State<StyleWidget> {
     );
   }
 
+  /// The faces Paperfold ships. Philosopher carries the content voice and
+  /// Source Sans 3 the plain one, both under the SIL Open Font License.
+  static final List<FontModel> bundledFonts = [
+    FontModel.bundled(
+      label: 'Philosopher',
+      name: 'Philosopher',
+      fileName: 'Philosopher-Regular.ttf',
+    ),
+    FontModel.bundled(
+      label: 'Source Sans 3',
+      name: 'SourceSans3',
+      fileName: 'SourceSans3-Regular.ttf',
+    ),
+    FontModel.bundled(
+      label: 'Source Han Serif',
+      name: 'SourceHanSerif',
+      fileName: 'SourceHanSerifSC-Regular.otf',
+    ),
+  ];
+
+  /// The reader's choices, in the order they are worth reading: the faces that
+  /// are here now, then the ones the reader added, then the two actions that
+  /// leave this sheet. The actions used to sit first, which put "download" and
+  /// "add" above every font the reader could actually pick.
   List<FontModel> fonts() {
     Directory fontDir = getFontDir();
     List<FontModel> fontList = [
-      FontModel(
-        label: L10n.of(context).downloadFonts,
-        name: 'download',
-        path: 'download',
-      ),
-      FontModel(
-        label: L10n.of(context).addNewFont,
-        name: 'newFont',
-        path: 'newFount',
-      ),
-      FontModel(
-        label: L10n.of(context).followBook,
-        name: 'book',
-        path: 'book',
-      ),
-      FontModel(
-        label: L10n.of(context).systemFont,
-        name: 'system',
-        path: 'system',
-      ),
+      ...bundledFonts,
+      FontModel.builtIn(label: L10n.of(context).followBook, name: 'book'),
+      FontModel.builtIn(label: L10n.of(context).systemFont, name: 'system'),
     ];
-    // fontDir.listSync().forEach((element) {
-    //   if (element is File) {
-    //     fontList.add(FontModel(
-    //       label: getFontNameFromFile(element),
-    //       name: 'customFont' + ,
-    //       path:
-    //           'http://127.0.0.1:${Server().port}/fonts/${element.path.split('/').last}',
-    //     ));
-    //   }
-    // });
     // name = 'customFont' + index
     for (int i = 0; i < fontDir.listSync().length; i++) {
       File element = fontDir.listSync()[i] as File;
@@ -137,14 +172,22 @@ class StyleWidgetState extends State<StyleWidget> {
       ));
     }
 
+    fontList.add(FontModel.builtIn(
+      label: L10n.of(context).addNewFont,
+      name: 'newFont',
+    ));
+    fontList.add(FontModel.builtIn(
+      label: L10n.of(context).downloadFonts,
+      name: 'download',
+    ));
+
     return fontList;
   }
 
   Widget fontAndPageTurn() {
     FontModel? font = fonts().firstWhere(
         (element) => element.path == Prefs().font.path,
-        orElse: () => FontModel(
-            label: L10n.of(context).followBook, name: 'book', path: 'book'));
+        orElse: () => Prefs.defaultFont);
 
     Widget? leadingIcon(String name) {
       if (name == 'download') {
@@ -155,20 +198,27 @@ class StyleWidgetState extends State<StyleWidget> {
       return null;
     }
 
+    final turnStyle = Prefs().pageTurnStyle;
     return Row(children: [
       Expanded(
         child: DropdownMenu<PageTurn>(
           label: Text(L10n.of(context).readingPagePageTurningMethod),
-          initialSelection: Prefs().pageTurnStyle,
+          initialSelection: turnStyle,
           expandedInsets: const EdgeInsets.only(right: 5),
+          // Each style costs something different, and the curl costs the most,
+          // so the reader sees what they picked without opening the list again.
+          helperText: turnStyle.getDescription(context),
           inputDecorationTheme: InputDecorationTheme(
+            helperMaxLines: 3,
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(50),
+              borderRadius: BorderRadius.circular(24),
             ),
           ),
           onSelected: (PageTurn? value) {
             if (value != null) {
-              Prefs().pageTurnStyle = value;
+              setState(() {
+                Prefs().pageTurnStyle = value;
+              });
               epubPlayerKey.currentState!.changePageTurnStyle(value);
             }
           },
@@ -187,7 +237,7 @@ class StyleWidgetState extends State<StyleWidget> {
           initialSelection: font,
           inputDecorationTheme: InputDecorationTheme(
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(50),
+              borderRadius: BorderRadius.circular(24),
             ),
           ),
           onSelected: (FontModel? font) async {
@@ -317,102 +367,105 @@ class StyleWidgetState extends State<StyleWidget> {
     );
   }
 
+  /// The saved reading themes, as swatches.
+  ///
+  /// Each swatch is a 48dp target with 8dp between it and the next, and shows
+  /// its own ink over its own ground, so the reader judges the pair as they
+  /// will read it. The selection ring takes the scheme accent rather than a
+  /// fixed black, because a fixed black disappears on the dark ground.
   SizedBox themeSelector() {
-    const size = 40.0;
-    const paddingSize = 5.0;
-    EdgeInsetsGeometry padding = const EdgeInsets.all(paddingSize);
+    const size = 48.0;
+    final scheme = Theme.of(context).colorScheme;
+    const newThemeDark = 'ff121212';
+    const newThemeInk = 'ffcccccc';
+
     return SizedBox(
-      height: size + paddingSize * 2,
-      child: ListView.builder(
-        itemCount: widget.themes.length + 1,
+      height: size + 8,
+      child: ListView.separated(
         scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(vertical: 4),
+        itemCount: widget.themes.length + 1,
+        separatorBuilder: (context, index) => const SizedBox(width: 8),
         itemBuilder: (context, index) {
           if (index == widget.themes.length) {
-            // add a new theme
-            return Padding(
-              padding: padding,
-              child: Container(
-                  padding: padding,
-                  width: size,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(50),
-                    border: Border.all(
-                      color: Colors.black45,
-                      width: 1,
-                    ),
+            return Semantics(
+              button: true,
+              label: L10n.of(context).readingPageTheme,
+              child: Tooltip(
+                message: L10n.of(context).readingPageTheme,
+                child: Material(
+                  color: Colors.transparent,
+                  shape: CircleBorder(
+                    side: BorderSide(color: scheme.outline),
                   ),
+                  clipBehavior: Clip.antiAlias,
                   child: InkWell(
                     onTap: () async {
                       int currId = await themeDao.insertTheme(ReadTheme(
-                          backgroundColor: 'ff121212',
-                          textColor: 'ffcccccc',
+                          backgroundColor: newThemeDark,
+                          textColor: newThemeInk,
                           backgroundImagePath: ''));
                       widget.setCurrentPage(ThemeChangeWidget(
                         readTheme: ReadTheme(
                             id: currId,
-                            backgroundColor: 'ff121212',
-                            textColor: 'ffcccccc',
+                            backgroundColor: newThemeDark,
+                            textColor: newThemeInk,
                             backgroundImagePath: ''),
                         setCurrentPage: widget.setCurrentPage,
                       ));
                     },
-                    child: Icon(Icons.add,
-                        size: size / 2,
-                        color: Color(int.parse('0x${'ffcccccc'}'))),
-                  )),
-            );
-          }
-          // theme list
-          return Padding(
-            padding: padding,
-            child: Container(
-              padding: padding,
-              decoration: BoxDecoration(
-                color: Color(
-                    int.parse('0x${widget.themes[index].backgroundColor}')),
-                borderRadius: BorderRadius.circular(50),
-                border: Border.all(
-                  color: index + 1 == currentThemeId
-                      ? Theme.of(context).primaryColor
-                      : Colors.black45,
-                  width: index + 1 == currentThemeId ? 3 : 1,
+                    child: SizedBox(
+                      height: size,
+                      width: size,
+                      child: Icon(Icons.add, color: scheme.onSurfaceVariant),
+                    ),
+                  ),
                 ),
               ),
-              height: size,
-              width: size,
+            );
+          }
+
+          final theme = widget.themes[index];
+          final selected = index + 1 == currentThemeId;
+          void edit() => setState(() {
+                widget.setCurrentPage(ThemeChangeWidget(
+                  readTheme: theme,
+                  setCurrentPage: widget.setCurrentPage,
+                ));
+              });
+
+          return Semantics(
+            button: true,
+            selected: selected,
+            label: L10n.of(context).readingPageTheme,
+            child: Material(
+              color: Color(int.parse('0x${theme.backgroundColor}')),
+              shape: CircleBorder(
+                side: BorderSide(
+                  color: selected ? scheme.primary : scheme.outlineVariant,
+                  width: selected ? 3 : 1,
+                ),
+              ),
+              clipBehavior: Clip.antiAlias,
               child: InkWell(
                 onTap: () {
-                  Prefs().saveReadThemeToPrefs(widget.themes[index]);
-                  widget.epubPlayerKey.currentState!
-                      .changeTheme(widget.themes[index]);
+                  Prefs().saveReadThemeToPrefs(theme);
+                  widget.epubPlayerKey.currentState!.changeTheme(theme);
                   setState(() {
-                    currentThemeId = widget.themes[index].id;
+                    currentThemeId = theme.id;
                   });
                 },
-                onSecondaryTap: () {
-                  setState(() {
-                    widget.setCurrentPage(ThemeChangeWidget(
-                      readTheme: widget.themes[index],
-                      setCurrentPage: widget.setCurrentPage,
-                    ));
-                  });
-                },
-                onLongPress: () {
-                  setState(() {
-                    widget.setCurrentPage(ThemeChangeWidget(
-                      readTheme: widget.themes[index],
-                      setCurrentPage: widget.setCurrentPage,
-                    ));
-                  });
-                },
-                child: Center(
-                  child: Text(
-                    "A",
-                    style: TextStyle(
-                      color: Color(
-                          int.parse('0x${widget.themes[index].textColor}')),
-                      fontSize: size / 3,
-                      fontWeight: FontWeight.bold,
+                onSecondaryTap: edit,
+                onLongPress: edit,
+                child: SizedBox(
+                  height: size,
+                  width: size,
+                  child: Center(
+                    child: Text(
+                      'A',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            color: Color(int.parse('0x${theme.textColor}')),
+                          ),
                     ),
                   ),
                 ),

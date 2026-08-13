@@ -1,19 +1,6 @@
 const wait = ms => new Promise(resolve => setTimeout(resolve, ms))
 
-const lerp = (min, max, x) => x * (max - min) + min
-const easeOutSine = x => Math.sin((x * Math.PI) / 2)
-// const easeOutSine = x => 1 - (1 - x) * (1 - x);
-const animate = (a, b, duration, ease, render) => new Promise(resolve => {
-  let start
-  const step = now => {
-    start ??= now
-    const fraction = Math.min(1, (now - start) / duration)
-    render(lerp(a, b, ease(fraction)))
-    if (fraction < 1) requestAnimationFrame(step)
-    else resolve()
-  }
-  requestAnimationFrame(step)
-})
+const turnEasing = 'cubic-bezier(0.22, 1, 0.36, 1)'
 
 // collapsed range doesn't return client rects sometimes (or always?)
 // try make get a non-collapsed range or element
@@ -204,7 +191,6 @@ class View {
       alignItems: 'center',
       contain: 'layout paint size',
       contentVisibility: 'auto',
-      willChange: 'transform',
     })
     Object.assign(this.#iframe.style, {
       overflow: 'hidden',
@@ -419,6 +405,7 @@ export class Paginator extends HTMLElement {
   #top
   #background
   #container
+  #seam
   // #header
   // #footer
   #view
@@ -434,13 +421,14 @@ export class Paginator extends HTMLElement {
   #mediaQuery = matchMedia('(prefers-color-scheme: dark)')
   #mediaQueryListener
   #ignoreNativeScroll = false
-  #pendingScrollFrame = null
+  #relocateTimer = null
   #touchState
   #touchScrolled
   #loadingNext = false
   #loadingPrev = false
-  #pendingRelocate = null
+  #pendingRelocate = false
   #isSnapping = false
+  #turnAnimation = null
   constructor() {
     super()
     this.#root.innerHTML = `<style>
@@ -508,6 +496,26 @@ export class Paginator extends HTMLElement {
         #container::-webkit-scrollbar {
             display: none;  /* Safari and Chrome */
         }
+        /* The crease of the turning leaf. It is one narrow band that travels
+           across the page with the same easing as the text under it: a dark
+           core where the paper bends away from the light, and a pale edge
+           where it catches it. It only ever moves and fades, so it stays on
+           the compositor with the turn itself. */
+        #seam {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 24%;
+            opacity: 0;
+            pointer-events: none;
+            background: linear-gradient(90deg,
+                rgba(0, 0, 0, 0) 0%,
+                rgba(0, 0, 0, 0.10) 34%,
+                rgba(0, 0, 0, 0.26) 49%,
+                rgba(255, 255, 255, 0.14) 56%,
+                rgba(255, 255, 255, 0.04) 70%,
+                rgba(255, 255, 255, 0) 100%);
+        }
         :host([flow="scrolled"]) #container {
             grid-column: 1 / -1;
             grid-row: 2;
@@ -544,29 +552,30 @@ export class Paginator extends HTMLElement {
         <div id="top">
             <div id="background" part="filter"></div>
             <div id="container"></div>
+            <div id="seam"></div>
         </div>
         `
 
     this.#top = this.#root.getElementById('top')
     this.#background = this.#root.getElementById('background')
     this.#container = this.#root.getElementById('container')
+    this.#seam = this.#root.getElementById('seam')
     // this.#header = this.#root.getElementById('header')
     // this.#footer = this.#root.getElementById('footer')
 
     this.#observer.observe(this.#container)
     this.#container.addEventListener('scroll', () => {
-      if (this.#ignoreNativeScroll) return
+      if (this.#ignoreNativeScroll) {
+        if (this.#justAnchored) this.#justAnchored = false
+        return
+      }
       if (this.#justAnchored) {
         this.#justAnchored = false
         return
       }
-      if (this.#pendingScrollFrame)
-        cancelAnimationFrame(this.#pendingScrollFrame)
-      this.#pendingScrollFrame = requestAnimationFrame(() => {
-        this.#pendingScrollFrame = null
-        this.#afterScroll('scroll')
-        if (this.scrolled) this.#handleScrollBoundaries()
-      })
+      this.#deferScrollRelocate()
+      if (this.#touchState || this.#touchScrolled || this.#isSnapping) return
+      if (this.scrolled) this.#handleScrollBoundaries()
     })
 
     const opts = { passive: false }
@@ -788,14 +797,8 @@ export class Paginator extends HTMLElement {
     const element = this.#container
     const { scrollProp } = this
     const isHorizontal = scrollProp === 'scrollLeft'
-    
-    // Stop native momentum scrolling immediately
     const currentScrollPos = element[scrollProp]
-    const overflowProp = isHorizontal ? 'overflowX' : 'overflowY'
-    const prevOverflow = element.style[overflowProp]
-    element.style[overflowProp] = 'hidden'
-    element[scrollProp] = currentScrollPos
-    
+
     // Calculate current position and target page
     const currentOffset = Math.abs(currentScrollPos)
     const currentPage = Math.round(currentOffset / size)
@@ -821,12 +824,23 @@ export class Paginator extends HTMLElement {
     // Calculate animation duration based on distance
     const targetOffset = targetPage * size
     const distance = Math.abs(targetOffset - currentOffset)
-    const duration = Math.max(200, Math.min(300, 250 * (distance / (size || 1))))
+    const duration = Math.max(260, Math.min(340, 300 * (distance / (size || 1))))
 
-    const pageArg = this.#rtl ? -targetPage : targetPage
+    const scrollOffset = size * (isHorizontal && this.#rtl ? -targetPage : targetPage)
+    const overflowProp = isHorizontal ? 'overflowX' : 'overflowY'
+    const prevOverflow = element.style[overflowProp]
     this.#isSnapping = true
-    
-    return this.#scrollToPage(pageArg, 'snap', { animate: true, duration })
+
+    // Changing overflow is required to stop native momentum. All geometry is
+    // captured first so this style change does not force layout before the turn.
+    element.style[overflowProp] = 'hidden'
+    element[scrollProp] = currentScrollPos
+
+    return this.#scrollTo(scrollOffset, 'snap', {
+      animate: true, duration,
+      startOffset: currentScrollPos, targetOffset: scrollOffset,
+      beforeSettle: () => { element.style[overflowProp] = prevOverflow },
+    })
       .then(() => {
         // Handle chapter boundaries (keep existing feature)
         const dir = targetPage <= 0 ? -1 : targetPage >= pages - 1 ? 1 : null
@@ -839,6 +853,7 @@ export class Paginator extends HTMLElement {
         this.#isSnapping = false
         // Restore overflow after snap is complete
         element.style[overflowProp] = prevOverflow
+        this.#scheduleScrollRelocate()
       })
   }
   #onTouchStart(e) {
@@ -977,6 +992,7 @@ export class Paginator extends HTMLElement {
     this.#touchScrolled = false
     if (this.scrolled) {
       this.#touchState = null
+      this.#scheduleScrollRelocate()
       return
     }
 
@@ -988,11 +1004,7 @@ export class Paginator extends HTMLElement {
       // Restore original horizontal position and skip snapping to avoid accidental page turns
       this.#container.scrollLeft = state.lockedOffset
       this.#touchState = null
-      if (this.#pendingRelocate) {
-        const detail = this.#pendingRelocate
-        this.#pendingRelocate = null
-        this.dispatchEvent(new CustomEvent('relocate', { detail }))
-      }
+      this.#scheduleScrollRelocate()
       return
     }
 
@@ -1001,10 +1013,21 @@ export class Paginator extends HTMLElement {
     // at this point I'm basically throwing `requestAnimationFrame` at
     // anything that doesn't work
     requestAnimationFrame(() => {
-      if (globalThis.visualViewport.scale === 1 && state)
-        Promise.resolve(this.snap(state.vx, state.vy, state))
-          .finally(() => { this.#touchState = null })
-      else this.#touchState = null
+      if (globalThis.visualViewport.scale === 1 && state) {
+        const settling = this.snap(state.vx, state.vy, state)
+        if (settling) Promise.resolve(settling)
+          .finally(() => {
+            this.#touchState = null
+            this.#scheduleScrollRelocate()
+          })
+        else {
+          this.#touchState = null
+          this.#scheduleScrollRelocate()
+        }
+      } else {
+        this.#touchState = null
+        this.#scheduleScrollRelocate()
+      }
     })
   }
   // allows one to process rects as if they were LTR and horizontal
@@ -1041,55 +1064,140 @@ export class Paginator extends HTMLElement {
   }
   async #scrollTo(offset, reason, smooth) {
     const element = this.#container
-    const { scrollProp, size } = this
+    const { scrollProp } = this
     this.#ignoreNativeScroll = true
-    
+    this.#cancelPendingRelocate()
+
     const opts = typeof smooth === 'object' ? smooth ?? {} : {}
     const shouldAnimate = opts.animate ?? (reason === 'snap' || smooth === true)
-    const easing = opts.easing ?? easeOutSine
-    
-    const finish = () => {
-      this.#afterScroll(reason)
-      this.#ignoreNativeScroll = false
-    }
+    const easing = opts.easing ?? turnEasing
+    const startOffset = opts.startOffset ?? element[scrollProp]
 
-    // If already at target position
-    if (Math.abs(element[scrollProp] - offset) < 1) {
-      finish()
-      return
+    const finish = async changed => {
+      try {
+        opts.beforeSettle?.()
+        this.#settleScroll(reason)
+        if (changed) await new Promise(resolve => requestAnimationFrame(resolve))
+      } finally {
+        this.#ignoreNativeScroll = false
+      }
     }
 
     // FIXME: vertical-rl only, not -lr
     if (this.scrolled && this.#vertical) offset = -offset
 
+    let targetOffset = opts.targetOffset
+    if (targetOffset == null) {
+      const maxOffset = scrollProp === 'scrollLeft'
+        ? element.scrollWidth - element.clientWidth
+        : element.scrollHeight - element.clientHeight
+      const negative = scrollProp === 'scrollLeft'
+        && (this.#rtl || (this.scrolled && this.#vertical))
+      targetOffset = negative
+        ? Math.max(-maxOffset, Math.min(0, offset))
+        : Math.max(0, Math.min(maxOffset, offset))
+    }
+
+    // If already at target position
+    if (Math.abs(startOffset - targetOffset) < 1) {
+      this.#turnAnimation?.cancel()
+      this.#turnAnimation = null
+      if (this.#view) {
+        this.#view.element.style.willChange = ''
+        this.#view.element.style.backfaceVisibility = ''
+      }
+      element[scrollProp] = offset
+      await finish(false)
+      return
+    }
+
     const useAnimation = shouldAnimate && this.hasAttribute('animated')
+      && this.#view
+      && !matchMedia('(prefers-reduced-motion: reduce)').matches
 
     if (useAnimation) {
-      const distance = Math.abs(element[scrollProp] - offset)
-      const duration = opts.duration ?? Math.max(200, Math.min(300, 250 * (distance / (size || 1))))
+      const distance = Math.abs(startOffset - targetOffset)
+      const duration = Math.max(260, Math.min(340,
+        opts.duration ?? 300 * (distance / (this.size || 1))))
+      const view = this.#view.element
+      const delta = startOffset - targetOffset
+      const transform = scrollProp === 'scrollLeft'
+        ? `translate3d(${delta}px, 0, 0)`
+        : `translate3d(0, ${delta}px, 0)`
+      let animation
+
+      // A tap can arrive while the last turn is still running. Two live
+      // animations on one element would both settle, and the first to finish
+      // would commit its own target as the resting scroll offset, landing the
+      // reader a page away from where they asked to be. Only the newest turn
+      // owns the hand-off.
+      this.#turnAnimation?.cancel()
+      this.#turnAnimation = null
+      view.style.willChange = 'transform'
+      view.style.backfaceVisibility = 'hidden'
+      const seam = this.#animateSeam(delta, duration, easing)
+      try {
+        animation = view.animate([
+          { transform: 'translate3d(0, 0, 0)' },
+          { transform },
+        ], { duration, easing, fill: 'both' })
+        this.#turnAnimation = animation
+        await animation.finished
+      } catch (_) {
+        // A cancelled or unavailable compositor animation lands instantly.
+      }
+      seam?.cancel()
+
+      // A newer turn took over. It owns the scroll offset and the ignore flag
+      // from here, so this one leaves both alone.
+      if (animation && this.#turnAnimation !== animation) return
 
       this.#justAnchored = true
-
-      return animate(
-        element[scrollProp],
-        offset,
-        duration,
-        easing,
-        x => element[scrollProp] = x,
-      ).then(() => {
-        // Ensure exact position
-        element[scrollProp] = offset
-        finish()
-      }).catch(() => {
-        this.#ignoreNativeScroll = false
-      })
-    } else {
       element[scrollProp] = offset
-      finish()
+      this.#turnAnimation = null
+      animation?.cancel()
+      view.style.willChange = ''
+      view.style.backfaceVisibility = ''
+      await finish(true)
+    } else {
+      this.#turnAnimation?.cancel()
+      this.#turnAnimation = null
+      if (this.#view) {
+        this.#view.element.style.willChange = ''
+        this.#view.element.style.backfaceVisibility = ''
+      }
+      this.#justAnchored = true
+      element[scrollProp] = offset
+      await finish(true)
     }
   }
+  // Sweeps the crease across the page, in step with the text.
+  //
+  // It runs only for the fold style, and only across a page turn that moves
+  // sideways: the crease is a metaphor for paper hinged at the spine, and a
+  // vertically written book has no such hinge on that axis. The sign of
+  // [delta] carries the reading direction, so this needs no separate case for
+  // right to left.
+  #animateSeam(delta, duration, easing) {
+    if (this.getAttribute('turn') !== 'fold') return null
+    if (this.#vertical || this.scrolled || !this.#seam) return null
+
+    const width = this.#container.getBoundingClientRect().width
+    if (!width) return null
+    const band = width * 0.24
+    const forward = delta < 0
+    const from = forward ? width : -band
+    const to = forward ? -band : width
+
+    return this.#seam.animate([
+      { transform: `translate3d(${from}px, 0, 0)`, opacity: 0 },
+      { opacity: 1, offset: 0.28 },
+      { opacity: 1, offset: 0.72 },
+      { transform: `translate3d(${to}px, 0, 0)`, opacity: 0 },
+    ], { duration, easing, fill: 'both' })
+  }
   async #scrollToPage(page, reason, smooth) {
-    const offset = this.size * (this.#rtl ? -page : page)
+    const offset = this.size * (this.scrollProp === 'scrollLeft' && this.#rtl ? -page : page)
     return this.#scrollTo(offset, reason, smooth)
   }
   async scrollToAnchor(anchor, select) {
@@ -1132,6 +1240,39 @@ export class Paginator extends HTMLElement {
     return getVisibleRange(this.#view.document,
       this.start - size, this.end - size, this.#getRectMapper())
   }
+  #deferScrollRelocate() {
+    this.#pendingRelocate = true
+    this.#scheduleScrollRelocate()
+  }
+  #scheduleScrollRelocate() {
+    if (this.#relocateTimer) {
+      clearTimeout(this.#relocateTimer)
+      this.#relocateTimer = null
+    }
+    if (!this.#pendingRelocate
+      || this.#touchState || this.#touchScrolled || this.#isSnapping) return
+    this.#relocateTimer = setTimeout(() => {
+      this.#relocateTimer = null
+      if (this.#touchState || this.#touchScrolled || this.#isSnapping) return
+      this.#flushScrollRelocate()
+    }, 100)
+  }
+  #flushScrollRelocate() {
+    if (!this.#pendingRelocate) return
+    this.#pendingRelocate = false
+    this.#afterScroll('scroll')
+  }
+  #cancelPendingRelocate() {
+    if (this.#relocateTimer) {
+      clearTimeout(this.#relocateTimer)
+      this.#relocateTimer = null
+    }
+    this.#pendingRelocate = false
+  }
+  #settleScroll(reason) {
+    this.#cancelPendingRelocate()
+    this.#afterScroll(reason)
+  }
   #afterScroll(reason) {
     const range = this.#getVisibleRange()
     // don't set new anchor if relocation was to scroll to anchor
@@ -1147,12 +1288,6 @@ export class Paginator extends HTMLElement {
       detail.fraction = (page - 1) / (pages - 2)
       detail.size = 1 / (pages - 2)
     }
-    if (!this.scrolled && reason === 'scroll' && (this.#touchState || this.#touchScrolled)) {
-      this.#pendingRelocate = detail
-      return
-    }
-
-    this.#pendingRelocate = null
     this.dispatchEvent(new CustomEvent('relocate', { detail }))
   }
   #handleScrollBoundaries() {
@@ -1348,15 +1483,13 @@ export class Paginator extends HTMLElement {
   }
   destroy() {
     this.#observer.unobserve(this)
+    this.#turnAnimation?.cancel()
+    this.#turnAnimation = null
     this.#view.destroy()
     this.#view = null
     this.sections[this.#index]?.unload?.()
     this.#mediaQuery.removeEventListener('change', this.#mediaQueryListener)
-    if (this.#pendingScrollFrame) {
-      cancelAnimationFrame(this.#pendingScrollFrame)
-      this.#pendingScrollFrame = null
-    }
-    this.#pendingRelocate = null
+    this.#cancelPendingRelocate()
   }
 }
 

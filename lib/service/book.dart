@@ -461,6 +461,9 @@ Future<void> pushToReadingPage(
     currentReading.finish();
     chapterContentBridge.state = null;
     tocSearch.clear();
+    // The reader no longer rebuilds the library on every page turn, so the
+    // shelves pick up the new position here instead, once.
+    ref.read(bookListProvider.notifier).refresh();
     AnxLog.info('Pop successfully ReadingPage: ${book.title}');
   });
 }

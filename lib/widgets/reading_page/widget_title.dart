@@ -1,35 +1,34 @@
 import 'package:paperfold/widgets/reading_page/more_settings/more_settings.dart';
 import 'package:flutter/material.dart';
 
-Widget widgetTitle(String title, ReadingSettings? settings) {
-  Widget settingsButton = settings == null
-      ? const SizedBox(
-          height: 48,
-        )
-      : SizedBox(
-          height: 48,
-          child: IconButton(
-              onPressed: () => showMoreSettings(settings),
-              icon: const Icon(Icons.settings)),
-        );
-
-  return Column(
-    children: [
-      Row(
-        children: [
-          Text(
+/// The heading of a reader panel, with the panel's own settings beside it.
+///
+/// The heading takes the Material title role rather than a size fixed here, so
+/// it follows the system text scale and speaks in Paperfold's content face.
+Widget widgetTitle(
+  BuildContext context,
+  String title,
+  ReadingSettings? settings,
+) {
+  return Padding(
+    padding: const EdgeInsetsDirectional.only(top: 4, bottom: 4),
+    child: Row(
+      children: [
+        Expanded(
+          child: Text(
             title,
-            style: const TextStyle(
-              fontSize: 28,
-              fontFamily: 'SourceHanSerif',
-              fontWeight: FontWeight.bold,
-            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: Theme.of(context).textTheme.titleLarge,
           ),
-          const Spacer(),
-          settingsButton,
-        ],
-      ),
-      const Divider(),
-    ],
+        ),
+        if (settings != null)
+          IconButton(
+            tooltip: MaterialLocalizations.of(context).moreButtonTooltip,
+            onPressed: () => showMoreSettings(settings),
+            icon: const Icon(Icons.tune),
+          ),
+      ],
+    ),
   );
 }

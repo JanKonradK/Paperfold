@@ -457,12 +457,21 @@ class Prefs extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// The reader's body face.
+  ///
+  /// Philosopher is the default rather than the book's own font, because
+  /// DESIGN.md makes it the voice of Paperfold's content. The reader can still
+  /// choose "follow book" in the style sheet.
+  static FontModel get defaultFont => FontModel.bundled(
+        label: 'Philosopher',
+        name: 'Philosopher',
+        fileName: 'Philosopher-Regular.ttf',
+      );
+
   FontModel get font {
     String? fontJson = prefs.getString('font');
-    BuildContext context = navigatorKey.currentContext!;
     if (fontJson == null) {
-      return FontModel(
-          label: L10n.of(context).followBook, name: 'book', path: 'book');
+      return defaultFont;
     }
     return FontModel.fromJson(fontJson);
   }
