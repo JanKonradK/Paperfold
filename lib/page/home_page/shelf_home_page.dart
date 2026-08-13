@@ -21,6 +21,7 @@ import 'package:paperfold/l10n/generated/L10n.dart';
 import 'package:paperfold/dao/wishlist.dart';
 import 'package:paperfold/models/book.dart';
 import 'package:paperfold/models/wishlist_item.dart';
+import 'package:paperfold/page/opds/opds_catalogs_page.dart';
 import 'package:paperfold/page/search/search_page.dart';
 import 'package:paperfold/providers/book_list.dart';
 import 'package:paperfold/providers/shelf_home.dart';
@@ -37,6 +38,8 @@ import 'package:paperfold/widgets/paperfold_glass_surface.dart';
 import 'package:path/path.dart' as path;
 
 enum _ShelfHomeAction { search, addBooks, addBookToBuy }
+
+enum _AddBooksRoute { device, catalogs }
 
 class ShelfHomePage extends ConsumerStatefulWidget {
   const ShelfHomePage({super.key, this.controller});
@@ -101,6 +104,58 @@ class _ShelfHomePageState extends ConsumerState<ShelfHomePage>
       return;
     }
     importBookList(files, context, ref);
+  }
+
+  /// The two ways a book arrives: a file on the device, or a download from an
+  /// OPDS catalog. Both hang off one "Add books" affordance, because the online
+  /// route was buried in the More destination where nobody looking for a book
+  /// would think to open it.
+  Future<void> _openAddBooksSheet() async {
+    final route = await showModalBottomSheet<_AddBooksRoute>(
+      context: context,
+      showDragHandle: true,
+      builder: (context) {
+        final l10n = L10n.of(context);
+        return SafeArea(
+          top: false,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                minTileHeight: 56,
+                leading: const Icon(Icons.folder_open_outlined),
+                title: Text(l10n.shelfAddBooksFromDevice),
+                onTap: () => Navigator.pop(context, _AddBooksRoute.device),
+              ),
+              ListTile(
+                minTileHeight: 56,
+                leading: const Icon(Icons.cloud_download_outlined),
+                title: Text(l10n.opdsFindBooksOnline),
+                onTap: () => Navigator.pop(context, _AddBooksRoute.catalogs),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+    if (route == null || !mounted) {
+      return;
+    }
+    switch (route) {
+      case _AddBooksRoute.device:
+        await _importBooks(context);
+      case _AddBooksRoute.catalogs:
+        // The catalogs page carries its own scaffold, app bar and action
+        // button, so it is pushed whole rather than wrapped in another one.
+        await Navigator.of(context).push<void>(
+          MaterialPageRoute(
+            builder: (context) => const OpdsCatalogsPage(),
+          ),
+        );
+        if (mounted) {
+          await ref.read(shelfHomeProvider.notifier).refresh();
+        }
+    }
   }
 
   Future<void> _openBookOptions(Book book) async {
@@ -261,7 +316,7 @@ class _ShelfHomePageState extends ConsumerState<ShelfHomePage>
                     ),
                   );
                 case _ShelfHomeAction.addBooks:
-                  _importBooks(context);
+                  _openAddBooksSheet();
                 case _ShelfHomeAction.addBookToBuy:
                   _addWishlistBook();
               }
@@ -328,7 +383,7 @@ class _ShelfHomePageState extends ConsumerState<ShelfHomePage>
                       emptyAction: section.count > 0
                           ? null
                           : index == 0
-                              ? () => _importBooks(context)
+                              ? _openAddBooksSheet
                               : index == 4
                                   ? _addWishlistBook
                                   : null,

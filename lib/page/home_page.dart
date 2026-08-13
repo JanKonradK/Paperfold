@@ -18,7 +18,6 @@ import 'package:paperfold/utils/log/common.dart';
 import 'package:paperfold/utils/platform_utils.dart';
 import 'package:paperfold/page/journal/book_review_page.dart';
 import 'package:paperfold/page/journal/month_tracker_page.dart';
-import 'package:paperfold/page/opds/opds_catalogs_page.dart';
 import 'package:paperfold/page/journal/reading_challenge_page.dart';
 import 'package:paperfold/providers/journal_home.dart';
 import 'package:paperfold/providers/month_tracker.dart';
@@ -651,7 +650,7 @@ class _TrackerCard extends StatelessWidget {
   }
 }
 
-enum _MoreRoute { catalogs, highlights, statistics, settings }
+enum _MoreRoute { highlights, statistics, settings }
 
 class _MorePlaceholder extends StatelessWidget {
   const _MorePlaceholder();
@@ -659,23 +658,10 @@ class _MorePlaceholder extends StatelessWidget {
   void _openRoute(BuildContext context, _MoreRoute route) {
     final l10n = L10n.of(context);
 
-    // The catalogs page carries its own scaffold, app bar and action button.
-    // Wrapping it the way the three inherited screens are wrapped would give
-    // it two app bars.
-    if (route == _MoreRoute.catalogs) {
-      Navigator.of(context).push(
-        MaterialPageRoute<void>(
-          builder: (context) => const OpdsCatalogsPage(),
-        ),
-      );
-      return;
-    }
-
     final (String title, Widget page) = switch (route) {
       _MoreRoute.highlights => (l10n.tileNotesTotalTitle, const NotesPage()),
       _MoreRoute.statistics => (l10n.navBarStatistics, const StatisticPage()),
       _MoreRoute.settings => (l10n.navBarSettings, const SettingsPage()),
-      _MoreRoute.catalogs => throw StateError('handled above'),
     };
     Navigator.of(context).push(
       MaterialPageRoute(
@@ -693,8 +679,10 @@ class _MorePlaceholder extends StatelessWidget {
     // The owner chose a third destination specifically so nothing would be
     // "hidden behind an icon". A popup menu in the app bar is exactly that, so
     // the three inherited screens are visible rows instead.
+    // Catalogs moved to the Library's "Add books" sheet. Finding a book online
+    // is how a book arrives, so it belongs beside the file picker, not in a
+    // list of secondary screens.
     final entries = <(_MoreRoute, IconData, String)>[
-      (_MoreRoute.catalogs, Icons.cloud_download_outlined, l10n.opdsCatalogs),
       (
         _MoreRoute.highlights,
         Icons.format_quote_outlined,
