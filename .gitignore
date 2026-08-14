@@ -80,3 +80,6 @@ node_modules/
 # Renders written by tool/render_shelf_preview.dart, for looking at while
 # working on the shelf. Regenerated on demand and never shipped.
 tool/preview/
+# A second attempt at the shelf, for comparison. Its own git worktree,
+# nested here only because the delegated agent can write nowhere else.
+codex-attempt/
