@@ -105,8 +105,12 @@ void main() {
       final spine = tester.widget<BookSpine>(spines.at(index));
       final rect = tester.getRect(spines.at(index));
       expect(spine.uniform, isFalse);
+      // Only the leading edge is checked. A horizontal scroller lays out past
+      // its own right edge on purpose - that is what there is to scroll to -
+      // and the viewport clips it, which is asserted above. Requiring every
+      // spine to fit was only ever accidentally true, while the row happened
+      // to be narrow enough.
       expect(rect.left, greaterThanOrEqualTo(viewportRect.left + 0.01));
-      expect(rect.right, lessThanOrEqualTo(viewportRect.right - 0.01));
       expect(rect.height, greaterThan(rect.width * 3));
     }
 

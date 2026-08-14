@@ -27,7 +27,7 @@ import 'package:paperfold/widgets/bookshelf/book_spine.dart';
 import 'package:paperfold/widgets/bookshelf/leading_book.dart';
 import 'package:paperfold/widgets/bookshelf/glass_shelf.dart';
 
-const double _width = 400;
+const double _width = 520;
 const double _height = 400;
 
 /// A shelf's worth of real titles, so the spines carry believable text lengths

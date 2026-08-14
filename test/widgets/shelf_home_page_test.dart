@@ -95,8 +95,12 @@ void main() {
     expect(tester.widget<ListView>(spineViewport).clipBehavior, Clip.hardEdge);
     for (var index = 0; index < 3; index++) {
       final spineRect = tester.getRect(firstShelfSpines.at(index));
+      // Only the leading edge is checked. A horizontal scroller lays out past
+      // its own right edge on purpose - that is what there is to scroll to -
+      // and the viewport clips it, which is asserted above. Requiring every
+      // spine to fit was only ever accidentally true, while the row happened
+      // to be narrow enough.
       expect(spineRect.left, greaterThanOrEqualTo(viewportRect.left + 0.01));
-      expect(spineRect.right, lessThanOrEqualTo(viewportRect.right - 0.01));
     }
     expect(find.byType(Scaffold), findsOneWidget);
     expect(tester.takeException(), isNull);

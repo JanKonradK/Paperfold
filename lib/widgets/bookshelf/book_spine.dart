@@ -801,12 +801,17 @@ class _BookPresencePainter extends CustomPainter {
     _paintContactShadow(canvas, size, left);
   }
 
-  /// The sliver of the book's own front cover, on its leading side.
+  /// The sliver of board that shows beside a spine.
   ///
-  /// This is the thing a photograph of a real shelf has and a row of drawn
-  /// rectangles does not: between two spines you see a slice of board, and it
-  /// is what tells the eye these are objects with depth standing in a tray
-  /// rather than stripes printed on a background.
+  /// This is the board edge, NOT the cover: a book shelved spine-out has its
+  /// front cover on the side that faces INTO the row, and the face that falls
+  /// outside its own footprint is the back. Painting jacket art here put the
+  /// back of the book where the reader reads a cover, and at this width it
+  /// only ever read as a dark gap between spines anyway.
+  ///
+  /// What a photographed shelf actually shows between two books is exactly
+  /// this: a narrow, dim edge of board. The cover belongs to the one book that
+  /// is turned out, which is [LeadingBook]'s job.
   void _paintCoverFace(Canvas canvas, double left) {
     final width = _coverFace;
     if (width < 0.5) return;
@@ -825,39 +830,18 @@ class _BookPresencePainter extends CustomPainter {
       ..lineTo(nearX, top + spineHeight)
       ..close();
 
-    final source = art;
-    if (source != null) {
-      // The book's real jacket, taken from the part of it the spine does not
-      // already wear.
-      canvas.save();
-      canvas.clipPath(face);
-      final image = source.strip;
-      final start = image.width * SpineArtCache.stripFraction;
-      canvas.drawImageRect(
-        image,
-        Rect.fromLTWH(
-          isRtl ? 0 : start,
-          0,
-          math.max(1, image.width - start),
-          image.height.toDouble(),
-        ),
-        face.getBounds(),
-        Paint()..filterQuality = FilterQuality.low,
-      );
-      canvas.restore();
-    } else {
-      canvas.drawPath(
-        face,
-        Paint()..color = Color.lerp(visual.background, Colors.white, 0.16)!,
-      );
-    }
-
-    // Angled away from the light, so it is darker than the spine whatever it
-    // carries. Without this the face reads as the spine getting wider; with
-    // too much of it the face goes black and reads as a gap between books.
+    // The book's own cloth, turned away from the light. Never its artwork.
     canvas.drawPath(
       face,
-      Paint()..color = Colors.black.withValues(alpha: 0.17),
+      Paint()
+        ..shader = LinearGradient(
+          begin: isRtl ? Alignment.centerLeft : Alignment.centerRight,
+          end: isRtl ? Alignment.centerRight : Alignment.centerLeft,
+          colors: [
+            Color.lerp(visual.background, Colors.black, 0.34)!,
+            Color.lerp(visual.background, Colors.black, 0.52)!,
+          ],
+        ).createShader(face.getBounds()),
     );
     canvas.drawLine(
       Offset(nearX, top),
