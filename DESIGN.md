@@ -226,7 +226,11 @@ The shelf list uses a 12dp directional gutter, an 8dp top inset, and a 32dp end 
 
 Each section has 16dp inner side padding. The first section has 20dp top padding. The 48dp-minimum header has a 6dp gap before the shelf stage.
 
-The shelf stage is the sum of its parts, not a round number: a 10dp top inset, an 11dp top board, the tallest spine, a 12dp reflection, and a 2dp bottom inset. It grows only with accessibility text.
+The shelf stage is the sum of its parts, not a round number: a 10dp top inset, a 40dp top board, the tallest spine, a 12dp reflection, and a 2dp bottom inset. It grows only with accessibility text.
+
+The row runs from the RIGHT. The display copy stands at the right-hand end and the spine-out books recede to the left behind it, which is a reversed scroll rather than a reversed list, so the reader's first book is still the first one.
+
+Books are seen square-on, with no yaw. A sheared top board leaves a wedge of background at one corner of every book that its neighbour cannot cover; square boards tile exactly. The depth cue is the board's DEPTH varying book to book, between 62% and 100% of the full 40dp, which is what a real shelf gives you because books are not all one size and nobody pushes them all flush. The turned display copy keeps its own angle - being turned is the point of it.
 
 The shelf is a floating plank, 14dp deep at the foot of the stage: a 17dp deck receding toward the wall at the same angle the books are seen from, a 5dp front edge, two 26dp brackets under it inset at 18% from each end, and the shadow it drops. A book's base sits on the deck's front line and its reflection runs down into it. No carcass, no uprights, no back panel.
 

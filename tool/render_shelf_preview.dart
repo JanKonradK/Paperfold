@@ -121,6 +121,10 @@ void main() {
                       ),
                       child: ListView.separated(
                         scrollDirection: Axis.horizontal,
+                        // Matches the shelf: the row rests against its right
+                        // edge, with the display copy there and the spine-out
+                        // books receding to the left behind it.
+                        reverse: true,
                         padding: const EdgeInsets.symmetric(horizontal: 8),
                         itemCount: _books.length,
                         separatorBuilder: (context, index) =>

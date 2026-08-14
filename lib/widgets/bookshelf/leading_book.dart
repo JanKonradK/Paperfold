@@ -55,8 +55,15 @@ class LeadingBook extends StatelessWidget {
   /// both faces recede from it - the spine back and to the left, the cover
   /// back and to the right. The spine is turned much further from the reader
   /// than the cover, so it climbs far more steeply over its own width.
-  static const double coverRise = 9;
-  static const double spineRise = 20;
+  /// These two sum to [BookSpine.topFaceDepth] on purpose. That is the
+  /// headroom every other book on the shelf already asks the bay for, so the
+  /// display copy needs no more than its neighbours and the stage does not
+  /// have to grow around one object. It also keeps the camera honest: the
+  /// highest point of a turned book and the highest point of a spine-out one
+  /// are the same distance above the shelf, because they are the same depth of
+  /// book seen from the same place.
+  static const double coverRise = 14;
+  static const double spineRise = 26;
 
   static const double width = coverWidth + spineWidth;
 

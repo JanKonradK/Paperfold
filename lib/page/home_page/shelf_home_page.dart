@@ -728,6 +728,12 @@ class _ShelfSpineList extends StatelessWidget {
     return ListView.separated(
       key: ValueKey('shelf-spine-viewport-$shelfIndex'),
       scrollDirection: Axis.horizontal,
+      // The row runs from the right, because the display copy stands at the
+      // right end of it and the spine-out books recede to the LEFT behind
+      // that. Reversing the scroll rather than reversing the list keeps the
+      // first book the reader's first book, and keeps the face-out one on
+      // screen without having to scroll to the end to find it.
+      reverse: true,
       clipBehavior: Clip.hardEdge,
       padding: const EdgeInsetsDirectional.symmetric(horizontal: 8),
       itemCount: section.count,

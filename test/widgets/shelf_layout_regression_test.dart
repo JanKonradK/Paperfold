@@ -105,12 +105,11 @@ void main() {
       final spine = tester.widget<BookSpine>(spines.at(index));
       final rect = tester.getRect(spines.at(index));
       expect(spine.uniform, isFalse);
-      // Only the leading edge is checked. A horizontal scroller lays out past
-      // its own right edge on purpose - that is what there is to scroll to -
-      // and the viewport clips it, which is asserted above. Requiring every
-      // spine to fit was only ever accidentally true, while the row happened
-      // to be narrow enough.
-      expect(rect.left, greaterThanOrEqualTo(viewportRect.left + 0.01));
+      // The row is reversed: it rests against its RIGHT edge and lays out
+      // leftward, so the right edge is the one nothing overflows and the left
+      // is where the clipping happens. Checking both would be checking that
+      // the shelf has nothing to scroll to.
+      expect(rect.right, lessThanOrEqualTo(viewportRect.right + 0.01));
       expect(rect.height, greaterThan(rect.width * 3));
     }
 
@@ -124,7 +123,14 @@ void main() {
           epsilon: 0.5),
       reason: 'the face-out book does not stand on the shelf line',
     );
-    expect(leadingRect.left, greaterThanOrEqualTo(viewportRect.left + 0.01));
+    // And it is the book at the right-hand end of the row, which is where a
+    // display copy stands.
+    expect(leadingRect.right, lessThanOrEqualTo(viewportRect.right + 0.01));
+    expect(
+      leadingRect.left,
+      greaterThan(tester.getRect(spines.at(0)).left),
+      reason: 'the display copy is not at the right-hand end of the row',
+    );
 
     Prefs().shelfUniformSpines = true;
     await tester.pump();
