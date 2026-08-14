@@ -165,7 +165,7 @@ class _BookCoverPageState extends ConsumerState<BookCoverPage> {
   }
 
   Future<void> _open() async {
-    await pushToReadingPage(ref, context, _book);
+    await pushToReadingPage(ref, context, _book, openingAnimation: true);
     if (!mounted) return;
     final refreshed = await _books.selectBookById(_book.id);
     if (!mounted) return;

@@ -1,4 +1,5 @@
 import 'package:paperfold/config/shared_preference_provider.dart';
+import 'package:paperfold/enums/shelf_material.dart';
 import 'package:paperfold/l10n/generated/L10n.dart';
 import 'package:paperfold/widgets/common/anx_segmented_button.dart';
 import 'package:paperfold/widgets/settings/settings_title.dart';
@@ -178,6 +179,38 @@ class _AppearanceSettingState extends State<AppearanceSetting> {
                         });
                       },
                     ),
+                  ),
+                ),
+              ),
+              CustomSettingsTile(
+                child: ListTile(
+                  leading: const Icon(Icons.shelves),
+                  title: Text(L10n.of(context).settingsShelfMaterial),
+                  subtitle:
+                      Text(L10n.of(context).settingsShelfMaterialDescription),
+                  trailing: DropdownButton<ShelfMaterial>(
+                    value: Prefs().shelfMaterial,
+                    underline: const SizedBox.shrink(),
+                    onChanged: (material) {
+                      if (material == null) return;
+                      setState(() => Prefs().shelfMaterial = material);
+                    },
+                    items: [
+                      for (final material in ShelfMaterial.values)
+                        DropdownMenuItem<ShelfMaterial>(
+                          value: material,
+                          child: Text(switch (material) {
+                            ShelfMaterial.glass =>
+                              L10n.of(context).shelfMaterialGlass,
+                            ShelfMaterial.metal =>
+                              L10n.of(context).shelfMaterialMetal,
+                            ShelfMaterial.wood =>
+                              L10n.of(context).shelfMaterialWood,
+                            ShelfMaterial.none =>
+                              L10n.of(context).shelfMaterialNone,
+                          }),
+                        ),
+                    ],
                   ),
                 ),
               ),

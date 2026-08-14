@@ -12,6 +12,7 @@ import 'package:paperfold/enums/reading_info.dart';
 import 'package:paperfold/enums/sort_field.dart';
 import 'package:paperfold/enums/sort_order.dart';
 import 'package:paperfold/enums/sync_protocol.dart';
+import 'package:paperfold/enums/shelf_material.dart';
 import 'package:paperfold/enums/translation_mode.dart';
 import 'package:paperfold/enums/writing_mode.dart';
 import 'package:paperfold/enums/text_alignment.dart';
@@ -849,6 +850,16 @@ class Prefs extends ChangeNotifier {
 
   bool get shelfUniformSpines {
     return prefs.getBool('shelfUniformSpines') ?? false;
+  }
+
+  /// What the shelves are made of. Glass unless the reader says otherwise.
+  set shelfMaterial(ShelfMaterial material) {
+    prefs.setString('shelfMaterial', material.code);
+    notifyListeners();
+  }
+
+  ShelfMaterial get shelfMaterial {
+    return ShelfMaterial.fromCode(prefs.getString('shelfMaterial'));
   }
 
   set bookshelfFolderStyle(BookshelfFolderStyle style) {

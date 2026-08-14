@@ -21,6 +21,7 @@ import 'package:paperfold/config/paperfold_tokens.dart';
 import 'package:paperfold/config/shared_preference_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:paperfold/enums/book_status.dart';
+import 'package:paperfold/enums/shelf_material.dart';
 import 'package:paperfold/models/book.dart';
 import 'package:paperfold/widgets/bookshelf/book_spine.dart';
 import 'package:paperfold/widgets/bookshelf/leading_book.dart';
@@ -85,7 +86,12 @@ void main() {
 
     Directory('tool/preview').createSync(recursive: true);
 
-    for (final brightness in Brightness.values) {
+    for (final (brightness, material) in <(Brightness, ShelfMaterial)>[
+      (Brightness.dark, ShelfMaterial.glass),
+      (Brightness.light, ShelfMaterial.glass),
+      (Brightness.light, ShelfMaterial.wood),
+      (Brightness.dark, ShelfMaterial.metal),
+    ]) {
       final boundaryKey = GlobalKey();
       await tester.pumpWidget(
         MaterialApp(
@@ -103,6 +109,7 @@ void main() {
             child: Scaffold(
               body: Center(
                 child: GlassShelf(
+                  material: material,
                   child: SizedBox(
                     height: BookSpine.shelfStageHeight(TextScaler.noScaling),
                     child: Padding(
@@ -156,7 +163,7 @@ void main() {
         final ui.Image image = await boundary.toImage(pixelRatio: 3);
         final ByteData png =
             (await image.toByteData(format: ui.ImageByteFormat.png))!;
-        File('tool/preview/shelf-${brightness.name}.png')
+        File('tool/preview/shelf-${brightness.name}-${material.code}.png')
             .writeAsBytesSync(png.buffer.asUint8List());
 
         // Everything that makes the glass glass - the deck, the metal nosing,
@@ -187,7 +194,7 @@ void main() {
             .toImage((image.width / 3 * zoom).round(), (band * zoom).round());
         final ByteData cropPng =
             (await crop.toByteData(format: ui.ImageByteFormat.png))!;
-        File('tool/preview/shelf-${brightness.name}-glass.png')
+        File('tool/preview/shelf-${brightness.name}-${material.code}-edge.png')
             .writeAsBytesSync(cropPng.buffer.asUint8List());
         crop.dispose();
         image.dispose();

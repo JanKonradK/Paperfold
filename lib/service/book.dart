@@ -19,6 +19,8 @@ import 'package:paperfold/service/convert_to_epub/txt/convert_from_txt.dart';
 import 'package:paperfold/service/md5_service.dart';
 import 'package:paperfold/utils/webView/anx_headless_webview.dart';
 import 'package:paperfold/utils/get_path/get_base_path.dart';
+import 'package:paperfold/config/shared_preference_provider.dart';
+import 'package:paperfold/page/opening/book_opening_sequence.dart';
 import 'package:paperfold/page/reading_page.dart';
 import 'package:paperfold/utils/import_book.dart';
 import 'package:paperfold/utils/log/common.dart';
@@ -422,6 +424,7 @@ Future<void> pushToReadingPage(
   Book book, {
   String? cfi,
   String? heroTag,
+  bool openingAnimation = false,
 }) async {
   if (book.isDeleted) {
     AnxToast.show(L10n.of(context).bookDeleted);
@@ -445,17 +448,35 @@ Future<void> pushToReadingPage(
   final chapterContentBridge = ref.read(chapterContentBridgeProvider.notifier);
   final tocSearch = ref.read(tocSearchProvider.notifier);
 
+  final reader = ReadingPage(
+    key: readingPageKey,
+    book: book,
+    cfi: cfi,
+    initialThemes: initialThemes,
+    heroTag: heroTag,
+  );
+
+  // Opening the book from its cover screen plays the cover curling open over
+  // the reader. It is a route transition rather than a screen of its own so
+  // that the WebView is mounted and painting from the first frame: a reader
+  // that had not laid out yet would arrive at the end of the zoom as a white
+  // rectangle.
+  //
+  // The route's own transition is deliberately nothing. The overlay is opaque
+  // from the frame it is built on and does all the moving, so a slide
+  // underneath it would only fight the zoom.
+  final playOpening = openingAnimation && Prefs().openBookAnimation;
+
   await Navigator.push(
     navigatorKey.currentContext!,
-    CupertinoPageRoute(
-      builder: (c) => ReadingPage(
-        key: readingPageKey,
-        book: book,
-        cfi: cfi,
-        initialThemes: initialThemes,
-        heroTag: heroTag,
-      ),
-    ),
+    playOpening
+        ? PageRouteBuilder<void>(
+            transitionDuration: Duration.zero,
+            reverseTransitionDuration: const Duration(milliseconds: 200),
+            pageBuilder: (context, animation, secondaryAnimation) =>
+                BookOpeningSequence(book: book, child: reader),
+          )
+        : CupertinoPageRoute(builder: (c) => reader),
   ).then((_) {
     AnxLog.info('ReadingPage: poped: ${book.title}');
     currentReading.finish();

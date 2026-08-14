@@ -15,6 +15,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:paperfold/config/shared_preference_provider.dart';
 import 'package:paperfold/enums/book_status.dart';
+import 'package:paperfold/enums/shelf_material.dart';
 import 'package:paperfold/l10n/generated/L10n.dart';
 import 'package:paperfold/dao/wishlist.dart';
 import 'package:paperfold/models/book.dart';
@@ -537,8 +538,7 @@ class _BookshelfSection extends StatelessWidget {
       container: true,
       child: CustomPaint(
         painter: GlassShelfPainter(
-          sheen: scheme.onSurface,
-          edge: scheme.outlineVariant,
+          palette: ShelfMaterialPalette.of(Prefs().shelfMaterial, scheme),
           shadow: scheme.shadow,
         ),
         child: Padding(
@@ -823,8 +823,7 @@ class _ShelfLoadingView extends StatelessWidget {
         itemBuilder: (context, index) => ExcludeSemantics(
           child: CustomPaint(
             painter: GlassShelfPainter(
-              sheen: scheme.onSurface,
-              edge: scheme.outlineVariant,
+              palette: ShelfMaterialPalette.of(Prefs().shelfMaterial, scheme),
               shadow: scheme.shadow,
             ),
             child: Padding(

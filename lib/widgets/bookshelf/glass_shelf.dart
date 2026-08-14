@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:paperfold/enums/shelf_material.dart';
 import 'package:paperfold/widgets/bookshelf/book_spine.dart';
 
 /// The shelf the books stand on.
@@ -10,64 +11,70 @@ import 'package:paperfold/widgets/bookshelf/book_spine.dart';
 /// with brown. It buried the books it was meant to hold, and it made the whole
 /// application read as antique when only the books were supposed to.
 ///
-/// What is left is a single sheet of glass. It is almost nothing: a lit front
-/// edge, a faint body, and the shadow the books drop onto it. The page ground
-/// shows through, the books supply every colour on the screen, and the
-/// furniture stops competing with them.
+/// What is there now is a floating plank, and almost nothing else: a deck
+/// receding toward the wall at the same angle the books are seen from, a front
+/// edge with the material's own character in it, two small brackets underneath,
+/// and the shadow the whole thing drops. No carcass, no uprights, no back
+/// panel.
+///
+/// The material is the reader's choice - see [ShelfMaterial] - and changing it
+/// changes only what the plank is made of. Every measurement below is shared by
+/// all of them, so a book stands in exactly the same place whichever is picked.
 ///
 /// Solid colour and linear gradients only, no blur or image, and
-/// [shouldRepaint] is false unless the palette changes.
+/// [shouldRepaint] is false unless something it draws with changes.
 class GlassShelfPainter extends CustomPainter {
   GlassShelfPainter({
-    required this.sheen,
-    required this.edge,
+    required this.palette,
     required this.shadow,
   });
 
-  final Color sheen;
-  final Color edge;
+  final ShelfMaterialPalette palette;
   final Color shadow;
 
-  /// The height the glass occupies at the foot of a shelf stage. The stage
-  /// pads its books by the same amount, so the books stand on the plate rather
-  /// than floating above it or sinking through it.
+  /// The height the plank occupies at the foot of a shelf stage. The stage pads
+  /// its books by the same amount, so the books stand on the deck rather than
+  /// floating above it or sinking through it.
   static const double plateInset = 14;
-  static const double plateThickness = 9;
-  static const double contactHeight = 20;
 
-  /// The top face of the glass, receding under the books at the same angle
-  /// they are seen from.
+  /// The deck: the top surface, receding toward the wall at the same angle the
+  /// books are seen from, so a book and the shelf it stands on agree.
   static const double deckDepth = BookSpine.topFaceDepth;
 
-  /// The metal band along the front edge.
-  static const double nosingThickness = 4;
+  /// The front edge. The only part of the plank with any thickness on screen,
+  /// and therefore the part that has to carry the material.
+  static const double edgeThickness = 5;
 
-  /// The nosing is the one thing on this shelf that does not take its colour
-  /// from the scheme.
-  ///
-  /// Every other part of the glass is `onSurface` at a low alpha, which is
-  /// correct for a tint - it goes light on a black ground and dark on a paper
-  /// one. Metal does not work that way. Built from `onSurface` the nosing came
-  /// out as a dark smear in the light theme and vanished, because dark-on-light
-  /// is not what a lit metal edge looks like. These are warm greys, tuned to
-  /// sit in the paper palette rather than against it, and they read as the same
-  /// object in both themes.
-  static const Color _metalShade = Color(0xFF33302B);
-  static const Color _metalBody = Color(0xFF8B8279);
-  static const Color _metalLight = Color(0xFFE9E1D5);
+  /// The brackets under the plank. Small, and inset from the ends, the way a
+  /// real floating shelf is hung.
+  static const double bracketWidth = 26;
+  static const double bracketDepth = 7;
+  static const double bracketInset = 0.18;
 
   @override
   void paint(Canvas canvas, Size size) {
-    final plateTop = size.height - plateInset;
-    if (plateTop <= 0) return;
+    final deckTop = size.height - plateInset;
+    if (deckTop <= 0) return;
+    if (palette.opacity <= 0) {
+      _paintContact(canvas, size, deckTop);
+      return;
+    }
 
-    // The books darken the glass where they touch it. This band is what makes
-    // them stand on the shelf rather than in front of it.
+    _paintContact(canvas, size, deckTop);
+    _paintDeck(canvas, size, deckTop);
+    _paintBrackets(canvas, size, deckTop);
+    _paintFrontEdge(canvas, size, deckTop);
+  }
+
+  /// The books darken the shelf where they touch it. This band is what makes
+  /// them stand on it rather than in front of it.
+  void _paintContact(Canvas canvas, Size size, double deckTop) {
+    const height = 20.0;
     final contact = Rect.fromLTWH(
       0,
-      math.max(0, plateTop - contactHeight),
+      math.max(0, deckTop - height),
       size.width,
-      math.min(contactHeight, plateTop),
+      math.min(height, deckTop),
     );
     canvas.drawRect(
       contact,
@@ -81,117 +88,141 @@ class GlassShelfPainter extends CustomPainter {
           ],
         ).createShader(contact),
     );
+  }
 
-    // The plate itself: bright where the light catches its top face, fading
-    // through the thickness of the glass.
-    final plate = Rect.fromLTWH(0, plateTop, size.width, plateThickness);
-    canvas.drawRect(
-      plate,
-      Paint()
-        ..shader = LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            sheen.withValues(alpha: 0.16),
-            sheen.withValues(alpha: 0.04),
-          ],
-        ).createShader(plate),
-    );
-
-    // The top face of the glass, receding under the books at the same angle
-    // they are seen from. Without it the plate is a line and the books stand
-    // on nothing; with it there is a surface for them to stand on.
-    final deck = Rect.fromLTWH(0, plateTop - deckDepth, size.width, deckDepth);
+  /// The top surface, running back toward the wall.
+  ///
+  /// It is drawn from the far edge forward, darker at the back, which is what
+  /// gives a flat band the read of a surface going away rather than a stripe.
+  void _paintDeck(Canvas canvas, Size size, double deckTop) {
+    final deck = Rect.fromLTWH(0, deckTop - deckDepth, size.width, deckDepth);
     canvas.drawRect(
       deck,
       Paint()
         ..shader = LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [
-            sheen.withValues(alpha: 0.03),
-            sheen.withValues(alpha: 0.11),
-          ],
+          colors: [palette.deckFar, palette.deck],
         ).createShader(deck),
     );
 
-    // Two hairlines carry the whole illusion: the lit top face, and the ground
-    // edge underneath it.
-    canvas.drawLine(
-      Offset(0, plateTop),
-      Offset(size.width, plateTop),
-      Paint()
-        ..color = sheen.withValues(alpha: 0.58)
-        ..strokeWidth = 1,
-    );
+    if (palette.grain) {
+      final grain = Paint()
+        ..color = palette.edgeShade.withValues(alpha: 0.16)
+        ..strokeWidth = 0.8;
+      for (var x = 12.0; x < size.width; x += 37) {
+        canvas.drawLine(
+          Offset(x, deckTop - deckDepth + 2),
+          Offset(x + 18, deckTop - 1),
+          grain,
+        );
+      }
+    }
+  }
 
-    // The metal nosing along the front edge of the glass.
-    //
-    // This is the only metal on the shelf and it stays a band rather than
-    // becoming a rail: `f7e86aa3` took the furniture out because a walnut
-    // carcass buried the books, and a bright bracket at every bay would repeat
-    // that mistake in a different material. What makes it read as metal rather
-    // than as another sheet of glass is the anisotropy - a hard bright line
-    // near the top of the band and a quick fall to a dark underside, instead of
-    // glass's even gradient.
-    final nosing = Rect.fromLTWH(
-      0,
-      plateTop + plateThickness - nosingThickness,
-      size.width,
-      nosingThickness,
-    );
+  /// Two small brackets, holding the plank off the wall.
+  ///
+  /// They are the reason a floating shelf reads as mounted rather than as a
+  /// line drawn across the screen, and they are the only part of the reference
+  /// the books do not already supply.
+  void _paintBrackets(Canvas canvas, Size size, double deckTop) {
+    final y = deckTop + edgeThickness;
+    for (final fraction in [bracketInset, 1 - bracketInset]) {
+      final centre = size.width * fraction;
+      final bracket = Rect.fromLTWH(
+        centre - bracketWidth / 2,
+        y,
+        bracketWidth,
+        bracketDepth,
+      );
+      canvas.drawRect(
+        bracket,
+        Paint()
+          ..shader = LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              palette.edgeBody,
+              palette.edgeShade,
+            ],
+          ).createShader(bracket),
+      );
+      // The light that catches the top of the bracket where it meets the
+      // underside of the plank.
+      canvas.drawLine(
+        Offset(bracket.left, y),
+        Offset(bracket.right, y),
+        Paint()
+          ..color = palette.edgeLight.withValues(alpha: 0.5)
+          ..strokeWidth = 1,
+      );
+    }
+  }
+
+  /// The front edge, and the shadow under it.
+  void _paintFrontEdge(Canvas canvas, Size size, double deckTop) {
+    final edge = Rect.fromLTWH(0, deckTop, size.width, edgeThickness);
     canvas.drawRect(
-      nosing,
+      edge,
       Paint()
-        ..shader = const LinearGradient(
+        ..shader = LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          // Opaque, and anisotropic: a hard bright line high on the band and a
-          // quick fall to a dark underside. Glass fades evenly; metal does not,
-          // and that difference is the whole of what tells them apart at 4 dp.
           colors: [
-            _metalShade,
-            _metalLight,
-            _metalBody,
-            _metalShade,
+            palette.edgeLight,
+            palette.edgeBody,
+            palette.edgeShade,
           ],
-          stops: [0, 0.28, 0.55, 1],
-        ).createShader(nosing),
+          stops: const [0, 0.42, 1],
+        ).createShader(edge),
     );
-    canvas.drawLine(
-      Offset(0, plateTop + plateThickness),
-      Offset(size.width, plateTop + plateThickness),
+
+    // Under the plank. A floating shelf casts onto the wall below it, and
+    // without this the plank sits on the page instead of in front of it.
+    final under = Rect.fromLTWH(
+      0,
+      deckTop + edgeThickness,
+      size.width,
+      plateInset - edgeThickness,
+    );
+    canvas.drawRect(
+      under,
       Paint()
-        ..color = edge.withValues(alpha: 0.42)
-        ..strokeWidth = 1,
+        ..shader = LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [palette.underside, palette.underside.withValues(alpha: 0)],
+        ).createShader(under),
     );
   }
 
   @override
   bool shouldRepaint(covariant GlassShelfPainter oldDelegate) {
-    return sheen != oldDelegate.sheen ||
-        edge != oldDelegate.edge ||
-        shadow != oldDelegate.shadow;
+    return palette != oldDelegate.palette || shadow != oldDelegate.shadow;
   }
 }
 
-/// A sheet of shelf glass with [child] standing on it.
+/// A shelf plank with [child] standing on it.
 ///
 /// Wraps [GlassShelfPainter] so a caller does not have to know which colour
-/// roles the glass is made of, and so the shelf can be drawn somewhere other
+/// roles the shelf is made of, and so the shelf can be drawn somewhere other
 /// than the home screen - a preview, a test - without copying that out.
 class GlassShelf extends StatelessWidget {
-  const GlassShelf({super.key, required this.child});
+  const GlassShelf({
+    super.key,
+    required this.child,
+    this.material = ShelfMaterial.glass,
+  });
 
   final Widget child;
+  final ShelfMaterial material;
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return CustomPaint(
       painter: GlassShelfPainter(
-        sheen: scheme.onSurface,
-        edge: scheme.outlineVariant,
+        palette: ShelfMaterialPalette.of(material, scheme),
         shadow: scheme.shadow,
       ),
       child: child,

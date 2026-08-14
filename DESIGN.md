@@ -228,7 +228,9 @@ Each section has 16dp inner side padding. The first section has 20dp top padding
 
 The shelf stage is the sum of its parts, not a round number: a 10dp top inset, an 11dp top board, the tallest spine, a 12dp reflection, and a 2dp bottom inset. It grows only with accessibility text.
 
-The glass is 14dp deep at the foot of the stage. It has an 11dp receding deck, a 9dp plate, a 4dp metal nosing along its front edge, and two hairlines. A book's base sits on the plate's top line and its reflection runs down into the glass.
+The shelf is a floating plank, 14dp deep at the foot of the stage: a 17dp deck receding toward the wall at the same angle the books are seen from, a 5dp front edge, two 26dp brackets under it inset at 18% from each end, and the shadow it drops. A book's base sits on the deck's front line and its reflection runs down into it. No carcass, no uprights, no back panel.
+
+The plank's material is the reader's choice - glass, metal, wood or none. Every measurement above is shared by all four, so a book stands in exactly the same place whichever is picked; only what the plank is made of changes. Glass is the default, and the green edge is what identifies it.
 
 Spines scroll horizontally and stand on the plate. Adjacent spines are separated by a 2dp hairline rather than the usual 8dp, which is recorded with its reasoning in `book_spine.dart`.
 

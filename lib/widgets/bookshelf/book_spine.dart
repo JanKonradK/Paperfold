@@ -17,6 +17,7 @@ class BookSpineVisual {
     required this.hubCount,
     required this.grainSeed,
     required this.leanRadians,
+    required this.protrusion,
   });
 
   final double width;
@@ -29,6 +30,16 @@ class BookSpineVisual {
   final int hubCount;
   final int grainSeed;
   final double leanRadians;
+
+  /// How far forward in the tray this book stands, from 0 at the back to 1 at
+  /// the front.
+  ///
+  /// Books on a real shelf are not pushed flush. A book standing proud of its
+  /// neighbour is the reason you can see part of its cover at all - the side
+  /// face is only visible in the depth it has over the book beside it - and it
+  /// is most of why a photographed shelf reads as objects rather than as a bar
+  /// chart.
+  final double protrusion;
 }
 
 class BookSpine extends StatefulWidget {
@@ -82,11 +93,27 @@ class BookSpine extends StatefulWidget {
   /// book, and is what a shelf photographed from one spot actually looks like.
   ///
   /// [topFaceDepth] is the pitch: how much of the book's top board shows.
-  /// [topFaceShear] is the yaw: how far the far edge slides toward the
-  /// trailing side. Adjacent top faces are parallel, so they tile along the
-  /// row the way real books do.
-  static const double topFaceDepth = 11;
-  static const double topFaceShear = 7;
+  /// [topFaceShear] is the yaw: how far the far edge of a face slides as it
+  /// recedes. Adjacent top faces are parallel, so they tile along the row the
+  /// way real books do.
+  ///
+  /// Both are large enough to read as bulk. At 11 and 7 the books had a top but
+  /// still looked like coloured rectangles with a lid; a shelf photographed
+  /// from a person's height shows a lot more board than that.
+  ///
+  /// The shear is negative in a left-to-right shelf: deeper into the tray is up
+  /// and to the LEFT. That is what makes each book's leading side face - its
+  /// cover - fall outside its own footprint and become visible, and it is what
+  /// lets the first book on the shelf be the one turned out. With the sign the
+  /// other way the visible faces are on the trailing side and only the last
+  /// book on a shelf could show a cover, which is no use on a row you have to
+  /// scroll to the end of.
+  static const double topFaceDepth = 17;
+  static const double topFaceShear = 13;
+
+  /// The widest a book's own cover face gets, for a book standing fully proud
+  /// of its neighbour.
+  static const double coverFaceWidth = 11;
 
   /// How far a book's reflection reaches down into the glass it stands on.
   static const double reflectionDepth = 12;
@@ -289,6 +316,7 @@ class BookSpine extends StatefulWidget {
         hubCount: ((hash >> 12) % 4) == 0 ? 3 : 0,
         grainSeed: (hash >> 16) & 255,
         leanRadians: leanRadians,
+        protrusion: ((hash >> 22) % 5) / 4.0,
       );
     });
   }
@@ -384,6 +412,7 @@ class _BookSpineState extends State<BookSpine> {
             hubCount: base.hubCount,
             grainSeed: base.grainSeed,
             leanRadians: base.leanRadians,
+            protrusion: base.protrusion,
           );
     final isRtl = Directionality.of(context) == TextDirection.rtl;
     final textScaler = MediaQuery.textScalerOf(context);
@@ -403,6 +432,10 @@ class _BookSpineState extends State<BookSpine> {
     final width = baseWidth;
     final lean = uniform ? 0.0 : visual.leanRadians * (isRtl ? -1 : 1);
     final leanInset = lean == 0 ? 0.0 : 8.0 * dimensionScale;
+    // A uniform shelf is uniform: no book stands proud of its neighbour, so
+    // none of them shows a cover face.
+    final faceWidth =
+        uniform ? 0.0 : BookSpine.coverFaceWidth * visual.protrusion;
 
     final text = Padding(
       padding: const EdgeInsets.fromLTRB(2, 16, 2, 14),
@@ -467,13 +500,17 @@ class _BookSpineState extends State<BookSpine> {
         child: Tooltip(
           message: semanticLabel,
           child: SizedBox(
-            width: width + leanInset * 2,
+            // The cover face stands beside the spine on the leading side, so
+            // the box carries it. Only as much as this book actually shows:
+            // a book pushed flush to the back of the tray has no face and asks
+            // for no room.
+            width: width + leanInset * 2 + faceWidth,
             height: height + BookSpine.verticalFurniture,
             child: CustomPaint(
               painter: _BookPresencePainter(
-                // Everything the book is beyond its spine: the top board it is
-                // seen slightly above, the shadow it drops where it meets the
-                // glass, and what the glass gives back.
+                // Everything the book is beyond its spine: the cover face
+                // beside it, the top board over both, the shadow it drops
+                // where it meets the tray, and what the tray gives back.
                 shadow: theme.colorScheme.shadow,
                 surface: theme.colorScheme.surface,
                 spineWidth: width,
@@ -482,14 +519,17 @@ class _BookSpineState extends State<BookSpine> {
                 art: art,
                 isRtl: isRtl,
               ),
-              child: Align(
-                alignment: Alignment.topCenter,
-                child: Padding(
-                  padding: const EdgeInsets.only(top: BookSpine.topFaceDepth),
-                  child: Transform.rotate(
-                    angle: lean,
-                    alignment: Alignment.bottomCenter,
-                    child: paintedSpine,
+              child: Padding(
+                padding: EdgeInsetsDirectional.only(start: faceWidth),
+                child: Align(
+                  alignment: Alignment.topCenter,
+                  child: Padding(
+                    padding: const EdgeInsets.only(top: BookSpine.topFaceDepth),
+                    child: Transform.rotate(
+                      angle: lean,
+                      alignment: Alignment.bottomCenter,
+                      child: paintedSpine,
+                    ),
                   ),
                 ),
               ),
@@ -735,12 +775,97 @@ class _BookPresencePainter extends CustomPainter {
   final bool isRtl;
   final SpineArt? art;
 
+  /// Which way "deeper into the tray" runs on screen: up, and toward the
+  /// leading side. Every face on every book shares it.
+  double get _shear =>
+      (isRtl ? BookSpine.topFaceShear : -BookSpine.topFaceShear);
+
+  /// How much of this book's cover shows beside its spine.
+  ///
+  /// Only a book standing proud of the one beside it shows any: the side face
+  /// is visible in the depth it has over its neighbour, and a shelf of books
+  /// pushed flush shows none at all.
+  double get _coverFace => BookSpine.coverFaceWidth * visual.protrusion;
+
   @override
   void paint(Canvas canvas, Size size) {
-    final left = (size.width - spineWidth) / 2;
+    // Where the layout put the spine: centred in what is left of the box once
+    // the cover face has taken its side.
+    final face = _coverFace;
+    final left = isRtl
+        ? (size.width - face - spineWidth) / 2
+        : face + (size.width - face - spineWidth) / 2;
+    _paintCoverFace(canvas, left);
     _paintTopBoard(canvas, left);
     _paintReflection(canvas, left);
     _paintContactShadow(canvas, size, left);
+  }
+
+  /// The sliver of the book's own front cover, on its leading side.
+  ///
+  /// This is the thing a photograph of a real shelf has and a row of drawn
+  /// rectangles does not: between two spines you see a slice of board, and it
+  /// is what tells the eye these are objects with depth standing in a tray
+  /// rather than stripes printed on a background.
+  void _paintCoverFace(Canvas canvas, double left) {
+    final width = _coverFace;
+    if (width < 0.5) return;
+
+    // The face lies on the leading side and recedes with the shear, so its far
+    // edge is higher than its near edge by the same proportion the top board
+    // uses.
+    final rise = BookSpine.topFaceDepth * (width / BookSpine.topFaceShear);
+    final nearX = isRtl ? left + spineWidth : left;
+    final farX = nearX + (isRtl ? width : -width);
+    final top = BookSpine.topFaceDepth;
+    final face = Path()
+      ..moveTo(nearX, top)
+      ..lineTo(farX, top - rise)
+      ..lineTo(farX, top - rise + spineHeight)
+      ..lineTo(nearX, top + spineHeight)
+      ..close();
+
+    final source = art;
+    if (source != null) {
+      // The book's real jacket, taken from the part of it the spine does not
+      // already wear.
+      canvas.save();
+      canvas.clipPath(face);
+      final image = source.strip;
+      final start = image.width * SpineArtCache.stripFraction;
+      canvas.drawImageRect(
+        image,
+        Rect.fromLTWH(
+          isRtl ? 0 : start,
+          0,
+          math.max(1, image.width - start),
+          image.height.toDouble(),
+        ),
+        face.getBounds(),
+        Paint()..filterQuality = FilterQuality.low,
+      );
+      canvas.restore();
+    } else {
+      canvas.drawPath(
+        face,
+        Paint()..color = Color.lerp(visual.background, Colors.white, 0.16)!,
+      );
+    }
+
+    // Angled away from the light, so it is darker than the spine whatever it
+    // carries. Without this the face reads as the spine getting wider; with
+    // too much of it the face goes black and reads as a gap between books.
+    canvas.drawPath(
+      face,
+      Paint()..color = Colors.black.withValues(alpha: 0.17),
+    );
+    canvas.drawLine(
+      Offset(nearX, top),
+      Offset(nearX, top + spineHeight),
+      Paint()
+        ..color = Colors.black.withValues(alpha: 0.34)
+        ..strokeWidth = 1,
+    );
   }
 
   /// The top of a closed book is its page block, bound at the spine edge by
@@ -748,23 +873,33 @@ class _BookPresencePainter extends CustomPainter {
   /// side it is a parallelogram, and every book on the shelf shares the angle,
   /// so the boards tile along the row.
   void _paintTopBoard(Canvas canvas, double left) {
-    final shear = isRtl ? -BookSpine.topFaceShear : BookSpine.topFaceShear;
+    final shear = _shear;
     final near = BookSpine.topFaceDepth;
+    // The board caps the spine and the cover face together - it is one board
+    // over the whole book - so it starts at the outer edge of the cover face.
+    final face = _coverFace;
+    final nearLeft = left - (isRtl ? 0 : face);
+    final nearRight = left + spineWidth + (isRtl ? face : 0);
+    // Square-sided, not a parallelogram.
+    //
+    // A sheared outline is what a single book's top really looks like, and it
+    // is wrong for a row: each board then leaves a wedge of background at its
+    // trailing top corner that the next book cannot fill, because the next book
+    // is a whole spine-width away and its own board is sheared the same way.
+    // Books on a shelf touch, and their boards read as one continuous run of
+    // page block. The yaw is carried by the leaves and by the cover face
+    // instead, which is where the eye reads it anyway.
     final board = Path()
-      ..moveTo(left, near)
-      ..lineTo(left + spineWidth, near)
-      ..lineTo(left + spineWidth + shear, 0)
-      ..lineTo(left + shear, 0)
-      ..close();
+      ..addRect(Rect.fromLTRB(nearLeft, 0, nearRight, near));
 
     // Page edges. Tinted toward the book's own cloth and kept well down the
     // luminance range: a board is a surface angled away from the light, and a
     // bright cream cap on every book turns a shelf into a row of lidded boxes.
     final paper = Color.lerp(_pageBlock, visual.background, 0.34)!;
     final bounds = Rect.fromLTWH(
-      left + math.min(0.0, shear),
+      nearLeft + math.min(0.0, shear),
       0,
-      spineWidth + shear.abs(),
+      (nearRight - nearLeft) + shear.abs(),
       near,
     );
     canvas.drawPath(
@@ -787,8 +922,8 @@ class _BookPresencePainter extends CustomPainter {
       ..strokeWidth = 0.6;
     canvas.save();
     canvas.clipPath(board);
-    for (var index = 1; index < 5; index++) {
-      final x = left + spineWidth * index / 5;
+    for (var index = 1; index < 6; index++) {
+      final x = nearLeft + (nearRight - nearLeft) * index / 6;
       canvas.drawLine(Offset(x, near), Offset(x + shear, 0), leaves);
     }
     canvas.restore();

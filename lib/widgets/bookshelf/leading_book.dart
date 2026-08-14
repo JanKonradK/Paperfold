@@ -154,23 +154,23 @@ class LeadingBook extends StatelessWidget {
     required double coverW,
     required BookSpineVisual visual,
   }) {
-    // The near corner sits inboard of the leading edge by the spine's width.
-    final cornerX = isRtl ? coverW : spineW;
-    // Positive x moves away from the corner into the cover, and the cover's
-    // far edge is higher than its near edge by [coverRise].
-    final direction = isRtl ? -1.0 : 1.0;
-    final slope = -direction * coverRise / coverW;
+    // The cover occupies the leading side of the box, up to the corner. Its
+    // far edge - the one away from the corner - is the higher one, by
+    // [coverRise], because that edge is deeper into the shelf.
+    //
+    // The shear is written as `y' = y + slope*x + offset`, solved so the near
+    // edge keeps its height and the far edge rises.
+    final slope = (isRtl ? -1.0 : 1.0) * coverRise / coverW;
+    final offset = isRtl ? 0.0 : -coverRise;
 
     return Positioned(
-      left: isRtl ? 0 : cornerX,
+      left: isRtl ? spineW : 0,
       top: cornerDrop,
       child: Transform(
         alignment: Alignment.topLeft,
         transform: Matrix4.identity()
           ..setEntry(1, 0, slope)
-          // In right-to-left the cover lies to the left of the corner, so the
-          // shear is measured from its own far edge instead.
-          ..setEntry(1, 3, isRtl ? coverRise : 0),
+          ..setEntry(1, 3, offset),
         child: SizedBox(
           width: coverW,
           height: bookHeight,
@@ -291,16 +291,22 @@ class _LeadingBookPainter extends CustomPainter {
   final Color surface;
 
   /// The near corner between the two faces.
+  ///
+  /// The cover lies on the leading side of it and the spine slice on the
+  /// trailing side, which is the way round the rest of the row is lit: deeper
+  /// into the shelf is up and toward the leading edge, so the cover of the
+  /// first book is the face that is not hidden behind anything.
   Offset get _corner =>
-      Offset(isRtl ? coverW : spineW, LeadingBook.cornerDrop);
+      Offset(isRtl ? spineW : coverW, LeadingBook.cornerDrop);
 
-  /// Where the spine's far edge sits relative to the corner.
+  /// Where the spine's far edge sits relative to the corner. Away from the
+  /// cover, and back.
   Offset get _spineAway =>
-      Offset(isRtl ? spineW : -spineW, -LeadingBook.spineRise);
+      Offset(isRtl ? -spineW : spineW, -LeadingBook.spineRise);
 
   /// Where the cover's far edge sits relative to the corner.
   Offset get _coverAway =>
-      Offset(isRtl ? -coverW : coverW, -LeadingBook.coverRise);
+      Offset(isRtl ? coverW : -coverW, -LeadingBook.coverRise);
 
   @override
   void paint(Canvas canvas, Size size) {
