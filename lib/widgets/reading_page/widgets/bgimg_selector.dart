@@ -230,7 +230,8 @@ class _BgimgSelectorState extends ConsumerState<BgimgSelector> {
                       Container(
                         padding: const EdgeInsets.symmetric(
                             horizontal: 8, vertical: 4),
-                        margin: const EdgeInsets.only(left: 8, bottom: 8),
+                        margin: const EdgeInsetsDirectional.only(
+                            start: 8, bottom: 8),
                         decoration: BoxDecoration(
                           color: Colors.white.withAlpha(180),
                           borderRadius: BorderRadius.circular(8),
@@ -244,7 +245,8 @@ class _BgimgSelectorState extends ConsumerState<BgimgSelector> {
                       Container(
                         padding: const EdgeInsets.symmetric(
                             horizontal: 8, vertical: 4),
-                        margin: const EdgeInsets.only(right: 8, bottom: 8),
+                        margin: const EdgeInsetsDirectional.only(
+                            end: 8, bottom: 8),
                         decoration: BoxDecoration(
                           color: Colors.black.withAlpha(180),
                           borderRadius: BorderRadius.circular(8),

@@ -4,49 +4,48 @@ import 'package:paperfold/config/shared_preference_provider.dart';
 import 'package:paperfold/widgets/common/anx_segmented_button.dart';
 import 'package:flutter/material.dart';
 
-class ChangeThemeMode extends StatefulWidget {
+/// The light / dark / system control.
+///
+/// It reads the preference on every build and rebuilds when the preference
+/// changes. The mode it used to cache in `initState` went stale the moment
+/// anything else wrote it — E-ink mode, the onboarding screen, or a restored
+/// backup — and the control then showed a mode the application was not in.
+class ChangeThemeMode extends StatelessWidget {
   const ChangeThemeMode({super.key});
 
   @override
-  ChangeThemeModeState createState() => ChangeThemeModeState();
-}
-
-class ChangeThemeModeState extends State<ChangeThemeMode> {
-  late String _themeMode;
-
-  @override
-  void initState() {
-    super.initState();
-    _themeMode = themeModeToString(Prefs().themeMode);
-  }
-
-  @override
   Widget build(BuildContext context) {
-    return AnxSegmentedButton<String>(
-      segments: <SegmentButtonItem<String>>[
-        SegmentButtonItem(
-          value: 'auto',
-          label: L10n.of(context).settingsSystemMode,
-          icon: const Icon(Icons.brightness_auto),
-        ),
-        SegmentButtonItem(
-          value: 'dark',
-          label: L10n.of(context).settingsDarkMode,
-          icon: const Icon(Icons.brightness_2),
-        ),
-        SegmentButtonItem(
-          value: 'light',
-          label: L10n.of(context).settingsLightMode,
-          icon: const Icon(Icons.brightness_5),
-        ),
-      ],
-      selected: {_themeMode},
-      onSelectionChanged: (Set<String> newSelection) {
-        final String mode = newSelection.first;
-        Prefs().saveThemeModeToPrefs(mode);
-        setState(() {
-          _themeMode = mode;
-        });
+    return AnimatedBuilder(
+      animation: Prefs(),
+      builder: (BuildContext context, _) {
+        // E-ink mode pins the application to light. The control says so
+        // instead of offering a choice that has no effect.
+        final bool eInk = Prefs().eInkMode;
+        return AnxSegmentedButton<String>(
+          segments: <SegmentButtonItem<String>>[
+            SegmentButtonItem(
+              value: 'auto',
+              label: L10n.of(context).settingsSystemMode,
+              icon: const Icon(Icons.brightness_auto),
+            ),
+            SegmentButtonItem(
+              value: 'dark',
+              label: L10n.of(context).settingsDarkMode,
+              icon: const Icon(Icons.brightness_2),
+            ),
+            SegmentButtonItem(
+              value: 'light',
+              label: L10n.of(context).settingsLightMode,
+              icon: const Icon(Icons.brightness_5),
+            ),
+          ],
+          selected: {eInk ? 'light' : themeModeToString(Prefs().themeMode)},
+          onSelectionChanged: eInk
+              ? null
+              : (Set<String> newSelection) {
+                  Prefs().saveThemeModeToPrefs(newSelection.first);
+                },
+        );
       },
     );
   }

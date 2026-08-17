@@ -91,7 +91,7 @@ class GoogleApiTranslateProvider extends TranslateServiceProvider {
         label: L10n.of(context).translateTip,
         type: ConfigItemType.tip,
         defaultValue: L10n.of(context).translateGoogleHelpText,
-        link: 'https://anx.anxcye.com/docs/translate/google',
+        link: 'https://cloud.google.com/translate/docs/setup',
       ),
       ConfigItem(
         key: 'api_key',

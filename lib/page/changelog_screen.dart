@@ -1,5 +1,4 @@
 import 'package:paperfold/l10n/generated/L10n.dart';
-import 'package:paperfold/utils/get_current_language_code.dart';
 import 'package:paperfold/widgets/markdown/styled_markdown.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -55,30 +54,31 @@ class _ChangelogScreenState extends State<ChangelogScreen> {
     }
   }
 
+  /// Tidies one version's section for display.
+  ///
+  /// It used to do two more things, both of them inherited from the upstream
+  /// project's own changelog and both wrong for this one.
+  ///
+  /// It kept only lines beginning with a bullet and threw the rest away, so an
+  /// entry long enough to wrap lost every line after its first and was shown
+  /// cut off in the middle of a sentence. And it took the first half of the
+  /// list for English and the second half for Chinese, because upstream wrote
+  /// each entry twice, one language after the other. Paperfold's changelog is
+  /// written once, so halving it simply hid half the release.
   String processChangelogContent(String content) {
-    bool isChinese() => getCurrentLanguageCode().startsWith('zh');
-
-    final lines = content.split('\n');
-    var processedLines = <String>[];
-
-    for (int i = 0; i < lines.length; i++) {
-      final line = lines[i].trim();
-      if (line.isEmpty) {
-        continue;
-      }
-
-      if (line.startsWith('- ') || line.startsWith('* ')) {
-        processedLines.add(line);
-        continue;
+    final out = <String>[];
+    for (final raw in content.split('\n')) {
+      final line = raw.trim();
+      if (line.isEmpty || line.startsWith('#')) continue;
+      final isBullet = line.startsWith('- ') || line.startsWith('* ');
+      if (isBullet || out.isEmpty) {
+        out.add(line);
+      } else {
+        // A continuation of the line above, folded back onto it.
+        out[out.length - 1] = '${out.last} $line';
       }
     }
-    if (isChinese()) {
-      processedLines = processedLines.sublist(processedLines.length ~/ 2);
-    } else {
-      processedLines = processedLines.sublist(0, processedLines.length ~/ 2);
-    }
-
-    return processedLines.join('\n');
+    return out.join('\n');
   }
 
   String _extractVersionChangelog(String fullChangelog) {

@@ -708,7 +708,9 @@ class Sync extends _$Sync {
                 if (backups.isEmpty)
                   Text(
                     L10n.of(context).noBackupsAvailable,
-                    style: const TextStyle(color: Colors.grey),
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
                   )
                 else
                   SizedBox(

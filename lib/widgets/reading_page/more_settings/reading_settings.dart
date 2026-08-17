@@ -7,7 +7,6 @@ import 'package:paperfold/enums/code_highlight_theme.dart';
 import 'package:paperfold/l10n/generated/L10n.dart';
 import 'package:paperfold/models/reading_info.dart';
 import 'package:paperfold/page/reading_page.dart';
-import 'package:paperfold/page/settings_page/subpage/fonts.dart';
 import 'package:paperfold/widgets/common/anx_segmented_button.dart';
 import 'package:flutter/material.dart';
 import 'package:icons_plus/icons_plus.dart';
@@ -90,43 +89,6 @@ class _ReadingMoreSettingsState extends State<ReadingMoreSettings> {
       );
     }
 
-    // Widget bionicReading() {
-    //   return StatefulBuilder(
-    //     builder: (context, setState) => ListTile(
-    //       contentPadding: EdgeInsets.zero,
-    //       title: Text(L10n.of(context).readingPageBionicReading,
-    //           style: Theme.of(context).textTheme.titleMedium),
-    //       subtitle: GestureDetector(
-    //         child: Text(
-    //           textAlign: TextAlign.start,
-    //           L10n.of(context).readingPageBionicReadingTips,
-    //           style: const TextStyle(
-    //             fontSize: 12,
-    //             color: Color(0xFF666666),
-    //             decoration: TextDecoration.underline,
-    //           ),
-    //         ),
-    //         onTap: () {
-    //           launchUrl(
-    //             Uri.parse('https://github.com/Anxcye/anx-reader/issues/49'),
-    //             mode: LaunchMode.externalApplication,
-    //           );
-    //         },
-    //       ),
-    //       trailing: Switch(
-    //         value: Prefs().readingRules.bionicReading,
-    //         onChanged: (value) {
-    //           setState(() {
-    //             Prefs().readingRules =
-    //                 Prefs().readingRules.copyWith(bionicReading: value);
-    //             epubPlayerKey.currentState?
-    //                 .changeReadingRules(Prefs().readingRules);
-    //           });
-    //         },
-    //       ),
-    //     ),
-    //   );
-    // }
 
     Widget columnCount() {
       return StatefulBuilder(
@@ -197,7 +159,7 @@ class _ReadingMoreSettingsState extends State<ReadingMoreSettings> {
               Text(
                 L10n.of(context).readingPageColumnThresholdTip,
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Colors.grey,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
               ),
             Slider(
@@ -285,7 +247,9 @@ class _ReadingMoreSettingsState extends State<ReadingMoreSettings> {
                   style: Theme.of(context)
                       .textTheme
                       .bodySmall
-                      ?.copyWith(color: Colors.grey)),
+                      ?.copyWith(
+                          color:
+                              Theme.of(context).colorScheme.onSurfaceVariant)),
             Row(
               children: [
                 Expanded(
@@ -534,23 +498,6 @@ class _ReadingMoreSettingsState extends State<ReadingMoreSettings> {
       );
     }
 
-    Widget downloadFonts() {
-      return ListTile(
-        contentPadding: EdgeInsets.zero,
-        title: Text(L10n.of(context).downloadFonts),
-        leading: const Icon(Icons.font_download_outlined),
-        trailing: const Icon(Icons.arrow_forward_ios),
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => const FontsSettingPage(),
-            ),
-          );
-        },
-      );
-    }
-
     Widget codeHighlightTheme() {
       return StatefulBuilder(
         builder: (context, setState) {
@@ -691,7 +638,6 @@ class _ReadingMoreSettingsState extends State<ReadingMoreSettings> {
       padding: const EdgeInsets.all(18.0),
       child: Column(
         children: [
-          downloadFonts(),
           const Divider(height: 20),
           writingMode(),
           translationMode(),
@@ -703,7 +649,6 @@ class _ReadingMoreSettingsState extends State<ReadingMoreSettings> {
           const Divider(height: 15),
           readingInfo(),
           // const Divider(height: 8),
-          // bionicReading(),
         ],
       ),
     );

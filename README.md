@@ -1,6 +1,6 @@
 # Paperfold
 
-Paperfold is an e-book reader and note app. A reading journal is planned but is not built yet.
+Paperfold is an e-book reader, note app and reading journal.
 
 ## Fork notice
 
@@ -25,14 +25,16 @@ Paperfold is a fork of [Anx Reader](https://github.com/anxcye/anx-reader) by Anx
 - Paperfold does not include text-to-speech.
 - Paperfold does not include in-app purchases.
 
-### Planned, not built
+### Built, still being finished
 
-- A reading journal with reviews, dot pages, shelves, and a reading challenge.
-- A real page curl.
-- OPDS catalogs.
-- The Paperfold visual design.
+- The Paperfold visual design: the token set, the theme, the ornaments, and a
+  library that stands its books on a bookcase as three-dimensional objects.
+- A reading journal: reviews, dot pages, shelves, a reading challenge, and a
+  month tracker.
+- A real page curl, drawn by a fragment shader, in the reader and the opening.
+- OPDS catalogs, reachable from the library's add-books button.
 
-These items do not work in the current code.
+These work, and the visual world is still under active change.
 
 ## Build
 
@@ -58,3 +60,5 @@ Paperfold includes these third-party works:
 
 - [`assets/foliate-js`](./assets/foliate-js) is the reader engine. It comes from [johnfactotum/foliate-js](https://github.com/johnfactotum/foliate-js) and uses the MIT License.
 - [Adobe Source Han Serif](https://github.com/adobe-fonts/source-han-serif) uses the SIL Open Font License 1.1. See [`assets/fonts/OFL.txt`](./assets/fonts/OFL.txt).
+- [Philosopher](https://fonts.google.com/specimen/Philosopher) is the display and body face. It uses the SIL Open Font License 1.1. See [`assets/fonts/OFL-Philosopher.txt`](./assets/fonts/OFL-Philosopher.txt).
+- [Source Sans 3](https://github.com/adobe-fonts/source-sans) is the label face. It uses the SIL Open Font License 1.1. See [`assets/fonts/OFL-SourceSans3.txt`](./assets/fonts/OFL-SourceSans3.txt).

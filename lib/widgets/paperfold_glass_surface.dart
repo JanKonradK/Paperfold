@@ -17,7 +17,23 @@ class PaperfoldGlassStyle {
     required this.edge,
   });
 
+  /// Resolving a style is a twenty-four step binary search, and each step
+  /// blends two colours and takes two luminances. That is nothing once and a
+  /// great deal on every frame: the shelf rebuilds its chrome as the reader
+  /// runs through a row, and the answer depends on the scheme alone.
+  static ColorScheme? _lastScheme;
+  static PaperfoldGlassStyle? _lastStyle;
+
   factory PaperfoldGlassStyle.fromScheme(ColorScheme scheme) {
+    final cached = _lastStyle;
+    if (cached != null && _lastScheme == scheme) return cached;
+    final style = PaperfoldGlassStyle._resolve(scheme);
+    _lastScheme = scheme;
+    _lastStyle = style;
+    return style;
+  }
+
+  factory PaperfoldGlassStyle._resolve(ColorScheme scheme) {
     final tintBase = scheme.surfaceContainerLow;
     final candidates = <Color>[
       scheme.onSurface,

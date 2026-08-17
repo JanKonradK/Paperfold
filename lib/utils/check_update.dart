@@ -26,7 +26,30 @@ Future<void> checkUpdate(bool manualCheck) async {
   BuildContext context = navigatorKey.currentContext!;
   Response response;
   try {
-    response = await Dio().get('https://api.anx.anxcye.com/api/info/latest');
+    // GitHub's own releases endpoint, so the check needs no service of its
+    // own. It used to ask the upstream project's API, which answers with the
+    // upstream project's version: Paperfold told its readers to update to a
+    // different application.
+    response = await Dio().get(
+      'https://api.github.com/repos/JanKonradK/Paperfold/releases/latest',
+    );
+  } on DioException catch (e) {
+    // GitHub answers 404 while a repository has no published release. That is
+    // not a failure to check: it is a complete answer, and it means there is
+    // nothing newer than what the reader is holding. Reported as an error, it
+    // told everybody the update check was broken until the first release.
+    if (e.response?.statusCode == 404) {
+      if (manualCheck) {
+        AnxToast.show(L10n.of(context).commonNoNewVersion);
+      }
+      AnxLog.info('Update: no release published yet');
+      return;
+    }
+    if (manualCheck) {
+      AnxToast.show(L10n.of(context).commonFailed);
+    }
+    AnxLog.severe('Update: Failed to check for updates $e');
+    return;
   } catch (e) {
     if (manualCheck) {
       AnxToast.show(L10n.of(context).commonFailed);
@@ -34,7 +57,8 @@ Future<void> checkUpdate(bool manualCheck) async {
     AnxLog.severe('Update: Failed to check for updates $e');
     return;
   }
-  String newVersion = response.data['version'].toString().substring(1);
+  final tag = response.data['tag_name'].toString();
+  String newVersion = tag.startsWith('v') ? tag.substring(1) : tag;
   String currentVersion = (await getAppVersion()).split('+').first;
   AnxLog.info('Update: new version $newVersion');
 
@@ -85,17 +109,10 @@ $body'''),
               onPressed: () {
                 launchUrl(
                     Uri.parse(
-                        'https://github.com/Anxcye/anx-reader/releases/latest'),
+                        'https://github.com/JanKonradK/Paperfold/releases/latest'),
                     mode: LaunchMode.externalApplication);
               },
               child: Text(L10n.of(context).updateViaGithub),
-            ),
-            TextButton(
-              onPressed: () {
-                launchUrl(Uri.parse('https://anx.anxcye.com/download'),
-                    mode: LaunchMode.externalApplication);
-              },
-              child: Text(L10n.of(context).updateViaOfficialWebsite),
             ),
           ],
         );

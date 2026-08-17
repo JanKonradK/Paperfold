@@ -9,7 +9,7 @@ import 'package:paperfold/models/book.dart';
 import 'package:paperfold/page/home_page/shelf_home_page.dart';
 import 'package:paperfold/providers/book_list.dart';
 import 'package:paperfold/providers/shelf_home.dart';
-import 'package:paperfold/widgets/bookshelf/book_spine.dart';
+import 'package:paperfold/widgets/bookshelf/bookcase.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class _ShelfController extends ShelfHomeController {
@@ -55,12 +55,17 @@ final _data = ShelfHomeData(
   booksToBuy: const [],
 );
 
+/// One pumped page, and only one.
+///
+/// `Sync` is a Riverpod notifier and a hand-rolled singleton at once, so its
+/// internal element reference can only be set by a single ProviderContainer per
+/// isolate. A second `pumpWidget` of this page in this file throws
+/// LateInitializationError out of a widget that has nothing to do with the
+/// shelf. See the note at the top of shelf_home_fixtures.dart.
 void main() {
-  testWidgets('shelf contains upright books and supports uniform mode',
-      (tester) async {
+  testWidgets('the library stands its books on one bookcase', (tester) async {
     SharedPreferences.setMockInitialValues(<String, Object>{});
     await Prefs().initPrefs();
-    expect(Prefs().shelfUniformSpines, isFalse);
 
     await tester.binding.setSurfaceSize(const Size(412, 915));
     addTearDown(() => tester.binding.setSurfaceSize(null));
@@ -85,39 +90,30 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    final viewport = find.byKey(const ValueKey('shelf-spine-viewport-0'));
-    final spines = find.descendant(
-      of: viewport,
-      matching: find.byType(BookSpine),
-    );
-    final viewportRect = tester.getRect(viewport);
+    // One piece of furniture, not five strips stacked down a scroll view.
+    final bookcase = find.byType(Bookcase);
+    expect(bookcase, findsOneWidget);
 
-    expect(spines, findsNWidgets(4));
-    expect(tester.widget<ListView>(viewport).clipBehavior, Clip.hardEdge);
-    for (var index = 0; index < 4; index++) {
-      final spine = tester.widget<BookSpine>(spines.at(index));
-      final rect = tester.getRect(spines.at(index));
-      expect(spine.uniform, isFalse);
-      expect(rect.left, greaterThanOrEqualTo(viewportRect.left + 0.01));
-      expect(rect.right, lessThanOrEqualTo(viewportRect.right - 0.01));
-      expect(rect.height, greaterThan(rect.width * 3));
-    }
-
-    Prefs().shelfUniformSpines = true;
-    await tester.pump();
-
-    final uniformSizes = [
-      for (var id = 1; id <= 4; id++)
-        tester.getSize(find.byKey(ValueKey('book-spine-surface-book-$id'))),
-    ];
+    final shelves = tester.widget<Bookcase>(bookcase).shelves;
+    expect(shelves.length, 5);
+    // The books arrive on the shelf they belong to, in the order given.
     expect(
-      uniformSizes.map((size) => size.width).toSet(),
-      {BookSpine.uniformWidth},
+      shelves.first.books.map((book) => book.title),
+      [
+        'The Left Hand of Darkness',
+        'The Tombs of Atuan',
+        'The Farthest Shore',
+        'Tehanu',
+      ],
     );
-    expect(
-      uniformSizes.map((size) => size.height).toSet(),
-      {BookSpine.uniformHeight},
-    );
+
+    // The bookcase fills the tab rather than sitting in a fixed-height band,
+    // which is what let the old strips clip their own books at a raised system
+    // font size.
+    final rect = tester.getRect(bookcase);
+    expect(rect.width, greaterThan(300));
+    expect(rect.height, greaterThan(400));
+
     expect(tester.takeException(), isNull);
   });
 }

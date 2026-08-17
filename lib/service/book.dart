@@ -25,7 +25,7 @@ import 'package:paperfold/utils/log/common.dart';
 import 'package:paperfold/utils/toast/common.dart';
 import 'package:paperfold/utils/webView/gererate_url.dart';
 import 'package:paperfold/utils/webView/webview_console_message.dart';
-import 'package:flutter/cupertino.dart';
+import 'package:paperfold/widgets/bookshelf/book_binding_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -194,10 +194,9 @@ void _showImportDialog(
             padding: const EdgeInsets.only(left: 28, top: 2),
             child: Text(
               L10n.of(context).duplicateOf(duplicateTitle),
-              style: const TextStyle(
-                fontSize: 12,
-                color: Colors.grey,
-              ),
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
             ),
           ),
         if (errorMessage != null)
@@ -225,6 +224,12 @@ void _showImportDialog(
         List<String> errorFiles = [];
         bool finished = false;
         Map<String, String> errorMessages = {};
+
+        // The books that arrived in this run. They are asked about after the
+        // import dialog has gone, not over the top of it: two modal surfaces at
+        // once is one surface too many, and the reader has not finished reading
+        // the import report yet.
+        List<Book> arrived = const [];
 
         return StatefulBuilder(builder: (context, setState) {
           return AlertDialog(
@@ -347,6 +352,15 @@ void _showImportDialog(
                     onPressed: () async {
                       if (finished) {
                         Navigator.of(context).pop('dialog');
+                        if (arrived.isEmpty) return;
+                        final host = navigatorKey.currentContext;
+                        if (host == null || !host.mounted) return;
+                        // How a book is bound decides the shape of the object
+                        // that stands on the shelf, and the metadata is often
+                        // silent about it. Asked once per book, here, while the
+                        // reader still has the book in mind.
+                        await askBookBindings(host, arrived);
+                        ref.read(bookListProvider.notifier).refresh();
                         return;
                       }
 
@@ -354,6 +368,14 @@ void _showImportDialog(
                       if (!skipDuplicates) {
                         filesToImport.addAll(duplicateFiles);
                       }
+
+                      // Which books the library already had, so the ones that
+                      // arrive can be told apart afterwards and asked about.
+                      // Nothing in the import chain hands the new row back.
+                      final before = {
+                        for (final book in await bookDao.selectAllBooks())
+                          book.id,
+                      };
 
                       for (var file in filesToImport) {
                         AnxToast.show(path.basename(file.path));
@@ -390,6 +412,12 @@ void _showImportDialog(
                       ref.read(syncProvider.notifier).syncData(
                           SyncDirection.upload, ref,
                           trigger: SyncTrigger.auto);
+
+                      arrived = [
+                        for (final book in await bookDao.selectAllBooks())
+                          if (!before.contains(book.id) && !book.isDeleted)
+                            book,
+                      ];
                     },
                     child: Text(finished
                         ? L10n.of(context).commonOk
@@ -447,14 +475,23 @@ Future<void> pushToReadingPage(
 
   await Navigator.push(
     navigatorKey.currentContext!,
-    CupertinoPageRoute(
-      builder: (c) => ReadingPage(
+    // A fade, not a slide. The shelf has already raised the page the book
+    // opened onto and this route draws the same page underneath, so there is
+    // nothing for a slide to reveal: it only added a third distinct screen
+    // between the tap and the first line of text. Faded, the handover from one
+    // route to the other cannot be seen at all.
+    PageRouteBuilder<void>(
+      transitionDuration: const Duration(milliseconds: 220),
+      reverseTransitionDuration: const Duration(milliseconds: 220),
+      pageBuilder: (context, animation, secondaryAnimation) => ReadingPage(
         key: readingPageKey,
         book: book,
         cfi: cfi,
         initialThemes: initialThemes,
         heroTag: heroTag,
       ),
+      transitionsBuilder: (context, animation, secondaryAnimation, child) =>
+          FadeTransition(opacity: animation, child: child),
     ),
   ).then((_) {
     AnxLog.info('ReadingPage: poped: ${book.title}');

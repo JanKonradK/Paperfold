@@ -60,7 +60,9 @@ class _TranslateSettingState extends State<TranslateSetting> {
                               L10n.of(context).underlineTranslationTip,
                               style: TextStyle(
                                 fontSize: 12,
-                                color: Colors.grey[600],
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .onSurfaceVariant,
                               ),
                             ),
                           ),
@@ -101,10 +103,14 @@ class _TranslateSettingState extends State<TranslateSetting> {
                           Expanded(
                             child: Text(
                               L10n.of(context).fullTextTranslationTip,
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.grey[600],
-                              ),
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodySmall
+                                  ?.copyWith(
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onSurfaceVariant,
+                                  ),
                             ),
                           ),
                         ],

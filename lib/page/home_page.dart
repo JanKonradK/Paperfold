@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:paperfold/dao/database.dart';
@@ -7,7 +8,7 @@ import 'package:paperfold/l10n/generated/L10n.dart';
 import 'package:paperfold/service/initialization_check.dart';
 import 'package:paperfold/page/home_page/notes_page.dart';
 import 'package:paperfold/page/home_page/shelf_home_page.dart';
-import 'package:paperfold/page/home_page/settings_page.dart';
+import 'package:paperfold/page/settings_page/settings_home_page.dart';
 import 'package:paperfold/page/home_page/statistics_page.dart';
 import 'package:paperfold/service/receive_file/receive_share.dart';
 import 'package:paperfold/service/vibration_service.dart';
@@ -59,10 +60,51 @@ class _HomePageState extends ConsumerState<HomePage> {
   int _destination = 1;
   List<int> _destinationHistory = [1];
 
+  /// The Library's claim on the back gesture, so a held book goes back on its
+  /// shelf before back starts walking the tab history.
+  final LibraryBackHandle _libraryBack = LibraryBackHandle();
+
+  /// True for the few seconds after the reader has been asked whether they
+  /// meant to leave, during which one more back closes the application.
+  ///
+  /// Back on the last screen used to close Paperfold outright, which on a
+  /// phone is one careless thumb away from losing the place you were at. The
+  /// press before it now only says so.
+  bool _leaving = false;
+  Timer? _leavingTimer;
+
+  static const Duration _leavingWindow = Duration(seconds: 3);
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) => initAnx());
+  }
+
+  @override
+  void dispose() {
+    _leavingTimer?.cancel();
+    _libraryBack.dispose();
+    super.dispose();
+  }
+
+  /// Says that one more back will leave, and forgets it again shortly.
+  void _armLeaving(BuildContext context) {
+    if (_leaving) return;
+    setState(() => _leaving = true);
+    _leavingTimer?.cancel();
+    _leavingTimer = Timer(_leavingWindow, () {
+      if (mounted) setState(() => _leaving = false);
+    });
+    final messenger = ScaffoldMessenger.maybeOf(context);
+    messenger
+      ?..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(L10n.of(context).appPressBackAgainToLeave),
+          duration: _leavingWindow,
+        ),
+      );
   }
 
   Future<void> _checkWindowsWebview() async {
@@ -166,7 +208,7 @@ class _HomePageState extends ConsumerState<HomePage> {
     ];
     final pages = [
       const _JournalDestination(),
-      const ShelfHomePage(),
+      ShelfHomePage(backHandle: _libraryBack),
       const _MorePlaceholder(),
     ];
 
@@ -199,9 +241,28 @@ class _HomePageState extends ConsumerState<HomePage> {
       children: pages,
     );
 
-    return PopScope<Object?>(
-      canPop: _destinationHistory.length <= 1,
-      onPopInvokedWithResult: handleBack,
+    // Rebuilt whenever the Library takes or releases its claim, because
+    // `canPop` is read at build time and a book leaves the shelf without this
+    // page rebuilding for any other reason.
+    return ListenableBuilder(
+      listenable: _libraryBack,
+      builder: (context, child) => PopScope<Object?>(
+        // Only the armed second press leaves. Everything else is ours to
+        // answer, so that the last back on the shelf asks before it closes the
+        // application rather than closing it.
+        canPop: _leaving,
+        onPopInvokedWithResult: (didPop, result) {
+          if (didPop) return;
+          // The Library first. Only one of the three may act on one press.
+          if (_libraryBack.takeBack()) return;
+          if (_destinationHistory.length > 1) {
+            handleBack(didPop, result);
+            return;
+          }
+          _armLeaving(context);
+        },
+        child: child!,
+      ),
       child: LayoutBuilder(
         builder: (context, constraints) {
           if (constraints.maxWidth > 600) {
@@ -260,7 +321,11 @@ class _HomePageState extends ConsumerState<HomePage> {
           }
 
           return Scaffold(
-            extendBody: true,
+            // The bar gets its own strip of the screen and the page stops
+            // above it. Under `extendBody` the shelf ran on behind the glass,
+            // so a book title, a shelf name and the three destinations were
+            // all printed over one another at the foot of the Library.
+            extendBody: false,
             body: pageStack,
             bottomNavigationBar: _SlidingNavigationBar(
               selectedIndex: _destination,
@@ -309,8 +374,12 @@ class _SlidingNavigationBar extends StatelessWidget {
       child: SizedBox(
         height: 56,
         child: PaperfoldGlassSurface(
+          // Nothing passes behind this bar any more: `extendBody` is off, so
+          // the page stops above it and the only thing left to blur is the
+          // scaffold's flat ground. The filter cost a full-width readback on
+          // every frame and blurred a solid colour into the same colour.
           borderRadius: const BorderRadius.all(Radius.circular(28)),
-          blurSigma: 18,
+          allowBlur: false,
           child: Padding(
             padding: const EdgeInsets.all(4),
             child: LayoutBuilder(
@@ -658,18 +727,21 @@ class _MorePlaceholder extends StatelessWidget {
   void _openRoute(BuildContext context, _MoreRoute route) {
     final l10n = L10n.of(context);
 
-    final (String title, Widget page) = switch (route) {
-      _MoreRoute.highlights => (l10n.tileNotesTotalTitle, const NotesPage()),
-      _MoreRoute.statistics => (l10n.navBarStatistics, const StatisticPage()),
-      _MoreRoute.settings => (l10n.navBarSettings, const SettingsPage()),
+    // Settings brings its own scaffold, because its wide layout puts the
+    // category list beside a detail pane and both belong under the one title.
+    final Widget page = switch (route) {
+      _MoreRoute.highlights => Scaffold(
+          appBar: AppBar(title: Text(l10n.tileNotesTotalTitle)),
+          body: const NotesPage(),
+        ),
+      _MoreRoute.statistics => Scaffold(
+          appBar: AppBar(title: Text(l10n.navBarStatistics)),
+          body: const StatisticPage(),
+        ),
+      _MoreRoute.settings => const SettingsHomePage(),
     };
     Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => Scaffold(
-          appBar: AppBar(title: Text(title)),
-          body: page,
-        ),
-      ),
+      MaterialPageRoute<void>(builder: (context) => page),
     );
   }
 
@@ -695,12 +767,11 @@ class _MorePlaceholder extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(title: Text(l10n.navMore)),
       body: ListView(
-        // The floating glass bar overlays the content, so the last row needs
-        // room to clear it as well as the system gesture inset.
-        padding: EdgeInsets.only(
-          top: 8,
-          bottom: 96 + MediaQuery.viewPaddingOf(context).bottom,
-        ),
+        // The bar no longer overlays anything: `extendBody` is off, so the
+        // scaffold already stops this list above the bar and above the system
+        // inset. Clearing them a second time left about 130 logical pixels of
+        // nothing under the last row.
+        padding: const EdgeInsets.only(top: 8, bottom: 8),
         children: [
           for (final (route, icon, label) in entries)
             ListTile(

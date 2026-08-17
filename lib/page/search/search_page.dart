@@ -69,7 +69,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
       forceMaterialTransparency: true,
       titleSpacing: 0,
       title: Padding(
-        padding: const EdgeInsets.only(right: 8.0),
+        padding: const EdgeInsetsDirectional.only(end: 8.0),
         child: TextField(
           controller: _controller,
           focusNode: _focusNode,

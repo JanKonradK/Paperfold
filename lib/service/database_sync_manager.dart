@@ -331,8 +331,10 @@ class DatabaseSyncManager {
             Text(content),
             const SizedBox(height: 12),
             Text(
-              'Details: ${result.message}',
-              style: const TextStyle(fontSize: 12, color: Colors.grey),
+              result.message,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
             ),
           ],
         ),

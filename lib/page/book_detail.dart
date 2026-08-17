@@ -3,6 +3,8 @@ import 'dart:ui';
 
 import 'package:paperfold/dao/book.dart';
 import 'package:paperfold/dao/reading_time.dart';
+import 'package:paperfold/config/shared_preference_provider.dart';
+import 'package:paperfold/enums/book_binding.dart';
 import 'package:paperfold/enums/hint_key.dart';
 import 'package:paperfold/enums/sync_direction.dart';
 import 'package:paperfold/enums/sync_trigger.dart';
@@ -14,11 +16,15 @@ import 'package:paperfold/providers/sync.dart';
 import 'package:paperfold/providers/book_list.dart';
 import 'package:paperfold/providers/tags.dart';
 import 'package:paperfold/service/book.dart';
+import 'package:paperfold/service/book_binding.dart';
+import 'package:paperfold/service/book_binding_settings.dart';
 import 'package:paperfold/utils/date/convert_seconds.dart';
 import 'package:paperfold/utils/get_path/get_base_path.dart';
 import 'package:paperfold/utils/log/common.dart';
 import 'package:paperfold/utils/color/hash_color.dart';
+import 'package:paperfold/widgets/book_model/book_model.dart';
 import 'package:paperfold/widgets/bookshelf/book_cover.dart';
+import 'package:paperfold/widgets/common/anx_segmented_button.dart';
 import 'package:paperfold/widgets/common/async_skeleton_wrapper.dart';
 import 'package:paperfold/widgets/common/container/filled_container.dart';
 import 'package:paperfold/widgets/common/color_picker_sheet.dart';
@@ -46,6 +52,25 @@ class _BookDetailState extends ConsumerState<BookDetail> {
   bool _isCollapsed = false;
   final TextEditingController _newTagController = TextEditingController();
   Color? _pendingTagColor;
+
+  /// The tags this book carries, when they have already loaded.
+  ///
+  /// The binding reads them, because "manga" is far more often a tag than a
+  /// word in a description. A tag that has not arrived yet only means the
+  /// first frame guesses from the description alone.
+  List<String> get _tagNames {
+    final state = ref.watch(bookTagEditorProvider(widget.book.id)).valueOrNull;
+    if (state == null) return const [];
+    return [
+      for (final tag in state.tags)
+        if (state.isAttached(tag.id)) tag.name,
+    ];
+  }
+
+  BookBindingVerdict get _verdict =>
+      widget.book.bindingVerdict(tags: _tagNames);
+
+  BookBinding get _binding => _verdict.binding;
 
   @override
   void initState() {
@@ -111,68 +136,106 @@ class _BookDetailState extends ConsumerState<BookDetail> {
       final percent = widget.book.readingPercentage.clamp(0.0, 1.0).toDouble();
 
       final Widget cover = GestureDetector(
-                onTap: () async {
-                  if (!isEditing) {
-                    return;
-                  }
+        onTap: () async {
+          if (!isEditing) {
+            return;
+          }
 
-                  FilePickerResult? result =
-                      await FilePicker.platform.pickFiles(
-                    type: FileType.image,
-                    allowMultiple: false,
-                  );
+          FilePickerResult? result = await FilePicker.platform.pickFiles(
+            type: FileType.image,
+            allowMultiple: false,
+          );
 
-                  if (result == null) {
-                    return;
-                  }
+          if (result == null) {
+            return;
+          }
 
-                  File image = File(result.files.single.path!);
+          File image = File(result.files.single.path!);
 
-                  AnxLog.info('BookDetail: Image path: ${image.path}');
-                  // Delete the existing cover image file
-                  final File oldCoverImageFile =
-                      File(widget.book.coverFullPath);
-                  if (await oldCoverImageFile.exists()) {
-                    await oldCoverImageFile.delete();
-                  }
+          AnxLog.info('BookDetail: Image path: ${image.path}');
+          // Delete the existing cover image file
+          final File oldCoverImageFile = File(widget.book.coverFullPath);
+          if (await oldCoverImageFile.exists()) {
+            await oldCoverImageFile.delete();
+          }
 
-                  String oldName = widget.book.coverPath
-                      .split('-')
-                      .sublist(0, widget.book.coverPath.split('-').length - 1)
-                      .join('');
-                  if (!oldName.startsWith('cover/')) {
-                    oldName = 'cover/$oldName';
-                  }
+          String oldName = widget.book.coverPath
+              .split('-')
+              .sublist(0, widget.book.coverPath.split('-').length - 1)
+              .join('');
+          if (!oldName.startsWith('cover/')) {
+            oldName = 'cover/$oldName';
+          }
 
-                  String newPath =
-                      '$oldName-${DateTime.now().millisecondsSinceEpoch.toString()}.png'
-                          .trim();
+          String newPath =
+              '$oldName-${DateTime.now().millisecondsSinceEpoch.toString()}.png'
+                  .trim();
 
-                  AnxLog.info('BookDetail: New path: $newPath');
-                  String newFullPath = getBasePath(newPath);
+          AnxLog.info('BookDetail: New path: $newPath');
+          String newFullPath = getBasePath(newPath);
 
-                  final File newCoverImageFile = File(newFullPath);
-                  await newCoverImageFile
-                      .writeAsBytes(await image.readAsBytes());
-                  widget.book.coverPath = newPath;
+          final File newCoverImageFile = File(newFullPath);
+          await newCoverImageFile.writeAsBytes(await image.readAsBytes());
+          widget.book.coverPath = newPath;
 
-                  setState(() {
-                    widget.book.coverPath = newPath;
-                    bookDao.updateBook(widget.book);
-                    Sync().syncData(SyncDirection.upload, ref,
-                        trigger: SyncTrigger.auto);
-                    ref.read(bookListProvider.notifier).refresh();
-                  });
-                },
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(10),
-                  child: Hero(
-                    tag: widget.book.coverFullPath,
-                    child:
-                        BookCover(book: widget.book, height: 186, width: 128),
+          setState(() {
+            widget.book.coverPath = newPath;
+            bookDao.updateBook(widget.book);
+            Sync()
+                .syncData(SyncDirection.upload, ref, trigger: SyncTrigger.auto);
+            ref.read(bookListProvider.notifier).refresh();
+          });
+        },
+        child: isEditing
+            // While the details are being edited the cover is a
+            // target for a new picture, so it goes flat and stays
+            // still. A book that swings open under a tap meant to
+            // replace its jacket is a book fighting its reader.
+            ? ClipRRect(
+                borderRadius: BorderRadius.circular(10),
+                child: Hero(
+                  tag: widget.book.coverFullPath,
+                  child: BookCover(
+                    book: widget.book,
+                    height: 186,
+                    width: 128,
                   ),
                 ),
-              );
+              )
+            : Hero(
+                tag: widget.book.coverFullPath,
+                // The library flies a flat cover to this page. A flat
+                // cover is what flies; it lands on the object. Letting
+                // the model itself be the shuttle would morph a
+                // painted book through a rectangle it never fits.
+                flightShuttleBuilder: (_, __, ___, ____, _____) =>
+                    BookCover(book: widget.book, radius: 10),
+                child: SizedBox(
+                  width: 150,
+                  height: 200,
+                  child: BookModel(
+                    key: ValueKey(
+                      'book-model-${widget.book.id}-${_binding.code}',
+                    ),
+                    title: widget.book.title,
+                    author: widget.book.author,
+                    blurb: widget.book.description,
+                    coverPath: File(widget.book.coverFullPath).existsSync()
+                        ? widget.book.coverFullPath
+                        : null,
+                    stableId: 'book-${widget.book.id}',
+                    binding: _binding,
+                    semanticLabel: widget.book.author.trim().isEmpty
+                        ? L10n.of(context)
+                            .bookModelSemanticLabelNoAuthor(widget.book.title)
+                        : L10n.of(context).bookModelSemanticLabel(
+                            widget.book.title,
+                            widget.book.author,
+                          ),
+                  ),
+                ),
+              ),
+      );
 
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -293,7 +356,7 @@ class _BookDetailState extends ConsumerState<BookDetail> {
           Flexible(
             child: HintBanner(
               hintKey: HintKey.editBookDetails,
-              margin: EdgeInsets.only(right: 10),
+              margin: EdgeInsetsDirectional.only(end: 10),
               child: Text(L10n.of(context).bookDetailEditHint),
             ),
           ),
@@ -334,12 +397,91 @@ class _BookDetailState extends ConsumerState<BookDetail> {
       );
     }
 
+    /// How this book is bound, why, and how to overrule it.
+    ///
+    /// The reason is on the page next to the control because the choice is a
+    /// guess made from metadata the reader can edit. A guess that cannot be
+    /// seen cannot be argued with, and this one is wrong often enough to need
+    /// arguing with.
+    Widget buildBindingSection() {
+      final theme = Theme.of(context);
+      final verdict = _verdict;
+      final choice = Prefs().bookBindingChoice(widget.book.id);
+      final explanation = switch (verdict.reason) {
+        BookBindingReason.reader => L10n.of(context).bookBindingWhyReader,
+        BookBindingReason.statedFormat =>
+          L10n.of(context).bookBindingWhyStatedFormat(verdict.evidence ?? ''),
+        BookBindingReason.comicOrLightNovel =>
+          L10n.of(context).bookBindingWhyComic,
+        BookBindingReason.modernPublication =>
+          L10n.of(context).bookBindingWhyModern(verdict.evidence ?? ''),
+        BookBindingReason.earlyPublication =>
+          L10n.of(context).bookBindingWhyEarly(verdict.evidence ?? ''),
+        BookBindingReason.publicDomain =>
+          L10n.of(context).bookBindingWhyPublicDomain,
+        BookBindingReason.libraryDefault =>
+          L10n.of(context).bookBindingWhyDefault,
+      };
+
+      return FilledContainer(
+        width: MediaQuery.of(context).size.width,
+        margin: const EdgeInsets.symmetric(vertical: 10),
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              L10n.of(context).bookBindingSectionTitle,
+              style: theme.textTheme.titleMedium,
+            ),
+            const SizedBox(height: 8),
+            SizedBox(
+              width: double.infinity,
+              child: AnxSegmentedButton<BookBindingChoice>(
+                segments: [
+                  SegmentButtonItem(
+                    value: BookBindingChoice.automatic,
+                    label: L10n.of(context).bookBindingAutomatic,
+                  ),
+                  SegmentButtonItem(
+                    value: BookBindingChoice.hardback,
+                    label: L10n.of(context).bookBindingHardback,
+                  ),
+                  SegmentButtonItem(
+                    value: BookBindingChoice.softback,
+                    label: L10n.of(context).bookBindingSoftback,
+                  ),
+                ],
+                selected: {choice},
+                showSelectedIcon: false,
+                onSelectionChanged: (selection) {
+                  setState(() {
+                    Prefs().setBookBindingChoice(
+                      widget.book.id,
+                      selection.first,
+                    );
+                  });
+                },
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              explanation,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
     Widget buildBookStatistics() {
       Widget buildNthBooksItem() {
-        TextStyle textStyle = const TextStyle(
-          fontSize: 15,
-          color: Colors.grey,
-        );
+        // `Colors.grey` measures 2.49:1 on the light paper ground, under the
+        // 4.5:1 minimum in DESIGN.md. The role measures 7.77:1.
+        final TextStyle textStyle = Theme.of(context).textTheme.bodyMedium!
+            .copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant);
         TextStyle digitStyle = const TextStyle(
           fontSize: 30,
           fontWeight: FontWeight.bold,
@@ -369,12 +511,11 @@ class _BookDetailState extends ConsumerState<BookDetail> {
                     color: Theme.of(context).textTheme.bodyLarge!.color,
                   ),
                 ),
-                const TextSpan(
+                TextSpan(
                   text: ' / 5',
-                  style: TextStyle(
-                    fontSize: 15,
-                    color: Colors.grey,
-                  ),
+                  style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
                 ),
               ],
             ),
@@ -388,10 +529,10 @@ class _BookDetailState extends ConsumerState<BookDetail> {
           fontWeight: FontWeight.bold,
           color: Theme.of(context).textTheme.bodyLarge!.color,
         );
-        TextStyle textStyle = const TextStyle(
-          fontSize: 15,
-          color: Colors.grey,
-        );
+        // `Colors.grey` measures 2.49:1 on the light paper ground, under the
+        // 4.5:1 minimum in DESIGN.md. The role measures 7.77:1.
+        final TextStyle textStyle = Theme.of(context).textTheme.bodyMedium!
+            .copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant);
         return FutureBuilder<int>(
           future: readingTimeDao.selectTotalReadingTimeByBookId(widget.book.id),
           builder: (BuildContext context, AsyncSnapshot<int> snapshot) {
@@ -801,6 +942,7 @@ class _BookDetailState extends ConsumerState<BookDetail> {
                                   children: [
                                     buildBookBaseDetail(
                                         constraints.maxWidth / 2 - 20),
+                                    buildBindingSection(),
                                     buildTagEditor(),
                                     buildEditButton(),
                                     const SizedBox(height: 5),
@@ -823,6 +965,7 @@ class _BookDetailState extends ConsumerState<BookDetail> {
                           return Column(
                             children: [
                               buildBookBaseDetail(constraints.maxWidth),
+                              buildBindingSection(),
                               buildTagEditor(),
                               buildEditButton(),
                               const SizedBox(height: 5),

@@ -1,4 +1,4 @@
-[English](#contributing-to-paperfold) | [简体中文](#让安读更好) | [Русский](#вклад-в-paperfold)
+[English](#contributing-to-paperfold) | [简体中文](#让Paperfold更好) | [Русский](#вклад-в-paperfold)
 
 # Contributing to Paperfold
 
@@ -103,8 +103,8 @@ After re-commenting the code in `book.js`, rerun the application.
 3. **Flutter Integration Testing**:
    After building, rerun the Flutter application to test the integration.
 
-# 让安读更好
-安读是一款开源项目，我们欢迎您的任何贡献，您可以对项目进行翻译、修复 bug、添加新功能，编写文档等。如果您想要贡献，以下内容可能会对您有所帮助。
+# 让Paperfold更好
+Paperfold是一款开源项目，我们欢迎您的任何贡献，您可以对项目进行翻译、修复 bug、添加新功能，编写文档等。如果您想要贡献，以下内容可能会对您有所帮助。
 
 让我们开始吧！
 
@@ -148,7 +148,7 @@ android {
 ```
 
 ### 翻译
-想要让安读支持您的语言，让我们一起来翻译吧！
+想要让Paperfold支持您的语言，让我们一起来翻译吧！
 
 您可以翻译项目文档，也可以翻译应用程序的界面。
 
@@ -159,7 +159,7 @@ android {
 请复制 README.md 为 README_语言代码.md，然后进行翻译，翻译后的文件请放在项目根目录下，然后在 README.md 头部添加链接。
 
 **翻译应用程序界面**
-- 安读使用 [intl](https://pub.dev/packages/intl) 进行多语言支持，您可以在`lib/l10n`目录下找到多语言文件，请复制`app_en.arb`为`app_语言代码.arb`，然后进行翻译。
+- Paperfold使用 [intl](https://pub.dev/packages/intl) 进行多语言支持，您可以在`lib/l10n`目录下找到多语言文件，请复制`app_en.arb`为`app_语言代码.arb`，然后进行翻译。
 - 您可以翻译缺失的字段，或者对现有翻译进行修改。
 - 翻译后的文件请放在`lib/l10n`目录下，然后运行`flutter gen-l10n`生成多语言文件。
 - 在[设置界面](lib/page/settings_page/appearance.dart#L83)添加您的`语言名称`和`代码`。
@@ -168,7 +168,7 @@ android {
 - 提交一个 Pull Request。
 
 ### 修复 bug 和添加新功能
-安读使用 [Flutter_inappwebview](https://pub.dev/packages/flutter_inappwebview) 来渲染电子书，因此项目在渲染电子书的部分使用`JavaScript`编写。
+Paperfold使用 [Flutter_inappwebview](https://pub.dev/packages/flutter_inappwebview) 来渲染电子书，因此项目在渲染电子书的部分使用`JavaScript`编写。
 
 `JavaScript`代码位于`assets/foliate-js`目录下，您可以在这里找到渲染电子书的代码。软件通过 [内置服务器](lib/service/book_player/book_player_server.dart) 加载`assets/foliate-js`目录下的`index.html`文件。
 

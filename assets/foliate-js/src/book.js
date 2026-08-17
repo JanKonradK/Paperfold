@@ -927,21 +927,10 @@ const convertChineseHandler = (mode, doc) => {
   });
 }
 
-const bionicReadingHandler = (doc) => {
-
-  return;
-
-};
-
-
 const readingFeaturesDocHandler = (doc) => {
   if (readingRules.convertChineseMode !== 'none') {
     convertChineseHandler(readingRules.convertChineseMode, doc)
   }
-  if (readingRules.bionicReadingMode) {
-    bionicReadingHandler(doc)
-  }
-
   // handle text indent and center alignment
   if (style.textIndent > 0) {
     const elements = doc.querySelectorAll('p, div, li, blockquote, dd, font')
@@ -1442,7 +1431,17 @@ class Reader {
   }
 
 
+  // Whether Flutter is drawing horizontal turns for us this session.
+  #externalTurn = () => this.view?.renderer?.externalTurn === true
+
+  // Whether a horizontal swipe has been handed over to Flutter and is still
+  // being held. Deltas are sent, never absolute positions: the curl maps
+  // pointer position straight onto how far the page has turned, so a swipe
+  // beginning in the middle of the screen would arrive already half turned.
+  #curlDragging = false
+
   #onTouchStart = ({ detail: e }) => {
+    this.#curlDragging = false;
     if (this.#ignoreTouch()) return;
 
     this.#bookMarkExists = !!document.getElementById('bookmark-icon');
@@ -1458,6 +1457,27 @@ class Reader {
 
   #onTouchMove = ({ detail: e }) => {
     if (this.#ignoreTouch()) return;
+
+    if (this.#externalTurn() && e.touchState.direction === 'horizontal') {
+      const dx = e.touchState.delta.x
+      const y = e.touch?.clientY ?? 0
+      // A tap is not a turn. The renderer commits to an axis after five pixels,
+      // which is the right threshold for deciding *which way* a finger is
+      // going and much too small for deciding that it means to turn a page: a
+      // plain tap wanders about ten pixels, and every one of them was starting
+      // a page turn and then springing it back.
+      if (!this.#curlDragging && Math.abs(dx) < 24) return
+      if (!this.#curlDragging) {
+        this.#curlDragging = true
+        // The sign of the first committed movement chooses the page. Flutter
+        // decides which way that is, because it is the side that knows whether
+        // the interface reads right to left.
+        callFlutter('onPageDragStart', { dx, y })
+      } else {
+        callFlutter('onPageDragUpdate', { dx, y })
+      }
+      return
+    }
 
     const mainView = this.view.shadowRoot.children[0]
     if (e.touchState.direction === 'vertical') {
@@ -1479,6 +1499,18 @@ class Reader {
   }
 
   #onTouchEnd = ({ detail: e }) => {
+    if (this.#curlDragging) {
+      this.#curlDragging = false
+      // `vx` counts leftward as positive and is measured per millisecond.
+      // Flutter wants pixels a second, rightward positive.
+      const velocityX = -(e.touchState?.vx ?? 0) * 1000
+      // How far it travelled goes with it, because Flutter may have declined
+      // to draw this turn and still needs to know whether one was asked for.
+      const dx = e.touchState?.delta?.x ?? 0
+      callFlutter('onPageDragEnd', { velocityX, dx })
+      return
+    }
+
     if (this.#ignoreTouch()) {
       if (e.touchState.direction === 'vertical') {
         const renderer = this.view.renderer;
@@ -1697,6 +1729,13 @@ const setStyle = (oldStyle) => {
   turn.animated ? reader.view.renderer.setAttribute('animated', 'true')
     : reader.view.renderer.removeAttribute('animated')
   reader.view.renderer.setAttribute('turn', turn.style)
+
+  // In curl mode Flutter owns the horizontal swipe: it draws the leaf over a
+  // captured page and drags it with the same finger. The renderer must not also
+  // scroll and snap, or every swipe turns two pages.
+  style.pageTurnStyle === 'curl'
+    ? reader.view.renderer.setAttribute('external-turn', 'true')
+    : reader.view.renderer.removeAttribute('external-turn')
 
   const newStyle = {
     fontSize: style.fontSize,
@@ -1981,8 +2020,6 @@ window.getChapterContentByHref = async (href, opts) =>
   reader.getChapterContentByHref(href, opts)
 
 // window.convertChinese = (mode) => reader.convertChinese(mode)
-
-// window.bionicReading = (enable) => reader.bionicReading(enable)
 
 window.isFootNoteOpen = () => footnoteDialog.getAttribute('style').includes('display: block')
 

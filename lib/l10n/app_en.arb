@@ -5,16 +5,12 @@
   "appVersion": "Version",
   "appLicense": "License",
   "appAuthor": "Author",
-  "appDonate": "Donate",
-  "appDonateTips": "Paperfold is an open-source software that could free to use. If you find it helpful, please donate to support us to continue improving it.",
-  "navBarBookshelf": "Books",
   "navBarStatistics": "Statistics",
   "navBarNotes": "Notes",
   "navBarSettings": "Settings",
   "settingsDarkMode": "Dark",
   "settingsLightMode": "Light",
   "settingsSystemMode": "System",
-  "settingsMoreSettings": "More Settings",
   "settingsAppearance": "Appearance",
   "settingsAppearanceTheme": "Theme",
   "settingsAppearanceThemeColor": "Theme Color",
@@ -22,7 +18,6 @@
   "settingsAppearanceDisplay": "Display",
   "settingsAppearanceLanguage": "Language",
   "settingsAppearanceOpenBookAnimation": "Open Book Animation",
-  "settingsAppearanceBottomNavigatorShow": "Bottom Navigator",
   "settingsAdvancedAutoHideBottomBar": "Auto hide bottom navigation bar",
   "readingContents": "Contents",
   "statisticToPresent": "To Present",
@@ -34,7 +29,6 @@
   "statisticYear": "year",
   "statisticAll": "all",
   "statisticAllTime": "All Time",
-  "statisticThisWeek": "This Week",
   "statisticMonday": "Mn",
   "statisticTuesday": "Tu",
   "statisticWednesday": "Wd",
@@ -46,8 +40,6 @@
   "notesBooks": "{count, plural, zero{No books} one{1 book} other{{count} books} }",
   "notesNotes": "{count, plural, zero{No notes} one{1 note} other{{count} notes} }",
   "notesReadPercentage": "{percentage} read",
-  "readingPageCopy": "Copy",
-  "readingPageExcerpt": "Excerpt",
   "readingPageTheme": "Theme",
   "readingPageCopyChapterContent": "Copy chapter content",
   "readingPageCopiedCharacters": "{count, plural, zero{No content to copy} one{Copied 1 character} other{Copied {count} characters} }",
@@ -68,8 +60,6 @@
   "readingPageDouble": "Double",
   "readingPageColumnThreshold": "Column Threshold",
   "readingPageColumnThresholdTip": "Width threshold for auto switching between single/double columns. When screen width exceeds this value, double-column layout will be used (only works in Auto mode)",
-  "readingPageBionicReading": "Bionic Reading",
-  "readingPageBionicReadingTips": "What is Bionic Reading?",
   "readingPageHeaderSettings": "Header Settings",
   "readingPageFooterSettings": "Footer Settings",
   "readingPageLeft": "Left",
@@ -90,10 +80,6 @@
   "contextMenuSearch": "Search",
   "contextMenuTranslate": "Translate",
   "contextMenuWriteIdea": "Write Idea",
-  "contextMenuDelete": "Delete",
-  "contextMenuConfirm": "Confirm",
-  "contextMenuHighlight": "Highlight",
-  "contextMenuUnderline": "Underline",
   "contextMenuShare": "Share",
   "readingPageFullScreen": "Full Screen",
   "readingPageScreenTimeout": "Screen Timeout",
@@ -105,11 +91,9 @@
   "addNewFont": "Add New Font",
   "followBook": "Follow Book",
   "systemFont": "System Font",
-  "pageTurningStyle": "Page Turning Style",
   "noAnimation": "No Animation",
   "slide": "Slide",
   "scroll": "Scroll",
-  "shelfBookOptionsHint": "open book options",
   "pageTurnFold": "Fold",
   "pageTurnCurl": "Curl",
   "pageTurnNoneDescription": "The next page appears at once.",
@@ -134,7 +118,6 @@
   "readingPageAutoMarkSelectionTips": "Automatically highlight selected text with the last used style",
   "readingPageAutoTranslateSelection": "Auto Translate Selection",
   "translateError": "Translate Error",
-  "readingPageSummaryTheChapter": "Summary the chapter",
   "readingPageAtLeastTwoThemes": "At least 2 themes are required",
   "readingPageAutoAdjustReadingTheme": "Auto Adjust Reading Theme",
   "readingPageAutoAdjustReadingThemeTips": "Use the 1st and 2nd colors in the color table as the day and night modes respectively",
@@ -157,7 +140,6 @@
   "bookDetailNthBook": "{count, plural, one{1st book you've read} =2{2nd book you've read} few{3rd book you've read} other{{count}th book you've read}}",
   "bookDetailLastReadDate": "Last read: ",
   "bookDetailImportDate": "Import date: ",
-  "readingPageReadingInfo": "Reading Info",
   "readingPageReadingInfoChapterTitle": "Chapter Title",
   "readingPageReadingInfoBattery": "Battery",
   "readingPageReadingInfoTime": "Time",
@@ -165,7 +147,6 @@
   "readingPageReadingInfoChapterProgress": "Chapter Progress",
   "readingPageReadingInfoBookProgress": "Book Progress",
   "bookshelfDragging": "Release to import",
-  "bookshelfSort": "Sort",
   "bookshelfTitle": "Title",
   "bookshelfAuthor": "Author",
   "bookshelfLastReadTime": "Last Read Time",
@@ -180,22 +161,17 @@
   "notesPageFilterReset": "Reset",
   "notesPageViewAllNNotes": "{count, plural, zero{No notes qualified} one{View 1 note} other{View all {count} notes}}",
   "commonDelete": "Delete",
-  "commonHoursFull": "{count, plural, one{1 hour} other{{count} hours} }",
   "commonHours": "{count, plural, other{{count} h} }",
   "commonMinutesFull": "{count, plural, one{1 minute} other{{count} minutes} }",
   "commonMinutes": "{count, plural, other{{count} m} }",
   "commonSecondsFull": "{count, plural, one{1 second} other{{count} seconds} }",
-  "commonSeconds": "{count, plural, other{{count} s} }",
   "commonSave": "Save",
   "commonCancel": "Cancel",
   "commonOk": "OK",
   "commonSuccess": "Success",
   "commonFailed": "Failed",
-  "commonUploading": "Uploading",
-  "commonDownloading": "Downloading",
   "commonCopy": "Copy",
   "commonNewVersion": "New version!",
-  "commonUpdate": "Update",
   "commonNoNewVersion": "No new version",
   "commonConfirm": "Confirm",
   "commonCanceled": "Canceled",
@@ -203,18 +179,12 @@
   "commonSaving": "Saving",
   "commonSaved": "Saved",
   "commonTest": "Test",
-  "commonDissolve": "Dissolve",
   "commonEdit": "Edit",
   "commonNthWeek": "{count, plural, one{1st week} =2{2nd week} few{3rd week} other{{count}th week}}",
-  "commonApply": "Apply",
-  "commonReset": "Reset",
   "commonNone": "None",
   "commonError": "Error",
   "commonUndo": "Undo",
   "commonDownload": "Download",
-  "commonPause": "Pause",
-  "commonResume": "Resume",
-  "commonDownloadFailed": "Download Failed",
   "commonRetry": "Retry",
   "commonAscending": "Ascending",
   "commonDescending": "Descending",
@@ -231,12 +201,9 @@
   "storageDataFileDetails": "Data File Details",
   "storageClearCache": "Clear Cache",
   "serviceImportSuccess": "Import success",
-  "serviceImportNBooks": "{count, plural, one{importing 1 book} other{importing {count} books}}",
-  "webdavWebdavNotEnabled": "WebDAV is not enabled",
   "webdavSyncing": "Syncing",
   "webdavSyncingFiles": "Syncing files",
   "webdavSyncComplete": "Sync complete",
-  "webdavConnectionSuccess": "Connection success",
   "webdavConnectionFailed": "Connection failed",
   "webdavSetInfoFirst": "Please set WebDAV information first",
   "webdavChoose_Sources": "Choose Sources",
@@ -268,8 +235,6 @@
   "settingsTranslate": "Translate",
   "settingsTranslateCurrentService": "Current Service",
   "settingsTranslateAuto": "Auto",
-  "settingsTranslateFrom": "From",
-  "settingsTranslateTo": "To",
   "settingsReading": "Reading",
   "settingsBookshelf": "Bookshelf",
   "settingsBookshelfCover": "Book cover",
@@ -301,13 +266,9 @@
   "settingsAdvancedLogClearLog": "Clear Log",
   "settingsAdvancedLogExportLog": "Export Log",
   "settingsAdvancedClearLogWhenStart": "Clear log when start",
-  "settingsAdvancedUseOriginalCoverRatio": "Use original cover aspect ratio",
   "aboutCheckForUpdates": "Check for updates",
   "updateNewVersion": "New version: ",
   "updateCurrentVersion": "Current version: ",
-  "aboutPrivacyPolicy": "Privacy Policy",
-  "aboutTermsOfUse": "Terms of Use",
-  "aboutHelp": "Help Documentation",
   "statisticJustNow": "just now",
   "statisticMinutesAgo": "{count, plural, one{1 minute ago} other{{count} minutes ago}}",
   "statisticHoursAgo": "{count, plural, one{1 hour ago} other{{count} hours ago}}",
@@ -319,18 +280,9 @@
   "statisticDeletedRecordsTips": "Will be deleted when leaving this page",
   "webviewUnsupportedVersion": "Unsupported Webview Version",
   "webviewUnsupportedMessage": "Your Webview version may be not supported. Current version is {version}, required minimum version is {minVersion}, please update your Webview",
-  "webviewUpdate": "How to update",
   "webviewCancel": "I know",
   "webview2NotInstalled": "Failed to find an installed WebView2 Runtime or non-stable Microsoft Edge installation.",
   "webview2Install": "Go to diownload",
-  "downloadFonts": "Download Fonts",
-  "fontNoAvailableFonts": "No available fonts",
-  "fontOfficialWebsite": "Official Website",
-  "fontLicenseAgreement": "License Agreement",
-  "fontDownloaded": "Downloaded",
-  "fontFailedToLoadFonts": "Failed to load fonts",
-  "fontDownloading": "Downloading {progress}",
-  "fontCancelled": "Cancelled {progress}",
   "bookSyncStatusNotSyncing": "Not syncing",
   "bookSyncStatusUploadingTitle": "Uploading",
   "bookSyncStatusDownloadingTitle": "Downloading",
@@ -342,17 +294,10 @@
   "bookSyncStatusBothBooks": "Books on both ends:",
   "bookSyncStatusNonExistentBooks": "Neither local nor remote:",
   "bookSyncStatusNonExistentTip": "Neither local nor remote: This means the book exists on the bookshelf, but the book file is missing on both this device and the remote storage. Syncing from a device that has the file is required.",
-  "bookSyncStatusUploadButton": "Upload",
-  "bookSyncStatusDownloadButton": "Download",
   "bookSyncStatusReleaseSpace": "Release Space",
   "bookSyncStatusReleaseSpaceDialogTitle": "Release Space",
   "bookSyncStatusReleaseSpaceDialogContent": "This will upload the book to the cloud and delete the local file, saving local storage space. You can download it anytime when needed.",
   "bookSyncStatusDoNotShowAgain": "Do not show again",
-  "bookSyncStatusWebdavConnectionFailed": "WebDAV connection failed\n{error}",
-  "bookSyncStatusWebdavPingFailed": "WebDAV connection failed, ping failed",
-  "bookSyncStatusWebdavCheckNetwork": "WebDAV connection failed, check your network",
-  "bookSyncStatusWebdavConnectionError": "WebDAV connection failed, connection error",
-  "bookSyncStatusSyncFailed": "Sync failed",
   "bookSyncStatusBookNotFoundRemote": "Could not find this book in the cloud",
   "bookSyncStatusDownloadingBook": "Downloading {fileName}",
   "bookSyncStatusSpaceReleased": "Space released",
@@ -395,7 +340,6 @@
   "settingsAdvancedEnableJavascriptForEpub": "Enable JavaScript for Epub",
   "readingSettingsMargin": "Margin",
   "updateViaGithub": "Via GitHub",
-  "updateViaOfficialWebsite": "Via Official Website",
   "testingConnection": "Testing connection...",
   "unknownErrorWhenTestingConnection": "Unknown error when testing connection: ",
   "configurationInformationIsIncomplete": "Configuration information is incomplete",
@@ -423,26 +367,20 @@
   "syncUnknownError": "Sync Error",
   "onboardingWelcomeTitle": "Welcome to Paperfold",
   "onboardingWelcomeBody": "A powerful e-book reader with cross-platform sync.",
-  "onboardingAppearanceTitle": "Customize Your Experience",
-  "onboardingAppearanceBody": "Choose your preferred language, theme colors, and e-ink mode for the best reading experience. You can configure more display options in Settings → Appearance.",
   "onboardingSyncTitle": "Cross-Platform Sync",
   "onboardingSyncBody": "Sync your books, reading progress, and notes across all your devices using WebDAV.",
   "onboardingSyncTip": "Set up sync in Settings → Sync to get started",
   "onboardingCompleteTitle": "Ready to Read!",
   "onboardingCompleteBody": "You're all set! Start adding books to your library and enjoy a premium reading experience.",
-  "onboardingNext": "Next",
-  "onboardingBack": "Back",
   "onboardingDone": "Get Started",
   "onboardingSkip": "Skip",
   "customizeYourExperience": "Customize your experience",
   "moreDisplayOptionsTip": "More display options available in Settings → Appearance",
   "optimizedForEInkDisplays": "Optimized for e-ink displays",
-  "commonUpdated": "Updated!",
   "updateFromVersion": "Updated from {version}",
   "welcomeToVersion": "Welcome to {version}",
   "whatsNew": "What's New",
   "databaseBackupManagement": "Database Backup Management",
-  "restoreDatabase": "Restore Database",
   "restoreBackup": "Restore Backup",
   "customCssEnabled": "Enable Custom CSS",
   "cssValidationUnmatchedBraces": "Unmatched braces",
@@ -494,8 +432,6 @@
   "translationMode": "Translation Mode",
   "translationOnly": "Translation Only",
   "bilingual": "Bilingual",
-  "allowMixing": "Allow Mixing",
-  "enableMixTip": "Enable to mix with other audio applications",
   "more": "More",
   "textAlignment": "Text Alignment",
   "textAlignmentAuto": "Auto",
@@ -516,7 +452,6 @@
   "viewChangelog": "View changelog",
   "viewOnboarding": "View onboarding",
   "close": "Close",
-  "dragAndDropToCreateFolderHint": "Long press and drag to another book to create a folder",
   "statisticsSwipeToDeleteHint": "Swipe left to delete reading records. You can undo within this page, but changes are permanent once you leave.",
   "bookNotesOperationsHint": "Long press to multi-select for delete or export, swipe left to edit or share notes",
   "searchBooksOrNotes": "Search books or notes",
@@ -611,7 +546,6 @@
   "bookDetailEditHint": "Tap Edit to change cover, title, tags, and more",
   "tagsSectionTitle": "Tags",
   "tagsEmptyHint": "No tags",
-  "noTagFilter": "Untagged",
   "tagsEditHint": "Press the edit button to add tags",
   "tagNewPlaceholder": "New tag",
   "tagAddButton": "Add",
@@ -622,7 +556,6 @@
   "bookshelfFilterFinished": "Finished",
   "bookshelfFilterReading": "Reading",
   "bookshelfFilterNotStarted": "Not started",
-  "bookshelfFilterTagsTooltip": "Filter tags",
   "settingsNarrateClickForHelp": "Click here for help",
   "translateBingWeb": "Bing Web Translate",
   "translateGoogleWeb": "Google Web Translate",
@@ -651,7 +584,6 @@
   "storagePathNotEmpty": "Please select an empty folder",
   "storageMigrationSuccess": "Migration completed. Please restart the app.",
   "storageMigrationFailed": "Migration failed. Data remains in the original location.",
-  "storagePathPermissionLost": "Custom storage path is no longer accessible. Data has been reset to default location.",
   "storagePathNoPermission": "No write permission for the selected folder",
   "bookBottomSheetReplaceFile": "Replace File",
   "bookBottomSheetOriginalFileSize": "Original file size: {size}",
@@ -665,9 +597,6 @@
   "historyForward": "Forward",
   "historyClose": "Close",
   "commonInputCannotBeEmpty": "Input cannot be empty",
-  "commonAddSuccess": "Added successfully",
-  "commonSaveSuccess": "Saved successfully",
-  "navShelf": "Shelf",
   "navLibrary": "Library",
   "navJournal": "Journal",
   "navMore": "More",
@@ -677,7 +606,6 @@
   "shelfToBeRead": "To be read",
   "shelfFinished": "Finished",
   "shelfBooksToBuy": "Books to buy",
-  "shelfHeaderSemanticLabel": "{label}, {count, plural, zero{no books} one{1 book} other{{count} books}}. Open shelf.",
   "emptyShelf": "No books here yet.",
   "shelfViewCovers": "Show covers",
   "shelfViewLog": "Show log",
@@ -691,8 +619,6 @@
   "shelfLoadErrorBody": "Try again to open the shelves.",
   "shelfAddBooksTooltip": "Add books",
   "shelfAddBooksFromDevice": "From this device",
-  "bookSpineSemanticLabel": "{title} by {author}. Open book options.",
-  "bookSpineSemanticLabelNoAuthor": "{title}. Open book options.",
   "wishlistSpineSemanticLabel": "{title} by {author}. Open books to buy.",
   "wishlistSpineSemanticLabelNoAuthor": "{title}. Open books to buy.",
   "bookCoverSemanticLabel": "Open {title}",
@@ -701,7 +627,12 @@
   "journalPlaceholderBody": "Reviews and reading notes will live here.",
   "journalPagesCount": "{count, plural, =1{1 page} other{{count} pages}}",
   "@journalPagesCount": {
-    "placeholders": { "count": { "type": "num", "format": "compact" } }
+    "placeholders": {
+      "count": {
+        "type": "num",
+        "format": "compact"
+      }
+    }
   },
   "journalReviewed": "Reviewed",
   "reviewRatingOverall": "Overall",
@@ -720,9 +651,6 @@
   "journalAddPage": "Add a page",
   "journalPageHint": "Write anything.",
   "journalNoPages": "No pages yet.",
-  "morePlaceholderTitle": "More is taking shape.",
-  "morePlaceholderBody": "Highlights, statistics, and settings stay available from the menu.",
-  "moreExistingPagesTooltip": "Open existing pages",
   "addToAllTimeFavourites": "Add to All time favourites",
   "removeFromAllTimeFavourites": "Remove from All time favourites",
   "addBookToBuyTitle": "Add a book to buy",
@@ -730,18 +658,30 @@
   "challengeTitle": "Reading challenge",
   "challengeYearTitle": "{year} reading challenge",
   "@challengeYearTitle": {
-    "placeholders": { "year": { "type": "String" } }
+    "placeholders": {
+      "year": {
+        "type": "String"
+      }
+    }
   },
   "challengeProgress": "{finished} of {target} books",
   "@challengeProgress": {
     "placeholders": {
-      "finished": { "type": "int" },
-      "target": { "type": "int" }
+      "finished": {
+        "type": "int"
+      },
+      "target": {
+        "type": "int"
+      }
     }
   },
   "challengeOverTarget": "{count, plural, =1{1 book past the target} other{{count} books past the target}}",
   "@challengeOverTarget": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "challengeLegendFinished": "Read",
   "challengeLegendReading": "Reading",
@@ -751,60 +691,94 @@
   "challengeShelfSemanticLabel": "Reading challenge shelf. {finished} of {target} books read, {reading} being read now.",
   "@challengeShelfSemanticLabel": {
     "placeholders": {
-      "finished": { "type": "int" },
-      "target": { "type": "int" },
-      "reading": { "type": "int" }
+      "finished": {
+        "type": "int"
+      },
+      "target": {
+        "type": "int"
+      },
+      "reading": {
+        "type": "int"
+      }
     }
   },
   "challengeSlotFilled": "Spine {slot}: {title}",
   "@challengeSlotFilled": {
     "placeholders": {
-      "slot": { "type": "int" },
-      "title": { "type": "String" }
+      "slot": {
+        "type": "int"
+      },
+      "title": {
+        "type": "String"
+      }
     }
   },
   "challengeSlotEmpty": "Spine {slot} is empty.",
   "@challengeSlotEmpty": {
-    "placeholders": { "slot": { "type": "int" } }
+    "placeholders": {
+      "slot": {
+        "type": "int"
+      }
+    }
   },
   "monthTrackerTitle": "Month tracker",
   "monthTrackerPagesTotal": "{count, plural, =0{No pages this month} =1{1 page this month} other{{count} pages this month}}",
   "@monthTrackerPagesTotal": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "monthTrackerDaysRead": "{count, plural, =0{No days read} =1{1 day read} other{{count} days read}}",
   "@monthTrackerDaysRead": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "monthTrackerPreviousMonth": "Previous month",
   "monthTrackerNextMonth": "Next month",
   "monthTrackerRingSemanticLabel": "Pages read each day. {days} days read, {pages} pages in total.",
   "@monthTrackerRingSemanticLabel": {
     "placeholders": {
-      "days": { "type": "int" },
-      "pages": { "type": "int" }
+      "days": {
+        "type": "int"
+      },
+      "pages": {
+        "type": "int"
+      }
     }
   },
   "monthTrackerDaySemanticLabel": "Day {day}: {count, plural, =0{no pages} =1{1 page} other{{count} pages}}",
   "@monthTrackerDaySemanticLabel": {
     "placeholders": {
-      "day": { "type": "int" },
-      "count": { "type": "int" }
+      "day": {
+        "type": "int"
+      },
+      "count": {
+        "type": "int"
+      }
     }
-  },
-  "monthTrackerEditDay": "Pages read on day {day}",
-  "@monthTrackerEditDay": {
-    "placeholders": { "day": { "type": "int" } }
   },
   "monthTrackerPagesLabel": "Pages",
   "translateWorking": "Translating",
   "translateFromLanguage": "Translate from {language}",
   "@translateFromLanguage": {
-    "placeholders": { "language": { "type": "String" } }
+    "placeholders": {
+      "language": {
+        "type": "String"
+      }
+    }
   },
   "translateToLanguage": "Translate into {language}",
   "@translateToLanguage": {
-    "placeholders": { "language": { "type": "String" } }
+    "placeholders": {
+      "language": {
+        "type": "String"
+      }
+    }
   },
   "opdsCatalogs": "Catalogs",
   "opdsFindBooksOnline": "Find books online",
@@ -818,23 +792,22 @@
   "opdsRemoveCatalog": "Remove catalog",
   "opdsRemoveCatalogBody": "Remove {name} and its password?",
   "@opdsRemoveCatalogBody": {
-    "placeholders": { "name": { "type": "String" } }
-  },
-  "opdsSignIn": "Sign in",
-  "opdsSignInBody": "{name} needs a user name and a password.",
-  "@opdsSignInBody": {
-    "placeholders": { "name": { "type": "String" } }
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   },
   "opdsFeedEmpty": "This shelf is empty.",
   "opdsNextPage": "More",
   "opdsDownload": "Download",
-  "opdsDownloading": "Downloading {title}",
-  "@opdsDownloading": {
-    "placeholders": { "title": { "type": "String" } }
-  },
   "opdsDownloaded": "{title} is on your shelf.",
   "@opdsDownloaded": {
-    "placeholders": { "title": { "type": "String" } }
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
   },
   "opdsErrorNetwork": "The catalog could not be reached.",
   "opdsErrorUnauthorized": "The user name or the password is wrong.",
@@ -842,22 +815,87 @@
   "opdsErrorServer": "The catalog answered with an error.",
   "opdsErrorNotAFeed": "That address is a web page, not a catalog feed.",
   "opdsInvalidUrl": "Enter a full address, such as https://example.org/opds",
+  "bookBindingSectionTitle": "Binding",
+  "bookBindingAutomatic": "Automatic",
+  "bookBindingHardback": "Hardback",
+  "bookBindingSoftback": "Softback",
+  "bookBindingWhyReader": "You chose this binding for this book.",
+  "bookBindingWhyStatedFormat": "The book describes itself as \"{evidence}\".",
+  "@bookBindingWhyStatedFormat": {
+    "placeholders": {
+      "evidence": {
+        "type": "String"
+      }
+    }
+  },
+  "bookBindingWhyComic": "Manga, comics and light novels are softbacks.",
+  "bookBindingWhyModern": "First published in {year}, after paperbacks became the usual first edition.",
+  "@bookBindingWhyModern": {
+    "placeholders": {
+      "year": {
+        "type": "String"
+      }
+    }
+  },
+  "bookBindingWhyEarly": "First published in {year}, when a new book was bound in boards.",
+  "@bookBindingWhyEarly": {
+    "placeholders": {
+      "year": {
+        "type": "String"
+      }
+    }
+  },
+  "bookBindingWhyPublicDomain": "A public-domain transcription of an older book.",
+  "bookBindingWhyDefault": "Nothing in this book says how it was bound, so the library default applies.",
+  "bookModelSemanticLabel": "{title} by {author}. Tap to open the book.",
+  "@bookModelSemanticLabel": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "author": {
+        "type": "String"
+      }
+    }
+  },
+  "bookModelSemanticLabelNoAuthor": "{title}. Tap to open the book.",
+  "@bookModelSemanticLabelNoAuthor": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsDefaultBinding": "Default binding",
+  "settingsDefaultBindingDescription": "The binding for a book whose details do not say how it was bound. Manga, light novels and modern novels still become softbacks, and older books hardbacks.",
   "settingsBookshelfUniformSpines": "Uniform spines",
   "settingsBookshelfUniformSpinesDescription": "Make every home shelf spine the same thickness and height.",
   "challengePreviousYear": "Previous year",
   "challengeNextYear": "Next year",
   "challengePaceAhead": "{count, plural, =1{Ahead of pace by 1 book} other{Ahead of pace by {count} books}}",
   "@challengePaceAhead": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "challengePaceBehind": "{count, plural, =1{Behind pace by 1 book} other{Behind pace by {count} books}}",
   "@challengePaceBehind": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "challengePaceOnTrack": "On pace for the year",
   "challengePaceExpected": "A steady pace is {count, plural, =1{1 book} other{{count} books}} by this point.",
   "@challengePaceExpected": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "challengeEmptyTitle": "No books on this shelf yet",
   "challengeEmptyBody": "Mark a book as Reading or finish a book to start filling the challenge.",
@@ -871,7 +909,11 @@
   "monthTrackerEmptyBody": "Tap a day number to add the page total for that day.",
   "monthTrackerDayCurrentPages": "{count, plural, =0{This day has 0 pages.} =1{This day has 1 page.} other{This day has {count} pages.}}",
   "@monthTrackerDayCurrentPages": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "monthTrackerDayNotRecorded": "No page total is recorded for this day.",
   "monthTrackerNewPagesLabel": "New page total",
@@ -881,5 +923,78 @@
   "statisticMeasureNote": "The charts use reading time in minutes. The month ring uses pages. These measures are separate.",
   "statisticOpenChallenge": "Open challenge",
   "statisticOpenMonthTracker": "Open month tracker",
-  "statisticTrackerLoadError": "Tracker data is not available."
+  "statisticTrackerLoadError": "Tracker data is not available.",
+  "shelfSortControl": "Sort this shelf",
+  "shelfFilterControl": "Filter this shelf",
+  "shelfFilterChipSemantic": "Filter: {label}. Remove this filter.",
+  "@shelfFilterChipSemantic": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "shelfSortTitle": "Sort books",
+  "shelfSortDateAdded": "Date added",
+  "shelfFilterTitle": "Filter books",
+  "shelfFilterStatus": "Reading status",
+  "shelfFilterRating": "Rating",
+  "shelfFilterTags": "Tags",
+  "shelfUnknownTag": "Deleted tag",
+  "shelfRatingAtLeast": "{rating}+ stars",
+  "@shelfRatingAtLeast": {
+    "placeholders": {
+      "rating": {
+        "type": "int"
+      }
+    }
+  },
+  "shelfClearFilters": "Clear filters",
+  "shelfNoFilterResults": "No books match these filters.",
+  "appPressBackAgainToLeave": "Press back again to leave Paperfold",
+  "bookBindingAskTitle": "How is this book bound?",
+  "bookBindingAskBody": "It decides how {title} stands on your shelf. You can change it later.",
+  "@bookBindingAskBody": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "bookBindingAskDecide": "Decide for me",
+  "shelfPickUpHint": "Pick up this book",
+  "shelfOpenHint": "Open this book",
+  "shelfBookOptions": "Book options",
+  "shelfBookOptionDetails": "Details",
+  "shelfBookOptionShelves": "Shelves",
+  "shelfBookOptionCustomise": "Customise",
+  "shelfBookOptionNotes": "Notes",
+  "shelfBookShelvesTitle": "Move or add to a shelf",
+  "shelfBookCustomiseTitle": "Customise this book",
+  "shelfBookCoverArt": "Cover art",
+  "shelfBookChooseCoverArt": "Choose cover art",
+  "settingsAppearanceTrueBlack": "True black",
+  "settingsAppearanceTrueBlackDescription": "Use pure black for dark backgrounds. On an OLED screen those pixels stay off. Turn it off for a softer near-black.",
+  "settingsAppearanceEInkDescription": "High contrast for e-paper screens. It holds the application in light mode.",
+  "settingsAppearanceThemeColorBrand": "Paperfold",
+  "settingsAppearanceThemeColorCustom": "Custom",
+  "settingsDeveloperOptions": "Developer options",
+  "settingsDeveloperOptionsEnable": "Enable developer options",
+  "settingsDeveloperOptionsEnableDescription": "Turn this off to hide the developer entry in settings.",
+  "settingsDeveloperOptionsEnabledToast": "Developer options are on",
+  "settingsDeveloperVibrationTest": "Vibration test",
+  "settingsDeveloperVibrationTestDescription": "Check what the device supports and play each pattern.",
+  "settingsQuickSettings": "Quick settings",
+  "commonLoadFailedTitle": "This could not be loaded.",
+  "commonLoadFailedBody": "Something went wrong while reading your books. Try again.",
+  "notesLoadFailed": "Your notes could not be loaded.",
+  "statisticsLoadFailed": "Your reading statistics could not be loaded.",
+  "notesExportCopy": "Copy",
+  "notesExportPlainText": "Plain text",
+  "commonNoOptions": "No options",
+  "commonClose": "Close",
+  "readingPageGoToCurrentLocation": "Go to where you are reading",
+  "readingPageBackgroundColour": "Background colour",
+  "readingPageTextColour": "Text colour",
+  "readingPageDeleteTheme": "Delete this theme"
 }

@@ -67,22 +67,30 @@ class SettingsPageBody extends StatelessWidget {
     // Material application is neither. Behaviour that came free with
     // CupertinoSliverNavigationBar, the large collapsing title, comes free
     // from SliverAppBar.large as well.
+    if (!isMobile) {
+      return Scaffold(body: Builder(builder: sections));
+    }
+
+    // No `SliverOverlapAbsorber` around the app bar.
+    //
+    // An absorber takes the header's overlap out of the inner viewport and
+    // expects a `SliverOverlapInjector` to put it back. The body here is a
+    // plain lazy `ListView`, not a CustomScrollView, so nothing ever injected
+    // it: on the phone the large title never collapsed and the first section
+    // slid underneath it. The "Theme" header and the light/dark control were
+    // hidden on every visit until the list was dragged back to the very top.
+    //
+    // An absorber is only needed for a pinned header over a sliver body. This
+    // header is neither, so it goes.
     return Scaffold(
       body: NestedScrollView(
         headerSliverBuilder: (BuildContext context, bool innerBoxIsScrolled) {
-          return isMobile
-              ? <Widget>[
-                  SliverOverlapAbsorber(
-                    handle: NestedScrollView.sliverOverlapAbsorberHandleFor(
-                      context,
-                    ),
-                    sliver: SliverAppBar.large(
-                      title: Text(title),
-                      forceElevated: innerBoxIsScrolled,
-                    ),
-                  ),
-                ]
-              : <Widget>[];
+          return <Widget>[
+            SliverAppBar.large(
+              title: Text(title),
+              forceElevated: innerBoxIsScrolled,
+            ),
+          ];
         },
         body: MediaQuery.removePadding(
           removeTop: true,

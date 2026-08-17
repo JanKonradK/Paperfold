@@ -3,6 +3,7 @@ import 'dart:core';
 
 import 'package:paperfold/enums/bgimg_alignment.dart';
 import 'package:paperfold/enums/bgimg_type.dart';
+import 'package:paperfold/enums/book_binding.dart';
 import 'package:paperfold/enums/bookshelf_folder_style.dart';
 import 'package:paperfold/enums/convert_chinese_mode.dart';
 import 'package:paperfold/enums/excerpt_share_template.dart';
@@ -54,6 +55,7 @@ class Prefs extends ChangeNotifier {
     initPrefs();
   }
 
+  static const String _bookBindingChoicesKey = 'bookBindingChoices';
   static const String _chapterSplitSelectedRuleKey =
       'chapterSplitSelectedRuleId';
   static const String _chapterSplitCustomRulesKey = 'chapterSplitCustomRules';
@@ -367,15 +369,6 @@ class Prefs extends ChangeNotifier {
     return prefs.getBool('clearLogWhenStart') ?? true;
   }
 
-  bool get useOriginalCoverRatio {
-    return prefs.getBool('useOriginalCoverRatio') ?? false;
-  }
-
-  set useOriginalCoverRatio(bool value) {
-    prefs.setBool('useOriginalCoverRatio', value);
-    notifyListeners();
-  }
-
   void saveHideStatusBar(bool status) {
     prefs.setBool('hideStatusBar', status);
     notifyListeners();
@@ -596,7 +589,6 @@ class Prefs extends ChangeNotifier {
     if (rulesJson == null) {
       return ReadingRules(
         convertChineseMode: ConvertChineseMode.none,
-        bionicReading: false,
       );
     }
     return ReadingRules.fromJson(rulesJson);
@@ -842,6 +834,52 @@ class Prefs extends ChangeNotifier {
     return prefs.getDouble('bookCoverWidth') ?? 120;
   }
 
+  /// The binding a book gets when nothing in its metadata says how it was
+  /// bound. Every book can still be overruled one at a time.
+  set defaultBookBinding(BookBinding binding) {
+    prefs.setString('defaultBookBinding', binding.code);
+    notifyListeners();
+  }
+
+  BookBinding get defaultBookBinding {
+    return BookBinding.fromCode(prefs.getString('defaultBookBinding'));
+  }
+
+  /// The reader's own binding for one book.
+  ///
+  /// Held as one small map rather than a column, because it changes how a book
+  /// is drawn and nothing else. A book that is deleted leaves an entry behind;
+  /// it costs a few bytes and it comes back correct if the book is imported
+  /// again.
+  BookBindingChoice bookBindingChoice(int bookId) {
+    return BookBindingChoice.fromCode(_bookBindingChoices()['$bookId']);
+  }
+
+  void setBookBindingChoice(int bookId, BookBindingChoice choice) {
+    final choices = _bookBindingChoices();
+    if (choice == BookBindingChoice.automatic) {
+      choices.remove('$bookId');
+    } else {
+      choices['$bookId'] = choice.code;
+    }
+    prefs.setString(_bookBindingChoicesKey, jsonEncode(choices));
+    notifyListeners();
+  }
+
+  Map<String, String> _bookBindingChoices() {
+    final raw = prefs.getString(_bookBindingChoicesKey);
+    if (raw == null || raw.isEmpty) return {};
+    try {
+      final decoded = jsonDecode(raw) as Map<String, dynamic>;
+      return {
+        for (final entry in decoded.entries) entry.key: '${entry.value}',
+      };
+    } catch (e) {
+      AnxLog.warning('The stored book bindings could not be read: $e');
+      return {};
+    }
+  }
+
   set shelfUniformSpines(bool value) {
     prefs.setBool('shelfUniformSpines', value);
     notifyListeners();
@@ -906,24 +944,6 @@ class Prefs extends ChangeNotifier {
 
   bool get useBookStyles {
     return prefs.getBool('useBookStyles') ?? false;
-  }
-
-  set bottomNavigatorShowNote(bool status) {
-    prefs.setBool('bottomNavigatorShowNote', status);
-    notifyListeners();
-  }
-
-  bool get bottomNavigatorShowNote {
-    return prefs.getBool('bottomNavigatorShowNote') ?? true;
-  }
-
-  set bottomNavigatorShowStatistics(bool status) {
-    prefs.setBool('bottomNavigatorShowStatistics', status);
-    notifyListeners();
-  }
-
-  bool get bottomNavigatorShowStatistics {
-    return prefs.getBool('bottomNavigatorShowStatistics') ?? true;
   }
 
   set syncCompletedToast(bool status) {
@@ -1000,15 +1020,6 @@ class Prefs extends ChangeNotifier {
         fontSize: prefs.getDouble('pageFooterFontSize') ?? 10,
       ),
     );
-  }
-
-  bool get showTextUnderIconButton {
-    return prefs.getBool('showTextUnderIconButton') ?? true;
-  }
-
-  set showTextUnderIconButton(bool show) {
-    prefs.setBool('showTextUnderIconButton', show);
-    notifyListeners();
   }
 
   DateTime? get lastUploadBookDate {
@@ -1321,15 +1332,6 @@ class Prefs extends ChangeNotifier {
       modes[bookIdStr] = mode;
     }
     bookTranslationModes = modes;
-  }
-
-  bool get allowMixWithOtherAudio {
-    return prefs.getBool('allowMixWithOtherAudio') ?? false;
-  }
-
-  set allowMixWithOtherAudio(bool allow) {
-    prefs.setBool('allowMixWithOtherAudio', allow);
-    notifyListeners();
   }
 
   TextAlignmentEnum get textAlignment {

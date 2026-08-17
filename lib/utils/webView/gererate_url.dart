@@ -62,7 +62,6 @@ String generateUrl(
 
   // let readingRules = {
   //   convertChineseMode: '${Prefs().readingRules.convertChineseMode.name}',
-  //   bionicReadingMode: ${Prefs().readingRules.bionicReading},
   // }
 
   Map<String, dynamic> style = {
@@ -100,7 +99,6 @@ String generateUrl(
 
   Map<String, dynamic> readingRules = {
     'convertChineseMode': Prefs().readingRules.convertChineseMode.name,
-    'bionicReadingMode': Prefs().readingRules.bionicReading,
   };
 
   Map<String, dynamic> params = {

@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:paperfold/config/paperfold_motion.dart';
 import 'package:paperfold/widgets/page_curl/page_curl.dart';
 
 void main() {
@@ -56,9 +57,11 @@ class _PageCurlDemoPageState extends State<PageCurlDemoPage> {
 
   Future<void> _playTimedOpen() async {
     _controller.jumpTo(0.0);
+    // The turn the application actually runs, so the lab and the reader cannot
+    // drift apart on timing.
     await _controller.animate(
-      duration: const Duration(milliseconds: 950),
-      curve: Curves.easeOutCubic,
+      duration: PaperfoldMotion.pageTurn,
+      curve: PaperfoldMotion.turn,
     );
   }
 
@@ -169,13 +172,17 @@ class _PageCurlDemoPageState extends State<PageCurlDemoPage> {
                   ),
             ),
             const SizedBox(height: 24.0),
-            Text('Curl radius  ${_radius.round()} px'),
+            // No longer a length. The radius of the roll is set by how much
+            // paper has been taken up into it; this is how stiff that paper is,
+            // so a low value rolls tight like a leaf and a high one rolls loose
+            // and wide like a cover board.
+            Text('Stiffness  ${_radius.round()}'),
             Slider(
               value: _radius,
-              min: 16.0,
+              min: 40.0,
               max: 120.0,
-              divisions: 26,
-              label: '${_radius.round()} px',
+              divisions: 20,
+              label: '${_radius.round()}',
               onChanged: (value) => setState(() => _radius = value),
             ),
             const SizedBox(height: 8.0),

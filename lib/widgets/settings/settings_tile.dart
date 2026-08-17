@@ -4,6 +4,18 @@ abstract class AbstractSettingsTile extends StatelessWidget {
   const AbstractSettingsTile({super.key});
 }
 
+/// The metrics a [ListTile] needs to line up with the rows around it.
+///
+/// A settings row indents its title to 42: an 8 start inset, a 24 icon, a 10
+/// gap. A stock ListTile indents to 56, so a card holding both kinds of row
+/// had two left edges down the middle of it.
+const ListTileThemeData settingsListTileTheme = ListTileThemeData(
+  contentPadding: EdgeInsetsDirectional.only(start: 8, end: 8),
+  minLeadingWidth: 24,
+  horizontalTitleGap: 10,
+  minTileHeight: 56,
+);
+
 enum SettingsTileType { simpleTile, switchTile, navigationTile }
 
 class SettingsTile extends AbstractSettingsTile {
@@ -125,18 +137,31 @@ class AndroidSettingsTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const scaleFactor = 0.6;
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
 
     final cantShowAnimation = tileType == SettingsTileType.switchTile
         ? onToggle == null && onPressed == null
         : onPressed == null;
 
-    return IgnorePointer(
-      ignoring: !enabled,
+    // The Material roles, not a local size. A bare TextStyle here replaced the
+    // theme's family outright, so every settings row printed in the platform
+    // default face while the About row beside it printed in Philosopher.
+    // DESIGN.md, the Roles-Not-Sizes Rule.
+    final titleStyle = (theme.textTheme.titleMedium ?? const TextStyle())
+        .copyWith(color: enabled ? scheme.onSurface : theme.disabledColor);
+    final supportingStyle = (theme.textTheme.bodyMedium ?? const TextStyle())
+        .copyWith(
+            color: enabled ? scheme.onSurfaceVariant : theme.disabledColor);
+
+    // A disabled row still reads as one node and still announces that it is
+    // disabled. IgnorePointer swallowed the tap without telling anybody why.
+    return Semantics(
+      enabled: enabled,
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          onTap: cantShowAnimation
+          onTap: !enabled || cantShowAnimation
               ? null
               : () {
                   if (tileType == SettingsTileType.switchTile) {
@@ -145,120 +170,107 @@ class AndroidSettingsTile extends StatelessWidget {
                     onPressed?.call(context);
                   }
                 },
-          highlightColor: Theme.of(context).listTileTheme.selectedColor,
-          child: Row(
-            children: [
-              if (leading != null)
-                Padding(
-                  padding: const EdgeInsetsDirectional.only(start: 8),
-                  child: IconTheme(
-                    data: IconTheme.of(context).copyWith(
-                      color: enabled
-                          ? Theme.of(context).iconTheme.color
-                          : Theme.of(context).disabledColor,
-                    ),
-                    child: leading!,
-                  ),
-                ),
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsetsDirectional.only(
-                    start: 10,
-                    end: 8,
-                    bottom: 19 * scaleFactor,
-                    top: 19 * scaleFactor,
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      DefaultTextStyle(
-                        style: TextStyle(
-                          color: enabled
-                              ? Theme.of(context).textTheme.bodyLarge!.color!
-                              : Theme.of(context).disabledColor,
-                          fontSize: 18,
-                          fontWeight: FontWeight.w400,
-                        ),
-                        child: title ?? Container(),
-                      ),
-                      if (value != null)
-                        Padding(
-                          padding: const EdgeInsets.only(top: 4.0),
-                          child: DefaultTextStyle(
-                            style: TextStyle(
-                              color: enabled
-                                  ? Theme.of(context)
-                                      .textTheme
-                                      .bodySmall!
-                                      .color!
-                                  : Theme.of(context).disabledColor,
-                            ),
-                            child: value!,
-                          ),
-                        )
-                      else if (description != null)
-                        Padding(
-                          padding: const EdgeInsets.only(top: 4.0),
-                          child: DefaultTextStyle(
-                            style: TextStyle(
-                              color: enabled
-                                  ? Theme.of(context)
-                                      .textTheme
-                                      .bodySmall!
-                                      .color!
-                                  : Theme.of(context).disabledColor,
-                            ),
-                            child: description!,
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
-              ),
-              if (trailing != null && tileType == SettingsTileType.switchTile)
-                Row(
-                  children: [
-                    trailing!,
-                    Padding(
-                      padding: const EdgeInsetsDirectional.only(end: 8),
-                      child: Switch(
-                        value: initialValue,
-                        onChanged: onToggle,
-                        activeThumbColor: enabled
-                            ? activeSwitchColor
-                            : Theme.of(context).disabledColor,
-                      ),
-                    ),
-                  ],
-                )
-              else if (tileType == SettingsTileType.switchTile)
-                Padding(
-                  padding: const EdgeInsetsDirectional.only(start: 16, end: 8),
-                  child: Switch(
-                    value: initialValue,
-                    onChanged: onToggle,
-                    activeThumbColor: enabled
-                        ? activeSwitchColor
-                        : Theme.of(context).disabledColor,
-                  ),
-                )
-              else if (tileType == SettingsTileType.navigationTile)
-                Padding(
-                  padding: const EdgeInsetsDirectional.only(end: 8),
-                  child: trailing ??
-                      Icon(
-                        Icons.chevron_right_sharp,
+          highlightColor: theme.listTileTheme.selectedColor,
+          child: ConstrainedBox(
+            // The 48-and-8 Rule. The old fixed padding made a one-line row
+            // about 46 dp high.
+            constraints: const BoxConstraints(minHeight: 48),
+            child: Row(
+              children: [
+                if (leading != null)
+                  Padding(
+                    padding: const EdgeInsetsDirectional.only(start: 8),
+                    child: IconTheme(
+                      data: IconTheme.of(context).copyWith(
                         color: enabled
-                            ? Theme.of(context).iconTheme.color
-                            : Theme.of(context).disabledColor,
+                            ? theme.iconTheme.color
+                            : theme.disabledColor,
                       ),
-                )
-              else if (trailing != null)
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: trailing!,
-                )
-            ],
+                      child: leading!,
+                    ),
+                  ),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsetsDirectional.only(
+                      start: 10,
+                      end: 8,
+                      bottom: 12,
+                      top: 12,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        DefaultTextStyle(
+                          style: titleStyle,
+                          child: title ?? const SizedBox.shrink(),
+                        ),
+                        // A row may carry both a current value and an
+                        // explanation. The old `else if` silently dropped the
+                        // explanation whenever a value was present.
+                        if (value != null)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 4.0),
+                            child: DefaultTextStyle(
+                              style: supportingStyle,
+                              child: value!,
+                            ),
+                          ),
+                        if (description != null)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 4.0),
+                            child: DefaultTextStyle(
+                              style: supportingStyle,
+                              child: description!,
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
+                if (trailing != null && tileType == SettingsTileType.switchTile)
+                  Row(
+                    children: [
+                      trailing!,
+                      Padding(
+                        padding: const EdgeInsetsDirectional.only(end: 8),
+                        child: Switch(
+                          value: initialValue,
+                          // A disabled switch takes its own disabled paint and
+                          // announces itself as disabled.
+                          onChanged: enabled ? onToggle : null,
+                          activeThumbColor: activeSwitchColor,
+                        ),
+                      ),
+                    ],
+                  )
+                else if (tileType == SettingsTileType.switchTile)
+                  Padding(
+                    padding:
+                        const EdgeInsetsDirectional.only(start: 16, end: 8),
+                    child: Switch(
+                      value: initialValue,
+                      onChanged: enabled ? onToggle : null,
+                      activeThumbColor: activeSwitchColor,
+                    ),
+                  )
+                else if (tileType == SettingsTileType.navigationTile)
+                  Padding(
+                    padding: const EdgeInsetsDirectional.only(end: 8),
+                    child: trailing ??
+                        Icon(
+                          Icons.chevron_right,
+                          color: enabled
+                              ? scheme.onSurfaceVariant
+                              : theme.disabledColor,
+                        ),
+                  )
+                else if (trailing != null)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: trailing!,
+                  )
+              ],
+            ),
           ),
         ),
       ),
@@ -277,5 +289,87 @@ class CustomSettingsTile extends AbstractSettingsTile {
   @override
   Widget build(BuildContext context) {
     return child;
+  }
+}
+
+/// A settings row whose control is too wide to sit beside the title: a
+/// slider, a segmented button, a group of chips.
+///
+/// It exists because those rows were built from bare [ListTile]s. A ListTile
+/// indents its title to 56, an [AndroidSettingsTile] to 42, and some of the
+/// rows carried no leading icon at all, so one section could hold three
+/// different left edges and two different title sizes. This keeps the metrics
+/// and the type of the row beside it.
+class SettingsControlTile extends AbstractSettingsTile {
+  const SettingsControlTile({
+    required this.title,
+    required this.control,
+    this.leading,
+    this.description,
+    super.key,
+  });
+
+  final Widget title;
+  final Widget control;
+  final Widget? leading;
+  final Widget? description;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+
+    return Padding(
+      padding: const EdgeInsetsDirectional.only(
+        start: 8,
+        end: 8,
+        top: 12,
+        bottom: 12,
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Top-aligned. Against a four-line description a centred icon
+          // floated in the middle of the block, out of line with every row
+          // above and below it.
+          SizedBox(
+            width: 24,
+            child: leading == null
+                ? null
+                : IconTheme(
+                    data: IconTheme.of(context)
+                        .copyWith(color: theme.iconTheme.color),
+                    child: leading!,
+                  ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                DefaultTextStyle(
+                  style: (theme.textTheme.titleMedium ?? const TextStyle())
+                      .copyWith(color: scheme.onSurface),
+                  child: title,
+                ),
+                if (description != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: DefaultTextStyle(
+                      style: (theme.textTheme.bodyMedium ?? const TextStyle())
+                          .copyWith(color: scheme.onSurfaceVariant),
+                      child: description!,
+                    ),
+                  ),
+                Padding(
+                  padding: const EdgeInsets.only(top: 10),
+                  child: control,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

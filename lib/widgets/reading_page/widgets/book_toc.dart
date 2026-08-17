@@ -1,3 +1,4 @@
+import 'package:paperfold/l10n/generated/L10n.dart';
 import 'package:paperfold/main.dart';
 import 'package:paperfold/models/search_result_model.dart';
 import 'package:paperfold/models/toc_item.dart';
@@ -307,6 +308,7 @@ class _BookTocState extends ConsumerState<BookToc> {
         : '${currentState.chapterCurrentPage} / ${currentState.chapterTotalPages}';
 
     var locatingButton = IconButton(
+      tooltip: L10n.of(context).readingPageGoToCurrentLocation,
       icon: const Icon(Icons.my_location),
       onPressed: () {
         _scrollToCurrent(animated: true);
@@ -314,7 +316,9 @@ class _BookTocState extends ConsumerState<BookToc> {
     );
 
     var searchBox = SizedBox(
-      height: 35,
+      // The 48-and-8 Rule. At 35 the field was under the minimum target and
+      // clipped its own clear button.
+      height: 48,
       child: SearchBar(
         controller: searchBarController,
         shadowColor: const WidgetStatePropertyAll<Color>(Colors.transparent),
@@ -324,6 +328,7 @@ class _BookTocState extends ConsumerState<BookToc> {
         trailing: [
           isSearchActive
               ? IconButton(
+                  tooltip: L10n.of(context).commonClose,
                   icon: const Icon(Icons.close),
                   onPressed: () {
                     searchBarController.clear();
@@ -429,8 +434,8 @@ Widget searchResultWidget({
     color: Theme.of(navigatorKey.currentContext!).colorScheme.primary,
     fontWeight: FontWeight.bold,
   );
-  TextStyle prePostStyle = const TextStyle(
-    color: Colors.grey,
+  TextStyle prePostStyle = TextStyle(
+    color: Theme.of(navigatorKey.currentContext!).colorScheme.onSurfaceVariant,
   );
   return StatefulBuilder(
     builder: (context, setState) {
@@ -452,7 +457,9 @@ Widget searchResultWidget({
                 // const Spacer(),
                 Text(
                   searchResult.subitems.length.toString(),
-                  style: const TextStyle(color: Colors.grey),
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
                 ),
               ],
             ),
@@ -533,7 +540,10 @@ class TocItemWidget extends StatelessWidget {
         ConstrainedBox(
           constraints: BoxConstraints(minHeight: showProgress ? 60 : 40),
           child: Padding(
-            padding: EdgeInsets.only(left: depth == 0 ? 0 : depth * 40.0),
+            // The nesting indent runs from the reading edge. Fixed to the
+            // left, an Arabic table of contents indented backwards.
+            padding: EdgeInsetsDirectional.only(
+                start: depth == 0 ? 0 : depth * 40.0),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               crossAxisAlignment: CrossAxisAlignment.center,

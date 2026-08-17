@@ -166,7 +166,7 @@ class _ServiceConfigFormState extends State<ServiceConfigForm> {
                   item.description!,
                   style: TextStyle(
                     fontSize: 12,
-                    color: Colors.grey[600],
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                 ),
               ),
@@ -193,7 +193,7 @@ class _ServiceConfigFormState extends State<ServiceConfigForm> {
 
       case ConfigItemType.select:
         if (item.options == null || item.options!.isEmpty) {
-          return const Text('No options');
+          return Text(L10n.of(context).commonNoOptions);
         }
 
         final String currentValue = _currentConfig[item.key]?.toString() ??
@@ -223,7 +223,7 @@ class _ServiceConfigFormState extends State<ServiceConfigForm> {
 
       case ConfigItemType.radio:
         if (item.options == null || item.options!.isEmpty) {
-          return const Text('No options');
+          return Text(L10n.of(context).commonNoOptions);
         }
 
         final currentValue = _currentConfig[item.key] ?? item.defaultValue;
@@ -287,7 +287,8 @@ class _ServiceConfigFormState extends State<ServiceConfigForm> {
               ),
               if (item.link != null)
                 Padding(
-                  padding: const EdgeInsets.only(left: 28.0, top: 4.0),
+                  padding: const EdgeInsetsDirectional.only(
+                      start: 28.0, top: 4.0),
                   child: GestureDetector(
                     onTap: () => launchUrl(
                       Uri.parse(item.link!),

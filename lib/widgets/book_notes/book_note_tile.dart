@@ -33,10 +33,11 @@ class BookNoteTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final iconColor = Color(int.tryParse('0xaa${note.color}') ?? 0xaa555555);
-    final infoStyle = const TextStyle(
-      fontSize: 14,
-      color: Colors.grey,
-    );
+    // A theme role. `Colors.grey` measures 2.49:1 on the light paper ground,
+    // under the 4.5:1 minimum in DESIGN.md.
+    final infoStyle = Theme.of(context).textTheme.bodyMedium!.copyWith(
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
+        );
 
     return GestureDetector(
       onTap: onTap,
@@ -80,7 +81,9 @@ class BookNoteTile extends StatelessWidget {
                                 child: Text(
                                   note.readerNote!,
                                   style: infoStyle.copyWith(
-                                    color: Colors.grey.shade600,
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onSurfaceVariant,
                                   ),
                                 ),
                               ),
@@ -93,7 +96,7 @@ class BookNoteTile extends StatelessWidget {
                   Divider(
                     indent: 4,
                     height: 3,
-                    color: Colors.grey.shade300,
+                    color: Theme.of(context).colorScheme.outlineVariant,
                   ),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
