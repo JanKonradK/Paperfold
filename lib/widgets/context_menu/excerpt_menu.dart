@@ -2,7 +2,6 @@ import 'package:paperfold/config/shared_preference_provider.dart';
 import 'package:paperfold/constants/note_annotations.dart';
 import 'package:paperfold/dao/book_note.dart';
 import 'package:paperfold/l10n/generated/L10n.dart';
-import 'package:paperfold/main.dart';
 import 'package:paperfold/models/book_note.dart';
 import 'package:paperfold/page/reading_page.dart';
 import 'package:paperfold/utils/toast/common.dart';

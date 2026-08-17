@@ -14,6 +14,7 @@ import 'package:paperfold/utils/toast/common.dart';
 import 'package:paperfold/widgets/book_share/excerpt_share_card.dart';
 import 'package:paperfold/widgets/icon_and_text.dart';
 import 'package:paperfold/widgets/show_loading.dart';
+import 'package:paperfold/widgets/common/load_failure.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
@@ -203,7 +204,7 @@ class _ExcerptShareBottomSheetState
                           final template =
                               ExcerptShareTemplateEnum.values[index];
                           return Padding(
-                            padding: const EdgeInsets.only(right: 8.0),
+                            padding: const EdgeInsetsDirectional.only(end: 8.0),
                             child: ChoiceChip(
                               label: Text(template.getL10n(context)),
                               selected: _template == template,
@@ -233,7 +234,7 @@ class _ExcerptShareBottomSheetState
                               itemBuilder: (context, index) {
                                 final font = data[index];
                                 return Padding(
-                                  padding: const EdgeInsets.only(right: 8.0),
+                                  padding: const EdgeInsetsDirectional.only(end: 8.0),
                                   child: ChoiceChip(
                                     label: Text(font.label),
                                     selected: _font == font,
@@ -251,8 +252,8 @@ class _ExcerptShareBottomSheetState
                             loading: () => const Center(
                               child: CircularProgressIndicator(),
                             ),
-                            error: (error, stack) => Center(
-                              child: Text(error.toString()),
+                            error: (error, stack) => LoadFailure.inline(
+                              error: error,
                             ),
                           ),
                     ),
@@ -269,7 +270,7 @@ class _ExcerptShareBottomSheetState
                         itemBuilder: (context, index) {
                           final scheme = _colorSchemes[index];
                           return Padding(
-                            padding: const EdgeInsets.only(right: 8.0),
+                            padding: const EdgeInsetsDirectional.only(end: 8.0),
                             child: GestureDetector(
                               onTap: () {
                                 setState(() {
@@ -323,7 +324,7 @@ class _ExcerptShareBottomSheetState
                         itemBuilder: (context, index) {
                           final bgImage = _backgroundImages[index];
                           return Padding(
-                            padding: const EdgeInsets.only(right: 8.0),
+                            padding: const EdgeInsetsDirectional.only(end: 8.0),
                             child: GestureDetector(
                               onTap: () {
                                 setState(() {

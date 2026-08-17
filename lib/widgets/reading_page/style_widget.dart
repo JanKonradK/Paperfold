@@ -5,7 +5,6 @@ import 'package:paperfold/l10n/generated/L10n.dart';
 import 'package:paperfold/models/book_style.dart';
 import 'package:paperfold/models/font_model.dart';
 import 'package:paperfold/page/reading_page.dart';
-import 'package:paperfold/page/settings_page/subpage/fonts.dart';
 import 'package:paperfold/service/book_player/book_player_server.dart';
 import 'package:paperfold/service/font.dart';
 import 'package:paperfold/utils/font_parser.dart';
@@ -176,10 +175,6 @@ class StyleWidgetState extends State<StyleWidget> {
       label: L10n.of(context).addNewFont,
       name: 'newFont',
     ));
-    fontList.add(FontModel.builtIn(
-      label: L10n.of(context).downloadFonts,
-      name: 'download',
-    ));
 
     return fontList;
   }
@@ -190,9 +185,7 @@ class StyleWidgetState extends State<StyleWidget> {
         orElse: () => Prefs.defaultFont);
 
     Widget? leadingIcon(String name) {
-      if (name == 'download') {
-        return const Icon(Icons.download);
-      } else if (name == 'newFont') {
+      if (name == 'newFont') {
         return const Icon(Icons.add);
       }
       return null;
@@ -204,7 +197,7 @@ class StyleWidgetState extends State<StyleWidget> {
         child: DropdownMenu<PageTurn>(
           label: Text(L10n.of(context).readingPagePageTurningMethod),
           initialSelection: turnStyle,
-          expandedInsets: const EdgeInsets.only(right: 5),
+          expandedInsets: const EdgeInsetsDirectional.only(end: 5),
           // Each style costs something different, and the curl costs the most,
           // so the reader sees what they picked without opening the list again.
           helperText: turnStyle.getDescription(context),
@@ -233,7 +226,7 @@ class StyleWidgetState extends State<StyleWidget> {
       Expanded(
         child: DropdownMenu<FontModel>(
           label: Text(L10n.of(context).font),
-          expandedInsets: const EdgeInsets.only(left: 5),
+          expandedInsets: const EdgeInsetsDirectional.only(start: 5),
           initialSelection: font,
           inputDecorationTheme: InputDecorationTheme(
             border: OutlineInputBorder(
@@ -245,14 +238,6 @@ class StyleWidgetState extends State<StyleWidget> {
             if (font.name == 'newFont') {
               widget.hideAppBarAndBottomBar(false);
               await importFont();
-              return;
-            } else if (font.name == 'download') {
-              widget.hideAppBarAndBottomBar(false);
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (context) => const FontsSettingPage()),
-              );
               return;
             } else {
               epubPlayerKey.currentState!.changeFont(font);
@@ -505,6 +490,7 @@ class _ThemeChangeWidgetState extends State<ThemeChangeWidget> {
   Widget build(BuildContext context) {
     return Row(children: [
       IconButton(
+        tooltip: L10n.of(context).readingPageBackgroundColour,
         onPressed: () async {
           String? pickingColor =
               await showColorPickerDialog(readTheme.backgroundColor);
@@ -520,6 +506,7 @@ class _ThemeChangeWidgetState extends State<ThemeChangeWidget> {
             color: Color(int.parse('0x${readTheme.backgroundColor}'))),
       ),
       IconButton(
+          tooltip: L10n.of(context).readingPageTextColour,
           onPressed: () async {
             String? pickingColor =
                 await showColorPickerDialog(readTheme.textColor);
@@ -536,6 +523,7 @@ class _ThemeChangeWidgetState extends State<ThemeChangeWidget> {
         child: SizedBox(),
       ),
       IconButton(
+        tooltip: L10n.of(context).readingPageDeleteTheme,
         onPressed: () {
           themeDao.deleteTheme(readTheme.id!);
           widget.setCurrentPage(const SizedBox(height: 1));
@@ -568,7 +556,7 @@ class _ThemeChangeWidgetState extends State<ThemeChangeWidget> {
           ),
           actions: <Widget>[
             TextButton(
-              child: const Text('Cancel'),
+              child: Text(L10n.of(context).commonCancel),
               onPressed: () {
                 Navigator.of(context).pop();
               },

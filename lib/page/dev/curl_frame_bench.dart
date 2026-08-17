@@ -5,6 +5,10 @@
 // the UI thread apart, because a shader that stutters shows on the raster
 // thread while a rebuild storm shows on the UI thread.
 //
+// The budget below is taken from the display rather than from that number. On
+// a 120 Hz phone it is 8.3 ms, and a curl that passes at 16 ms can miss every
+// second frame at 8.3 without a single figure in this table changing.
+//
 // Flutter's frame timings are the right instrument. `adb shell dumpsys
 // gfxinfo` reports zero frames for a Flutter app, because it tracks Android's
 // HWUI pipeline and Flutter draws to its own surface.
@@ -21,6 +25,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
+import 'package:paperfold/config/paperfold_motion.dart';
 import 'package:paperfold/widgets/page_curl/page_curl.dart';
 
 class CurlFrameBenchApp extends StatelessWidget {
@@ -72,12 +77,13 @@ class CurlFrameBenchPage extends StatefulWidget {
   State<CurlFrameBenchPage> createState() => _CurlFrameBenchPageState();
 }
 
-class _CurlFrameBenchPageState extends State<CurlFrameBenchPage>
-    with SingleTickerProviderStateMixin {
+class _CurlFrameBenchPageState extends State<CurlFrameBenchPage> {
   static const int _turns = 12;
-  static const Duration _turnDuration = Duration(milliseconds: 900);
 
-  late final AnimationController _drive;
+  /// The turn the reader actually gets, not a slow one chosen to be watched.
+  /// A budget met at 900 ms says nothing about the same shader at 380.
+  static const Duration _turnDuration = PaperfoldMotion.pageTurn;
+
   final PageCurlController _curl = PageCurlController();
 
   bool _running = false;
@@ -94,7 +100,6 @@ class _CurlFrameBenchPageState extends State<CurlFrameBenchPage>
   @override
   void initState() {
     super.initState();
-    _drive = AnimationController(vsync: this, duration: _turnDuration);
     _callback = (List<FrameTiming> timings) {
       if (!_recording) return;
       for (final t in timings) {
@@ -116,8 +121,18 @@ class _CurlFrameBenchPageState extends State<CurlFrameBenchPage>
     if (_callback != null) {
       SchedulerBinding.instance.removeTimingsCallback(_callback!);
     }
-    _drive.dispose();
     super.dispose();
+  }
+
+  /// One turn, exactly as the reader runs it, and back to the start.
+  Future<void> _oneTurn() async {
+    if (!_curl.isAttached) return;
+    _curl.jumpTo(0);
+    await _curl.animate(
+      to: 1,
+      duration: _turnDuration,
+      curve: PaperfoldMotion.turn,
+    );
   }
 
   Future<void> _run() async {
@@ -132,17 +147,14 @@ class _CurlFrameBenchPageState extends State<CurlFrameBenchPage>
 
     // Warm up first so shader compilation is not counted as a dropped frame.
     await PageCurl.warmUp();
-    _drive.value = 0;
-    await _drive.forward();
-    _drive.value = 0;
+    await _oneTurn();
     await Future<void>.delayed(const Duration(milliseconds: 300));
 
     setState(() => _status = 'Recording $_turns turns.');
     _recording = true;
 
     for (int i = 0; i < _turns; i++) {
-      _drive.value = 0;
-      await _drive.forward();
+      await _oneTurn();
       await Future<void>.delayed(const Duration(milliseconds: 60));
     }
 
@@ -160,30 +172,27 @@ class _CurlFrameBenchPageState extends State<CurlFrameBenchPage>
       body: SafeArea(
         child: Column(
           children: [
+            // Driven through the controller, because that is what the reader
+            // does. Rebuilding the curl every frame from an `AnimatedBuilder`
+            // and pushing it a `jumpTo` measured the harness: it put back the
+            // per-frame rebuild the widget exists to avoid, so no improvement
+            // inside the widget could ever show up in these numbers.
             Expanded(
               flex: 3,
-              child: AnimatedBuilder(
-                animation: _drive,
-                builder: (context, _) {
-                  if (_curl.isAttached) {
-                    _curl.jumpTo(_drive.value);
-                  }
-                  return WidgetPageCurl(
-                    controller: _curl,
-                    interactive: false,
-                    textDirection: TextDirection.ltr,
-                    front: const _BenchPage(
-                      title: 'Recto',
-                      tint: Color(0xFFFAF6EE),
-                      ink: Color(0xFF3A2E28),
-                    ),
-                    back: const _BenchPage(
-                      title: 'Verso',
-                      tint: Color(0xFFEDE3D2),
-                      ink: Color(0xFF5C4A3F),
-                    ),
-                  );
-                },
+              child: WidgetPageCurl(
+                controller: _curl,
+                interactive: false,
+                textDirection: TextDirection.ltr,
+                front: const _BenchPage(
+                  title: 'Recto',
+                  tint: Color(0xFFFAF6EE),
+                  ink: Color(0xFF3A2E28),
+                ),
+                back: const _BenchPage(
+                  title: 'Verso',
+                  tint: Color(0xFFEDE3D2),
+                  ink: Color(0xFF5C4A3F),
+                ),
               ),
             ),
             const Divider(height: 1),

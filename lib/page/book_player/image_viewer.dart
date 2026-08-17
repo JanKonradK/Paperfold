@@ -7,6 +7,7 @@ import 'package:paperfold/utils/log/common.dart';
 import 'package:paperfold/utils/save_image_to_path.dart';
 import 'package:paperfold/utils/share_file.dart';
 import 'package:flutter/gestures.dart';
+import 'package:paperfold/l10n/generated/L10n.dart';
 import 'package:flutter/material.dart';
 import 'package:photo_view/photo_view.dart';
 
@@ -63,7 +64,7 @@ class _ImageViewerState extends State<ImageViewer> {
       imgType = parts[0].split('/')[1].split(';')[0];
     } catch (e) {
       AnxLog.severe('Error decoding image: $e');
-      return const Center(child: Text('Error'));
+      return Center(child: Text(L10n.of(context).commonError));
     }
 
     return Listener(
@@ -94,6 +95,9 @@ class _ImageViewerState extends State<ImageViewer> {
                       mainAxisAlignment: MainAxisAlignment.start,
                       children: [
                         IconButton(
+                          // Icon-only, over a photograph. Without a name a
+                          // screen reader announced three unlabelled buttons.
+                          tooltip: L10n.of(context).commonClose,
                           onPressed: () => Navigator.pop(context),
                           icon: const Icon(Icons.close, color: Colors.white),
                         ),
@@ -104,13 +108,16 @@ class _ImageViewerState extends State<ImageViewer> {
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [
                         IconButton(
+                          tooltip: L10n.of(context).commonDownload,
                           onPressed: () {
                             SaveImg.downloadImg(
                                 imageBytes!, imgType!, widget.bookName);
                           },
-                          icon: const Icon(Icons.download, color: Colors.white),
+                          icon:
+                              const Icon(Icons.download, color: Colors.white),
                         ),
                         IconButton(
+                          tooltip: L10n.of(context).readingPageShareShare,
                           onPressed: () async {
                             final path = await saveB64ImageToPath(
                               widget.image,

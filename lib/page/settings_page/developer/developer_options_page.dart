@@ -1,6 +1,6 @@
 import 'package:paperfold/config/shared_preference_provider.dart';
+import 'package:paperfold/l10n/generated/L10n.dart';
 import 'package:paperfold/page/settings_page/developer/vibration_test_page.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 class DeveloperOptionsPage extends StatelessWidget {
@@ -10,7 +10,7 @@ class DeveloperOptionsPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Developer Options'),
+        title: Text(L10n.of(context).settingsDeveloperOptions),
       ),
       body: AnimatedBuilder(
         animation: Prefs(),
@@ -20,9 +20,10 @@ class DeveloperOptionsPage extends StatelessWidget {
             padding: const EdgeInsets.symmetric(vertical: 8),
             children: [
               SwitchListTile(
-                title: const Text('Enable Developer Options'),
-                subtitle: const Text(
-                    'Toggle off to hide developer entries in settings'),
+                title:
+                    Text(L10n.of(context).settingsDeveloperOptionsEnable),
+                subtitle: Text(L10n.of(context)
+                    .settingsDeveloperOptionsEnableDescription),
                 value: enabled,
                 onChanged: (value) {
                   Prefs().developerOptionsEnabled = value;
@@ -34,13 +35,17 @@ class DeveloperOptionsPage extends StatelessWidget {
               const Divider(),
               ListTile(
                 leading: const Icon(Icons.vibration_outlined),
-                title: const Text('Vibration Test'),
-                subtitle:
-                    const Text('Inspect device support and trigger presets'),
+                title: Text(L10n.of(context).settingsDeveloperVibrationTest),
+                subtitle: Text(L10n.of(context)
+                    .settingsDeveloperVibrationTestDescription),
                 trailing: const Icon(Icons.chevron_right),
+                minTileHeight: 56,
+                // Material, like the rest of the settings tree. A Cupertino
+                // route here brought an iOS transition and an iOS back
+                // gesture into a Material application.
                 onTap: () {
                   Navigator.of(context).push(
-                    CupertinoPageRoute(
+                    MaterialPageRoute<void>(
                       builder: (context) => const VibrationTestPage(),
                     ),
                   );

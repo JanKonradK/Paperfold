@@ -1,3 +1,5 @@
+import 'dart:ui' as ui;
+
 import 'package:flutter/material.dart';
 import 'package:paperfold/config/paperfold_tokens.dart';
 import 'package:paperfold/widgets/ornament.dart';
@@ -18,7 +20,11 @@ class PaperfoldLogoMark extends StatelessWidget {
   });
 
   /// The two initials inside the wreath.
-  static const String monogram = 'HJ';
+  ///
+  /// Set apart, not kerned into one another. `HJ` read as a single made-up
+  /// word; two letters joined by a rule read as two initials, which is what a
+  /// monogram is.
+  static const String monogram = 'H + J';
 
   /// The name under the initials, on the shapes large enough to read it.
   static const String wordmark = 'Paperfold';
@@ -100,6 +106,13 @@ class _MonogramPainter extends CustomPainter {
   /// the letters, not to describe the font, so a constant is enough.
   static const double _capHeightEm = 0.70;
 
+  /// How much of the side the letters may take across, inside the inner ring.
+  ///
+  /// The ring itself is 0.48 of the side. This leaves a little air between the
+  /// last letter and the rule, which is what stops the monogram reading as a
+  /// word wedged into a circle.
+  static const double _innerRoom = 0.40;
+
   /// The name reads at about a fifth of the initials.
   static const double _wordmarkFactor = 0.058;
 
@@ -113,15 +126,32 @@ class _MonogramPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final double fontSize = side *
+    var fontSize = side *
         (wordmark ? _fontSizeFactorWithWordmark : _fontSizeFactor);
-    final TextPainter initials = _painter(
+    TextPainter initials = _painter(
       PaperfoldLogoMark.monogram,
       fontSize: fontSize,
       weight: FontWeight.w700,
       // Two initials sit better apart than kerned together.
       tracking: fontSize * 0.06,
     );
+
+    // The wreath's inner circle is 48 per cent of the side, so the letters
+    // have to fit inside that however many of them there are. Measured and
+    // brought back rather than guessed at: the monogram is a constant one line
+    // away from being changed, and a factor tuned to two glyphs runs a
+    // three-glyph monogram straight through the ring.
+    final double room = side * _innerRoom;
+    if (initials.width > room) {
+      fontSize *= room / initials.width;
+      initials.dispose();
+      initials = _painter(
+        PaperfoldLogoMark.monogram,
+        fontSize: fontSize,
+        weight: FontWeight.w700,
+        tracking: fontSize * 0.06,
+      );
+    }
 
     final double baseline =
         initials.computeDistanceToActualBaseline(TextBaseline.alphabetic);
@@ -138,7 +168,7 @@ class _MonogramPainter extends CustomPainter {
             family: PaperfoldTypeTokens.chromeFamily,
           )
         : null;
-    final double gap = name == null ? 0 : side * 0.045;
+    final double gap = name == null ? 0 : side * 0.075;
     final double blockHeight =
         capHeight + gap + (name?.height ?? 0);
     final double blockTop = (size.height - blockHeight) / 2;
@@ -222,8 +252,14 @@ class PaperfoldAppIcon extends StatelessWidget {
     this.shape = PaperfoldAppIconShape.card,
   });
 
-  /// The mark fills most of the card, the way a foil stamp fills a cover.
-  static const double _cardMarkFactor = 0.72;
+  /// How much of the card the mark fills.
+  ///
+  /// Larger than it was, because there is no longer a frame for it to sit
+  /// inside. The card used to carry a double foil rule round the trim and the
+  /// application's name under the initials, and at 48 px — which is the size a
+  /// launcher actually draws it — the rule, the wreath, the letters and the
+  /// nine-letter word all collapsed into one gold blur. One mark, drawn large.
+  static const double _cardMarkFactor = 0.74;
 
   /// An adaptive foreground fills its master file. flutter_launcher_icons
   /// insets the drawable by 16% on every side, which is what holds the art
@@ -247,18 +283,82 @@ class PaperfoldAppIcon extends StatelessWidget {
     };
     final double markFactor = isCard ? _cardMarkFactor : _bleedMarkFactor;
 
+    final Widget mark = Center(
+      child: PaperfoldLogoMark(
+        size: size * markFactor,
+        tint: tint,
+        // No name on the icon. The launcher already prints it underneath.
+        showWordmark: false,
+      ),
+    );
+
+    if (!isCard) {
+      // The two transparent shapes carry the mark and nothing else. The
+      // launcher supplies their ground and masks their outline, so a painted
+      // cover and a rectangular frame would only be clipped into rubbish.
+      return SizedBox.square(dimension: size, child: mark);
+    }
+
     return SizedBox.square(
       dimension: size,
-      child: ColoredBox(
-        color: isCard ? PaperfoldTokens.cover.ground : const Color(0x00000000),
-        child: Center(
-          child: PaperfoldLogoMark(
-            size: size * markFactor,
-            tint: tint,
-            showWordmark: true,
-          ),
-        ),
+      child: CustomPaint(
+        painter: _CoverPainter(side: size),
+        child: mark,
       ),
     );
   }
+}
+
+/// The card ground: bookcloth, and nothing stamped on it but the mark.
+///
+/// A flat fill made the icon read as a coloured square with a logo dropped on
+/// it. DESIGN.md's north star is a bound book — cloth catching light — so the
+/// ground is painted rather than filled.
+///
+/// The double foil rule that used to run round the trim has gone. It was
+/// correct for a cover and wrong for an icon: a launcher draws this at 48 px
+/// inside a mask of its own, where a frame a few pixels inside another frame
+/// is one more ring of gold competing with the wreath. What is left is cloth
+/// and one mark.
+class _CoverPainter extends CustomPainter {
+  const _CoverPainter({required this.side});
+
+  final double side;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final Rect bounds = Offset.zero & size;
+    final Color ground = PaperfoldTokens.cover.ground;
+    final Color foil = PaperfoldTokens.cover.foil;
+
+    // Cloth. The light falls from above the left shoulder, the same direction
+    // the book model lights its boards, so the two objects agree.
+    canvas.drawRect(
+      bounds,
+      Paint()
+        ..shader = ui.Gradient.radial(
+          Offset(size.width * 0.36, size.height * 0.30),
+          size.width * 0.92,
+          <Color>[
+            Color.lerp(ground, const Color(0xFF7A2340), 0.34)!,
+            ground,
+            Color.lerp(ground, const Color(0xFF12060B), 0.45)!,
+          ],
+          <double>[0.0, 0.55, 1.0],
+        ),
+    );
+
+    // The weave. Far too faint to see as lines at icon size; it stops the
+    // gradient from looking like a smooth digital blur.
+    final Paint weave = Paint()
+      ..color = foil.withValues(alpha: 0.016)
+      ..strokeWidth = side * 0.0018;
+    for (double y = 0; y < size.height; y += side * 0.014) {
+      canvas.drawLine(Offset(0, y), Offset(size.width, y), weave);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _CoverPainter oldDelegate) =>
+      oldDelegate.side != side;
 }

@@ -6,6 +6,7 @@ import 'package:paperfold/providers/notes_statistics.dart';
 import 'package:paperfold/utils/date/convert_seconds.dart';
 import 'package:paperfold/widgets/bookshelf/book_cover.dart';
 import 'package:paperfold/widgets/common/container/filled_container.dart';
+import 'package:paperfold/widgets/common/load_failure.dart';
 import 'package:paperfold/widgets/highlight_digit.dart';
 import 'package:paperfold/widgets/tips/notes_tips.dart';
 import 'package:flutter/material.dart';
@@ -66,13 +67,16 @@ class _NotesPageState extends ConsumerState<NotesPage> {
 
   Widget notesStatistic() {
     final notesStats = ref.watch(notesStatisticsProvider);
+    final theme = Theme.of(context);
 
-    TextStyle digitStyle = const TextStyle(
-      fontSize: 24,
+    // Material roles. These carried a hardcoded `SourceHanSerif`, which set
+    // the Journal's own statistics in a CJK serif in every language and
+    // ignored the Paperfold text theme. The theme already substitutes a
+    // Chinese face where one is needed.
+    final TextStyle digitStyle = theme.textTheme.headlineSmall!.copyWith(
       fontWeight: FontWeight.bold,
     );
-    TextStyle textStyle =
-        const TextStyle(fontSize: 18, fontFamily: 'SourceHanSerif');
+    final TextStyle textStyle = theme.textTheme.titleMedium!;
 
     return notesStats.when(
       data: (data) {
@@ -98,8 +102,11 @@ class _NotesPageState extends ConsumerState<NotesPage> {
           ),
         );
       },
-      loading: () => const CircularProgressIndicator(),
-      error: (error, stack) => Text('Error: $error'),
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (error, stack) => LoadFailure.inline(
+        title: L10n.of(context).notesLoadFailed,
+        error: error,
+      ),
     );
   }
 
@@ -112,7 +119,10 @@ class _NotesPageState extends ConsumerState<NotesPage> {
             ? const Expanded(child: Center(child: NotesTips()))
             : Expanded(
                 child: ListView.builder(
-                    padding: EdgeInsets.only(bottom: 80),
+                    // The Journal's note list is pushed as its own route with
+                    // its own app bar. Nothing floats over its foot, so the
+                    // 80 logical pixels reserved here were dead space.
+                    padding: const EdgeInsets.only(bottom: 12),
                     controller: _scrollController,
                     itemCount: data.length,
                     itemBuilder: (context, index) {
@@ -125,8 +135,11 @@ class _NotesPageState extends ConsumerState<NotesPage> {
                     }),
               );
       },
-      loading: () => const CircularProgressIndicator(),
-      error: (error, stack) => Text('Error: $error'),
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (error, stack) => LoadFailure.inline(
+        title: L10n.of(context).notesLoadFailed,
+        error: error,
+      ),
     );
   }
 
@@ -136,98 +149,109 @@ class _NotesPageState extends ConsumerState<NotesPage> {
     required bool isMobile,
     required int readingTime,
   }) {
-    TextStyle digitStyle = const TextStyle(
-      fontSize: 28,
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+
+    final TextStyle digitStyle = theme.textTheme.headlineSmall!.copyWith(
       fontWeight: FontWeight.bold,
     );
-    TextStyle textStyle = const TextStyle(
-      fontSize: 20,
-    );
-    TextStyle titleStyle = const TextStyle(
+    final TextStyle textStyle = theme.textTheme.titleMedium!;
+    final TextStyle titleStyle = theme.textTheme.titleMedium!.copyWith(
+      fontWeight: FontWeight.bold,
       overflow: TextOverflow.ellipsis,
-      fontSize: 18,
-      fontFamily: 'SourceHanSerif',
-      fontWeight: FontWeight.bold,
     );
-    TextStyle readingTimeStyle = const TextStyle(
-      fontSize: 14,
-      color: Colors.grey,
+    // `Colors.grey` measures 2.49:1 on the light paper ground, under the
+    // 4.5:1 minimum in DESIGN.md. The role measures 7.77:1.
+    final TextStyle readingTimeStyle = theme.textTheme.bodySmall!.copyWith(
+      color: scheme.onSurfaceVariant,
     );
-    return GestureDetector(
-      onTap: () {
-        if (isMobile) {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-                builder: (context) => BookNotesPage(
-                      book: book,
-                      numberOfNotes: numberOfNotes,
-                      isMobile: true,
-                    )),
-          );
-        } else {
-          ref
-              .read(notesPageCurrentBookProvider.notifier)
-              .setData(book, numberOfNotes);
-        }
-      },
-      child: FilledContainer(
-        margin: const EdgeInsets.only(top: 8, left: 15, right: 15),
-        padding: const EdgeInsets.all(8.0),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Expanded(
-              flex: 3,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  highlightDigit(
-                    context,
-                    L10n.of(context).notesNotes(numberOfNotes),
-                    textStyle,
-                    digitStyle,
-                  ),
-                  const SizedBox(height: 8),
-                  Text(book.title, style: titleStyle),
-                  const SizedBox(height: 18),
-                  // Reading time
-                  SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Row(
-                      children: [
-                        Icon(Icons.access_time, size: 16, color: Colors.grey),
-                        const SizedBox(width: 4),
-                        Text(
-                          convertSeconds(readingTime),
-                          style: readingTimeStyle,
-                        ),
-                        Text(" | ", style: readingTimeStyle),
-                        Icon(Icons.bar_chart, size: 16, color: Colors.grey),
-                        const SizedBox(width: 4),
-                        Text(
-                          '${(book.readingPercentage * 100).toStringAsFixed(1)}%',
-                          style: readingTimeStyle,
-                        ),
-                      ],
+
+    void open() {
+      if (isMobile) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+              builder: (context) => BookNotesPage(
+                    book: book,
+                    numberOfNotes: numberOfNotes,
+                    isMobile: true,
+                  )),
+        );
+      } else {
+        ref
+            .read(notesPageCurrentBookProvider.notifier)
+            .setData(book, numberOfNotes);
+      }
+    }
+
+    // A GestureDetector stood here: no ink, no focus, and no button role, so
+    // a screen reader read the row as loose text with nothing to activate.
+    return Semantics(
+      button: true,
+      label: book.title,
+      child: InkWell(
+        onTap: open,
+        borderRadius: BorderRadius.circular(12),
+        child: FilledContainer(
+          margin: const EdgeInsetsDirectional.only(top: 8, start: 15, end: 15),
+          padding: const EdgeInsets.all(8.0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                flex: 3,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    highlightDigit(
+                      context,
+                      L10n.of(context).notesNotes(numberOfNotes),
+                      textStyle,
+                      digitStyle,
                     ),
-                  ),
-                ],
+                    const SizedBox(height: 8),
+                    Text(book.title, style: titleStyle),
+                    const SizedBox(height: 18),
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        children: [
+                          Icon(Icons.access_time,
+                              size: 16, color: scheme.onSurfaceVariant),
+                          const SizedBox(width: 4),
+                          Text(
+                            convertSeconds(readingTime),
+                            style: readingTimeStyle,
+                          ),
+                          Text(' | ', style: readingTimeStyle),
+                          Icon(Icons.bar_chart,
+                              size: 16, color: scheme.onSurfaceVariant),
+                          const SizedBox(width: 4),
+                          Text(
+                            '${(book.readingPercentage * 100).toStringAsFixed(1)}%',
+                            style: readingTimeStyle,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
-            // Expanded(child: SizedBox()),
-            Hero(
-              tag: isMobile
-                  ? book.coverFullPath
-                  : '${book.coverFullPath}notMobile',
-              child: BookCover(
-                book: book,
-                height: 130,
-                width: 90,
-                radius: 20,
+              Hero(
+                tag: isMobile
+                    ? book.coverFullPath
+                    : '${book.coverFullPath}notMobile',
+                child: BookCover(
+                  book: book,
+                  height: 130,
+                  width: 90,
+                  // DESIGN.md gives cover art a 10 dp radius. 20 rounded the
+                  // corners off a book.
+                  radius: 10,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

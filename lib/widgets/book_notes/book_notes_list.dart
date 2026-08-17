@@ -12,6 +12,7 @@ import 'package:paperfold/widgets/book_share/excerpt_share_service.dart';
 import 'package:paperfold/widgets/delete_confirm.dart';
 import 'package:paperfold/widgets/hint/hint_banner.dart';
 import 'package:paperfold/widgets/tips/notes_tips.dart';
+import 'package:paperfold/widgets/common/load_failure.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
@@ -40,9 +41,9 @@ class BookNotesList extends ConsumerWidget {
         padding: EdgeInsets.symmetric(vertical: 40),
         child: Center(child: CircularProgressIndicator()),
       ),
-      error: (error, stack) => Padding(
-        padding: const EdgeInsets.all(16),
-        child: Text('Error: $error'),
+      error: (error, stack) => LoadFailure.inline(
+        title: L10n.of(context).notesLoadFailed,
+        error: error,
       ),
     );
   }
@@ -240,9 +241,9 @@ class BookNotesList extends ConsumerWidget {
                 height: 160,
                 child: Center(child: CircularProgressIndicator()),
               ),
-              error: (error, stack) => Padding(
-                padding: const EdgeInsets.all(16),
-                child: Text('Error: $error'),
+              error: (error, stack) => LoadFailure.inline(
+                title: L10n.of(context).notesLoadFailed,
+                error: error,
               ),
             );
           },

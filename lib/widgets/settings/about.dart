@@ -6,9 +6,9 @@ import 'package:paperfold/main.dart';
 import 'package:paperfold/page/settings_page/developer/developer_options_page.dart';
 import 'package:paperfold/utils/env_var.dart';
 import 'package:paperfold/utils/toast/common.dart';
+import 'package:paperfold/widgets/paperfold_logo_mark.dart';
 import 'package:paperfold/widgets/settings/link_icon.dart';
 import 'package:paperfold/utils/check_update.dart';
-import 'package:paperfold/widgets/settings/show_donate_dialog.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -29,16 +29,6 @@ class About extends StatefulWidget {
 }
 
 class _AboutState extends State<About> {
-  String version = '';
-
-  @override
-  void initState() {
-    super.initState();
-    initData();
-  }
-
-  Future<void> initData() async {}
-
   @override
   Widget build(BuildContext context) {
     return ListTile(
@@ -70,7 +60,7 @@ void _handleDeveloperUnlockTap(BuildContext context) {
   _developerUnlockTapCount = 0;
   if (!alreadyEnabled) {
     Prefs().developerOptionsEnabled = true;
-    AnxToast.show('Developer options enabled');
+    AnxToast.show(L10n.of(context).settingsDeveloperOptionsEnabledToast);
   }
 
   final navigator = Navigator.of(context, rootNavigator: true);
@@ -111,17 +101,28 @@ Future<void> openAboutDialog() async {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
+                // The fork's own name, and the mark that goes with it. The
+                // dialog still said "Anx" at 50 points, directly under the
+                // Paperfold mark on the settings page that opened it.
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(0, 0, 0, 5),
-                  child: Center(
-                    child: Text(
-                      'Anx',
-                      style: TextStyle(
-                        fontSize: 50,
-                        fontWeight: FontWeight.bold,
-                        color: Theme.of(context).colorScheme.primary,
+                  padding: const EdgeInsets.fromLTRB(0, 8, 0, 8),
+                  child: Column(
+                    children: [
+                      PaperfoldLogoMark(
+                        size: 64,
+                        tint: Theme.of(context).colorScheme.primary,
                       ),
-                    ),
+                      const SizedBox(height: 10),
+                      Text(
+                        L10n.of(context).appName,
+                        style: Theme.of(context)
+                            .textTheme
+                            .headlineSmall
+                            ?.copyWith(
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
+                      ),
+                    ],
                   ),
                 ),
                 const Divider(),
@@ -138,19 +139,12 @@ Future<void> openAboutDialog() async {
                   ListTile(
                       title: Text(L10n.of(context).aboutCheckForUpdates),
                       onTap: () => checkUpdate(true)),
-                if (EnvVar.enableDonation)
-                  ListTile(
-                    title: Text(L10n.of(context).appDonate),
-                    onTap: () {
-                      showDonateDialog(context);
-                    },
-                  ),
                 ListTile(
                   title: Text(L10n.of(context).appLicense),
                   onTap: () {
                     showLicensePage(
                       context: context,
-                      applicationName: 'Anx',
+                      applicationName: L10n.of(context).appName,
                       applicationVersion: version,
                     );
                   },
@@ -160,49 +154,18 @@ Future<void> openAboutDialog() async {
                   onTap: () {
                     launchUrl(
                       Uri.parse(
-                          'https://github.com/Anxcye/anx-reader/graphs/contributors'),
-                      mode: LaunchMode.externalApplication,
-                    );
-                  },
-                ),
-                ListTile(
-                  title: Text(L10n.of(context).aboutPrivacyPolicy),
-                  onTap: () async {
-                    launchUrl(
-                      Uri.parse('https://anx.anxcye.com/privacy'),
-                      mode: LaunchMode.externalApplication,
-                    );
-                  },
-                ),
-                ListTile(
-                  title: Text(L10n.of(context).aboutTermsOfUse),
-                  onTap: () async {
-                    launchUrl(
-                      Uri.parse('https://anx.anxcye.com/terms'),
-                      mode: LaunchMode.externalApplication,
-                    );
-                  },
-                ),
-                ListTile(
-                  title: Text(L10n.of(context).aboutHelp),
-                  onTap: () async {
-                    launchUrl(
-                      Uri.parse('https://anx.anxcye.com/docs'),
+                          'https://github.com/JanKonradK/Paperfold/graphs/contributors'),
                       mode: LaunchMode.externalApplication,
                     );
                   },
                 ),
                 const Divider(),
-                if (EnvVar.showBeian) ...[
-                  GestureDetector(
-                    onTap: () {
-                      launchUrl(Uri.parse('https://beian.miit.gov.cn/'),
-                          mode: LaunchMode.externalApplication);
-                    },
-                    child: const Text('闽ICP备2025091402号-1A'),
-                  ),
-                  const Divider(),
-                ],
+                // Two links, and both are Paperfold's own.
+                //
+                // This row used to carry the upstream project's website, its
+                // repository, its Xiaohongshu profile and its QQ group. A fork
+                // that has become its own application should not be sending its
+                // readers to another project's community.
                 SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
                   child: Row(
@@ -210,17 +173,10 @@ Future<void> openAboutDialog() async {
                     children: [
                       linkIcon(
                           icon: Icon(
-                            IonIcons.earth,
-                            color: Theme.of(context).colorScheme.secondary,
-                          ),
-                          url: 'https://anx.anxcye.com',
-                          mode: LaunchMode.externalApplication),
-                      linkIcon(
-                          icon: Icon(
                             IonIcons.logo_github,
                             color: Theme.of(context).colorScheme.secondary,
                           ),
-                          url: 'https://github.com/Anxcye/anx-reader',
+                          url: 'https://github.com/JanKonradK/Paperfold',
                           mode: LaunchMode.externalApplication),
                       if (EnvVar.showTelegramLink)
                         linkIcon(
@@ -230,26 +186,6 @@ Future<void> openAboutDialog() async {
                             ),
                             url: 'https://t.me/Paperfold',
                             mode: LaunchMode.externalApplication),
-                      linkIcon(
-                          icon: Image.asset(
-                            'assets/images/xiaohongshu.png',
-                            color: Theme.of(context).colorScheme.secondary,
-                          ),
-                          url:
-                              'https://www.xiaohongshu.com/user/profile/5d403f3e00000000100151ff',
-                          mode: LaunchMode.externalApplication),
-                      linkIcon(
-                          icon: Padding(
-                            padding: const EdgeInsets.all(4.0),
-                            child: Image.asset(
-                              'assets/images/qq.png',
-                              color: Theme.of(context).colorScheme.secondary,
-                            ),
-                          ),
-                          // qq group url is so crazy
-                          url:
-                              'http://qm.qq.com/cgi-bin/qm/qr?_wv=1027&k=8BYItJOMz4RCQJoHAAei7FV-nGB0iT8O&authKey=MD6a7gI%2FENiMr32rQRTLx2BpzTaa1wO9Qfmhx9ETcaLS%2FdcOFeptvVH9FWfvUpL2&noverify=0&group_code=1042905699',
-                          mode: LaunchMode.externalApplication),
                     ],
                   ),
                 ),

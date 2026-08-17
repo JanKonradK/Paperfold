@@ -19,7 +19,7 @@ jobs:
   build-windows:
     runs-on: windows-latest
     env:
-      BASE_NOTIFICATION_URL: ${{ secrets.NOTIFICATION_URL }}/Anx-Reader%20Action
+      BASE_NOTIFICATION_URL: ${{ secrets.NOTIFICATION_URL }}/Paperfold%20Action
       NOTIFICATION_PARAMS: ?url=https://app.signpath.io/Web/254a26d6-6c3a-4a55-9ca6-890d0d34deb1/SigningRequests&level=timeSensitive&icon=https://github.githubassets.com/assets/GitHub-Mark-ea2971cee799.png
       IS_ALPHA: ${{ contains(inputs.version, '-alpha.') }}
     
@@ -74,7 +74,7 @@ jobs:
         with:
           api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
           organization-id: '254a26d6-6c3a-4a55-9ca6-890d0d34deb1'
-          project-slug: 'anx-reader'
+          project-slug: 'paperfold'
           signing-policy-slug: ${{ env.IS_ALPHA == 'true' && 'test-signing' || 'release-signing' }}
           artifact-configuration-slug: 'initial_zip'
           github-artifact-id: ${{ steps.upload-unsigned-zip.outputs.artifact-id }}
@@ -110,7 +110,7 @@ jobs:
         with:
           api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
           organization-id: 254a26d6-6c3a-4a55-9ca6-890d0d34deb1
-          project-slug: 'anx-reader'
+          project-slug: 'paperfold'
           signing-policy-slug: ${{ env.IS_ALPHA == 'true' && 'test-signing' || 'release-signing' }}
           artifact-configuration-slug: 'initial_exe'
           github-artifact-id: ${{ steps.upload-unsigned-exe.outputs.artifact-id }}

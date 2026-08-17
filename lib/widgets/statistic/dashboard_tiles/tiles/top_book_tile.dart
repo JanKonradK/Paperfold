@@ -41,19 +41,19 @@ class TopBookTile extends StatisticsDashboardTileBase {
         final book = entry.keys.first;
         final seconds = entry.values.first;
 
-        final TextStyle bookTitleStyle = const TextStyle(
-          fontSize: 20,
-          fontFamily: 'SourceHanSerif',
+        // Material roles. A pinned CJK serif and a `Colors.grey` that
+        // measures 2.49:1 on the light paper ground stood here.
+        final theme = Theme.of(context);
+        final TextStyle bookTitleStyle = theme.textTheme.titleMedium!.copyWith(
           fontWeight: FontWeight.bold,
           overflow: TextOverflow.ellipsis,
         );
-        final TextStyle bookAuthorStyle = const TextStyle(
-          fontSize: 12,
-          color: Colors.grey,
+        final TextStyle bookAuthorStyle = theme.textTheme.bodySmall!.copyWith(
+          color: theme.colorScheme.onSurfaceVariant,
           overflow: TextOverflow.ellipsis,
         );
-        final TextStyle bookReadingTimeStyle = const TextStyle(
-          fontSize: 18,
+        final TextStyle bookReadingTimeStyle =
+            theme.textTheme.titleMedium!.copyWith(
           fontWeight: FontWeight.bold,
         );
 

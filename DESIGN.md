@@ -101,6 +101,19 @@ components:
   cover-tile:
     rounded: "{rounded.glass-panel}"
     padding: "4dp"
+  book-model:
+    typography: "{typography.title}"
+    hardback-trim: "0.645"
+    hardback-squares: "0.023"
+    hardback-spine-round: "0.08"
+    softback-trim: "0.680"
+    softback-squares: "0"
+    softback-spine-round: "0.06"
+    shelf-zoom: "0.50"
+    shelf-yaw: "1.30rad"
+    cover-angle: "2.30rad"
+    open-duration: "720ms"
+    close-duration: "560ms"
 ---
 
 # Design System: Paperfold
@@ -319,6 +332,61 @@ The count uses `primaryContainer`, `onPrimaryContainer`, a 12dp radius, and 9dp 
 - Keep title and author contrast at 4.5:1 or more.
 - Keep the full title and author in the semantic label and tooltip.
 
+### The book model
+
+A book is drawn as a solid object, not as a cover with a strip beside it. The model has a front board, a spine, a back board, three cut paper edges, and the inside face of each board. The renderer sorts each face by depth, hides each face that turns away, and lights all faces from one direction.
+
+One book unit is the height of the paper block. All proportions are fractions of that unit, so the object is correct at any size.
+
+Two bindings are available. The binding changes the shape, not only the color.
+
+| Part | Hardback | Softback |
+|---|---|---|
+| Boards | Stand proud of the paper on three edges | Trimmed flush with the paper |
+| Spine | Rounded, with a groove at each joint | Flat, with a score line at each joint |
+| Head and tail | Silk headbands | None |
+| Inside board | Endpaper, with the cover material turned in | The back of the printed card |
+| Surface | Cloth grain | Laminate highlight |
+| Back board | Plain cloth, with a blind-stamped rule | The blurb, a device, and a barcode |
+
+The application selects the binding from the book metadata. Manga, comics and light novels get the softback. A book first published in 1960 or later gets the softback. A book first published before 1960, or a public-domain transcription, gets the hardback. A stated format in the metadata has priority over the date.
+
+The book detail page shows the reason for the binding. The reader can set Automatic, Hardback or Softback for each book. The Appearance settings set the default binding for a book that gives no signal.
+
+Cover art wraps around the object. A front-only cover supplies the front board, a spine strip taken from the hinge edge, and a back cloth taken from the far edge. A wrap-around jacket supplies the back, the spine and the front directly. Printed matter on artwork keeps a minimum 4.5:1 contrast ratio.
+
+A book with no artwork prints its own cover: a field, a frame, the title and the author.
+
+The object is closed at all angles. The paper block is a box of six faces, and its sixth face is the bound edge at the spine. Each board has four edges, and the fourth edge is at the joint. The spine facets are two-sided.
+
+A rounded spine turns away from the reader like a cylinder. If the model removes the facets that turn away, and the object is open behind them, the reader sees through the book. A closed object cannot do this at any angle.
+
+Each face fills a small area outside its own edge in its own color. Two faces that touch are drawn separately, and antialiasing shows the background between them. The fill covers this line.
+
+The sheets of the block are sorted by their position at the spine, not by the nearest corner. The distance across a sheet is much larger than the distance between two sheets. If the model sorts by a point on the sheet, a wide sheet goes behind a narrow sheet, and a turning page becomes invisible.
+
+The bound edge of the block obeys the same rule. It is one tall face that runs the full thickness of the book, so on the nearest-corner rule it reaches nearer the camera than any single facet of the covering that wraps it, and the paper is drawn over the spine. Facets of a curve keep the nearest-corner rule; the long flat faces they meet are anchored.
+
+The default camera shows the front cover. `BookCamera.threeQuarter` (yaw 0.92, pitch -0.40) is the mid-turn angle. The shelf stands its books at `ShelfStage.camera` (yaw 1.30, pitch -0.16, focal length 11), which is the angle almost every book in the application is seen at. The model must be correct through the full turn, from yaw -0.4 to yaw 3.5.
+
+**The Solid-Object Rule.** Add a new surface as a face in book space. Do not paste a picture on top of the object.
+
+**The Closed-Solid Rule.** Give each part all of its faces. A part with a missing face shows a hole at some angle.
+
+### The opening
+
+A tap or a horizontal drag opens the book. The front board turns on its joint. The first four leaves follow the board, each one less far than the leaf above it, and each leaf bends along its length. The board throws a shadow on the open page.
+
+The leaves are the top sheets of the block. The printed first page is below all of them, and the leaves uncover it as they lift. After the board passes square it no longer holds the leaves, and they fall back on the block.
+
+The cover opens for 720ms and closes for 560ms. The cover goes a little past its rest angle and returns. On closing, the cover lands, lifts a little, and settles.
+
+A long press turns the book over, so the back board comes round to the reader. The turn takes 620ms. The long press has a screen-reader hint.
+
+When the system removes animations, the book opens, closes and turns in one frame.
+
+**The Paper-Bends Rule.** A board is rigid. A leaf is not. Build a leaf from panels that lie flatter toward the fore-edge.
+
 ### Compact navigation
 
 The glass shell is 56dp high. It uses a 28dp radius, 12dp side margins, 4dp internal padding, and 8dp gaps.
@@ -396,6 +464,8 @@ Both trackers open from the Journal destination. They are not destinations thems
 The bookshelf has no ambient animation. Material ink, routes, sheets, and refresh behavior supply direct feedback.
 
 The cold-start cover is the one theatrical sequence. Its duration is 1150ms. The user can skip it from the first frame.
+
+The book model on the book detail page opens only when the reader taps or drags it. It has no ambient motion.
 
 When the system removes animations, finish the opening immediately. Replace page curl with the implemented cross-fade path.
 

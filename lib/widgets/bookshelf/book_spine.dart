@@ -2,78 +2,45 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:paperfold/config/paperfold_tokens.dart';
-import 'package:paperfold/service/spine_art.dart';
 import 'package:paperfold/utils/log/common.dart';
 
+/// The two colours one book wears: its bookcloth and the ink that reads on it.
+@immutable
 class BookSpineVisual {
   const BookSpineVisual({
-    required this.width,
-    required this.height,
     required this.background,
     required this.foreground,
     required this.contrastRatio,
-    required this.hasBands,
-    required this.hasRoundedHead,
-    required this.hasFoilRules,
-    required this.hubCount,
-    required this.grainSeed,
-    required this.leanRadians,
   });
 
-  final double width;
-  final double height;
+  /// The bookcloth.
   final Color background;
+
+  /// Printed matter on that cloth. Tested to 4.5:1 over [background].
   final Color foreground;
+
+  /// What the pair actually measured, so a test can hold the rule.
   final double contrastRatio;
-  final bool hasBands;
-  final bool hasRoundedHead;
-  final bool hasFoilRules;
-  final int hubCount;
-  final int grainSeed;
-  final double leanRadians;
 }
 
-class BookSpine extends StatefulWidget {
-  const BookSpine({
-    super.key,
-    required this.stableId,
-    required this.title,
-    required this.author,
-    required this.semanticLabel,
-    required this.onTap,
-    this.onLongPress,
-    this.longPressHint,
-    this.uniform = false,
-    this.coverPath,
-  });
-
-  /// The book's cover file. A spine with one wears a strip of its own art; a
-  /// spine without one - a wishlist entry, or a book whose cover failed to
-  /// extract - falls back to the derived bookcloth.
-  final String? coverPath;
-
-  static const double minimumWidth = 48;
-  static const double maximumWidth = 64;
-
-  /// Books on a real shelf touch. An 8 dp gap between every spine is what made
-  /// the first two builds read as a bar chart rather than a bookcase, so the
-  /// gap is a hairline instead.
+/// How a book's look is derived: which bookcloth it wears, and which ink reads
+/// on it.
+///
+/// A namespace of statics, not a widget. It used to be a painted flat spine,
+/// and it carried everything that painter needed: the spine's width, height and
+/// lean, its raised bands, its foil rules, its hub count and its grain seed.
+/// The library now stands its books on a bookcase as real three-dimensional
+/// objects, and those derive their own geometry, so all of it went with the
+/// painter. What is left is what the rest of the application still asks for —
+/// the same hash and the same cloth table, so that one book is one colour
+/// wherever it is drawn.
+abstract final class BookSpine {
+  /// One bay of the bookcase, and how much of that bay is book.
   ///
-  /// This is a deliberate, narrow departure from the "48 dp targets, 8 dp
-  /// apart" rule in PRODUCT.md. The TARGET itself is untouched: every spine is
-  /// still at least [minimumWidth] = 48 dp wide and at least [minimumHeight]
-  /// tall, so no target is small. The 8 dp separation guidance exists to stop
-  /// mis-taps between SMALL adjacent targets; between two 48 dp-wide ones it
-  /// costs the whole metaphor and buys very little.
-  static const double spacing = 2;
-  static const double minimumHeight = 220;
-  static const double maximumHeight = 280;
-  static const double fullLengthMinimumHeight = 264;
-  static const double uniformWidth = maximumWidth;
-  static const double uniformHeight = maximumHeight;
-  static const double contactShadowDepth = 6;
-  static const double minimumEffectiveTextSize = 11;
-  static const double _baseShelfStageHeight = 318;
+  /// Only the loading skeleton reads this now. It has to stand as tall as the
+  /// shelf it stands in for, or the screen jumps when the books arrive.
+  static const double _bayHeight = 318;
+  static const double _bookHeight = 280;
 
   static final List<Color> _bookclothBackgrounds = List<Color>.unmodifiable([
     PaperfoldTokens.cover.ground,
@@ -153,18 +120,6 @@ class BookSpine extends StatefulWidget {
       ),
       BookSpineVisual> _visualCache = {};
 
-  final String stableId;
-  final String title;
-  final String author;
-  final String semanticLabel;
-  final VoidCallback onTap;
-  final VoidCallback? onLongPress;
-  final String? longPressHint;
-  final bool uniform;
-
-  @override
-  State<BookSpine> createState() => _BookSpineState();
-
   static int stableHash(String value) {
     var hash = 2166136261;
     for (final codeUnit in value.codeUnits) {
@@ -182,11 +137,9 @@ class BookSpine extends StatefulWidget {
     return (lighter + 0.05) / (darker + 0.05);
   }
 
-  /// The table is built once. Calls return the same immutable instance.
-  static List<Color> backgrounds() => _bookclothBackgrounds;
-
   /// The bookcloth set for [brightness]. Light is the pale keepsake row; dark
-  /// is the saturated cover world. Both tables are built once.
+  /// is the saturated cover world. Both tables are built once, and every caller
+  /// gets the same immutable instance.
   static List<Color> backgroundsFor(Brightness brightness) =>
       brightness == Brightness.light ? _bookclothLight : _bookclothBackgrounds;
 
@@ -235,476 +188,18 @@ class BookSpine extends StatefulWidget {
         );
       }
 
-      final width = minimumWidth + (hash % 17);
-      final variedHeight = fullLengthMinimumHeight + ((hash >> 8) % 17);
-      final height = variedHeight
-          .clamp(
-            math.max(fullLengthMinimumHeight, width * 4),
-            math.min(maximumHeight, width * 6),
-          )
-          .toDouble();
-      final leanStep = (hash >> 19) % 7;
-      final leanRadians = leanStep == 0 || leanStep == 6
-          ? (leanStep == 0 ? -1 : 1) * math.pi / 144
-          : 0.0;
-
       return BookSpineVisual(
-        width: width,
-        height: height,
         background: background,
         foreground: foreground,
         contrastRatio: bestContrast,
-        hasBands: ((hash >> 3) & 1) == 0,
-        hasRoundedHead: ((hash >> 4) & 1) == 0,
-        hasFoilRules: ((hash >> 5) & 3) != 0,
-        hubCount: ((hash >> 12) % 4) == 0 ? 3 : 0,
-        grainSeed: (hash >> 16) & 255,
-        leanRadians: leanRadians,
       );
     });
   }
 
-  static TextScaler legibleTextScaler(
-    TextScaler systemScaler,
-    double fontSize,
-  ) {
-    if (systemScaler.scale(fontSize) >= minimumEffectiveTextSize) {
-      return systemScaler;
-    }
-    return TextScaler.linear(minimumEffectiveTextSize / fontSize);
-  }
-
-  /// Spine dimensions grow with accessibility text. This keeps the visible
-  /// title at the requested scale instead of shrinking it or clipping it.
-  static double layoutScale(TextScaler textScaler) {
-    return math.max(1, textScaler.scale(16) / 16);
-  }
-
-  /// The standard 318 dp bay grows only when accessibility text grows.
+  /// One bay of the bookcase, grown for accessibility text so a large system
+  /// font does not clip the books standing in it.
   static double shelfStageHeight(TextScaler textScaler) {
-    final fixedFurniture = _baseShelfStageHeight - maximumHeight;
-    return fixedFurniture + maximumHeight * layoutScale(textScaler);
-  }
-
-}
-
-class _BookSpineState extends State<BookSpine> {
-  SpineArt? _art;
-
-  String get stableId => widget.stableId;
-  String get title => widget.title;
-  String get author => widget.author;
-  String get semanticLabel => widget.semanticLabel;
-  VoidCallback get onTap => widget.onTap;
-  VoidCallback? get onLongPress => widget.onLongPress;
-  String? get longPressHint => widget.longPressHint;
-  bool get uniform => widget.uniform;
-
-  @override
-  void initState() {
-    super.initState();
-    _resolveArt();
-  }
-
-  @override
-  void didUpdateWidget(covariant BookSpine oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.coverPath != widget.coverPath) {
-      _art = null;
-      _resolveArt();
-    }
-  }
-
-  /// A cover already decoded is taken synchronously, so a shelf that has been
-  /// seen once never blinks back to the fallback cloth while it scrolls.
-  void _resolveArt() {
-    final path = widget.coverPath;
-    if (path == null || path.isEmpty) return;
-    final ready = SpineArtCache.peek(path);
-    if (ready != null) {
-      _art = ready;
-      return;
-    }
-    SpineArtCache.load(path).then((art) {
-      if (!mounted || art == null || widget.coverPath != path) return;
-      setState(() => _art = art);
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final art = _art;
-    // The cover, when there is one, decides both the field and the title
-    // colour. The hashed cloth stays as the fallback and still supplies every
-    // structural detail: the bands, the hubs, the lean, the grain seed.
-    final base = BookSpine.resolveVisual(stableId, theme.colorScheme);
-    final visual = art == null
-        ? base
-        : BookSpineVisual(
-            width: base.width,
-            height: base.height,
-            background: art.average,
-            foreground: art.foreground,
-            contrastRatio: SpineArtCache.contrast(art.foreground, art.average),
-            hasBands: base.hasBands,
-            hasRoundedHead: base.hasRoundedHead,
-            hasFoilRules: base.hasFoilRules,
-            hubCount: base.hubCount,
-            grainSeed: base.grainSeed,
-            leanRadians: base.leanRadians,
-          );
-    final isRtl = Directionality.of(context) == TextDirection.rtl;
-    final textScaler = MediaQuery.textScalerOf(context);
-    final titleStyle = (theme.textTheme.titleSmall ?? const TextStyle())
-        .copyWith(color: visual.foreground, fontWeight: FontWeight.w700);
-    final authorStyle = (theme.textTheme.labelSmall ?? const TextStyle())
-        .copyWith(color: visual.foreground, fontWeight: FontWeight.w600);
-    final authorSize = authorStyle.fontSize ?? 11;
-    final showAuthor = author.trim().isNotEmpty;
-    final dimensionScale = BookSpine.layoutScale(textScaler);
-    final height =
-        (uniform ? BookSpine.uniformHeight : visual.height) * dimensionScale;
-    final metadataTextScaler =
-        BookSpine.legibleTextScaler(textScaler, authorSize);
-    final baseWidth =
-        (uniform ? BookSpine.uniformWidth : visual.width) * dimensionScale;
-    final width = baseWidth;
-    final lean = uniform ? 0.0 : visual.leanRadians * (isRtl ? -1 : 1);
-    final leanInset = lean == 0 ? 0.0 : 8.0 * dimensionScale;
-
-    final text = Padding(
-      padding: const EdgeInsets.fromLTRB(2, 16, 2, 14),
-      child: RotatedBox(
-        quarterTurns: isRtl ? 1 : 3,
-        child: Center(
-          child: Text.rich(
-            TextSpan(
-              children: [
-                TextSpan(text: title, style: titleStyle.copyWith(height: 1)),
-                if (showAuthor)
-                  TextSpan(
-                    text: '\n$author',
-                    style: authorStyle.copyWith(height: 1),
-                  ),
-              ],
-            ),
-            key: ValueKey('book-spine-metadata-$stableId'),
-            textAlign: TextAlign.center,
-            softWrap: true,
-            textScaler: metadataTextScaler,
-          ),
-        ),
-      ),
-    );
-
-    final paintedSpine = SizedBox(
-      width: width,
-      height: height,
-      child: Material(
-        key: ValueKey('book-spine-surface-$stableId'),
-        color: visual.background,
-        clipBehavior: Clip.antiAlias,
-        shape: RoundedRectangleBorder(
-          borderRadius: visual.hasRoundedHead
-              ? const BorderRadius.vertical(top: Radius.circular(5))
-              : BorderRadius.zero,
-        ),
-        child: InkWell(
-          onTap: onTap,
-          onLongPress: onLongPress,
-          onSecondaryTap: onLongPress,
-          child: CustomPaint(
-            painter: _BookSpinePainter(
-              visual: visual,
-              isRtl: isRtl,
-              art: art,
-            ),
-            child: text,
-          ),
-        ),
-      ),
-    );
-
-    return Semantics(
-      button: true,
-      label: semanticLabel,
-      onTap: onTap,
-      onLongPress: onLongPress,
-      onLongPressHint: onLongPress == null ? null : longPressHint,
-      child: ExcludeSemantics(
-        child: Tooltip(
-          message: semanticLabel,
-          child: SizedBox(
-            width: width + leanInset * 2,
-            height: height + BookSpine.contactShadowDepth,
-            child: CustomPaint(
-              painter: _BookContactShadowPainter(
-                // The shadow the book drops onto the glass it stands on. It
-                // used to take the colour of the walnut carcass behind it,
-                // which no longer exists.
-                color: theme.colorScheme.shadow,
-                spineWidth: width,
-              ),
-              child: Align(
-                alignment: Alignment.topCenter,
-                child: Transform.rotate(
-                  angle: lean,
-                  alignment: Alignment.bottomCenter,
-                  child: paintedSpine,
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _BookSpinePainter extends CustomPainter {
-  _BookSpinePainter({
-    required this.visual,
-    required this.isRtl,
-    this.art,
-  })  : edgePaint = Paint()
-          ..color = visual.foreground.withValues(alpha: 0.14)
-          ..strokeWidth = 2,
-        highlightPaint = Paint()
-          ..color = visual.foreground.withValues(alpha: 0.22)
-          ..strokeWidth = 1,
-        detailPaint = Paint()
-          ..color = visual.foreground.withValues(alpha: 0.56)
-          ..strokeWidth = 1,
-        grainPaint = Paint()
-          ..color = Color.lerp(
-            visual.background,
-            visual.foreground,
-            0.12,
-          )!
-          ..strokeWidth = 0.7,
-        foilPaint = Paint()
-          ..color = (BookSpine.contrast(
-                    PaperfoldTokens.cover.foil,
-                    visual.background,
-                  ) >=
-                  3
-              ? PaperfoldTokens.cover.foil
-              : visual.foreground)
-          ..strokeWidth = 1;
-
-  final BookSpineVisual visual;
-  final bool isRtl;
-  final SpineArt? art;
-  final Paint edgePaint;
-  final Paint highlightPaint;
-  final Paint detailPaint;
-  final Paint grainPaint;
-  final Paint foilPaint;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    _paintUpright(canvas, size);
-  }
-
-  /// Wraps the cover's leading edge around onto the spine.
-  ///
-  /// The slice is a fifth of the cover, stretched across the spine's width, so
-  /// what shows is the part of the jacket that really does wrap around a
-  /// hardback's hinge. Stretching a handful of pixels this far is soft on
-  /// purpose: it reads as printed cloth rather than as a thumbnail.
-  ///
-  /// A veil of the slice's own average colour goes over it afterwards. It
-  /// keeps the hue and the banding of the art while pulling every pixel toward
-  /// the colour the title was tested against, so a busy cover cannot leave the
-  /// title below 4.5:1 in one corner.
-  bool _paintCoverStrip(Canvas canvas, Size size) {
-    final source = art;
-    if (source == null) return false;
-    final image = source.strip;
-    final sliceWidth =
-        (image.width * SpineArtCache.stripFraction).clamp(1.0, image.width * 1.0);
-    final src = isRtl
-        ? Rect.fromLTWH(
-            image.width - sliceWidth, 0, sliceWidth, image.height.toDouble())
-        : Rect.fromLTWH(0, 0, sliceWidth, image.height.toDouble());
-
-    canvas.drawImageRect(
-      image,
-      src,
-      Offset.zero & size,
-      Paint()..filterQuality = FilterQuality.low,
-    );
-    canvas.drawRect(
-      Offset.zero & size,
-      Paint()..color = source.average.withValues(alpha: 0.52),
-    );
-    return true;
-  }
-
-  void _paintUpright(Canvas canvas, Size size) {
-    if (_paintCoverStrip(canvas, size)) {
-      _paintSpineDetail(canvas, size);
-      return;
-    }
-    // A spine is a curved surface, not a card. One gradient across the width
-    // does more for that read than any amount of line work: the outer edges
-    // fall away, and a soft band of light sits just off centre.
-    final sheenRect = Offset.zero & size;
-    canvas.drawRect(
-      sheenRect,
-      Paint()
-        ..shader = LinearGradient(
-          begin: isRtl ? Alignment.centerRight : Alignment.centerLeft,
-          end: isRtl ? Alignment.centerLeft : Alignment.centerRight,
-          colors: [
-            Color.lerp(visual.background, visual.foreground, 0.14)!,
-            visual.background,
-            Color.lerp(
-              visual.background,
-              PaperfoldTokens.cover.foil,
-              0.06,
-            )!,
-            Color.lerp(visual.background, visual.foreground, 0.10)!,
-          ],
-          stops: const [0, 0.3, 0.63, 1],
-        ).createShader(sheenRect),
-    );
-
-    _paintSpineDetail(canvas, size);
-  }
-
-  /// Everything that is not the field: the label, the bands, the hubs, the
-  /// foil and the edges. Shared, so a spine wearing cover art keeps exactly
-  /// the same construction as one wearing the fallback cloth.
-  void _paintSpineDetail(Canvas canvas, Size size) {
-    // A label pasted on the spine, behind the title. Two books in three carry
-    // one, chosen from the same stable seed so it never changes between runs.
-    if (visual.grainSeed % 3 != 0) {
-      final block = RRect.fromRectAndRadius(
-        Rect.fromLTWH(
-          5,
-          size.height * 0.3,
-          size.width - 10,
-          size.height * 0.4,
-        ),
-        const Radius.circular(2),
-      );
-      canvas.drawRRect(
-        block,
-        Paint()
-          ..color = Color.lerp(
-            visual.background,
-            visual.foreground,
-            0.035,
-          )!,
-      );
-      canvas.drawRRect(
-        block,
-        Paint()
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 0.8
-          ..color = visual.foreground.withValues(alpha: 0.28),
-      );
-    }
-
-    final shadowX = isRtl ? size.width - 4 : 4.0;
-    final highlightX = isRtl ? 4.0 : size.width - 4;
-    canvas.drawLine(
-        Offset(shadowX, 8), Offset(shadowX, size.height), edgePaint);
-    canvas.drawLine(
-      Offset(highlightX, 7),
-      Offset(highlightX, size.height),
-      highlightPaint,
-    );
-
-    if (visual.hasBands) {
-      canvas.drawRect(Rect.fromLTWH(0, 8, size.width, 5), detailPaint);
-      canvas.drawRect(
-        Rect.fromLTWH(0, size.height - 10, size.width, 5),
-        detailPaint,
-      );
-    }
-    if (visual.hasFoilRules) {
-      canvas.drawLine(
-        const Offset(7, 20),
-        Offset(size.width - 7, 20),
-        foilPaint,
-      );
-      canvas.drawLine(
-        Offset(7, size.height - 20),
-        Offset(size.width - 7, size.height - 20),
-        foilPaint,
-      );
-    }
-    if (visual.hubCount > 0) {
-      for (var index = 1; index <= visual.hubCount; index++) {
-        final y = size.height * index / (visual.hubCount + 1);
-        canvas.drawLine(
-          Offset(5, y),
-          Offset(size.width - 5, y),
-          edgePaint,
-        );
-        canvas.drawLine(
-          Offset(7, y - 2),
-          Offset(size.width - 7, y - 2),
-          highlightPaint,
-        );
-      }
-    }
-    for (var index = 0; index < 4; index++) {
-      final x = 9.0 +
-          ((visual.grainSeed + index * 13) %
-                  math.max(1, (size.width - 18).floor()))
-              .toDouble();
-      canvas.drawLine(
-        Offset(x, 18),
-        Offset(x, size.height - 14),
-        grainPaint,
-      );
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant _BookSpinePainter oldDelegate) {
-    return visual != oldDelegate.visual || isRtl != oldDelegate.isRtl;
-  }
-}
-
-class _BookContactShadowPainter extends CustomPainter {
-  const _BookContactShadowPainter({
-    required this.color,
-    required this.spineWidth,
-  });
-
-  final Color color;
-  final double spineWidth;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final left = (size.width - spineWidth) / 2 + 3;
-    final rect = Rect.fromLTWH(
-      left,
-      size.height - BookSpine.contactShadowDepth,
-      math.max(0, spineWidth - 6),
-      BookSpine.contactShadowDepth,
-    );
-    canvas.drawRect(
-      rect,
-      Paint()
-        ..shader = LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            color.withValues(alpha: 0.5),
-            color.withValues(alpha: 0),
-          ],
-        ).createShader(rect),
-    );
-  }
-
-  @override
-  bool shouldRepaint(covariant _BookContactShadowPainter oldDelegate) {
-    return color != oldDelegate.color || spineWidth != oldDelegate.spineWidth;
+    final scale = math.max(1, textScaler.scale(16) / 16);
+    return (_bayHeight - _bookHeight) + _bookHeight * scale;
   }
 }

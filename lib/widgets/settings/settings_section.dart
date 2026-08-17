@@ -24,30 +24,44 @@ class SettingsSection extends AbstractSettingsSection {
   }
 
   Widget buildSectionBody(BuildContext context) {
-    const scaleFactor = 0.5;
+    final theme = Theme.of(context);
     final tileList = buildTileList();
 
-    if (title == null) {
-      return tileList;
-    }
-
+    // A section without a header still gets the card and the side inset. It
+    // used to fall back to a bare column, so a headerless section sat flush
+    // against the screen edge while its neighbours were inset and grouped.
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Padding(
-          padding: const EdgeInsetsDirectional.only(
-            top: 24 * scaleFactor,
-            bottom: 10 * scaleFactor,
-            start: 24,
-            end: 24,
-          ),
-          child: DefaultTextStyle(
-            style: TextStyle(
-              color: Theme.of(context).primaryColor,
+        if (title == null)
+          // Without a header there is nothing to separate this card from the
+          // one above it, and the two ran together at the seam.
+          const SizedBox(height: 12)
+        else
+          Padding(
+            padding: const EdgeInsetsDirectional.only(
+              top: 20,
+              bottom: 8,
+              start: 24,
+              end: 24,
             ),
-            child: title!,
+            child: DefaultTextStyle(
+              // The Label role. DESIGN.md gives Source Sans 3 to navigation,
+              // controls, menus and metadata, and a section header is all
+              // four; it also sets the header apart from the Philosopher row
+              // titles under it. The bare TextStyle this replaced carried a
+              // colour and nothing else, so the header printed at the ambient
+              // body size in the platform default face.
+              style:
+                  (theme.textTheme.labelLarge ?? const TextStyle()).copyWith(
+                color: theme.colorScheme.primary,
+              ),
+              child: Semantics(
+                header: true,
+                child: title!,
+              ),
+            ),
           ),
-        ),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 8),
           child: FilledContainer(

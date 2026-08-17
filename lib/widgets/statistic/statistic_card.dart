@@ -6,6 +6,7 @@ import 'package:paperfold/widgets/common/container/filled_container.dart';
 import 'package:paperfold/widgets/common/anx_segmented_button.dart';
 import 'package:paperfold/widgets/statistic/heatmap_chart.dart';
 import 'package:paperfold/widgets/statistic/statistic_chart.dart';
+import 'package:paperfold/widgets/common/load_failure.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:icons_plus/icons_plus.dart';
@@ -138,8 +139,9 @@ class StatisticCard extends ConsumerWidget {
                   loading: () => const Center(
                     child: CircularProgressIndicator(),
                   ),
-                  error: (error, stack) => Center(
-                    child: Text('Error: $error'),
+                  error: (error, stack) => LoadFailure.inline(
+                    title: L10n.of(context).statisticsLoadFailed,
+                    error: error,
                   ),
                 ),
               )
@@ -160,13 +162,17 @@ class StatisticCard extends ConsumerWidget {
                     const SizedBox(height: 10),
                     if (data.mode == ChartMode.heatmap) const HeatmapChart(),
                     if (data.mode != ChartMode.heatmap) barChart(data),
-                    // HeatmapChart(),
                   ],
                 ),
             loading: () => const Center(
                   child: CircularProgressIndicator(),
                 ),
-            error: (error, stack) => throw error),
+            // Rethrowing inside a builder took the whole widget tree down
+            // with a red screen. A chart that cannot load is not fatal.
+            error: (error, stack) => LoadFailure.inline(
+                  title: L10n.of(context).statisticsLoadFailed,
+                  error: error,
+                )),
       ),
     );
   }

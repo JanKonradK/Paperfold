@@ -312,9 +312,13 @@ class DBHelper {
         return await openDatabase(
           path,
           version: dbVersion,
-          onCreate: (db, version) async {
-            onUpgradeDatabase(db, 0, version);
-          },
+          // Awaited. Without the await, `onCreate` returns as soon as the
+          // migration has started, sqflite reports the schema ready, and the
+          // first screen queries tables the migration is still creating. On a
+          // fresh install that is every table added after version 0, so the
+          // Library opened on "The shelves could not be opened" and only came
+          // right if the reader happened to press Retry.
+          onCreate: (db, version) => onUpgradeDatabase(db, 0, version),
           onUpgrade: onUpgradeDatabase,
         );
       case AnxPlatformEnum.ios:
@@ -330,9 +334,7 @@ class DBHelper {
           path,
           options: OpenDatabaseOptions(
             version: dbVersion,
-            onCreate: (db, version) async {
-              onUpgradeDatabase(db, 0, version);
-            },
+            onCreate: (db, version) => onUpgradeDatabase(db, 0, version),
             onUpgrade: onUpgradeDatabase,
           ),
         );
@@ -558,26 +560,34 @@ class DBHelper {
         final basePath = getBasePath('');
         final fileDir = Directory('$basePath/file');
         final coverDir = Directory('$basePath/cover');
-        fileDir.listSync().forEach((element) {
-          if (element is File) {
-            final path = element.path;
-            String pathAfterReplace = path.replaceAll(' ', '_');
-            int endIndex =
-                (pathAfterReplace.length < 72) ? pathAfterReplace.length : 72;
-            final newPath = '${pathAfterReplace.substring(0, endIndex)}.epub';
-            element.rename(newPath);
-          }
-        });
-        coverDir.listSync().forEach((element) {
-          if (element is File) {
-            final path = element.path;
-            String pathAfterReplace = path.replaceAll(' ', '_');
-            int endIndex =
-                (pathAfterReplace.length < 72) ? pathAfterReplace.length : 72;
-            final newPath = '${pathAfterReplace.substring(0, endIndex)}.png';
-            element.rename(newPath);
-          }
-        });
+        // A brand new database runs this step too, on its way up from version
+        // 0, and a brand new install may not have either directory yet.
+        // `listSync` on a directory that is not there throws, and the throw
+        // would abandon the rest of the migration half done.
+        if (fileDir.existsSync()) {
+          fileDir.listSync().forEach((element) {
+            if (element is File) {
+              final path = element.path;
+              String pathAfterReplace = path.replaceAll(' ', '_');
+              int endIndex =
+                  (pathAfterReplace.length < 72) ? pathAfterReplace.length : 72;
+              final newPath = '${pathAfterReplace.substring(0, endIndex)}.epub';
+              element.rename(newPath);
+            }
+          });
+        }
+        if (coverDir.existsSync()) {
+          coverDir.listSync().forEach((element) {
+            if (element is File) {
+              final path = element.path;
+              String pathAfterReplace = path.replaceAll(' ', '_');
+              int endIndex =
+                  (pathAfterReplace.length < 72) ? pathAfterReplace.length : 72;
+              final newPath = '${pathAfterReplace.substring(0, endIndex)}.png';
+              element.rename(newPath);
+            }
+          });
+        }
         continue case3;
       case3:
       case 3:

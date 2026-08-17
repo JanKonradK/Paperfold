@@ -1,37 +1,47 @@
 import 'package:paperfold/l10n/generated/L10n.dart';
+import 'package:paperfold/widgets/common/message_block.dart';
+import 'package:paperfold/widgets/ornament.dart';
 import 'package:flutter/material.dart';
 
+/// The notes empty state.
+///
+/// It showed a kaomoji at 50 points in `Colors.grey` — inherited styling that
+/// measured 2.49:1 on the light paper ground and belonged to no part of
+/// Paperfold. DESIGN.md gives empty states an ornament and a block no wider
+/// than 440 dp.
+///
+/// It lays out through [MessageBlock] because this widget is dropped into a
+/// bare `Column` in the reader's note list and into a `FittedBox` on the
+/// statistics dashboard, and both measure it with an unbounded height.
 class NotesTips extends StatelessWidget {
   const NotesTips({super.key});
 
-  final TextStyle textStyleBig = const TextStyle(
-    fontSize: 20,
-    fontWeight: FontWeight.bold,
-  );
-  final TextStyle textStyle = const TextStyle(
-    fontSize: 15,
-  );
-
   @override
   Widget build(BuildContext context) {
-    return Center(
+    final theme = Theme.of(context);
+    return MessageBlock(
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
         children: [
-          const Text('o(TヘTo) ',
-              style: TextStyle(
-                  fontSize: 50,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.grey)),
-          const SizedBox(height: 50),
+          Ornament(
+            ornament: PaperfoldOrnament.circularWreath,
+            width: 112,
+            height: 112,
+            tint: theme.colorScheme.outlineVariant,
+          ),
+          const SizedBox(height: 28),
           Text(
             L10n.of(context).notesTips_1,
-            style: textStyleBig,
+            textAlign: TextAlign.center,
+            style: theme.textTheme.headlineSmall,
           ),
           const SizedBox(height: 10),
           Text(
             L10n.of(context).notesTips_2,
-            style: textStyle,
+            textAlign: TextAlign.center,
+            style: theme.textTheme.bodyLarge?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
           ),
         ],
       ),

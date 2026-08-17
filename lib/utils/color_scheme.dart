@@ -168,6 +168,26 @@ ThemeData colorSchema(
           drawerTheme: DrawerThemeData()
               .copyWith(backgroundColor: gropedBackgroundColor),
           dialogTheme: DialogThemeData()
-              .copyWith(backgroundColor: gropedBackgroundColor))
+              .copyWith(backgroundColor: gropedBackgroundColor),
+          // The one surface still wearing stock Material: a white slab of
+          // snack bar across a true-black shelf. Every other surface in the
+          // application takes the grouped background and the body face, so
+          // this one does too, floating and rounded like the rest of the
+          // chrome rather than welded to the bottom edge.
+          snackBarTheme: SnackBarThemeData(
+            behavior: SnackBarBehavior.floating,
+            // A raised step of the scheme, not the ground: on true black a
+            // snack bar the colour of the shelf is a message nobody can see.
+            backgroundColor: colorScheme.surfaceContainerHigh,
+            contentTextStyle: _paperfoldTextTheme(themeData.textTheme)
+                .bodyMedium
+                ?.copyWith(color: colorScheme.onSurface),
+            actionTextColor: colorScheme.primary,
+            elevation: 2,
+            insetPadding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+            shape: const RoundedRectangleBorder(
+              borderRadius: BorderRadius.all(Radius.circular(12)),
+            ),
+          ))
       .useSystemChineseFont(brightness);
 }

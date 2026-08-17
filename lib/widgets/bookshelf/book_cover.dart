@@ -124,9 +124,9 @@ class BookCover extends StatelessWidget {
 
     final RoundedSuperellipseBorder borderShape = RoundedSuperellipseBorder(
       borderRadius: borderRadius,
-      side: const BorderSide(
+      side: BorderSide(
         width: 0.3,
-        color: Colors.grey,
+        color: Theme.of(context).colorScheme.outlineVariant,
       ),
     );
 

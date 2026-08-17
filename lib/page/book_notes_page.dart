@@ -11,6 +11,7 @@ import 'package:paperfold/widgets/common/container/filled_container.dart';
 import 'package:paperfold/widgets/highlight_digit.dart';
 import 'package:paperfold/widgets/icon_and_text.dart';
 import 'package:paperfold/providers/book_notes.dart';
+import 'package:paperfold/widgets/common/load_failure.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:icons_plus/icons_plus.dart';
@@ -33,12 +34,13 @@ class BookNotesPage extends ConsumerStatefulWidget {
 
 class _BookNotesPageState extends ConsumerState<BookNotesPage> {
   Widget bookInfo(BuildContext context, Book book, int numberOfNotes) {
-    TextStyle titleStyle = const TextStyle(
-      fontSize: 24,
-      fontWeight: FontWeight.bold,
-      overflow: TextOverflow.ellipsis,
-      fontFamily: 'SourceHanSerif',
-    );
+    // A Material role. The pinned `SourceHanSerif` set every book title on
+    // this page in a CJK serif whatever the language.
+    final TextStyle titleStyle =
+        Theme.of(context).textTheme.headlineSmall!.copyWith(
+              fontWeight: FontWeight.bold,
+              overflow: TextOverflow.ellipsis,
+            );
     return FilledContainer(
       padding: const EdgeInsets.all(10.0),
       child: LayoutBuilder(builder: (context, constraints) {
@@ -69,7 +71,7 @@ class _BookNotesPageState extends ConsumerState<BookNotesPage> {
                     book: book,
                     height: 180,
                     width: 120,
-                    radius: 20,
+                    radius: 10,
                   )),
             ],
           );
@@ -101,7 +103,7 @@ class _BookNotesPageState extends ConsumerState<BookNotesPage> {
                         book: book,
                         height: 180,
                         width: 120,
-                        radius: 20,
+                        radius: 10,
                       )),
                 ],
               ),
@@ -157,7 +159,7 @@ class _BookNotesPageState extends ConsumerState<BookNotesPage> {
                                 ExportType.copy,
                                 mergeChapters: allowMerge && mergeChapters,
                                 icon: const Icon(Icons.copy),
-                                label: 'Copy',
+                                label: L10n.of(context).notesExportCopy,
                               ),
                               _exportButton(
                                 context,
@@ -177,7 +179,7 @@ class _BookNotesPageState extends ConsumerState<BookNotesPage> {
                                 ExportType.txt,
                                 mergeChapters: allowMerge && mergeChapters,
                                 icon: const Icon(Icons.text_snippet),
-                                label: 'Text',
+                                label: L10n.of(context).notesExportPlainText,
                               ),
                               _exportButton(
                                 context,
@@ -199,9 +201,9 @@ class _BookNotesPageState extends ConsumerState<BookNotesPage> {
                     height: 120,
                     child: Center(child: CircularProgressIndicator()),
                   ),
-                  error: (error, stack) => Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Text('Error: $error'),
+                  error: (error, stack) => LoadFailure.inline(
+                    title: L10n.of(context).notesLoadFailed,
+                    error: error,
                   ),
                 );
               },
@@ -319,7 +321,7 @@ class _BookNotesPageState extends ConsumerState<BookNotesPage> {
     );
 
     return Padding(
-        padding: const EdgeInsets.only(right: 8.0),
+        padding: const EdgeInsetsDirectional.only(end: 8.0),
         child: isActive
             ? FilledButton(onPressed: onPressed, child: buttonChild)
             : OutlinedButton(onPressed: onPressed, child: buttonChild));
@@ -378,15 +380,11 @@ class _BookNotesPageState extends ConsumerState<BookNotesPage> {
   }
 
   Widget notesStatistic(BuildContext context, int numberOfNotes, Book book) {
-    TextStyle digitStyle = TextStyle(
-      fontSize: 28,
-      fontWeight: FontWeight.bold,
-      color: Theme.of(context).textTheme.bodyLarge!.color,
-    );
-    TextStyle textStyle = TextStyle(
-        fontSize: 18,
-        color: Theme.of(context).textTheme.bodyLarge!.color,
-        fontFamily: 'SourceHanSerif');
+    final TextStyle digitStyle =
+        Theme.of(context).textTheme.headlineSmall!.copyWith(
+              fontWeight: FontWeight.bold,
+            );
+    final TextStyle textStyle = Theme.of(context).textTheme.titleMedium!;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [

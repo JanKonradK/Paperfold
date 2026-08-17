@@ -747,6 +747,14 @@ export class Paginator extends HTMLElement {
   get scrolled() {
     return this.getAttribute('flow') === 'scrolled'
   }
+  // Whether horizontal page turns belong to the host rather than to this
+  // component. Set for the Flutter page curl, which draws the turn itself over
+  // a captured page and drives it from the same finger. Without this the two
+  // both answer the same swipe: the column scrolls natively underneath while
+  // the curl peels on top, and the release fires two page turns.
+  get externalTurn() {
+    return this.hasAttribute('external-turn')
+  }
   get scrollProp() {
     const { scrolled } = this
     return this.#vertical ? (scrolled ? 'scrollLeft' : 'scrollTop')
@@ -974,6 +982,20 @@ export class Paginator extends HTMLElement {
     }
 
     if (horizontalDrag && horizontalAxis) {
+      if (this.externalTurn) {
+        // The host is drawing this turn, and has already sent the column to the
+        // destination page so that its curl uncovers the real thing. Refusing
+        // the browser's own scrolling is all that is wanted here.
+        //
+        // Pinning `scrollLeft` as well - which is the obvious way to stop
+        // native momentum, and what this did at first - drags the column back
+        // off the destination on every single move event. The turn then
+        // uncovered the page it started from, while the reader's own page
+        // counter, which follows the programmatic jump rather than the scroll
+        // offset, insisted it had moved on.
+        e.preventDefault()
+        return
+      }
       this.#touchScrolled = true
       // rely on native scrolling for horizontal paging
     }
@@ -991,6 +1013,17 @@ export class Paginator extends HTMLElement {
 
     this.#touchScrolled = false
     if (this.scrolled) {
+      this.#touchState = null
+      this.#scheduleScrollRelocate()
+      return
+    }
+
+    // A horizontal swipe the host is drawing has already been reported to it,
+    // and the host decides where the page lands. Snapping here as well would
+    // turn a second page underneath the one being turned.
+    // The host owns where this one lands, and has already put the column
+    // there. Restoring any offset here would undo it.
+    if (this.externalTurn && state?.direction === 'horizontal') {
       this.#touchState = null
       this.#scheduleScrollRelocate()
       return

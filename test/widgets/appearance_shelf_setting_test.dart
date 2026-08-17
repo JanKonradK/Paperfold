@@ -31,6 +31,16 @@ void main() {
     );
     await tester.pumpAndSettle();
 
+    // The Bookshelf section sits below the Theme and Display sections, and
+    // the settings list builds its sections lazily, so the row has to be
+    // scrolled to before it exists.
+    await tester.scrollUntilVisible(
+      find.text('Uniform spines'),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.pumpAndSettle();
+
     final control = find.bySemanticsLabel('Uniform spines');
     expect(control, findsOneWidget);
     expect(tester.getSize(control).height, greaterThanOrEqualTo(48));

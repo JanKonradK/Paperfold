@@ -261,10 +261,9 @@ class TotalReadTime extends ConsumerWidget {
               ),
               Text(
                 '${Prefs().beginDate.toString().substring(0, 10)} ${L10n.of(context).statisticToPresent}',
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Colors.grey[600],
-                ),
+                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
               )
             ],
           );

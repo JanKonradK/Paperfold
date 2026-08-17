@@ -18,6 +18,7 @@ import 'package:paperfold/widgets/common/container/outlined_container.dart';
 import 'package:paperfold/widgets/hint/hint_banner.dart';
 import 'package:paperfold/widgets/statistic/statistic_card.dart';
 import 'package:paperfold/widgets/statistic/statistics_dashboard_title.dart';
+import 'package:paperfold/widgets/common/load_failure.dart';
 import 'package:paperfold/widgets/statistic/statistics_dashboard.dart';
 import 'package:paperfold/widgets/tips/statistic_tips.dart';
 import 'package:flutter/material.dart';
@@ -444,12 +445,14 @@ class DateBooks extends ConsumerStatefulWidget {
 }
 
 class _DateBooksState extends ConsumerState<DateBooks> {
-  final TextStyle titleStyle = const TextStyle(
-    fontSize: 30,
-    fontFamily: 'SourceHanSerif',
-    fontWeight: FontWeight.bold,
-    overflow: TextOverflow.ellipsis,
-  );
+  // A Material role. The hardcoded `SourceHanSerif` set this heading in a CJK
+  // serif in every language and ignored the Paperfold text theme, which
+  // already substitutes a Chinese face where one is needed.
+  TextStyle get titleStyle =>
+      Theme.of(context).textTheme.headlineMedium!.copyWith(
+            fontWeight: FontWeight.bold,
+            overflow: TextOverflow.ellipsis,
+          );
 
   List<int> deleteBookIds = [];
 
@@ -594,8 +597,9 @@ class _DateBooksState extends ConsumerState<DateBooks> {
       loading: () => const Center(
         child: CircularProgressIndicator(),
       ),
-      error: (error, stack) => Center(
-        child: Text('Error: $error'),
+      error: (error, stack) => LoadFailure.inline(
+        title: L10n.of(context).statisticsLoadFailed,
+        error: error,
       ),
     );
   }
@@ -607,24 +611,23 @@ class BookStatisticItem extends StatelessWidget {
 
   final int bookId;
   final int readingTime;
-  final TextStyle bookTitleStyle = const TextStyle(
-    fontSize: 20,
-    fontFamily: 'SourceHanSerif',
-    fontWeight: FontWeight.bold,
-    overflow: TextOverflow.ellipsis,
-  );
-  final TextStyle bookAuthorStyle = const TextStyle(
-    fontSize: 12,
-    color: Colors.grey,
-    overflow: TextOverflow.ellipsis,
-  );
-  final TextStyle bookReadingTimeStyle = const TextStyle(
-    fontSize: 18,
-    fontWeight: FontWeight.bold,
-  );
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    // Material roles. These were a pinned CJK serif and a `Colors.grey` that
+    // measures 2.49:1 on the light paper ground, under the 4.5:1 minimum.
+    final TextStyle bookTitleStyle = theme.textTheme.titleMedium!.copyWith(
+      fontWeight: FontWeight.bold,
+      overflow: TextOverflow.ellipsis,
+    );
+    final TextStyle bookAuthorStyle = theme.textTheme.bodySmall!.copyWith(
+      color: theme.colorScheme.onSurfaceVariant,
+      overflow: TextOverflow.ellipsis,
+    );
+    final TextStyle bookReadingTimeStyle =
+        theme.textTheme.titleMedium!.copyWith(fontWeight: FontWeight.bold);
+
     return FutureBuilder<Book>(
       future: bookDao.selectBookById(bookId),
       builder: (context, snapshot) {

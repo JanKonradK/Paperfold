@@ -219,7 +219,7 @@ class _StorageSettingsState extends ConsumerState<StorageSettings>
                           storageInfoAsync.value?.dataFilesSizeStr),
                     ),
                     Padding(
-                      padding: const EdgeInsets.only(left: 20.0),
+                      padding: const EdgeInsetsDirectional.only(start: 20.0),
                       child: Column(
                         children: [
                           ListTile(
@@ -373,11 +373,14 @@ class _StorageSettingsState extends ConsumerState<StorageSettings>
                       ],
                     ),
                     SizedBox(
-                      height: MediaQuery.of(context).size.height -
-                          MediaQuery.of(context).padding.top -
-                          MediaQuery.of(context).padding.bottom -
-                          kToolbarHeight -
-                          140,
+                      // Screen height less a magic 140 went negative on a
+                      // short window and threw. The list needs a workable
+                      // height, not the whole screen, so it takes a share of
+                      // what is there and never less than 240.
+                      height: max(
+                        240,
+                        MediaQuery.of(context).size.height * 0.55,
+                      ),
                       child: TabBarView(
                         controller: _tabController,
                         children: [

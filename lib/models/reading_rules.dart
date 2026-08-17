@@ -4,32 +4,25 @@ import 'package:paperfold/enums/convert_chinese_mode.dart';
 
 class ReadingRules {
   late ConvertChineseMode convertChineseMode;
-  late bool bionicReading;
 
-  ReadingRules({required this.convertChineseMode, required this.bionicReading});
+  ReadingRules({required this.convertChineseMode});
 
   ReadingRules.fromJson(String json) {
     Map<String, dynamic> data = jsonDecode(json);
     convertChineseMode = getConvertChineseMode(data['convertChineseMode']);
-    bionicReading = data['bionicReading'];
   }
 
   String toJson() {
     return '''
     {
-      "convertChineseMode": "${convertChineseMode.name}",
-      "bionicReading": $bionicReading
+      "convertChineseMode": "${convertChineseMode.name}"
     }
     ''';
   }
 
-  ReadingRules copyWith({
-    ConvertChineseMode? convertChineseMode,
-    bool? bionicReading,
-  }) {
+  ReadingRules copyWith({ConvertChineseMode? convertChineseMode}) {
     return ReadingRules(
       convertChineseMode: convertChineseMode ?? this.convertChineseMode,
-      bionicReading: bionicReading ?? this.bionicReading,
     );
   }
 }
