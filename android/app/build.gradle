@@ -12,15 +12,17 @@ if (localPropertiesFile.exists()) {
     }
 }
 
-def flutterVersionCode = localProperties.getProperty('flutter.versionCode')
-if (flutterVersionCode == null) {
-    flutterVersionCode = '1'
-}
+// `flutter build` passes the pubspec version as -Pversion-code / -Pversion-name.
+// local.properties is only a fallback, for a bare `gradlew` invocation. Read the
+// fallback first and a stale copy of it silently overrides pubspec.yaml: this
+// tree carried versionCode 6324 from the fork long after pubspec said otherwise.
+def flutterVersionCode = project.findProperty('version-code')
+        ?: localProperties.getProperty('flutter.versionCode')
+        ?: '1'
 
-def flutterVersionName = localProperties.getProperty('flutter.versionName')
-if (flutterVersionName == null) {
-    flutterVersionName = '1.0'
-}
+def flutterVersionName = project.findProperty('version-name')
+        ?: localProperties.getProperty('flutter.versionName')
+        ?: '1.0'
 
 def keystoreProperties = new Properties()
 def keystorePropertiesFile = rootProject.file('key.properties')
@@ -31,16 +33,16 @@ if (keystorePropertiesFile.exists()) {
 android {
     namespace "com.paperfold.app"
     // compileSdk flutter.compileSdkVersion
-    compileSdk 35
+    compileSdk 36
     ndkVersion flutter.ndkVersion
 
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
     }
 
     kotlinOptions {
-        jvmTarget = '1.8'
+        jvmTarget = '17'
     }
 
     sourceSets {
@@ -52,7 +54,7 @@ android {
         // You can update the following values to match your application needs.
         // For more information, see: https://docs.flutter.dev/deployment/android#reviewing-the-gradle-build-configuration.
         minSdkVersion flutter.minSdkVersion
-        targetSdkVersion 35
+        targetSdkVersion 36
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
     }
