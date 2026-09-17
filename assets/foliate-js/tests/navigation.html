@@ -1,0 +1,96 @@
+<!doctype html>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Reader navigation regression checks</title>
+<style>html,body { margin:0; height:100%; } foliate-view {display:block; width:100%; height:100%;}</style>
+<script type="module">
+import '../src/view.js';
+
+// Serve assets/foliate-js over HTTP and open tests/navigation.html in a browser.
+// The checks use real iframe layout, section loads and click events.
+window.results = [];
+window.isFootNoteOpen = () => false;
+const assert = (condition, message) => {
+  if (!condition) throw new Error(message);
+  results.push(message);
+};
+const view = document.createElement('foliate-view');
+document.body.append(view);
+const art = '<svg xmlns="http://www.w3.org/2000/svg" width="400" height="160"><rect width="400" height="160" fill="maroon"/></svg>';
+const image = `<img src="data:image/svg+xml,${encodeURIComponent(art)}">`;
+const contents = [image, image, `<a href="0">${image}</a>`, '<p>A chapter of readable text.</p>'.repeat(100) + '<a href="0">Contents</a>'];
+const urls = contents.map(body => URL.createObjectURL(new Blob([
+  `<!doctype html><html><head><style>body{font:18px/1.6 serif}img{width:100%}</style></head><body>${body}</body></html>`
+], {type:'text/html'})));
+let loads = 0;
+const book = {
+  metadata:{language:'en'}, dir:'ltr', toc:[],
+  sections: urls.map((url,i)=>({id:String(i), size:1000, load:()=>{loads++;return url}})),
+  splitTOCHref: href => [href], getTOCFragment: doc => doc.body,
+  resolveHref: href => ({index:Number(href)}),
+};
+window.done = (async()=>{
+  await view.open(book);
+  const r = view.renderer;
+  r.setAttribute('gap','6');
+  r.setAttribute('top-margin','20px');
+  r.setAttribute('bottom-margin','20px');
+  r.setAttribute('max-column-count','1');
+  r.setAttribute('max-inline-size','720px');
+  r.setAttribute('flow','scrolled');
+  r.setAttribute('animated','');
+  const settleImages = async () => {
+    await Promise.all([...r.getContents()[0].doc.images].map(img=>img.decode()));
+    await new Promise(requestAnimationFrame);
+  };
+  await view.goTo(0);
+  let clicks = 0;
+  view.addEventListener('click-view',()=>clicks++);
+  for (let i=0;i<3;i++) {
+    await view.goTo(i);
+    await settleImages();
+    const before = clicks;
+    r.dispatchEvent(new MouseEvent('click',{clientX:390,clientY:500,bubbles:true}));
+    assert(clicks-before===1, `Section ${i}: margin tap emits one event`);
+  }
+  if (navigator.maxTouchPoints > 0) {
+    const before = clicks;
+    r.getContents()[0].doc.querySelector('img').click();
+    assert(clicks-before===1, 'Linked chapter art forwards a touch tap');
+  }
+  await view.goTo(0);
+  await settleImages();
+  const beforeLoads = loads;
+  await Promise.all([view.next(),view.next(),view.next()]);
+  assert(r.getContents()[0].index===1 && loads-beforeLoads===1, 'Rapid taps load one section at a time');
+  await view.goTo(3);
+  const firstTextTurn = view.next();
+  // The same render callback runs when fonts/images or the viewport resize.
+  r.render();
+  await firstTextTurn;
+  assert(r.start > 0, 'A text-page turn survives a delayed layout update');
+  await view.prev();
+  assert(r.start < 2, 'Previous returns to the start of the text');
+  await r.goTo({index:3,anchor:1});
+  await view.next();
+  assert(r.getContents()[0].index===3, 'Next at the book end stays in the last section');
+  await view.prev();
+  assert(r.start < r.viewSize-r.size-2, 'Navigation still works after reaching the end');
+  let links = 0;
+  view.addEventListener('link', e=>{e.preventDefault();links++});
+  r.getContents()[0].doc.querySelector('a').click();
+  assert(links===1, 'Text hyperlinks still work');
+  await view.goTo(0);
+  await view.prev();
+  assert(r.getContents()[0].index===0, 'Previous at the beginning stays in the book');
+  r.setAttribute('flow','paginated');
+  await view.goTo(3);
+  const pageStart = r.start;
+  await view.next();
+  assert(r.start > pageStart, 'Paginated text still turns forward');
+  await view.prev();
+  assert(Math.abs(r.start-pageStart)<2, 'Paginated text still turns back');
+  document.title = 'PASS: '+results.length+' reader checks';
+  return results;
+})();
+window.done.catch(error=>{document.title='FAIL: '+error.message;window.failure=error.stack});
+</script>

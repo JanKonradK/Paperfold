@@ -135,8 +135,14 @@ void main() {
       );
     });
 
-    // Both dark variants are first class, so both are tested. The warm brown
-    // "candlelight" ground was rejected on 2026-08-12; see plan.md 5.1.
+    test('aged gold is readable on the burgundy cover', () {
+      expect(
+        _contrastRatio(
+            PaperfoldTokens.cover.foil, PaperfoldTokens.cover.ground),
+        greaterThanOrEqualTo(4.5),
+      );
+    });
+
     for (final (name, palette) in <(String, PaperfoldPagePalette)>[
       ('true black', PaperfoldTokens.darkTrueBlack),
       ('near-black', PaperfoldTokens.darkNearBlack),
@@ -153,18 +159,6 @@ void main() {
         expect(
           _contrastRatio(palette.accent, palette.ground),
           greaterThanOrEqualTo(4.5),
-        );
-      });
-
-      // Black raised every palette colour, but not enough to rescue this one,
-      // which is why the accent still has to swap between themes.
-      test('terracotta remains unsafe as text on $name', () {
-        expect(
-          _contrastRatio(
-            PaperfoldTokens.surfaces.terracottaBrown,
-            palette.ground,
-          ),
-          lessThan(4.5),
         );
       });
 
@@ -192,6 +186,11 @@ void main() {
             _contrastRatio(palette.ink, step),
             greaterThanOrEqualTo(4.5),
             reason: 'ink must stay readable on every $name surface',
+          );
+          expect(
+            _contrastRatio(palette.inkSoft, step),
+            greaterThanOrEqualTo(4.5),
+            reason: 'secondary text must stay readable on every $name surface',
           );
         }
       });

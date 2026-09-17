@@ -1,15 +1,13 @@
 /*
-THESIS: The Library is one climbable 3D bookcase, not five scrolling strips or a cover grid.
-OWN-WORLD: Warm paper and true-black grounds; solid bound books; quiet glass Material chrome for shelf controls.
-STORY: The reader opens the app onto their own books, recognises one by its spine the way they would at home, and reaches into it.
-FIRST VIEWPORT: The active shelf fills the tab. Its name, sort state, and honest filter chips sit above the furniture.
-FORM: The five-level Bookcase specified for the Paperfold visual world.
-FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, and DESIGN.md.
+THESIS: A personal library of flat, readable book spines on straight shelves.
+OWN-WORLD: Burgundy bookcloth, warm ivory paper, aged gold and dove bindings.
+STORY: Choose a shelf, take down a book, and return to reading.
+FIRST VIEWPORT: A gold wordmark, visible shelf choices, and a front-on shelf.
+FORM: The user's supplied burgundy cover and paper references govern this redesign.
 */
 
 import 'dart:async';
 import 'dart:io';
-import 'dart:math' as math;
 
 import 'package:desktop_drop/desktop_drop.dart';
 import 'package:file_picker/file_picker.dart';
@@ -32,10 +30,6 @@ import 'package:paperfold/service/book_binding_settings.dart';
 import 'package:paperfold/utils/get_path/get_temp_dir.dart';
 import 'package:paperfold/utils/log/common.dart';
 import 'package:paperfold/utils/platform_utils.dart';
-import 'package:paperfold/widgets/book_model/book_model_builder.dart'
-    as book_model;
-import 'package:paperfold/widgets/book_model/book_model_scene.dart';
-import 'package:paperfold/widgets/book_model/book_model_warm_up.dart';
 import 'package:paperfold/widgets/bookshelf/book_bottom_sheet.dart';
 import 'package:paperfold/widgets/bookshelf/book_cover.dart';
 import 'package:paperfold/widgets/bookshelf/book_spine.dart';
@@ -45,7 +39,8 @@ import 'package:paperfold/widgets/bookshelf/shelf_controls/shelf_controls.dart';
 import 'package:paperfold/widgets/bookshelf/shelf_stage.dart';
 import 'package:paperfold/widgets/bookshelf/sync_button.dart';
 import 'package:paperfold/widgets/ornament.dart';
-import 'package:paperfold/widgets/paperfold_glass_surface.dart';
+import 'package:paperfold/widgets/paperfold_wordmark.dart';
+import 'package:paperfold/widgets/paperfold_library_theme.dart';
 import 'package:path/path.dart' as path;
 
 enum _ShelfHomeAction { search, addBooks, addBookToBuy }
@@ -122,12 +117,7 @@ class _ShelfHomePageState extends ConsumerState<ShelfHomePage>
   final GlobalKey<BookcaseState> _bookcaseKey = GlobalKey<BookcaseState>();
   int _shelfIndex = 0;
   bool _dragging = false;
-
-  /// Whether the books on the first shelf have been drawn once already, out of
-  /// sight, and whether a slice of that work is already booked for after this
-  /// frame. See [BookModelWarmUp].
-  bool _warmed = false;
-  bool _warming = false;
+  bool _holding = false;
 
   @override
   bool get wantKeepAlive => true;
@@ -420,75 +410,17 @@ class _ShelfHomePageState extends ConsumerState<ShelfHomePage>
     ];
   }
 
-  /// Draws the books the reader is about to be shown, once, out of sight.
-  ///
-  /// The first frame a shelf paints is the frame that lays out a title and an
-  /// author for every book on it, resolves every palette, and finds no artwork
-  /// decoded — twenty books' worth of first-time work in the one frame the
-  /// reader is watching arrive. Doing it beforehand at idle priority costs
-  /// nothing anybody can see and leaves that frame with nothing but drawing to
-  /// do. Once per run: the caches are static and outlive this page.
-  void _warmUpShelves(List<ShelfRow> rows) {
-    if (_warmed || _warming || rows.isEmpty) return;
-    _warming = true;
-    final scheme = Theme.of(context).colorScheme;
-    final typography = book_model.BookModelTypography.of(context);
-    final mirror = Directionality.of(context) == TextDirection.rtl;
-    // The shelf the reader lands on, and no more. Warming the whole bookcase
-    // would be most of a library, and every other shelf is a climb away — by
-    // which time this has long finished.
-    final books = rows[_shelfIndex.clamp(0, rows.length - 1)].books;
-    final specs = [
-      for (final book in books)
-        () {
-          final seed = BookSpine.stableHash(book.id);
-          return book_model.BookModelSpec(
-            binding: book.binding,
-            title: book.title,
-            author: book.author,
-            blurb: book.blurb,
-            palette: BookModelPalette.resolve(
-              scheme: scheme,
-              binding: book.binding,
-              seed: seed,
-            ),
-            typography: typography,
-            seed: seed,
-            camera: ShelfStage.camera,
-            showDropShadow: false,
-            // What the row is actually drawn at. A book warmed at another
-            // level of detail lays out its type at another size, which is
-            // another cache key, which is no warming at all.
-            detail: book_model.BookDetail.reduced,
-          );
-        }(),
-    ];
-
-    // After the frame, not during it: this is called from build, and the point
-    // is to use the time between frames rather than any part of one.
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      _warming = false;
-      BookModelWarmUp.warmArt(
-        [for (final book in books) book.coverPath ?? ''],
-        mirror: mirror,
-      );
-      final more = BookModelWarmUp.slice(
-        specs,
-        keyOf: (spec) => '${spec.seed}|${spec.title}|${spec.author}',
-      );
-      // Nothing is scheduled to finish the rest. A shelf arriving rebuilds
-      // several times over, and each of those asks again; if the screen goes
-      // still before the row is warm, there is no longer anything to be warm
-      // for. Requesting a frame to finish warming would be spending the very
-      // thing this is trying to save.
-      if (!more) _warmed = true;
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     super.build(context);
+    return Theme(
+      data: paperfoldLibraryTheme(Theme.of(context)),
+      child:
+          Consumer(builder: (context, ref, _) => _buildLibrary(context, ref)),
+    );
+  }
+
+  Widget _buildLibrary(BuildContext context, WidgetRef ref) {
     final l10n = L10n.of(context);
     final shelves = ref.watch(shelfHomeProvider);
     final controls = ref.watch(shelfHomeControlsProvider);
@@ -513,42 +445,20 @@ class _ShelfHomePageState extends ConsumerState<ShelfHomePage>
         : _shelfRows(sections, data, controls);
     final activeIndex =
         rows.isEmpty ? 0 : _shelfIndex.clamp(0, rows.length - 1);
-    if (rows.isNotEmpty) _warmUpShelves(rows);
 
     final page = Scaffold(
       appBar: AppBar(
         titleSpacing: 16,
-        title: Text(
-          rows.isEmpty ? l10n.shelfHomeTitle : rows[activeIndex].name,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-        ),
-        // Always four actions, in one order. The sort and the filter are
-        // disabled rather than absent until the shelves have loaded: an
-        // actions list that changes length hands the sync button's State to a
-        // different element as the bar rebuilds, and the Riverpod subscription
-        // inside it throws on the second read. That is the same trap the key
-        // below exists for, reached by a different road.
+        toolbarHeight: 72,
+        title: const PaperfoldWordmark(),
+        // Stable actions keep the sync subscription attached during loading.
         actions: [
           IconButton(
-            key: const ValueKey('shelf-sort-control'),
-            tooltip: l10n.shelfSortControl,
-            onPressed: data == null
-                ? null
-                : () => showShelfSortSheet(context, controls),
-            icon: const Icon(Icons.sort_rounded),
-          ),
-          Badge.count(
-            count: controls.filterCount,
-            isLabelVisible: data != null && controls.hasFilters,
-            child: IconButton(
-              key: const ValueKey('shelf-filter-control'),
-              tooltip: l10n.shelfFilterControl,
-              onPressed: data == null
-                  ? null
-                  : () => showShelfFilterSheet(context, controls, data.tags),
-              icon: const Icon(Icons.filter_alt_outlined),
+            tooltip: l10n.searchBooksOrNotes,
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (context) => const SearchPage()),
             ),
+            icon: const Icon(Icons.search_rounded),
           ),
           // Keyed so the framework matches this button by identity rather than
           // by its position among the actions. Matched positionally, it gets
@@ -606,6 +516,13 @@ class _ShelfHomePageState extends ConsumerState<ShelfHomePage>
           ),
         ],
       ),
+      floatingActionButton: _holding
+          ? null
+          : FloatingActionButton(
+              tooltip: l10n.shelfAddBooksTooltip,
+              onPressed: _openAddBooksSheet,
+              child: const Icon(Icons.add_rounded),
+            ),
       body: SafeArea(
         top: false,
         bottom: false,
@@ -617,71 +534,131 @@ class _ShelfHomePageState extends ConsumerState<ShelfHomePage>
             };
             return Column(
               children: [
+                Padding(
+                  padding: const EdgeInsetsDirectional.fromSTEB(24, 8, 12, 4),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          rows.isEmpty
+                              ? l10n.shelfHomeTitle
+                              : rows[activeIndex].name,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: Theme.of(context).textTheme.headlineSmall,
+                        ),
+                      ),
+                      IconButton(
+                        key: const ValueKey('shelf-sort-control'),
+                        tooltip: l10n.shelfSortControl,
+                        onPressed: () => showShelfSortSheet(context, controls),
+                        icon: const Icon(Icons.sort_rounded),
+                      ),
+                      Badge.count(
+                        count: controls.filterCount,
+                        isLabelVisible: controls.hasFilters,
+                        child: IconButton(
+                          key: const ValueKey('shelf-filter-control'),
+                          tooltip: l10n.shelfFilterControl,
+                          onPressed: () => showShelfFilterSheet(
+                              context, controls, data.tags),
+                          icon: const Icon(Icons.filter_alt_outlined),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(
+                  height: 38 + MediaQuery.textScalerOf(context).scale(14),
+                  child: ListView.separated(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    scrollDirection: Axis.horizontal,
+                    itemCount: rows.length,
+                    separatorBuilder: (context, index) =>
+                        const SizedBox(width: 8),
+                    itemBuilder: (context, index) => ChoiceChip(
+                      key: ValueKey('shelf-tab-$index'),
+                      label: Text(rows[index].name),
+                      selected: index == activeIndex,
+                      showCheckmark: false,
+                      onSelected: _holding
+                          ? null
+                          : (_) => _bookcaseKey.currentState?.climbTo(index),
+                    ),
+                  ),
+                ),
                 ShelfFilterChips(controls: controls, tags: data.tags),
                 Expanded(
-                  child: Bookcase(
-                    key: _bookcaseKey,
-                    shelves: rows,
-                    initialShelf: activeIndex,
-                    onHoldingChanged: (holding) =>
-                        widget.backHandle?._setCanTakeBack(holding),
-                    onShelfChanged: (index) {
-                      if (_shelfIndex != index) {
-                        setState(() => _shelfIndex = index);
-                      }
-                    },
-                    onOpen: (shelfBook) async {
-                      final book = booksById[shelfBook.id];
-                      if (book != null) {
-                        await _openBook(book);
-                      } else {
-                        await _openShelf(sections.last);
-                      }
-                      _bookcaseKey.currentState?.activeStage?.reset();
-                    },
-                    optionsBuilder: (context, shelfBook) {
-                      final book = booksById[shelfBook.id];
-                      if (book == null) return const SizedBox.shrink();
-                      return ShelfBookOptionBar(
-                        onDetails: () => _openDetails(book),
-                        onShelves: () => _openShelves(book),
-                        onCustomise: () => _openCustomise(book),
-                        onNotes: () => _openNotes(book),
-                      );
-                    },
-                    emptyBuilder: (context, shelf) {
-                      final index = rows.indexWhere(
-                        (candidate) => candidate.name == shelf.name,
-                      );
-                      final sourceCount = index < 0 ? 0 : sections[index].count;
-                      final filteredEmpty =
-                          controls.hasFilters && sourceCount > 0;
-                      return _BookcaseEmptyState(
-                        shelfName: shelf.name,
-                        message: filteredEmpty
-                            ? l10n.shelfNoFilterResults
-                            : l10n.emptyShelf,
-                        actionLabel: filteredEmpty
-                            ? l10n.shelfClearFilters
-                            : index == 0
-                                ? l10n.shelfAddBooksTooltip
-                                : index == 4
-                                    ? l10n.addBookToBuyAction
-                                    : null,
-                        actionIcon: filteredEmpty
-                            ? Icons.filter_alt_off_outlined
-                            : Icons.add_rounded,
-                        onAction: filteredEmpty
-                            ? controls.clearFilters
-                            : index == 0
-                                ? _openAddBooksSheet
-                                : index == 4
-                                    ? _addWishlistBook
-                                    : null,
-                      );
-                    },
-                    pickUpHint: l10n.shelfPickUpHint,
-                    openHint: l10n.shelfOpenHint,
+                  child: Padding(
+                    padding: EdgeInsets.only(bottom: _holding ? 0 : 72),
+                    child: Bookcase(
+                      key: _bookcaseKey,
+                      showSignposts: false,
+                      shelves: rows,
+                      initialShelf: activeIndex,
+                      onHoldingChanged: (holding) {
+                        setState(() => _holding = holding);
+                        widget.backHandle?._setCanTakeBack(holding);
+                      },
+                      onShelfChanged: (index) {
+                        if (_shelfIndex != index) {
+                          setState(() => _shelfIndex = index);
+                        }
+                      },
+                      onOpen: (shelfBook) async {
+                        final book = booksById[shelfBook.id];
+                        if (book != null) {
+                          await _openBook(book);
+                        } else {
+                          await _openShelf(sections.last);
+                        }
+                        _bookcaseKey.currentState?.activeStage?.reset();
+                      },
+                      optionsBuilder: (context, shelfBook) {
+                        final book = booksById[shelfBook.id];
+                        if (book == null) return const SizedBox.shrink();
+                        return ShelfBookOptionBar(
+                          onDetails: () => _openDetails(book),
+                          onShelves: () => _openShelves(book),
+                          onCustomise: () => _openCustomise(book),
+                          onNotes: () => _openNotes(book),
+                        );
+                      },
+                      emptyBuilder: (context, shelf) {
+                        final index = rows.indexWhere(
+                          (candidate) => candidate.name == shelf.name,
+                        );
+                        final sourceCount =
+                            index < 0 ? 0 : sections[index].count;
+                        final filteredEmpty =
+                            controls.hasFilters && sourceCount > 0;
+                        return _BookcaseEmptyState(
+                          shelfName: shelf.name,
+                          message: filteredEmpty
+                              ? l10n.shelfNoFilterResults
+                              : l10n.emptyShelf,
+                          actionLabel: filteredEmpty
+                              ? l10n.shelfClearFilters
+                              : index == 0
+                                  ? l10n.shelfAddBooksTooltip
+                                  : index == 4
+                                      ? l10n.addBookToBuyAction
+                                      : null,
+                          actionIcon: filteredEmpty
+                              ? Icons.filter_alt_off_outlined
+                              : Icons.add_rounded,
+                          onAction: filteredEmpty
+                              ? controls.clearFilters
+                              : index == 0
+                                  ? _openAddBooksSheet
+                                  : index == 4
+                                      ? _addWishlistBook
+                                      : null,
+                        );
+                      },
+                      pickUpHint: l10n.shelfPickUpHint,
+                      openHint: l10n.shelfOpenHint,
+                    ),
                   ),
                 ),
               ],
@@ -836,6 +813,9 @@ ShelfBook shelfBookFromBook(Book book) => ShelfBook(
       coverPath: book.coverFullPath,
       progress: normaliseShelfProgress(book.readingPercentage),
       finished: book.status == BookStatus.finished,
+      series: book.series,
+      volume: book.volume,
+      pageCount: book.pageCount,
     );
 
 ShelfBook shelfBookFromWishlist(WishlistItem item) => ShelfBook(
@@ -907,185 +887,21 @@ class _BookcaseEmptyState extends StatelessWidget {
   }
 }
 
-/// The shelf the books stand on.
-///
-/// The bookcase used to be the loudest object on the screen: a walnut carcass
-/// with uprights, a grained back panel and a thick board, filling every bay
-/// with brown. It buried the books it was meant to hold, and it made the whole
-/// application read as antique when only the books were supposed to.
-///
-/// What is left is a single sheet of glass. It is almost nothing: a lit front
-/// edge, a faint body, and the shadow the books drop onto it. The page ground
-/// shows through, the books supply every colour on the screen, and the
-/// furniture stops competing with them.
-///
-/// Solid colour and linear gradients only, no blur or image, and
-/// [shouldRepaint] is false unless the palette changes.
-class _GlassShelfPainter extends CustomPainter {
-  _GlassShelfPainter({
-    required this.sheen,
-    required this.edge,
-    required this.shadow,
-  });
-
-  final Color sheen;
-  final Color edge;
-  final Color shadow;
-
-  /// The height the glass occupies at the foot of a shelf stage. The stage
-  /// pads its books by the same amount, so the books stand on the plate rather
-  /// than floating above it or sinking through it.
-  static const double plateInset = 14;
-  static const double _plateThickness = 9;
-  static const double _contactHeight = 20;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final plateTop = size.height - plateInset;
-    if (plateTop <= 0) return;
-
-    // The books darken the glass where they touch it. This band is what makes
-    // them stand on the shelf rather than in front of it.
-    final contact = Rect.fromLTWH(
-      0,
-      math.max(0, plateTop - _contactHeight),
-      size.width,
-      math.min(_contactHeight, plateTop),
-    );
-    canvas.drawRect(
-      contact,
-      Paint()
-        ..shader = LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            shadow.withValues(alpha: 0),
-            shadow.withValues(alpha: 0.34),
-          ],
-        ).createShader(contact),
-    );
-
-    // The plate itself: bright where the light catches its top face, fading
-    // through the thickness of the glass.
-    final plate = Rect.fromLTWH(0, plateTop, size.width, _plateThickness);
-    canvas.drawRect(
-      plate,
-      Paint()
-        ..shader = LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            sheen.withValues(alpha: 0.16),
-            sheen.withValues(alpha: 0.04),
-          ],
-        ).createShader(plate),
-    );
-
-    // Two hairlines carry the whole illusion: the lit top face, and the ground
-    // edge underneath it.
-    canvas.drawLine(
-      Offset(0, plateTop),
-      Offset(size.width, plateTop),
-      Paint()
-        ..color = sheen.withValues(alpha: 0.58)
-        ..strokeWidth = 1,
-    );
-    canvas.drawLine(
-      Offset(0, plateTop + _plateThickness),
-      Offset(size.width, plateTop + _plateThickness),
-      Paint()
-        ..color = edge.withValues(alpha: 0.42)
-        ..strokeWidth = 1,
-    );
-  }
-
-  @override
-  bool shouldRepaint(covariant _GlassShelfPainter oldDelegate) {
-    return sheen != oldDelegate.sheen ||
-        edge != oldDelegate.edge ||
-        shadow != oldDelegate.shadow;
-  }
-}
-
 class _ShelfLoadingView extends StatelessWidget {
   const _ShelfLoadingView();
 
   @override
   Widget build(BuildContext context) {
-    final l10n = L10n.of(context);
-    final labels = [
-      l10n.shelfReadingNow,
-      l10n.shelfAllTimeFavourites,
-      l10n.shelfToBeRead,
-      l10n.shelfFinished,
-      l10n.shelfBooksToBuy,
-    ];
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
-    final glass = PaperfoldGlassStyle.fromScheme(scheme);
-
-    return Semantics(
-      liveRegion: true,
-      label: l10n.shelvesLoading,
-      child: ListView.builder(
-        padding: const EdgeInsetsDirectional.fromSTEB(12, 8, 12, 32),
-        itemCount: labels.length,
-        itemBuilder: (context, index) => ExcludeSemantics(
-          child: CustomPaint(
-            painter: _GlassShelfPainter(
-              sheen: scheme.onSurface,
-              edge: scheme.outlineVariant,
-              shadow: scheme.shadow,
-            ),
-            child: Padding(
-              padding: EdgeInsetsDirectional.fromSTEB(
-                16,
-                index == 0 ? 12 : 16,
-                16,
-                0,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  PaperfoldGlassSurface(
-                    borderRadius: const BorderRadius.all(Radius.circular(12)),
-                    blurSigma: 10,
-                    child: SizedBox(
-                      height: 48,
-                      child: Padding(
-                        padding: const EdgeInsetsDirectional.symmetric(
-                            horizontal: 8),
-                        child: Align(
-                          alignment: AlignmentDirectional.centerStart,
-                          child: Text(
-                            labels[index],
-                            style: Theme.of(context)
-                                .textTheme
-                                .headlineSmall
-                                ?.copyWith(color: glass.foreground),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                  SizedBox(
-                    height: BookSpine.shelfStageHeight(
-                          MediaQuery.textScalerOf(context),
-                        ) +
-                        6,
-                    child: Center(
-                      child: Ornament(
-                        ornament: PaperfoldOrnament.circularWreath,
-                        width: 50,
-                        height: 50,
-                        tint: scheme.outlineVariant,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(width: 160, child: LinearProgressIndicator()),
+            const SizedBox(height: 24),
+            Text(L10n.of(context).shelvesLoading),
+          ],
         ),
       ),
     );

@@ -1,8 +1,9 @@
 import 'dart:io';
-import 'dart:math' as math;
 
 import 'package:paperfold/config/shared_preference_provider.dart';
 import 'package:paperfold/models/book.dart';
+import 'package:paperfold/config/paperfold_tokens.dart';
+import 'package:paperfold/widgets/bookshelf/book_spine.dart';
 import 'package:flutter/material.dart';
 
 class BookCover extends StatelessWidget {
@@ -19,15 +20,9 @@ class BookCover extends StatelessWidget {
   final double? width;
   final double? radius;
 
-  // Calculate text color based on background brightness
-  Color _getContrastColor(Color backgroundColor) {
-    final brightness = ThemeData.estimateBrightnessForColor(backgroundColor);
-    return brightness == Brightness.dark ? Colors.white : Colors.black;
-  }
-
   @override
   Widget build(BuildContext context) {
-    final double effectiveRadius = radius ?? 8;
+    final double effectiveRadius = radius ?? 3;
     final BorderRadius borderRadius = BorderRadius.circular(effectiveRadius);
     final File file = File(book.coverFullPath);
 
@@ -51,13 +46,12 @@ class BookCover extends StatelessWidget {
           // Calculate responsive sizes based on width
           final titleFontSize = coverWidth * 0.12;
           final authorFontSize = coverWidth * 0.08;
-          final iconSize = coverWidth * 0.8;
           final padding = coverWidth * 0.08;
 
-          final backgroundColor = Colors
-              .primaries[book.title.hashCode % Colors.primaries.length]
-              .shade200;
-          final textColor = _getContrastColor(backgroundColor);
+          final visual = BookSpine.resolveVisual(
+              'book-${book.id}', Theme.of(context).colorScheme);
+          final backgroundColor = visual.background;
+          final textColor = visual.foreground;
 
           final showTitle = Prefs().showBookTitleOnDefaultCover;
           final showAuthor = Prefs().showAuthorOnDefaultCover;
@@ -81,6 +75,7 @@ class BookCover extends StatelessWidget {
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(
                               fontSize: titleFontSize,
+                              fontFamily: PaperfoldTypeTokens.journalFamily,
                               fontWeight: FontWeight.bold,
                               color: textColor,
                               height: 1.2,
@@ -102,19 +97,6 @@ class BookCover extends StatelessWidget {
                       ],
                     ),
                   ),
-                // Icon at bottom right corner with rotation
-                Positioned(
-                  right: -padding * 0.8,
-                  bottom: -padding * 0.5,
-                  child: Transform.rotate(
-                    angle: 15 * math.pi / 180, // 15 degrees in radians
-                    child: Icon(
-                      Icons.book,
-                      size: iconSize,
-                      color: textColor.withValues(alpha: 0.1),
-                    ),
-                  ),
-                ),
               ],
             ),
           );

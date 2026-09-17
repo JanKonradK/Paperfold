@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:paperfold/config/shared_preference_provider.dart';
@@ -9,6 +11,7 @@ import 'package:paperfold/dao/wishlist.dart';
 import 'package:paperfold/models/book.dart';
 import 'package:paperfold/models/tag.dart';
 import 'package:paperfold/models/wishlist_item.dart';
+import 'package:paperfold/service/book_spine_metadata.dart';
 
 class ShelfHomeData {
   const ShelfHomeData({
@@ -36,14 +39,20 @@ final shelfHomeProvider =
 );
 
 class ShelfHomeController extends AsyncNotifier<ShelfHomeData> {
+  int _loadRevision = 0;
+
   @override
-  Future<ShelfHomeData> build() => _load();
+  Future<ShelfHomeData> build() {
+    ref.onDispose(() => _loadRevision++);
+    return _load();
+  }
 
   Future<void> refresh() async {
     state = await AsyncValue.guard(_load);
   }
 
   Future<ShelfHomeData> _load() async {
+    final revision = ++_loadRevision;
     final allBooksFuture = bookDao.selectNotDeleteBooks();
     final favouritesFuture = shelfDao.listBooks(builtInFavouritesShelfId);
     final booksToBuyFuture = wishlistDao.listBooksToBuy();
@@ -56,26 +65,33 @@ class ShelfHomeController extends AsyncNotifier<ShelfHomeData> {
     final bookTagIds = await bookTagDao.bookIdToTagIds(
       bookIds: allBooks.map((book) => book.id).toList(growable: false),
     );
+    final booksById = {for (final book in allBooks) book.id: book};
 
-    return ShelfHomeData(
-      readingNow: allBooks
-          .where((book) => book.status == BookStatus.reading)
-          .toList(growable: false),
-      favourites: favourites,
-      toBeRead: allBooks
-          .where((book) => book.status == BookStatus.notStarted)
-          .toList(growable: false),
-      finished: allBooks
-          .where((book) => book.status == BookStatus.finished)
-          .toList(growable: false),
-      booksToBuy: booksToBuy,
-      tags: tags,
-      bookTagIds: bookTagIds,
-    );
+    ShelfHomeData result() => ShelfHomeData(
+          readingNow: allBooks
+              .where((book) => book.status == BookStatus.reading)
+              .toList(growable: false),
+          favourites:
+              favourites.map((book) => booksById[book.id] ?? book).toList(),
+          toBeRead: allBooks
+              .where((book) => book.status == BookStatus.notStarted)
+              .toList(growable: false),
+          finished: allBooks
+              .where((book) => book.status == BookStatus.finished)
+              .toList(growable: false),
+          booksToBuy: booksToBuy,
+          tags: tags,
+          bookTagIds: bookTagIds,
+        );
+    // Paint the library immediately. File parsing runs outside the UI isolate.
+    unawaited(loadBookSpineMetadata(allBooks).then((_) {
+      if (revision == _loadRevision) state = AsyncData(result());
+    }));
+    return result();
   }
 }
 
-enum ShelfSortField { title, author, dateAdded, progress, rating }
+enum ShelfSortField { title, author, series, dateAdded, progress, rating }
 
 enum ShelfSortDirection { ascending, descending }
 
@@ -89,6 +105,7 @@ class ShelfHomeControls extends ChangeNotifier {
 
   static const _sortFieldKey = 'shelfSortField';
   static const _sortDirectionKey = 'shelfSortDirection';
+  static const _seriesDirectionKey = 'shelfSeriesSortDirection';
   static const _statusFiltersKey = 'shelfStatusFilters';
   static const _minimumRatingKey = 'shelfMinimumRating';
   static const _tagFiltersKey = 'shelfTagFilters';
@@ -96,17 +113,23 @@ class ShelfHomeControls extends ChangeNotifier {
   final Prefs _prefs;
 
   ShelfSortField sortField = ShelfSortField.dateAdded;
-  ShelfSortDirection sortDirection = ShelfSortDirection.descending;
+  ShelfSortDirection _sortDirection = ShelfSortDirection.descending;
+  ShelfSortDirection _seriesDirection = ShelfSortDirection.ascending;
+  ShelfSortDirection get sortDirection =>
+      sortField == ShelfSortField.series ? _seriesDirection : _sortDirection;
   Set<BookStatus> statusFilters = <BookStatus>{};
   double? minimumRating;
   Set<int> tagFilters = <int>{};
 
-  bool get hasFilters => statusFilters.isNotEmpty ||
+  bool get hasFilters =>
+      statusFilters.isNotEmpty ||
       minimumRating != null ||
       tagFilters.isNotEmpty;
 
   int get filterCount =>
-      statusFilters.length + (minimumRating == null ? 0 : 1) + tagFilters.length;
+      statusFilters.length +
+      (minimumRating == null ? 0 : 1) +
+      tagFilters.length;
 
   void _read() {
     final storedField = _prefs.prefs.getString(_sortFieldKey);
@@ -115,9 +138,14 @@ class ShelfHomeControls extends ChangeNotifier {
       orElse: () => ShelfSortField.dateAdded,
     );
     final storedDirection = _prefs.prefs.getString(_sortDirectionKey);
-    sortDirection = ShelfSortDirection.values.firstWhere(
+    _sortDirection = ShelfSortDirection.values.firstWhere(
       (value) => value.name == storedDirection,
       orElse: () => ShelfSortDirection.descending,
+    );
+    final storedSeriesDirection = _prefs.prefs.getString(_seriesDirectionKey);
+    _seriesDirection = ShelfSortDirection.values.firstWhere(
+      (value) => value.name == storedSeriesDirection,
+      orElse: () => ShelfSortDirection.ascending,
     );
     final storedStatuses =
         _prefs.prefs.getStringList(_statusFiltersKey) ?? const <String>[];
@@ -127,10 +155,11 @@ class ShelfHomeControls extends ChangeNotifier {
     final rating = _prefs.prefs.getDouble(_minimumRatingKey);
     minimumRating =
         rating == null || rating <= 0 ? null : rating.clamp(1, 5).toDouble();
-    tagFilters = (_prefs.prefs.getStringList(_tagFiltersKey) ?? const <String>[])
-        .map(int.tryParse)
-        .whereType<int>()
-        .toSet();
+    tagFilters =
+        (_prefs.prefs.getStringList(_tagFiltersKey) ?? const <String>[])
+            .map(int.tryParse)
+            .whereType<int>()
+            .toSet();
   }
 
   void setSortField(ShelfSortField value) {
@@ -142,8 +171,13 @@ class ShelfHomeControls extends ChangeNotifier {
 
   void setSortDirection(ShelfSortDirection value) {
     if (sortDirection == value) return;
-    sortDirection = value;
-    _prefs.prefs.setString(_sortDirectionKey, value.name);
+    if (sortField == ShelfSortField.series) {
+      _seriesDirection = value;
+      _prefs.prefs.setString(_seriesDirectionKey, value.name);
+    } else {
+      _sortDirection = value;
+      _prefs.prefs.setString(_sortDirectionKey, value.name);
+    }
     notifyListeners();
   }
 
@@ -157,9 +191,8 @@ class ShelfHomeControls extends ChangeNotifier {
   }
 
   void setMinimumRating(double? rating) {
-    final next = rating == null || rating <= 0
-        ? null
-        : rating.clamp(1, 5).toDouble();
+    final next =
+        rating == null || rating <= 0 ? null : rating.clamp(1, 5).toDouble();
     if (minimumRating == next) return;
     minimumRating = next;
     if (next == null) {
@@ -212,7 +245,8 @@ class ShelfHomeControls extends ChangeNotifier {
     indexed.sort((left, right) {
       final compared = _compareBooks(left.$2, right.$2);
       if (compared == 0) return left.$1.compareTo(right.$1);
-      return sortDirection == ShelfSortDirection.ascending
+      return sortField == ShelfSortField.series ||
+              sortDirection == ShelfSortDirection.ascending
           ? compared
           : -compared;
     });
@@ -229,8 +263,10 @@ class ShelfHomeControls extends ChangeNotifier {
         ShelfSortField.title => _text(left.$2.title, right.$2.title),
         ShelfSortField.author => _text(left.$2.author, right.$2.author),
         ShelfSortField.dateAdded ||
+        ShelfSortField.series ||
         ShelfSortField.progress ||
-        ShelfSortField.rating => 0,
+        ShelfSortField.rating =>
+          0,
       };
       if (compared == 0) return left.$1.compareTo(right.$1);
       return sortDirection == ShelfSortDirection.ascending
@@ -243,11 +279,44 @@ class ShelfHomeControls extends ChangeNotifier {
   int _compareBooks(Book left, Book right) => switch (sortField) {
         ShelfSortField.title => _text(left.title, right.title),
         ShelfSortField.author => _text(left.author, right.author),
+        ShelfSortField.series => _compareSeries(left, right),
         ShelfSortField.dateAdded => left.createTime.compareTo(right.createTime),
         ShelfSortField.progress =>
           left.readingPercentage.compareTo(right.readingPercentage),
         ShelfSortField.rating => left.rating.compareTo(right.rating),
       };
+
+  int _compareSeries(Book left, Book right) {
+    final leftSeries = left.series?.trim() ?? '';
+    final rightSeries = right.series?.trim() ?? '';
+    // Keep each series together, with standalone books after the series.
+    if (leftSeries.isEmpty != rightSeries.isEmpty) {
+      return leftSeries.isEmpty ? 1 : -1;
+    }
+    final series = _text(leftSeries, rightSeries);
+    if (series != 0) return series;
+    if (leftSeries.isNotEmpty) {
+      final leftVolume = _volumeNumber(left.volume);
+      final rightVolume = _volumeNumber(right.volume);
+      // Unknown volumes stay at the end in either direction.
+      if (leftVolume == null && rightVolume != null) return 1;
+      if (leftVolume != null && rightVolume == null) return -1;
+      if (leftVolume != null && rightVolume != null) {
+        final volume = leftVolume.compareTo(rightVolume);
+        if (volume != 0) {
+          return sortDirection == ShelfSortDirection.ascending
+              ? volume
+              : -volume;
+        }
+      }
+    }
+    return _text(left.title, right.title);
+  }
+
+  static double? _volumeNumber(String? value) {
+    final number = double.tryParse(value ?? '');
+    return number != null && number.isFinite && number >= 0 ? number : null;
+  }
 
   static int _text(String left, String right) =>
       left.toLowerCase().compareTo(right.toLowerCase());

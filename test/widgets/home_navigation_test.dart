@@ -7,6 +7,7 @@ import 'package:paperfold/config/paperfold_tokens.dart';
 import 'package:paperfold/config/shared_preference_provider.dart';
 import 'package:paperfold/l10n/generated/L10n.dart';
 import 'package:paperfold/page/home_page.dart';
+import 'package:paperfold/widgets/bookshelf/bookcase.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'shelf_home_fixtures.dart';
@@ -93,6 +94,16 @@ void main() {
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 300));
       expect(tester.getRect(indicator).left, greaterThan(libraryTabRect.left));
+
+      await tester.tap(find.text('Library'));
+      await tester.pumpAndSettle();
+      final bookcase = tester.state<BookcaseState>(find.byType(Bookcase));
+      await bookcase.climbTo(2);
+      await tester.pumpAndSettle();
+      await tester.binding.setSurfaceSize(const Size(900, 412));
+      await tester.pumpAndSettle();
+      expect(tester.state<BookcaseState>(find.byType(Bookcase)), same(bookcase));
+      expect(bookcase.shelf, 2);
 
       expect(tester.takeException(), isNull);
     },

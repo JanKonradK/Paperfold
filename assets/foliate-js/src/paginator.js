@@ -320,7 +320,8 @@ class View {
         'max-height': vertical
           ? (maxHeight !== 'none' && maxHeight !== '0px' ? maxHeight : '100%')
           : `${height - margin * 2}px`,
-        'max-width': effectiveMaxWidth,
+        // In scroll mode the preferred column can be wider than the phone.
+        'max-width': !this.#column && !vertical ? '100%' : effectiveMaxWidth,
         'object-fit': 'contain',
         'page-break-inside': 'avoid',
         'break-inside': 'avoid',
@@ -1234,6 +1235,9 @@ export class Paginator extends HTMLElement {
     return this.#scrollTo(offset, reason, smooth)
   }
   async scrollToAnchor(anchor, select) {
+    // Font/image and viewport resize callbacks can arrive during a turn.
+    // Let that turn settle its new anchor instead of cancelling it at the old one.
+    if (this.#turnAnimation) return
     this.#anchor = anchor
     const rects = uncollapse(anchor)?.getClientRects?.()
     // if anchor is an element or a range
@@ -1455,17 +1459,20 @@ export class Paginator extends HTMLElement {
       if (this.sections[index]?.linear !== 'no') return index
   }
   async #turnPage(dir, distance) {
-    // if (this.#locked) return
+    if (this.#locked) return
     this.#locked = true
-    const prev = dir === -1
-    const shouldGo = await (prev ? this.#scrollPrev(distance) : this.#scrollNext(distance))
-    
-    if (shouldGo) await this.#goTo({
-      index: this.#adjacentIndex(dir),
-      anchor: prev ? () => 1 : () => 0,
-    })
-    if (shouldGo || !this.hasAttribute('animated')) await wait(100)
-    this.#locked = false
+    try {
+      const prev = dir === -1
+      const shouldGo = await (prev ? this.#scrollPrev(distance) : this.#scrollNext(distance))
+      const index = this.#adjacentIndex(dir)
+      if (shouldGo && index != null) await this.#goTo({
+        index,
+        anchor: prev ? () => 1 : () => 0,
+      })
+      if (shouldGo || !this.hasAttribute('animated')) await wait(100)
+    } finally {
+      this.#locked = false
+    }
   }
   prev(distance) {
     return this.#turnPage(-1, distance)

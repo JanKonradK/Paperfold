@@ -4,64 +4,48 @@ import 'package:chinese_font_library/chinese_font_library.dart';
 import 'package:flex_color_scheme/flex_color_scheme.dart';
 import 'package:flutter/material.dart';
 
-TextStyle? _journalStyle(
-  TextStyle? style, {
-  FontStyle fontStyle = FontStyle.normal,
-  FontWeight fontWeight = FontWeight.w400,
-}) {
+TextStyle? _journalStyle(TextStyle? style) {
   return style?.copyWith(
     fontFamily: PaperfoldTypeTokens.journalFamily,
-    fontStyle: fontStyle,
-    fontWeight: fontWeight,
+    fontStyle: FontStyle.normal,
+    fontWeight: FontWeight.w400,
+    height: 1.2,
+    letterSpacing: 0,
   );
 }
 
 TextTheme _paperfoldTextTheme(TextTheme base) {
-  return base.copyWith(
-    displayLarge: _journalStyle(
-      base.displayLarge,
-      fontStyle: FontStyle.italic,
-    ),
-    displayMedium: _journalStyle(
-      base.displayMedium,
-      fontStyle: FontStyle.italic,
-    ),
-    displaySmall: _journalStyle(
-      base.displaySmall,
-      fontStyle: FontStyle.italic,
-    ),
-    headlineLarge: _journalStyle(
-      base.headlineLarge,
-      fontStyle: FontStyle.italic,
-    ),
-    headlineMedium: _journalStyle(
-      base.headlineMedium,
-      fontStyle: FontStyle.italic,
-    ),
-    headlineSmall: _journalStyle(
-      base.headlineSmall,
-      fontStyle: FontStyle.italic,
-    ),
+  final chrome = base.apply(fontFamily: PaperfoldTypeTokens.chromeFamily);
+  return chrome.copyWith(
+    displayLarge: _journalStyle(base.displayLarge),
+    displayMedium: _journalStyle(base.displayMedium),
+    displaySmall: _journalStyle(base.displaySmall),
+    headlineLarge: _journalStyle(base.headlineLarge),
+    headlineMedium: _journalStyle(base.headlineMedium),
+    headlineSmall: _journalStyle(base.headlineSmall),
     titleLarge: _journalStyle(base.titleLarge),
-    titleMedium: _journalStyle(base.titleMedium),
-    titleSmall: _journalStyle(base.titleSmall),
-    bodyLarge: _journalStyle(base.bodyLarge),
-    bodyMedium: _journalStyle(base.bodyMedium),
-    bodySmall: _journalStyle(base.bodySmall),
-    labelLarge: base.labelLarge?.copyWith(
-      fontFamily: PaperfoldTypeTokens.chromeFamily,
-      fontStyle: FontStyle.normal,
+    titleMedium: chrome.titleMedium?.copyWith(
       fontWeight: FontWeight.w600,
+      letterSpacing: 0,
     ),
-    labelMedium: base.labelMedium?.copyWith(
-      fontFamily: PaperfoldTypeTokens.chromeFamily,
-      fontStyle: FontStyle.normal,
+    titleSmall: chrome.titleSmall?.copyWith(
       fontWeight: FontWeight.w600,
+      letterSpacing: 0,
     ),
-    labelSmall: base.labelSmall?.copyWith(
-      fontFamily: PaperfoldTypeTokens.chromeFamily,
-      fontStyle: FontStyle.normal,
+    bodyLarge: chrome.bodyLarge?.copyWith(height: 1.5, letterSpacing: 0),
+    bodyMedium: chrome.bodyMedium?.copyWith(height: 1.45, letterSpacing: 0),
+    bodySmall: chrome.bodySmall?.copyWith(height: 1.4, letterSpacing: 0),
+    labelLarge: chrome.labelLarge?.copyWith(
       fontWeight: FontWeight.w600,
+      letterSpacing: 0.1,
+    ),
+    labelMedium: chrome.labelMedium?.copyWith(
+      fontWeight: FontWeight.w600,
+      letterSpacing: 0.1,
+    ),
+    labelSmall: chrome.labelSmall?.copyWith(
+      fontWeight: FontWeight.w600,
+      letterSpacing: 0.1,
     ),
   );
 }
@@ -107,11 +91,20 @@ ThemeData colorSchema(
           primaryContainer: Colors.grey,
           onPrimaryContainer: Colors.black,
           secondary: Colors.grey,
-          onSecondary: Colors.white,
+          onSecondary: Colors.black,
           secondaryContainer: Colors.black12,
           onSecondaryContainer: Colors.black,
+          tertiary: Colors.black,
+          onTertiary: Colors.white,
           surface: Colors.white,
           onSurface: Colors.black,
+          onSurfaceVariant: Colors.black,
+          surfaceContainerLowest: Colors.white,
+          surfaceContainerLow: Colors.white,
+          surfaceContainer: Colors.white,
+          surfaceContainerHigh: Color(0xFFF2F2F2),
+          surfaceContainerHighest: Color(0xFFE5E5E5),
+          surfaceTint: Colors.transparent,
         )
       : hasCustomSeed
           ? switch (brightness) {
@@ -154,34 +147,70 @@ ThemeData colorSchema(
             )
         };
 
+  final textTheme = _paperfoldTextTheme(themeData.textTheme);
+  const surfaceShape = RoundedRectangleBorder(
+    borderRadius: BorderRadius.all(Radius.circular(16)),
+  );
+
   return themeData
       .copyWith(
           sliderTheme: const SliderThemeData(year2023: false),
           progressIndicatorTheme:
               const ProgressIndicatorThemeData(year2023: false),
-          textTheme: _paperfoldTextTheme(themeData.textTheme),
+          textTheme: textTheme,
           primaryTextTheme: _paperfoldTextTheme(themeData.primaryTextTheme)
               .useSystemChineseFont(brightness),
           scaffoldBackgroundColor: gropedBackgroundColor,
-          bottomSheetTheme: BottomSheetThemeData()
-              .copyWith(backgroundColor: gropedBackgroundColor),
-          drawerTheme: DrawerThemeData()
-              .copyWith(backgroundColor: gropedBackgroundColor),
-          dialogTheme: DialogThemeData()
-              .copyWith(backgroundColor: gropedBackgroundColor),
-          // The one surface still wearing stock Material: a white slab of
-          // snack bar across a true-black shelf. Every other surface in the
-          // application takes the grouped background and the body face, so
-          // this one does too, floating and rounded like the rest of the
-          // chrome rather than welded to the bottom edge.
+          appBarTheme: themeData.appBarTheme.copyWith(
+            backgroundColor: gropedBackgroundColor,
+            foregroundColor: colorScheme.onSurface,
+            surfaceTintColor: Colors.transparent,
+            elevation: 0,
+            scrolledUnderElevation: 0,
+            titleTextStyle: textTheme.titleLarge?.copyWith(
+              color: colorScheme.onSurface,
+            ),
+          ),
+          bottomSheetTheme: themeData.bottomSheetTheme.copyWith(
+            backgroundColor: gropedBackgroundColor,
+            modalBackgroundColor: gropedBackgroundColor,
+            surfaceTintColor: Colors.transparent,
+            shape: const RoundedRectangleBorder(
+              borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+            ),
+          ),
+          drawerTheme: themeData.drawerTheme.copyWith(
+            backgroundColor: gropedBackgroundColor,
+            surfaceTintColor: Colors.transparent,
+          ),
+          dialogTheme: themeData.dialogTheme.copyWith(
+            backgroundColor: gropedBackgroundColor,
+            surfaceTintColor: Colors.transparent,
+            shape: surfaceShape,
+            titleTextStyle: textTheme.headlineSmall,
+            contentTextStyle: textTheme.bodyMedium,
+          ),
+          cardTheme: themeData.cardTheme.copyWith(
+            color: colorScheme.surfaceContainerLow,
+            surfaceTintColor: Colors.transparent,
+            elevation: 0,
+            shape: surfaceShape,
+          ),
+          popupMenuTheme: themeData.popupMenuTheme.copyWith(
+            color: colorScheme.surfaceContainerLow,
+            surfaceTintColor: Colors.transparent,
+            shape: surfaceShape,
+            textStyle: textTheme.bodyMedium,
+          ),
+          dividerTheme: themeData.dividerTheme.copyWith(
+            color: colorScheme.outlineVariant,
+            thickness: 0.5,
+          ),
           snackBarTheme: SnackBarThemeData(
             behavior: SnackBarBehavior.floating,
-            // A raised step of the scheme, not the ground: on true black a
-            // snack bar the colour of the shelf is a message nobody can see.
             backgroundColor: colorScheme.surfaceContainerHigh,
-            contentTextStyle: _paperfoldTextTheme(themeData.textTheme)
-                .bodyMedium
-                ?.copyWith(color: colorScheme.onSurface),
+            contentTextStyle:
+                textTheme.bodyMedium?.copyWith(color: colorScheme.onSurface),
             actionTextColor: colorScheme.primary,
             elevation: 2,
             insetPadding: const EdgeInsets.fromLTRB(16, 8, 16, 12),

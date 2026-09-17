@@ -194,7 +194,7 @@ class Prefs extends ChangeNotifier {
   }
 
   ThemeMode get themeMode {
-    String themeMode = prefs.getString('themeMode') ?? 'system';
+    String themeMode = prefs.getString('themeMode') ?? 'light';
     switch (themeMode) {
       case 'dark':
         return ThemeMode.dark;
@@ -235,8 +235,8 @@ class Prefs extends ChangeNotifier {
     String? readThemeJson = prefs.getString('readTheme');
     if (readThemeJson == null) {
       return ReadTheme(
-          backgroundColor: 'FFFBFBF3',
-          textColor: 'FF343434',
+          backgroundColor: 'FFF6F2EA',
+          textColor: 'FF160F0C',
           backgroundImagePath: '');
     }
     return ReadTheme.fromJson(readThemeJson);

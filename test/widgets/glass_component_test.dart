@@ -17,22 +17,24 @@ void main() {
       Brightness.dark,
       trueBlack: false,
     ),
+    'custom seed': ColorScheme.fromSeed(seedColor: Colors.blue),
   };
 
   test(
-    'glass material maintains 4.5:1 over black and white in all brand themes',
+    'matte material stays opaque and readable in brand and custom themes',
     () {
       for (final MapEntry(key: name, value: scheme) in schemes.entries) {
         final style = PaperfoldGlassStyle.fromScheme(scheme);
+        expect(style.tint.a, 1, reason: '$name hides the content behind it');
         expect(
           style.worstCaseContrast,
           greaterThanOrEqualTo(PaperfoldGlassStyle.minimumContrast),
-          reason: '$name translucent path',
+          reason: '$name over any background',
         );
         expect(
           style.solidContrast,
           greaterThanOrEqualTo(PaperfoldGlassStyle.minimumContrast),
-          reason: '$name solid fallback',
+          reason: '$name matte surface',
         );
         expect(
           PaperfoldGlassStyle.contrastRatio(
@@ -47,7 +49,7 @@ void main() {
   );
 
   testWidgets(
-    'glass disables blur for high contrast and reduced motion',
+    'matte controls do not blur, including high contrast and reduced motion',
     (tester) async {
       Future<void> pumpSurface({
         bool highContrast = false,
@@ -64,7 +66,7 @@ void main() {
                 child: SizedBox(
                   width: 180,
                   height: 48,
-                  child: PaperfoldGlassSurface(child: Text('Glass')),
+                  child: PaperfoldGlassSurface(child: Text('Control')),
                 ),
               ),
             ),
@@ -78,7 +80,7 @@ void main() {
           of: find.byType(PaperfoldGlassSurface),
           matching: find.byType(BackdropFilter),
         ),
-        findsOneWidget,
+        findsNothing,
       );
       expect(
         find.descendant(

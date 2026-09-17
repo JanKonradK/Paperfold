@@ -29,6 +29,7 @@ import 'package:paperfold/utils/toast/common.dart';
 import 'package:paperfold/widgets/ornament.dart';
 import 'package:paperfold/widgets/paperfold_glass_surface.dart';
 import 'package:paperfold/widgets/paperfold_logo_mark.dart';
+import 'package:paperfold/widgets/paperfold_library_theme.dart';
 import 'package:paperfold/widgets/settings/about.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart';
@@ -63,6 +64,7 @@ class _HomePageState extends ConsumerState<HomePage> {
   /// The Library's claim on the back gesture, so a held book goes back on its
   /// shelf before back starts walking the tab history.
   final LibraryBackHandle _libraryBack = LibraryBackHandle();
+  final GlobalKey _pageStackKey = GlobalKey();
 
   /// True for the few seconds after the reader has been asked whether they
   /// meant to leave, during which one more back closes the application.
@@ -237,6 +239,7 @@ class _HomePageState extends ConsumerState<HomePage> {
     }
 
     final pageStack = IndexedStack(
+      key: _pageStackKey,
       index: _destination,
       children: pages,
     );
@@ -244,98 +247,105 @@ class _HomePageState extends ConsumerState<HomePage> {
     // Rebuilt whenever the Library takes or releases its claim, because
     // `canPop` is read at build time and a book leaves the shelf without this
     // page rebuilding for any other reason.
-    return ListenableBuilder(
-      listenable: _libraryBack,
-      builder: (context, child) => PopScope<Object?>(
-        // Only the armed second press leaves. Everything else is ours to
-        // answer, so that the last back on the shelf asks before it closes the
-        // application rather than closing it.
-        canPop: _leaving,
-        onPopInvokedWithResult: (didPop, result) {
-          if (didPop) return;
-          // The Library first. Only one of the three may act on one press.
-          if (_libraryBack.takeBack()) return;
-          if (_destinationHistory.length > 1) {
-            handleBack(didPop, result);
-            return;
-          }
-          _armLeaving(context);
-        },
-        child: child!,
-      ),
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          if (constraints.maxWidth > 600) {
-            final extended = constraints.maxWidth > 1000;
-            return Scaffold(
-              body: Row(
-                children: [
-                  SafeArea(
-                    child: NavigationRail(
-                      leading: Semantics(
-                        button: true,
-                        label: l10n.appAbout,
-                        child: Tooltip(
-                          message: l10n.appAbout,
-                          child: InkWell(
-                            onTap: openAboutDialog,
-                            borderRadius: BorderRadius.circular(24),
-                            child: SizedBox(
-                              width: 48,
-                              height: 48,
-                              child: Center(
-                                child: PaperfoldLogoMark(
-                                  size: 32,
-                                  tint: Theme.of(context).colorScheme.secondary,
+    return Theme(
+      data: _destination == 1
+          ? paperfoldLibraryTheme(Theme.of(context))
+          : Theme.of(context),
+      child: ListenableBuilder(
+        listenable: _libraryBack,
+        builder: (context, child) => PopScope<Object?>(
+          // Only the armed second press leaves. Everything else is ours to
+          // answer, so that the last back on the shelf asks before it closes the
+          // application rather than closing it.
+          canPop: _leaving,
+          onPopInvokedWithResult: (didPop, result) {
+            if (didPop) return;
+            // The Library first. Only one of the three may act on one press.
+            if (_libraryBack.takeBack()) return;
+            if (_destinationHistory.length > 1) {
+              handleBack(didPop, result);
+              return;
+            }
+            _armLeaving(context);
+          },
+          child: child!,
+        ),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            if (constraints.maxWidth > 600) {
+              final extended = constraints.maxWidth > 1000;
+              return Scaffold(
+                body: Row(
+                  children: [
+                    SafeArea(
+                      child: NavigationRail(
+                        leading: Semantics(
+                          button: true,
+                          label: l10n.appAbout,
+                          child: Tooltip(
+                            message: l10n.appAbout,
+                            child: InkWell(
+                              onTap: openAboutDialog,
+                              borderRadius: BorderRadius.circular(24),
+                              child: SizedBox(
+                                width: 48,
+                                height: 48,
+                                child: Center(
+                                  child: PaperfoldLogoMark(
+                                    size: 32,
+                                    tint:
+                                        Theme.of(context).colorScheme.secondary,
+                                  ),
                                 ),
                               ),
                             ),
                           ),
                         ),
+                        groupAlignment: 1,
+                        extended: extended,
+                        selectedIndex: _destination,
+                        onDestinationSelected: selectDestination,
+                        labelType:
+                            extended ? null : NavigationRailLabelType.all,
+                        destinations: [
+                          for (final destination in destinations)
+                            NavigationRailDestination(
+                              icon: Icon(destination.icon),
+                              selectedIcon: Icon(destination.selectedIcon),
+                              label: Text(destination.label),
+                            ),
+                        ],
                       ),
-                      groupAlignment: 1,
-                      extended: extended,
-                      selectedIndex: _destination,
-                      onDestinationSelected: selectDestination,
-                      labelType: extended ? null : NavigationRailLabelType.all,
-                      destinations: [
-                        for (final destination in destinations)
-                          NavigationRailDestination(
-                            icon: Icon(destination.icon),
-                            selectedIcon: Icon(destination.selectedIcon),
-                            label: Text(destination.label),
-                          ),
-                      ],
                     ),
-                  ),
-                  const VerticalDivider(width: 1),
-                  Expanded(
-                    child: SafeArea(
-                      top: false,
-                      child: pageStack,
+                    const VerticalDivider(width: 1),
+                    Expanded(
+                      child: SafeArea(
+                        top: false,
+                        child: pageStack,
+                      ),
                     ),
-                  ),
+                  ],
+                ),
+              );
+            }
+
+            return Scaffold(
+              // The bar gets its own strip of the screen and the page stops
+              // above it. Under `extendBody` the shelf ran on behind the glass,
+              // so a book title, a shelf name and the three destinations were
+              // all printed over one another at the foot of the Library.
+              extendBody: false,
+              body: pageStack,
+              bottomNavigationBar: _SlidingNavigationBar(
+                selectedIndex: _destination,
+                onDestinationSelected: selectDestination,
+                destinations: [
+                  ...destinations,
                 ],
               ),
             );
-          }
-
-          return Scaffold(
-            // The bar gets its own strip of the screen and the page stops
-            // above it. Under `extendBody` the shelf ran on behind the glass,
-            // so a book title, a shelf name and the three destinations were
-            // all printed over one another at the foot of the Library.
-            extendBody: false,
-            body: pageStack,
-            bottomNavigationBar: _SlidingNavigationBar(
-              selectedIndex: _destination,
-              onDestinationSelected: selectDestination,
-              destinations: [
-                ...destinations,
-              ],
-            ),
-          );
-        },
+          },
+        ),
       ),
     );
   }
@@ -364,6 +374,8 @@ class _SlidingNavigationBar extends StatelessWidget {
     final glass = PaperfoldGlassStyle.fromScheme(scheme);
     final mediaQuery = MediaQuery.of(context);
     final disableAnimations = MediaQuery.disableAnimationsOf(context);
+    final largeText = MediaQuery.textScalerOf(context).scale(12) > 18;
+    final barHeight = largeText ? 96.0 : 56.0;
     final bottomInset = math.max(
       mediaQuery.padding.bottom,
       mediaQuery.systemGestureInsets.bottom,
@@ -372,7 +384,7 @@ class _SlidingNavigationBar extends StatelessWidget {
     return Padding(
       padding: EdgeInsetsDirectional.fromSTEB(12, 4, 12, bottomInset + 8),
       child: SizedBox(
-        height: 56,
+        height: barHeight,
         child: PaperfoldGlassSurface(
           // Nothing passes behind this bar any more: `extendBody` is off, so
           // the page stops above it and the only thing left to blur is the
@@ -384,7 +396,7 @@ class _SlidingNavigationBar extends StatelessWidget {
             padding: const EdgeInsets.all(4),
             child: LayoutBuilder(
               builder: (context, constraints) {
-                const gap = 8.0;
+                final gap = largeText ? 0.0 : 8.0;
                 final slotWidth =
                     (constraints.maxWidth - gap * (destinations.length - 1)) /
                         destinations.length;
@@ -402,7 +414,7 @@ class _SlidingNavigationBar extends StatelessWidget {
                         top: 0,
                         start: selectedIndex * (slotWidth + gap),
                         width: slotWidth,
-                        height: 48,
+                        height: barHeight - 8,
                         child: DecoratedBox(
                           decoration: BoxDecoration(
                             color: scheme.primaryContainer,
@@ -415,7 +427,7 @@ class _SlidingNavigationBar extends StatelessWidget {
                           for (var index = 0;
                               index < destinations.length;
                               index++) ...[
-                            if (index > 0) const SizedBox(width: gap),
+                            if (index > 0) SizedBox(width: gap),
                             Expanded(
                               child: _SlidingNavigationItem(
                                 tabIndex: index,
@@ -478,8 +490,14 @@ class _SlidingNavigationItem extends StatelessWidget {
           borderRadius: BorderRadius.circular(24),
           child: SizedBox.expand(
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 6),
-              child: Row(
+              padding: EdgeInsets.symmetric(
+                horizontal:
+                    MediaQuery.textScalerOf(context).scale(12) > 18 ? 2 : 6,
+              ),
+              child: Flex(
+                direction: MediaQuery.textScalerOf(context).scale(12) > 18
+                    ? Axis.vertical
+                    : Axis.horizontal,
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Icon(
@@ -487,11 +505,12 @@ class _SlidingNavigationItem extends StatelessWidget {
                     size: 18,
                     color: foreground,
                   ),
-                  const SizedBox(width: 6),
+                  const SizedBox(width: 6, height: 4),
                   Flexible(
                     child: Text(
                       destination.label,
-                      maxLines: 1,
+                      textAlign: TextAlign.center,
+                      maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: theme.textTheme.labelMedium?.copyWith(
                         color: foreground,
@@ -525,87 +544,106 @@ class _JournalDestination extends ConsumerWidget {
     // their own. The architecture is two destinations, cross-linked.
     final trackers = const SliverToBoxAdapter(child: _JournalTrackerCards());
 
-    return Scaffold(
-      appBar: AppBar(title: Text(l10n.navJournal)),
-      body: RefreshIndicator(
-        onRefresh: () async {
-          await ref.read(journalHomeProvider.notifier).refresh();
-          await ref.read(readingChallengeProvider.notifier).refresh();
-          await ref.read(monthTrackerProvider.notifier).refresh();
-        },
-        child: CustomScrollView(
-          slivers: [
-            trackers,
-            ...entries.when(
-              loading: () => const [
-                SliverFillRemaining(
-                  hasScrollBody: false,
-                  child: Center(child: CircularProgressIndicator()),
-                ),
-              ],
-              error: (error, stackTrace) => [
-                SliverFillRemaining(
-                  hasScrollBody: false,
-                  child: _DestinationEmptyState(
-                    ornament: PaperfoldOrnament.rectangularVineFrame,
-                    title: l10n.journalPlaceholderTitle,
-                    body: l10n.journalPlaceholderBody,
+    final paper = Theme.of(context).brightness == Brightness.light &&
+        Prefs().useBrandTheme &&
+        !Prefs().eInkMode;
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        image: paper
+            ? const DecorationImage(
+                image: AssetImage('assets/images/paperfold_paper.jpg'),
+                fit: BoxFit.cover,
+              )
+            : null,
+      ),
+      child: Scaffold(
+        backgroundColor: paper ? Colors.transparent : null,
+        appBar: AppBar(
+          title: Text(l10n.navJournal),
+          backgroundColor: paper ? Colors.transparent : null,
+          surfaceTintColor: Colors.transparent,
+        ),
+        body: RefreshIndicator(
+          onRefresh: () async {
+            await ref.read(journalHomeProvider.notifier).refresh();
+            await ref.read(readingChallengeProvider.notifier).refresh();
+            await ref.read(monthTrackerProvider.notifier).refresh();
+          },
+          child: CustomScrollView(
+            slivers: [
+              trackers,
+              ...entries.when(
+                loading: () => const [
+                  SliverFillRemaining(
+                    hasScrollBody: false,
+                    child: Center(child: CircularProgressIndicator()),
                   ),
-                ),
-              ],
-              data: (data) {
-                if (data.isEmpty) {
-                  return [
-                    SliverFillRemaining(
-                      hasScrollBody: false,
-                      child: _DestinationEmptyState(
-                        ornament: PaperfoldOrnament.rectangularVineFrame,
-                        title: l10n.journalPlaceholderTitle,
-                        body: l10n.journalPlaceholderBody,
+                ],
+                error: (error, stackTrace) => [
+                  SliverFillRemaining(
+                    hasScrollBody: false,
+                    child: _DestinationEmptyState(
+                      ornament: PaperfoldOrnament.rectangularVineFrame,
+                      title: l10n.journalPlaceholderTitle,
+                      body: l10n.journalPlaceholderBody,
+                    ),
+                  ),
+                ],
+                data: (data) {
+                  if (data.isEmpty) {
+                    return [
+                      SliverFillRemaining(
+                        hasScrollBody: false,
+                        child: _DestinationEmptyState(
+                          ornament: PaperfoldOrnament.rectangularVineFrame,
+                          title: l10n.journalPlaceholderTitle,
+                          body: l10n.journalPlaceholderBody,
+                        ),
                       ),
+                    ];
+                  }
+                  return [
+                    SliverList.builder(
+                      itemCount: data.length,
+                      itemBuilder: (context, index) {
+                        final entry = data[index];
+                        final details = <String>[
+                          if (entry.review != null) l10n.journalReviewed,
+                          if (entry.pageCount > 0)
+                            l10n.journalPagesCount(entry.pageCount),
+                        ];
+                        return ListTile(
+                          minTileHeight: 56,
+                          title: Text(
+                            entry.book.title,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          subtitle: details.isEmpty
+                              ? null
+                              : Text(details.join(' · ')),
+                          trailing: const Icon(Icons.chevron_right),
+                          onTap: () => Navigator.of(context).push(
+                            MaterialPageRoute<void>(
+                              builder: (context) =>
+                                  BookReviewPage(book: entry.book),
+                            ),
+                          ),
+                        );
+                      },
                     ),
                   ];
-                }
-                return [
-                  SliverList.builder(
-                    itemCount: data.length,
-                    itemBuilder: (context, index) {
-                      final entry = data[index];
-                      final details = <String>[
-                        if (entry.review != null) l10n.journalReviewed,
-                        if (entry.pageCount > 0)
-                          l10n.journalPagesCount(entry.pageCount),
-                      ];
-                      return ListTile(
-                        minTileHeight: 56,
-                        title: Text(
-                          entry.book.title,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        subtitle:
-                            details.isEmpty ? null : Text(details.join(' · ')),
-                        trailing: const Icon(Icons.chevron_right),
-                        onTap: () => Navigator.of(context).push(
-                          MaterialPageRoute<void>(
-                            builder: (context) =>
-                                BookReviewPage(book: entry.book),
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                ];
-              },
-            ),
-            // The floating glass bar overlays content, so the last row needs
-            // room to clear it as well as the gesture inset.
-            SliverToBoxAdapter(
-              child: SizedBox(
-                height: 96 + MediaQuery.viewPaddingOf(context).bottom,
+                },
               ),
-            ),
-          ],
+              // The floating glass bar overlays content, so the last row needs
+              // room to clear it as well as the gesture inset.
+              SliverToBoxAdapter(
+                child: SizedBox(
+                  height: 96 + MediaQuery.viewPaddingOf(context).bottom,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

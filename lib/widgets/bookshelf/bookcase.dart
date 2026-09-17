@@ -28,6 +28,7 @@ class Bookcase extends StatefulWidget {
     this.onHoldingChanged,
     this.pickUpHint,
     this.openHint,
+    this.showSignposts = true,
   });
 
   final List<ShelfRow> shelves;
@@ -50,6 +51,7 @@ class Bookcase extends StatefulWidget {
 
   final String? pickUpHint;
   final String? openHint;
+  final bool showSignposts;
 
   @override
   State<Bookcase> createState() => BookcaseState();
@@ -74,9 +76,23 @@ class BookcaseState extends State<Bookcase> {
   @override
   void initState() {
     super.initState();
-    _shelf = widget.initialShelf.clamp(0, math.max(0, widget.shelves.length - 1));
+    _shelf =
+        widget.initialShelf.clamp(0, math.max(0, widget.shelves.length - 1));
     _page = _shelf.toDouble();
     _climb = PageController(initialPage: _shelf)..addListener(_readClimb);
+  }
+
+  @override
+  void didUpdateWidget(covariant Bookcase oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // An empty-state widget replaces the stage, so it cannot report a return.
+    if (_holding &&
+        (_shelf >= widget.shelves.length || widget.shelves[_shelf].isEmpty)) {
+      _holding = false;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && !_holding) widget.onHoldingChanged?.call(false);
+      });
+    }
   }
 
   @override
@@ -149,15 +165,18 @@ class BookcaseState extends State<Bookcase> {
         // book was still rising: the one motion on the screen had a hole cut in
         // it. IgnorePointer goes with the fade, or a signpost nobody can see
         // still takes the tap meant for the book.
-        IgnorePointer(
-          ignoring: _holding,
-          child: AnimatedOpacity(
-            opacity: _holding ? 0 : 1,
-            duration: const Duration(milliseconds: 220),
-            curve: Curves.easeOut,
-            child: Stack(fit: StackFit.expand, children: _signposts()),
+        if (widget.showSignposts)
+          IgnorePointer(
+            ignoring: _holding,
+            child: AnimatedOpacity(
+              opacity: _holding ? 0 : 1,
+              duration: MediaQuery.disableAnimationsOf(context)
+                  ? Duration.zero
+                  : const Duration(milliseconds: 220),
+              curve: Curves.easeOut,
+              child: Stack(fit: StackFit.expand, children: _signposts()),
+            ),
           ),
-        ),
       ],
     );
   }
@@ -206,7 +225,7 @@ class BookcaseState extends State<Bookcase> {
   /// Moves to another shelf. Used by the signposts and by anything outside
   /// that wants to put the reader on a particular board.
   Future<void> climbTo(int index) async {
-    if (index < 0 || index >= widget.shelves.length) return;
+    if (_holding || index < 0 || index >= widget.shelves.length) return;
     if (!_climb.hasClients) return;
     if (MediaQuery.disableAnimationsOf(context)) {
       _climb.jumpToPage(index);
@@ -265,14 +284,18 @@ class _Signpost extends StatelessWidget {
             onTap: onTap,
             borderRadius: BorderRadius.circular(24),
             child: ConstrainedBox(
-              constraints: const BoxConstraints(minHeight: 44),
+              constraints: const BoxConstraints(minHeight: 48),
               child: Padding(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: iconFirst
-                      ? [arrow, const SizedBox(width: 8), Flexible(child: label)]
+                      ? [
+                          arrow,
+                          const SizedBox(width: 8),
+                          Flexible(child: label)
+                        ]
                       : [
                           Flexible(child: label),
                           const SizedBox(width: 8),

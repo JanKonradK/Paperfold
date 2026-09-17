@@ -36,6 +36,8 @@ void main() {
     WidgetTester tester, {
     List<ShelfRow> shelves = _shelves,
     ValueChanged<int>? onShelfChanged,
+    ValueChanged<bool>? onHoldingChanged,
+    Widget Function(BuildContext, ShelfRow)? emptyBuilder,
   }) async {
     await tester.pumpWidget(
       MaterialApp(
@@ -47,6 +49,8 @@ void main() {
               key: key,
               shelves: shelves,
               onShelfChanged: onShelfChanged,
+              onHoldingChanged: onHoldingChanged,
+              emptyBuilder: emptyBuilder,
             ),
           ),
         ),
@@ -139,5 +143,30 @@ void main() {
     await tester.pump();
 
     expect(find.text('nothing on Books to buy'), findsOneWidget);
+  });
+
+  testWidgets('removing the last held book unlocks shelf navigation',
+      (tester) async {
+    final holding = <bool>[];
+    Widget emptyBuilder(BuildContext context, ShelfRow shelf) =>
+        const Text('Empty shelf');
+    await pumpCase(tester,
+        onHoldingChanged: holding.add, emptyBuilder: emptyBuilder);
+    await key.currentState!.activeStage!.pickUp();
+    await tester.pumpAndSettle();
+    expect(holding, [true]);
+
+    await pumpCase(tester,
+        shelves: [
+          const ShelfRow(name: 'Reading now', books: []),
+          ..._shelves.skip(1),
+        ],
+        onHoldingChanged: holding.add,
+        emptyBuilder: emptyBuilder);
+    expect(holding, [true, false]);
+    expect(find.text('Empty shelf'), findsOneWidget);
+    unawaited(key.currentState!.climbTo(1));
+    await tester.pumpAndSettle();
+    expect(key.currentState!.shelf, 1);
   });
 }

@@ -125,12 +125,16 @@ Future<void> showShelfSortSheet(
                 segments: [
                   ButtonSegment(
                     value: ShelfSortDirection.ascending,
-                    label: Text(l10n.commonAscending),
+                    label: Text(controls.sortField == ShelfSortField.series
+                        ? l10n.shelfSortFirstToLast
+                        : l10n.commonAscending),
                     icon: const Icon(Icons.arrow_upward_rounded),
                   ),
                   ButtonSegment(
                     value: ShelfSortDirection.descending,
-                    label: Text(l10n.commonDescending),
+                    label: Text(controls.sortField == ShelfSortField.series
+                        ? l10n.shelfSortLastToFirst
+                        : l10n.commonDescending),
                     icon: const Icon(Icons.arrow_downward_rounded),
                   ),
                 ],
@@ -253,6 +257,7 @@ Future<void> showShelfFilterSheet(
 String _sortFieldLabel(ShelfSortField field, L10n l10n) => switch (field) {
       ShelfSortField.title => l10n.bookshelfTitle,
       ShelfSortField.author => l10n.bookshelfAuthor,
+      ShelfSortField.series => l10n.shelfSortSeries,
       ShelfSortField.dateAdded => l10n.shelfSortDateAdded,
       ShelfSortField.progress => l10n.bookshelfProgress,
       ShelfSortField.rating => l10n.shelfLogRating,

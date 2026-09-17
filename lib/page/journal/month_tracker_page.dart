@@ -193,9 +193,7 @@ class MonthTrackerRing extends ConsumerWidget {
     final MaterialLocalizations material = MaterialLocalizations.of(context);
     final int currentPages = data.pagesFor(day);
     final bool wasRecorded = data.isRecorded(day);
-    final TextEditingController controller = TextEditingController(
-      text: wasRecorded ? currentPages.toString() : '',
-    );
+    String pageText = wasRecorded ? currentPages.toString() : '';
 
     final int? pages = await showDialog<int>(
       context: context,
@@ -213,8 +211,9 @@ class MonthTrackerRing extends ConsumerWidget {
                   : l10n.monthTrackerDayNotRecorded,
             ),
             const SizedBox(height: 16),
-            TextField(
-              controller: controller,
+            TextFormField(
+              initialValue: pageText,
+              onChanged: (String value) => pageText = value,
               autofocus: true,
               keyboardType: TextInputType.number,
               inputFormatters: <TextInputFormatter>[
@@ -224,7 +223,7 @@ class MonthTrackerRing extends ConsumerWidget {
                 labelText: l10n.monthTrackerNewPagesLabel,
                 suffixText: l10n.monthTrackerPagesLabel,
               ),
-              onSubmitted: (String value) =>
+              onFieldSubmitted: (String value) =>
                   Navigator.of(context).pop(int.tryParse(value.trim())),
             ),
           ],
@@ -236,15 +235,13 @@ class MonthTrackerRing extends ConsumerWidget {
           ),
           TextButton(
             onPressed: () =>
-                Navigator.of(context).pop(int.tryParse(controller.text.trim())),
+                Navigator.of(context).pop(int.tryParse(pageText.trim())),
             child: Text(l10n.commonSave),
           ),
         ],
       ),
     );
-    controller.dispose();
-
-    if (pages != null) {
+    if (context.mounted && pages != null) {
       await ref.read(monthTrackerProvider.notifier).setPages(
             DateTime(data.year, data.month, day),
             pages,
