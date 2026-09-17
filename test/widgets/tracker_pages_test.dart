@@ -1,9 +1,12 @@
-// The two tracker pages: the reading challenge shelf and the month ring.
+// The month ring, the challenge data, and the Statistics tracker sections.
 //
-// Both draw on one canvas rather than one widget per spine or per day, which
-// plan.md Section 11.2 asks for. A canvas has no widgets to find, so these
-// tests read the semantics tree instead. That is the point: a painted control
-// with no semantics is unusable, and nothing else would catch it.
+// The ring draws on one canvas rather than one widget per day, which plan.md
+// Section 11.2 asks for. A canvas has no widgets to find, so these tests read
+// the semantics tree instead. That is the point: a painted control with no
+// semantics is unusable, and nothing else would catch it.
+//
+// The challenge page's own widget tests live in
+// test/widgets/reading_challenge_page_test.dart.
 //
 //   flutter test test/widgets/tracker_pages_test.dart
 
@@ -17,7 +20,6 @@ import 'package:paperfold/enums/book_status.dart';
 import 'package:paperfold/l10n/generated/L10n.dart';
 import 'package:paperfold/models/book.dart';
 import 'package:paperfold/page/journal/month_tracker_page.dart';
-import 'package:paperfold/page/journal/reading_challenge_page.dart';
 import 'package:paperfold/page/home_page/statistics_page.dart';
 import 'package:paperfold/providers/month_tracker.dart';
 import 'package:paperfold/providers/reading_challenge.dart';
@@ -85,14 +87,6 @@ class _FakeMonth extends MonthTrackerController {
   Future<void> refresh() async => state = AsyncData(data);
 }
 
-class _YearAwareChallenge extends ReadingChallengeController {
-  @override
-  Future<ReadingChallengeData> build() async {
-    final int year = ref.watch(trackedChallengeYearProvider);
-    return _challenge(year: year);
-  }
-}
-
 Widget _host(Widget child, List<Override> overrides) {
   return ProviderScope(
     overrides: overrides,
@@ -112,171 +106,6 @@ void main() {
   setUpAll(() async {
     SharedPreferences.setMockInitialValues(<String, Object>{});
     await Prefs().initPrefs();
-  });
-
-  group('the reading challenge', () {
-    testWidgets('fills a spine per finished book and reads out the shelf',
-        (WidgetTester tester) async {
-      final SemanticsHandle handle = tester.ensureSemantics();
-      await tester.pumpWidget(
-        _host(
-          const ReadingChallengePage(),
-          <Override>[
-            readingChallengeProvider
-                .overrideWith(() => _FakeChallenge(_challenge())),
-          ],
-        ),
-      );
-      await tester.pumpAndSettle();
-
-      // Three read, one being read, the rest empty.
-      expect(
-        find.semantics.byLabel('Spine 1: A Wizard of Earthsea'),
-        findsOne,
-      );
-      expect(find.semantics.byLabel('Spine 4: Tehanu'), findsOne);
-      expect(find.semantics.byLabel('Spine 5 is empty.'), findsOne);
-      expect(
-        find.semantics.byLabel(
-          'Reading challenge shelf. 3 of 100 books read, 1 being read now.',
-        ),
-        findsOne,
-      );
-      handle.dispose();
-    });
-
-    testWidgets('the shelf is one canvas, not one widget per spine',
-        (WidgetTester tester) async {
-      await tester.pumpWidget(
-        _host(
-          const ReadingChallengePage(),
-          <Override>[
-            readingChallengeProvider
-                .overrideWith(() => _FakeChallenge(_challenge())),
-          ],
-        ),
-      );
-      await tester.pumpAndSettle();
-
-      // One CustomPaint for the shelf. A hundred laid-out spines is the third
-      // most likely source of jank in the project, so this is a real budget,
-      // not a style preference.
-      expect(find.byType(CustomPaint), findsWidgets);
-      expect(tester.takeException(), isNull);
-    });
-
-    testWidgets('every slot state is covered by the legend',
-        (WidgetTester tester) async {
-      await tester.pumpWidget(
-        _host(
-          const ReadingChallengePage(),
-          <Override>[
-            readingChallengeProvider
-                .overrideWith(() => _FakeChallenge(_challenge())),
-          ],
-        ),
-      );
-      await tester.pumpAndSettle();
-
-      expect(find.text('Read'), findsOne);
-      expect(find.text('Reading'), findsOne);
-      expect(find.text('Want to read'), findsOne);
-      expect(find.text('3 of 100 books'), findsOne);
-    });
-
-    testWidgets('passing the target is reported, not hidden',
-        (WidgetTester tester) async {
-      await tester.pumpWidget(
-        _host(
-          const ReadingChallengePage(),
-          <Override>[
-            readingChallengeProvider
-                .overrideWith(() => _FakeChallenge(_challenge(target: 2))),
-          ],
-        ),
-      );
-      await tester.pumpAndSettle();
-
-      expect(find.text('1 book past the target'), findsOne);
-    });
-
-    testWidgets('moves to a past year and returns to the current year',
-        (WidgetTester tester) async {
-      await tester.pumpWidget(
-        _host(
-          const ReadingChallengePage(),
-          <Override>[
-            readingChallengeProvider.overrideWith(_YearAwareChallenge.new),
-          ],
-        ),
-      );
-      await tester.pumpAndSettle();
-
-      expect(find.text('2026 reading challenge'), findsOne);
-      await tester.tap(
-        find.byKey(const ValueKey<String>('challenge-previous-year')),
-      );
-      await tester.pumpAndSettle();
-
-      expect(find.text('2025 reading challenge'), findsOne);
-      await tester.tap(
-        find.byKey(const ValueKey<String>('challenge-next-year')),
-      );
-      await tester.pumpAndSettle();
-      expect(find.text('2026 reading challenge'), findsOne);
-    });
-
-    testWidgets('an empty shelf explains how to start',
-        (WidgetTester tester) async {
-      await tester.pumpWidget(
-        _host(
-          const ReadingChallengePage(),
-          <Override>[
-            readingChallengeProvider.overrideWith(
-              () => _FakeChallenge(
-                _challenge(
-                  finished: const <Book>[],
-                  readingNow: const <Book>[],
-                ),
-              ),
-            ),
-          ],
-        ),
-      );
-      await tester.pumpAndSettle();
-
-      expect(find.text('No books on this shelf yet'), findsOne);
-      expect(
-        find.text(
-          'Mark a book as Reading or finish a book to start filling the challenge.',
-        ),
-        findsOne,
-      );
-    });
-
-    testWidgets('each painted spine has a 48 dp semantic target',
-        (WidgetTester tester) async {
-      final SemanticsHandle handle = tester.ensureSemantics();
-      await tester.pumpWidget(
-        _host(
-          const ReadingChallengePage(),
-          <Override>[
-            readingChallengeProvider
-                .overrideWith(() => _FakeChallenge(_challenge())),
-          ],
-        ),
-      );
-      await tester.pumpAndSettle();
-
-      final SemanticsNode spine = find.semantics
-          .byLabel('Spine 1: A Wizard of Earthsea')
-          .evaluate()
-          .single;
-      expect(spine.rect.width, greaterThanOrEqualTo(48));
-      expect(spine.rect.height, greaterThanOrEqualTo(48));
-      expect(spine.getSemanticsData().hasAction(SemanticsAction.tap), isTrue);
-      handle.dispose();
-    });
   });
 
   group('the challenge data', () {

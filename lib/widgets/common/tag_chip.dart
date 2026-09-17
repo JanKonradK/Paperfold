@@ -86,7 +86,7 @@ class TagChip extends StatelessWidget {
     required Future<void> Function() onDelete,
   }) async {
     final l10n = L10n.of(context);
-    final controller = TextEditingController(text: initialName);
+    String nameValue = initialName;
     await showDialog(
       context: context,
       builder: (dialogContext) {
@@ -105,8 +105,9 @@ class TagChip extends StatelessWidget {
                   }),
                 ],
               ),
-              content: TextField(
-                controller: controller,
+              content: TextFormField(
+                initialValue: initialName,
+                onChanged: (value) => nameValue = value,
                 decoration: InputDecoration(
                   hintText: l10n.tagNamePlaceholder,
                 ),
@@ -130,7 +131,7 @@ class TagChip extends StatelessWidget {
                 ),
                 TextButton(
                   onPressed: () async {
-                    final newName = controller.text.trim();
+                    final newName = nameValue.trim();
                     if (newName.isEmpty) return;
                     await onRename(newName);
                     if (context.mounted) Navigator.of(dialogContext).pop();
@@ -143,6 +144,5 @@ class TagChip extends StatelessWidget {
         );
       },
     );
-    controller.dispose();
   }
 }

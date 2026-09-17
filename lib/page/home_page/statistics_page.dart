@@ -1,4 +1,3 @@
-import 'package:paperfold/dao/book.dart';
 import 'package:paperfold/dao/reading_time.dart';
 import 'package:paperfold/enums/chart_mode.dart';
 import 'package:paperfold/enums/hint_key.dart';
@@ -25,37 +24,39 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 
-class StatisticPage extends StatefulWidget {
+class StatisticPage extends ConsumerStatefulWidget {
   const StatisticPage({super.key, this.controller});
 
   final ScrollController? controller;
 
   @override
-  State<StatisticPage> createState() => _StatisticPageState();
+  ConsumerState<StatisticPage> createState() => _StatisticPageState();
 }
 
-class _StatisticPageState extends State<StatisticPage> {
-  int totalNumberOfBook = 0;
-  int totalNumberOfDate = 0;
-  int totalNumberOfNotes = 0;
-  late final ScrollController _scrollController =
-      widget.controller ?? ScrollController();
+class _StatisticPageState extends ConsumerState<StatisticPage> {
+  /// Only set when the page makes its own. A caller's controller is the
+  /// caller's to dispose.
+  ScrollController? _ownController;
 
-  void setNumbers() async {
-    final numberOfBook = await readingTimeDao.selectTotalNumberOfBook();
-    final numberOfDate = await readingTimeDao.selectTotalNumberOfDate();
-    final numberOfNotes = await readingTimeDao.selectTotalNumberOfNotes();
-    setState(() {
-      totalNumberOfBook = numberOfBook;
-      totalNumberOfDate = numberOfDate;
-      totalNumberOfNotes = numberOfNotes;
-    });
-  }
+  ScrollController get _scrollController =>
+      widget.controller ?? (_ownController ??= ScrollController());
 
   @override
   void initState() {
-    setNumbers();
     super.initState();
+    // The page holds the statistics data, not a section of it. The provider is
+    // auto-dispose and every section that watched it sat at one end of the
+    // scroll view, so scrolling to the middle disposed it. Coming back rebuilt
+    // it loading, which collapsed a section's extent and threw the offset to
+    // the top. This still drops the data when the page closes, so reopening
+    // reads fresh numbers.
+    ref.listenManual(statisticDataProvider, (_, __) {});
+  }
+
+  @override
+  void dispose() {
+    _ownController?.dispose();
+    super.dispose();
   }
 
   @override
@@ -93,9 +94,9 @@ class _StatisticPageState extends State<StatisticPage> {
                           ),
                           const SizedBox(width: 20),
                           Expanded(
-                            child: ListView(
+                            child: CustomScrollView(
                               controller: _scrollController,
-                              children: const [
+                              slivers: const [
                                 DateBooks(),
                               ],
                             ),
@@ -103,22 +104,27 @@ class _StatisticPageState extends State<StatisticPage> {
                         ],
                       );
                     } else {
-                      return Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Expanded(
-                            child: ListView(
-                                padding: const EdgeInsets.only(bottom: 80),
-                                controller: _scrollController,
-                                children: const [
-                                  StatisticsDashboard(),
-                                  StatisticsMeasureNote(),
-                                  StatisticCard(),
-                                  SizedBox(height: 20),
-                                  StatisticsTrackerSections(),
-                                  SizedBox(height: 20),
-                                  DateBooks(),
-                                ]),
+                      // The head sections keep the lazy list delegate the
+                      // `ListView` gave them; `SliverToBoxAdapter` would lay
+                      // them out on every pass, on screen or not. Only the
+                      // book list changes, from one eager `Column` to a
+                      // builder.
+                      return CustomScrollView(
+                        controller: _scrollController,
+                        slivers: [
+                          SliverList.list(
+                            children: const [
+                              StatisticsDashboard(),
+                              StatisticsMeasureNote(),
+                              StatisticCard(),
+                              SizedBox(height: 20),
+                              StatisticsTrackerSections(),
+                              SizedBox(height: 20),
+                            ],
+                          ),
+                          const DateBooks(),
+                          const SliverToBoxAdapter(
+                            child: SizedBox(height: 80),
                           ),
                         ],
                       );
@@ -437,6 +443,8 @@ class _TrackerError extends StatelessWidget {
   }
 }
 
+/// The books read in the selected period. Returns slivers, so it belongs in a
+/// [CustomScrollView] and its cards build only as they come on screen.
 class DateBooks extends ConsumerStatefulWidget {
   const DateBooks({super.key});
 
@@ -553,63 +561,76 @@ class _DateBooksState extends ConsumerState<DateBooks> {
                         : L10n.of(context).statisticAllTime;
 
         final books = data.bookReadingTime;
-        return Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.only(left: 10, top: 10, right: 10),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(title, style: titleStyle),
-                ],
+        return SliverMainAxisGroup(
+          slivers: [
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.only(left: 10, top: 10, right: 10),
+                // No `Row` around one `Text`. It handed the heading unbounded
+                // width, so the style's ellipsis never applied and a long
+                // period label overflowed on a narrow screen.
+                child: Text(title, style: titleStyle),
               ),
             ),
             if (books.isEmpty)
-              const Padding(
-                padding: EdgeInsets.only(top: 50),
-                child: StatisticsTips(),
+              const SliverToBoxAdapter(
+                child: Padding(
+                  padding: EdgeInsets.only(top: 50),
+                  child: StatisticsTips(),
+                ),
               )
-            else
-              Column(
-                children: [
-                  HintBanner(
-                    icon: const Icon(Icons.swipe_left),
-                    hintKey: HintKey.statisticsSwipeToDelete,
-                    margin: const EdgeInsets.only(bottom: 10),
-                    child: Text(L10n.of(context).statisticsSwipeToDeleteHint),
-                  ),
-                  ...books.map((bookMap) {
-                    final book = bookMap.keys.first;
-                    final readingTime = bookMap.values.first;
-                    return dragToDelete(
-                      BookStatisticItem(
-                        bookId: book.id,
-                        readingTime: readingTime,
-                      ),
-                      book.id,
-                    );
-                  })
-                ],
+            else ...[
+              SliverToBoxAdapter(
+                child: HintBanner(
+                  icon: const Icon(Icons.swipe_left),
+                  hintKey: HintKey.statisticsSwipeToDelete,
+                  margin: const EdgeInsets.only(bottom: 10),
+                  child: Text(L10n.of(context).statisticsSwipeToDeleteHint),
+                ),
               ),
+              // Not fixed-extent: the cards vary in height, and a pinned
+              // 156 dp overflows at a large text scale.
+              SliverList.builder(
+                itemCount: books.length,
+                itemBuilder: (context, index) {
+                  final entry = books[index].entries.first;
+                  return dragToDelete(
+                    BookStatisticItem(
+                      book: entry.key,
+                      readingTime: entry.value,
+                    ),
+                    entry.key.id,
+                  );
+                },
+              ),
+            ],
           ],
         );
       },
-      loading: () => const Center(
-        child: CircularProgressIndicator(),
+      loading: () => const SliverToBoxAdapter(
+        child: Center(
+          child: CircularProgressIndicator(),
+        ),
       ),
-      error: (error, stack) => LoadFailure.inline(
-        title: L10n.of(context).statisticsLoadFailed,
-        error: error,
+      error: (error, stack) => SliverToBoxAdapter(
+        child: LoadFailure.inline(
+          title: L10n.of(context).statisticsLoadFailed,
+          error: error,
+        ),
       ),
     );
   }
 }
 
+/// One book row. The book arrives with the statistics data, which already joins
+/// the books table. The `FutureBuilder` this replaces read the same row again
+/// on every rebuild and painted a spinner in place of the card, which collapsed
+/// the list under the scroll position.
 class BookStatisticItem extends StatelessWidget {
   const BookStatisticItem(
-      {super.key, required this.bookId, required this.readingTime});
+      {super.key, required this.book, required this.readingTime});
 
-  final int bookId;
+  final Book book;
   final int readingTime;
 
   @override
@@ -628,77 +649,62 @@ class BookStatisticItem extends StatelessWidget {
     final TextStyle bookReadingTimeStyle =
         theme.textTheme.titleMedium!.copyWith(fontWeight: FontWeight.bold);
 
-    return FutureBuilder<Book>(
-      future: bookDao.selectBookById(bookId),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.done) {
-          return GestureDetector(
-            onTap: () {
-              Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => BookDetail(book: snapshot.data!)));
-            },
-            child: FilledContainer(
-              margin: const EdgeInsets.only(bottom: 10),
-              padding: const EdgeInsets.all(8.0),
-              child: Row(
-                children: [
-                  Hero(
-                      tag: snapshot.data!.coverFullPath,
-                      child: BookCover(
-                        book: snapshot.data!,
-                        height: 130,
-                        width: 90,
-                        radius: 20,
-                      )),
-                  const SizedBox(width: 15),
-                  Flexible(
-                    child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(snapshot.data!.title, style: bookTitleStyle),
-                          const SizedBox(height: 10),
-                          Row(
-                            children: [
-                              Expanded(
-                                flex: 3,
-                                child: Text(snapshot.data!.author,
-                                    style: bookAuthorStyle),
-                              ),
-                              Text(
-                                  // getReadingTime(context),
-                                  convertSeconds(readingTime),
-                                  textAlign: TextAlign.end,
-                                  style: bookReadingTimeStyle),
-                            ],
-                          ),
-                          const SizedBox(height: 20),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: LinearProgressIndicator(
-                                  value: snapshot.data!.readingPercentage,
-                                  backgroundColor: Colors.grey[300],
-                                  valueColor: AlwaysStoppedAnimation<Color>(
-                                      Theme.of(context).colorScheme.primary),
-                                ),
-                              ),
-                              const SizedBox(width: 10),
-                              Text(
-                                  '${(snapshot.data!.readingPercentage * 100).toInt()} %'),
-                            ],
-                          ),
-                        ]),
-                  ),
-                ],
-              ),
-            ),
-          );
-        } else {
-          return const CircularProgressIndicator();
-        }
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(context,
+            MaterialPageRoute(builder: (context) => BookDetail(book: book)));
       },
+      child: FilledContainer(
+        margin: const EdgeInsets.only(bottom: 10),
+        padding: const EdgeInsets.all(8.0),
+        child: Row(
+          children: [
+            Hero(
+                tag: book.coverFullPath,
+                child: BookCover(
+                  book: book,
+                  height: 130,
+                  width: 90,
+                  radius: 20,
+                )),
+            const SizedBox(width: 15),
+            Flexible(
+              child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(book.title, style: bookTitleStyle),
+                    const SizedBox(height: 10),
+                    Row(
+                      children: [
+                        Expanded(
+                          flex: 3,
+                          child: Text(book.author, style: bookAuthorStyle),
+                        ),
+                        Text(convertSeconds(readingTime),
+                            textAlign: TextAlign.end,
+                            style: bookReadingTimeStyle),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: LinearProgressIndicator(
+                            value: book.readingPercentage,
+                            backgroundColor: Colors.grey[300],
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                                theme.colorScheme.primary),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Text('${(book.readingPercentage * 100).toInt()} %'),
+                      ],
+                    ),
+                  ]),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

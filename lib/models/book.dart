@@ -20,6 +20,12 @@ class Book {
   DateTime createTime;
   DateTime updateTime;
 
+  // Derived from the book file for shelf presentation; never written to the DB.
+  String? series;
+  String? volume;
+  int? pageCount;
+  bool pageCountEstimated;
+
   Book(
       {required this.id,
       required this.title,
@@ -37,7 +43,11 @@ class Book {
       this.startedOn,
       this.finishedOn,
       required this.createTime,
-      required this.updateTime});
+      required this.updateTime,
+      this.series,
+      this.volume,
+      this.pageCount,
+      this.pageCountEstimated = false});
 
   factory Book.mock() {
     return Book(
@@ -122,6 +132,10 @@ class Book {
       finishedOn: finishedOn ?? this.finishedOn,
       createTime: createTime ?? this.createTime,
       updateTime: updateTime ?? this.updateTime,
+      series: series,
+      volume: volume,
+      pageCount: pageCount,
+      pageCountEstimated: pageCountEstimated,
     );
   }
 

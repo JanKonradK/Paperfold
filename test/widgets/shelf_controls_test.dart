@@ -64,6 +64,46 @@ void main() {
   });
 
   group('sorting', () {
+    test('series order is numeric, grouped, reversible, and saved', () {
+      Book volume(int id, String title, String series, String? number) =>
+          _book(id, title)
+            ..series = series
+            ..volume = number;
+      final books = [
+        volume(10, 'Book ten', 'First series', '10'),
+        volume(20, 'Other first', 'Second series', '1'),
+        volume(2, 'Book two', 'First series', '2'),
+        _book(30, 'A standalone'),
+        volume(3, 'Short story', 'First series', '2.5'),
+        volume(11, 'Unknown volume', 'First series', null),
+        volume(1, 'Book one', 'First series', '1'),
+        volume(9, 'Book nine', 'First series', '9'),
+      ];
+      controls.setSortField(ShelfSortField.series);
+      expect(controls.sortDirection, ShelfSortDirection.ascending);
+      expect(controls.booksForShelf(books, {}).map((b) => b.id),
+          [1, 2, 3, 9, 10, 11, 20, 30]);
+      expect(books.first.id, 10, reason: 'Sorting must not mutate the source.');
+      final restored = ShelfHomeControls();
+      expect(restored.sortField, ShelfSortField.series);
+      expect(restored.sortDirection, ShelfSortDirection.ascending);
+      restored.setSortField(ShelfSortField.dateAdded);
+      expect(restored.sortDirection, ShelfSortDirection.descending,
+          reason:
+              'Series order must preserve the existing date sort direction.');
+      restored.setSortField(ShelfSortField.series);
+      controls.setSortDirection(ShelfSortDirection.descending);
+      expect(controls.booksForShelf(books, {}).map((b) => b.id),
+          [10, 9, 3, 2, 1, 11, 20, 30]);
+      expect(ShelfHomeControls().sortDirection, ShelfSortDirection.descending);
+      controls.setSortField(ShelfSortField.title);
+      controls.setSortDirection(ShelfSortDirection.ascending);
+      controls.setSortField(ShelfSortField.series);
+      expect(controls.sortDirection, ShelfSortDirection.descending);
+      controls.setSortField(ShelfSortField.title);
+      expect(controls.sortDirection, ShelfSortDirection.ascending);
+    });
+
     test('by title, ascending and descending', () {
       controls
         ..setSortField(ShelfSortField.title)
@@ -112,6 +152,35 @@ void main() {
         'Tehanu',
       );
     });
+  });
+
+  testWidgets('the sort sheet offers series order and first-to-last by default',
+      (tester) async {
+    tester.view.physicalSize = const Size(320, 640);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(MaterialApp(
+      locale: const Locale('en'),
+      localizationsDelegates: L10n.localizationsDelegates,
+      supportedLocales: L10n.supportedLocales,
+      home: Scaffold(
+          body: Builder(
+              builder: (context) => TextButton(
+                    onPressed: () => showShelfSortSheet(context, controls),
+                    child: const Text('Sort'),
+                  ))),
+    ));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Sort'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('shelf-sort-series')));
+    await tester.pumpAndSettle();
+    expect(controls.sortField, ShelfSortField.series);
+    expect(controls.sortDirection, ShelfSortDirection.ascending);
+    await tester.ensureVisible(find.text('First to last'));
+    await tester.pumpAndSettle();
+    expect(find.text('Last to first'), findsOneWidget);
+    expect(tester.takeException(), isNull);
   });
 
   group('filtering', () {
@@ -171,7 +240,8 @@ void main() {
       expect(controls.booksForShelf(_shelf, const {}), isEmpty);
     });
 
-    test('an empty filtered shelf can clear filters and restore every book', () {
+    test('an empty filtered shelf can clear filters and restore every book',
+        () {
       controls
         ..setMinimumRating(5)
         ..toggleStatus(BookStatus.notStarted);

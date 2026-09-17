@@ -20,41 +20,14 @@ void main() {
     );
   });
 
-  test('light and dark draw from different bookcloth', () {
-    final light = BookSpine.backgroundsFor(Brightness.light);
-    final dark = BookSpine.backgroundsFor(Brightness.dark);
-
-    // The light theme is the printed keepsake page: pale, near-uniform spines.
-    // The dark theme is the saturated cover world, where the books are the only
-    // colour on a black screen. One shared table cannot be both.
-    expect(light, isNot(same(dark)));
-    expect(
-      identical(
-        BookSpine.backgroundsFor(Brightness.light),
-        BookSpine.backgroundsFor(Brightness.light),
-      ),
-      isTrue,
-      reason: 'each table is built once, never per frame',
-    );
-
-    double meanLuminance(List<Color> colors) =>
-        colors.map((c) => c.computeLuminance()).reduce((a, b) => a + b) /
-        colors.length;
-
-    expect(
-      meanLuminance(light),
-      greaterThan(meanLuminance(dark)),
-      reason: 'light spines must be pale and dark spines saturated',
-    );
-
-    // A pale spine must still separate from the paper ground, or the shelf
-    // dissolves into the page.
-    for (final colour in light) {
-      expect(
-        BookSpine.contrast(colour, PaperfoldTokens.light.ground),
-        greaterThan(1.05),
-        reason: 'a light spine must be visible against paper',
-      );
+  test('a book keeps its binding when the theme changes', () {
+    for (var index = 0; index < 200; index++) {
+      final id = 'book-$index';
+      final light = BookSpine.resolveVisual(
+          id, PaperfoldTokens.colorScheme(Brightness.light));
+      final dark = BookSpine.resolveVisual(
+          id, PaperfoldTokens.colorScheme(Brightness.dark));
+      expect(light.background, dark.background);
     }
   });
 

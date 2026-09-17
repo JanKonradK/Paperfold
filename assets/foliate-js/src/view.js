@@ -111,6 +111,10 @@ export class View extends HTMLElement {
       this.renderer = document.createElement('foliate-paginator')
     }
     this.renderer.setAttribute('exportparts', 'head,foot,filter')
+    // The renderer survives chapter changes. Register its margin tap once.
+    this.renderer.addEventListener('click', e => {
+      this.#emit('click-view', { x: e.clientX, y: e.clientY })
+    })
     this.renderer.addEventListener('load', e => this.#onLoad(e.detail))
     this.renderer.addEventListener('relocate', e => this.#onRelocate(e.detail))
     this.renderer.addEventListener('create-overlayer', e =>
@@ -216,6 +220,11 @@ export class View extends HTMLElement {
     for (const a of doc.querySelectorAll('a[href]'))
       a.addEventListener('click', e => {
         e.preventDefault()
+        // Full-page chapter art often links back to the contents. On touch
+        // screens, its short tap should turn the page like other illustrations.
+        const image = e.target.closest('img, svg')
+        if (navigator.maxTouchPoints > 0 && image && !a.textContent.trim()
+          && image.getBoundingClientRect().width >= window.innerWidth / 2) return
         e.stopPropagation()
         const href_ = a.getAttribute('href')
         const href = section?.resolveHref?.(href_) ?? href_
@@ -322,13 +331,6 @@ export class View extends HTMLElement {
         clientY += rect.top
       }
 
-      this.#emit('click-view', { x: clientX, y: clientY })
-    })
-    this.renderer.addEventListener('click', e => {
-      const { clientX, clientY } = e
-      while (clientX > window.innerWidth) {
-        clientX -= window.innerWidth
-      }
       this.#emit('click-view', { x: clientX, y: clientY })
     })
   }

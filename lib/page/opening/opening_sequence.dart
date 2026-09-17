@@ -3,6 +3,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:flutter/services.dart';
 import 'package:paperfold/config/paperfold_motion.dart';
 import 'package:paperfold/config/paperfold_tokens.dart';
 import 'package:paperfold/page/opening/opening_quotes.dart';
@@ -309,21 +310,26 @@ class _OpeningSequenceState extends State<OpeningSequence>
       children: [
         _PaintGate(painting: revealed, child: widget.child),
         if (!_finished)
-          Listener(
-            behavior: HitTestBehavior.opaque,
-            onPointerDown: (_) => _advance(),
-            child: Semantics(
-              button: true,
-              onTap: _advance,
-              child: _OpeningScene(
-                turn: _turn,
-                leave: _leave,
-                hint: _hint,
-                waiting: _stage == _OpeningStage.cover ||
-                    _stage == _OpeningStage.page,
-                curlController: _curlController,
-                coverArtBuilder: widget.coverArtBuilder,
-                quote: _quote,
+          BlockSemantics(
+            child: AnnotatedRegion<SystemUiOverlayStyle>(
+              value: SystemUiOverlayStyle.light,
+              child: Listener(
+                behavior: HitTestBehavior.opaque,
+                onPointerDown: (_) => _advance(),
+                child: Semantics(
+                  button: true,
+                  onTap: _advance,
+                  child: _OpeningScene(
+                    turn: _turn,
+                    leave: _leave,
+                    hint: _hint,
+                    waiting: _stage == _OpeningStage.cover ||
+                        _stage == _OpeningStage.page,
+                    curlController: _curlController,
+                    coverArtBuilder: widget.coverArtBuilder,
+                    quote: _quote,
+                  ),
+                ),
               ),
             ),
           ),
@@ -414,8 +420,8 @@ class _OpeningScene extends StatelessWidget {
   final PageCurlController curlController;
   final OpeningCoverArtBuilder? coverArtBuilder;
 
-  static const Color _coverGround = Color(0xFF3B111D);
-  static const Color _coverEdge = Color(0xFF21090F);
+  static final Color _coverGround = PaperfoldTokens.cover.ground;
+  static const Color _coverEdge = Color(0xFF160F0C);
 
   /// The stiffness of the sheet the curl is turning.
   ///
@@ -746,62 +752,15 @@ class _BookCover extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Color(0xFF4A1424),
-            Color(0xFF2C0B14),
-          ],
-        ),
-      ),
-      child: Stack(
-        fit: StackFit.expand,
-        children: [
-          // MILESTONE 3 EXTENSION POINT: replace only this artwork layer.
-          if (artBuilder case final builder?)
-            builder(context)
-          else
-            const CustomPaint(painter: _ProvisionalCoverArtPainter()),
-          const Padding(
-            padding: EdgeInsets.fromLTRB(28.0, 36.0, 28.0, 34.0),
-            child: Column(
-              children: [
-                Spacer(flex: 5),
-                FittedBox(
-                  fit: BoxFit.scaleDown,
-                  child: Text(
-                    'PAPERFOLD',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: Color(0xFFC4A071),
-                      // Philosopher, the literary voice. The cold-start cover
-                      // set the application's own name in a CJK serif.
-                      fontFamily: PaperfoldTypeTokens.journalFamily,
-                      fontSize: 24.0,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: 3.0,
-                      height: 1.0,
-                    ),
-                  ),
-                ),
-                SizedBox(height: 14.0),
-                SizedBox(
-                  width: 42.0,
-                  child: Divider(
-                    height: 1.0,
-                    thickness: 1.0,
-                    color: Color(0xFFC4A071),
-                  ),
-                ),
-                Spacer(flex: 4),
-              ],
-            ),
+    return Semantics(
+      label: 'Paperfold',
+      image: true,
+      child: artBuilder?.call(context) ??
+          Image.asset(
+            'assets/images/paperfold_cover.jpg',
+            fit: BoxFit.cover,
+            excludeFromSemantics: true,
           ),
-        ],
-      ),
     );
   }
 }
@@ -820,8 +779,13 @@ class _WelcomePage extends StatelessWidget {
     final align = rightToLeft ? TextAlign.right : TextAlign.left;
     return ColoredBox(
       color: const Color(0xFFFAF6EE),
-      child: CustomPaint(
-        painter: const _WelcomePagePainter(),
+      child: DecoratedBox(
+        decoration: const BoxDecoration(
+          image: DecorationImage(
+            image: AssetImage('assets/images/paperfold_paper.jpg'),
+            fit: BoxFit.cover,
+          ),
+        ),
         child: Padding(
           padding: const EdgeInsets.fromLTRB(34.0, 38.0, 30.0, 34.0),
           // No `Spacer`, and no `Flexible` on the type.
@@ -907,112 +871,4 @@ class _FixedSpine extends StatelessWidget {
       ),
     );
   }
-}
-
-class _ProvisionalCoverArtPainter extends CustomPainter {
-  const _ProvisionalCoverArtPainter();
-
-  static const Color _gold = Color(0xFFC4A071);
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final fine = Paint()
-      ..color = _gold.withValues(alpha: 0.78)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.1;
-    final strong = Paint()
-      ..color = _gold.withValues(alpha: 0.92)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.5;
-
-    final inset = math.min(size.width, size.height) * 0.075;
-    final frame = RRect.fromRectAndRadius(
-      Rect.fromLTRB(inset, inset, size.width - inset, size.height - inset),
-      const Radius.circular(2.0),
-    );
-    canvas.drawRRect(frame, fine);
-
-    final center = Offset(size.width * 0.5, size.height * 0.31);
-    final motifWidth = size.width * 0.23;
-    final motifHeight = size.height * 0.075;
-    final leftPage = Path()
-      ..moveTo(center.dx, center.dy + motifHeight)
-      ..quadraticBezierTo(
-        center.dx - motifWidth * 0.38,
-        center.dy + motifHeight * 0.2,
-        center.dx - motifWidth,
-        center.dy + motifHeight * 0.46,
-      )
-      ..lineTo(center.dx - motifWidth, center.dy - motifHeight * 0.55)
-      ..quadraticBezierTo(
-        center.dx - motifWidth * 0.38,
-        center.dy - motifHeight * 0.82,
-        center.dx,
-        center.dy,
-      )
-      ..close();
-    final rightPage = Path()
-      ..moveTo(center.dx, center.dy + motifHeight)
-      ..quadraticBezierTo(
-        center.dx + motifWidth * 0.38,
-        center.dy + motifHeight * 0.2,
-        center.dx + motifWidth,
-        center.dy + motifHeight * 0.46,
-      )
-      ..lineTo(center.dx + motifWidth, center.dy - motifHeight * 0.55)
-      ..quadraticBezierTo(
-        center.dx + motifWidth * 0.38,
-        center.dy - motifHeight * 0.82,
-        center.dx,
-        center.dy,
-      )
-      ..close();
-    canvas
-      ..drawPath(leftPage, strong)
-      ..drawPath(rightPage, strong)
-      ..drawLine(
-        Offset(center.dx, center.dy),
-        Offset(center.dx, center.dy + motifHeight),
-        fine,
-      );
-
-    final ruleHalfWidth = size.width * 0.12;
-    final upperRuleY = size.height * 0.18;
-    final lowerRuleY = size.height * 0.79;
-    canvas
-      ..drawLine(
-        Offset(center.dx - ruleHalfWidth, upperRuleY),
-        Offset(center.dx + ruleHalfWidth, upperRuleY),
-        fine,
-      )
-      ..drawLine(
-        Offset(center.dx - ruleHalfWidth, lowerRuleY),
-        Offset(center.dx + ruleHalfWidth, lowerRuleY),
-        fine,
-      );
-  }
-
-  @override
-  bool shouldRepaint(covariant _ProvisionalCoverArtPainter oldDelegate) {
-    return false;
-  }
-}
-
-class _WelcomePagePainter extends CustomPainter {
-  const _WelcomePagePainter();
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final inset = math.min(size.width, size.height) * 0.055;
-    canvas.drawRect(
-      Rect.fromLTRB(inset, inset, size.width - inset, size.height - inset),
-      Paint()
-        ..color = const Color(0xFFC4A071).withValues(alpha: 0.48)
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 0.8,
-    );
-  }
-
-  @override
-  bool shouldRepaint(covariant _WelcomePagePainter oldDelegate) => false;
 }

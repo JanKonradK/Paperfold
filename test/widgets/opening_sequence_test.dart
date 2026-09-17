@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:paperfold/page/opening/opening_sequence.dart';
 
@@ -67,13 +68,26 @@ void main() {
 
   testWidgets('one tap turns the cover, another goes through the page',
       (tester) async {
+    final semantics = tester.ensureSemantics();
     await pumpOpening(tester);
+    expect(find.bySemanticsLabel('the library'), findsNothing);
+    expect(
+      tester
+          .widget<AnnotatedRegion<SystemUiOverlayStyle>>(
+            find.byType(AnnotatedRegion<SystemUiOverlayStyle>),
+          )
+          .value
+          .statusBarIconBrightness,
+      Brightness.light,
+    );
 
     await tapThrough(tester, OpeningSequence.turnDuration);
     expect(finished, 0, reason: 'the cover turn finished the whole sequence');
 
     await tapThrough(tester, OpeningSequence.leaveDuration);
     expect(finished, 1);
+    expect(find.bySemanticsLabel('the library'), findsOneWidget);
+    semantics.dispose();
 
     // And the reader is let through once, not once per movement that happens
     // to be running when they arrive.
