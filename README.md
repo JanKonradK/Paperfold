@@ -2,6 +2,17 @@
 
 Paperfold is an e-book reader, a note application, and a reading journal.
 
+## Version 1.75
+
+- Continue reading from the library with one tap.
+- Open a book's journal to find its review, pages, and highlights.
+- Add a saved passage to the journal. Keep the quote and a link to its location.
+- Search books, highlights, reviews, and journal pages.
+- Export a book's journal to Markdown.
+
+The update keeps the burgundy library, warm paper, and existing reader themes.
+The database upgrade adds passage fields without replacing existing writing.
+
 ## Fork notice
 
 Paperfold is a fork of [Anx Reader](https://github.com/anxcye/anx-reader) by

@@ -139,6 +139,9 @@ class EpubPlayerState extends ConsumerState<EpubPlayer>
   // Write-behind for the reading position. See saveReadingProgress.
   Timer? _progressSaveTimer;
   bool _progressDirty = false;
+  String? _passageReturnCfi;
+  String? _resumeAtCfi;
+  bool _passageNavigating = false;
 
   // The page-curl turn.
   //
@@ -338,8 +341,93 @@ class EpubPlayerState extends ConsumerState<EpubPlayer>
   void goToHref(String href) =>
       webViewController.evaluateJavascript(source: "goToHref('$href')");
 
-  void goToCfi(String cfi) =>
-      webViewController.evaluateJavascript(source: "goToCfi('$cfi')");
+  Future<void> goToCfi(String cfi) async {
+    await webViewController.evaluateJavascript(
+      source: 'goToCfi(${jsonEncode(cfi)})',
+    );
+  }
+
+  /// Visits a journal source without replacing the main reading position.
+  Future<void> previewPassage(String targetCfi) async {
+    if (_passageNavigating || !mounted) return;
+    setState(() => _passageNavigating = true);
+    try {
+      if (_passageReturnCfi == null && widget.cfi == null) {
+        if (cfi.isEmpty) throw StateError('The reader is not ready');
+        await saveReadingProgress(immediate: true);
+        if (!mounted) return;
+        setState(() => _passageReturnCfi = cfi);
+      }
+      _resumeAtCfi = null;
+      await _goToPassage(targetCfi);
+    } finally {
+      if (mounted) setState(() => _passageNavigating = false);
+    }
+  }
+
+  Future<String> _goToPassage(String targetCfi) async {
+    // evaluateJavascript does not await the renderer's navigation Promise.
+    final result = await webViewController.callAsyncJavaScript(
+      arguments: {'targetCfi': targetCfi},
+      functionBody: '''
+        const view = reader.view;
+        const resolved = await view.resolveNavigation(targetCfi);
+        if (!resolved) throw new Error('The passage cannot be resolved');
+        const moved = await goToCfi(targetCfi);
+        const location = view.lastLocation;
+        const content = view.renderer.getContents()
+          .find(entry => entry.index === resolved.index);
+        if (!moved || !location || !location.cfi || !content) {
+          throw new Error('The passage is not available');
+        }
+        const anchor = typeof resolved.anchor === 'function'
+          ? resolved.anchor(content.doc) : null;
+        if (anchor && anchor.startContainer && location.range &&
+            !location.range.isPointInRange(anchor.startContainer, anchor.startOffset)) {
+          throw new Error('The passage is not visible');
+        }
+        return location.cfi;
+      ''',
+    );
+    if (result?.error != null || result?.value is! String) {
+      throw StateError('Could not navigate to the passage: ${result?.error}');
+    }
+    return result!.value as String;
+  }
+
+  Future<void> returnToReading() async {
+    final targetCfi = _passageReturnCfi;
+    if (targetCfi == null || _passageNavigating || !mounted) return;
+    setState(() => _passageNavigating = true);
+    try {
+      final returnedCfi = await _goToPassage(targetCfi);
+      if (!mounted) return;
+      // The platform may deliver onRelocated before or after the JS result.
+      // Keep preview writes disabled until both confirm the return location.
+      _resumeAtCfi = returnedCfi;
+      _finishPassageReturn(cfi);
+    } catch (error, stackTrace) {
+      AnxLog.warning(
+          'Could not return to the reading position', error, stackTrace);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(L10n.of(context).journalPassageOpenFailed)),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _passageNavigating = false);
+    }
+  }
+
+  void _finishPassageReturn(String locationCfi) {
+    if (_resumeAtCfi != null && _resumeAtCfi == locationCfi) {
+      setState(() {
+        _passageReturnCfi = null;
+        _resumeAtCfi = null;
+        showHistory = false;
+      });
+    }
+  }
 
   void addAnnotation(BookNote bookNote) {
     final noteContent =
@@ -668,7 +756,9 @@ class EpubPlayerState extends ConsumerState<EpubPlayer>
     controller.addJavaScriptHandler(
         handlerName: 'onRelocated',
         callback: (args) {
+          if (!mounted) return;
           Map<String, dynamic> location = args[0];
+          _finishPassageReturn(location['cfi'] ?? '');
           if (cfi == location['cfi']) return;
           // if (chapterHref != location['chapterHref']) {
           //   refreshToc();
@@ -1365,7 +1455,7 @@ class EpubPlayerState extends ConsumerState<EpubPlayer>
   }
 
   Future<void> saveReadingProgress({bool immediate = false}) async {
-    if (cfi == '' || widget.cfi != null) return;
+    if (cfi == '' || widget.cfi != null || _passageReturnCfi != null) return;
     _progressDirty = true;
     if (!immediate) {
       _progressSaveTimer?.cancel();
@@ -1381,7 +1471,7 @@ class EpubPlayerState extends ConsumerState<EpubPlayer>
   }
 
   Future<void> _flushReadingProgress({required bool refreshLibrary}) async {
-    if (!_progressDirty) return;
+    if (!_progressDirty || _passageReturnCfi != null) return;
     _progressDirty = false;
     Book book = widget.book;
     book.lastReadPosition = cfi;
@@ -1396,7 +1486,7 @@ class EpubPlayerState extends ConsumerState<EpubPlayer>
     }
     await bookDao.updateBook(book);
     if (refreshLibrary && mounted) {
-      ref.read(bookListProvider.notifier).refresh();
+      ref.invalidate(bookListProvider);
     }
   }
 
@@ -1436,13 +1526,12 @@ class EpubPlayerState extends ConsumerState<EpubPlayer>
 
   Widget _buildHistoryCapsule() {
     final l10n = L10n.of(context);
-    final buttonColor = Color(int.parse('0x$textColor')).withAlpha(200);
+    final buttonColor = Theme.of(context).colorScheme.onSurface;
 
     // Common button style for all history navigation buttons
     final buttonStyle = TextButton.styleFrom(
-      minimumSize: const Size(0, 32),
-      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
+      minimumSize: const Size(48, 48),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(32),
       ),
@@ -1450,7 +1539,7 @@ class EpubPlayerState extends ConsumerState<EpubPlayer>
 
     // Helper method to create history navigation buttons
     Widget createHistoryButton(
-        IconData icon, String label, VoidCallback onPressed) {
+        IconData icon, String label, VoidCallback? onPressed) {
       return TextButton.icon(
         icon: Icon(icon, size: 18, color: buttonColor),
         label: Text(label, style: TextStyle(color: buttonColor, fontSize: 14)),
@@ -1462,50 +1551,54 @@ class EpubPlayerState extends ConsumerState<EpubPlayer>
     // Build buttons list
     final List<Widget> buttons = [];
 
-    if (canGoBack) {
+    if (_passageReturnCfi != null) {
       buttons.add(createHistoryButton(
-        Icons.arrow_back,
-        l10n.historyBack,
-        backHistory,
+        Icons.keyboard_return,
+        l10n.journalReturnToReading,
+        _passageNavigating ? null : returnToReading,
       ));
-    }
+    } else {
+      if (canGoBack) {
+        buttons.add(createHistoryButton(
+          Icons.arrow_back,
+          l10n.historyBack,
+          backHistory,
+        ));
+      }
 
-    buttons.add(createHistoryButton(
-      Icons.close,
-      l10n.historyClose,
-      () => setState(() => showHistory = false),
-    ));
-
-    if (canGoForward) {
       buttons.add(createHistoryButton(
-        Icons.arrow_forward,
-        l10n.historyForward,
-        forwardHistory,
+        Icons.close,
+        l10n.historyClose,
+        () => setState(() => showHistory = false),
       ));
+
+      if (canGoForward) {
+        buttons.add(createHistoryButton(
+          Icons.arrow_forward,
+          l10n.historyForward,
+          forwardHistory,
+        ));
+      }
     }
     return Align(
       alignment: Alignment.bottomCenter,
       child: Padding(
-        padding: const EdgeInsets.only(bottom: 40),
+        padding: const EdgeInsets.fromLTRB(12, 0, 12, 40),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(32),
           child: BackdropFilter(
             filter: ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0),
             child: Container(
-              height: 32,
               decoration: BoxDecoration(
-                color: Theme.of(context)
-                    .colorScheme
-                    .surfaceContainer
-                    .withAlpha(123),
+                color: Theme.of(context).colorScheme.surfaceContainer,
                 borderRadius: BorderRadius.circular(32),
                 border: Border.all(
                   color: Theme.of(context).colorScheme.outline,
                   width: 0.5,
                 ),
               ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
+              child: Wrap(
+                alignment: WrapAlignment.center,
                 children: buttons,
               ),
             ),
@@ -1702,7 +1795,8 @@ class EpubPlayerState extends ConsumerState<EpubPlayer>
                 ),
               ),
             readingInfoWidget(),
-            if (showHistory) _buildHistoryCapsule(),
+            if (showHistory || _passageReturnCfi != null)
+              _buildHistoryCapsule(),
             if (!_openingPageGone)
               Positioned.fill(
                 child: IgnorePointer(

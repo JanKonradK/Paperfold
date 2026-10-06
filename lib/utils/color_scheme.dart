@@ -152,6 +152,9 @@ ThemeData colorSchema(
 
 /// Shared typography and surfaces for the paper pages and burgundy library.
 ThemeData paperfoldComponentTheme(ThemeData themeData) {
+  // Component themes animate too. Resolve their text geometry before copying
+  // styles, so raw app themes and inherited library themes share inherit=false.
+  themeData = ThemeData.localize(themeData, themeData.typography.englishLike);
   final colorScheme = themeData.colorScheme;
   final brightness = colorScheme.brightness;
   final gropedBackgroundColor = colorScheme.surface;

@@ -15,7 +15,7 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 export 'package:paperfold/enums/book_status.dart';
 
 // Current app database version
-const int currentDbVersion = 9;
+const int currentDbVersion = 10;
 
 const createBookSQL = '''
 CREATE TABLE tb_books (
@@ -139,6 +139,9 @@ CREATE TABLE IF NOT EXISTS tb_journal (
   book_id INTEGER,
   page_index INTEGER,
   body TEXT,
+  source_cfi TEXT,
+  source_excerpt TEXT,
+  source_chapter TEXT,
   create_time TEXT,
   update_time TEXT,
   FOREIGN KEY (book_id) REFERENCES tb_books(id)
@@ -705,6 +708,18 @@ class DBHelper {
         // migration. The reserved negative ID is the identity; the name is a
         // display fallback and must never be used for lookup.
         await db.execute(seedBuiltInFavouritesShelfSQL);
+    }
+
+    if (oldVersion < 10 && newVersion >= 10) {
+      // Keep a passage snapshot apart from editable journal text. Fresh
+      // databases already have these columns; v9 journals gain them in place.
+      final columns = await db.rawQuery('PRAGMA table_info(tb_journal)');
+      final names = columns.map((column) => column['name']).toSet();
+      for (final name in ['source_cfi', 'source_excerpt', 'source_chapter']) {
+        if (!names.contains(name)) {
+          await db.execute('ALTER TABLE tb_journal ADD COLUMN $name TEXT');
+        }
+      }
     }
 
     if (oldVersion != 0 && Prefs().webdavStatus) {

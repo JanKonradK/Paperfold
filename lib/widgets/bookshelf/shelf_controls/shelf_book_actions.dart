@@ -97,7 +97,7 @@ class ShelfBookOptionBar extends StatelessWidget {
               _OptionButton(
                 key: const ValueKey('shelf-book-notes'),
                 icon: Icons.menu_book_outlined,
-                label: l10n.shelfBookOptionNotes,
+                label: l10n.navJournal,
                 width: width,
                 onPressed: onNotes,
               ),

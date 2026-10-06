@@ -32,7 +32,7 @@ class _MinuteClockState extends State<MinuteClock> {
     final secondsUntilNextMinute = 60 - DateTime.now().second;
 
     // Wait for that initial delay before starting the periodic timer.
-    Future.delayed(Duration(seconds: secondsUntilNextMinute), () {
+    _timer = Timer(Duration(seconds: secondsUntilNextMinute), () {
       if (mounted) {
         // The first synchronized update.
         setState(() {

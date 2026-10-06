@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:paperfold/config/paperfold_tokens.dart';
 import 'package:paperfold/dao/journal.dart';
 import 'package:paperfold/l10n/generated/L10n.dart';
 import 'package:paperfold/models/book.dart';
 import 'package:paperfold/models/journal_page.dart';
 import 'package:paperfold/providers/journal_home.dart';
+import 'package:paperfold/page/reading_page.dart';
+import 'package:paperfold/service/book.dart';
 import 'package:paperfold/utils/log/common.dart';
 import 'package:paperfold/widgets/common/load_failure.dart';
 
@@ -17,9 +18,15 @@ import 'package:paperfold/widgets/common/load_failure.dart';
 /// resolution here is that the paper is a background, not a container the
 /// keyboard has to be fitted inside.
 class DotPagesPage extends ConsumerStatefulWidget {
-  const DotPagesPage({super.key, required this.book, this.dao});
+  const DotPagesPage({
+    super.key,
+    required this.book,
+    this.dao,
+    this.initialPageId,
+  });
 
   final Book book;
+  final int? initialPageId;
 
   /// Injected in tests so the pages can run against an in-memory database.
   final JournalDao? dao;
@@ -36,6 +43,7 @@ class _DotPagesPageState extends ConsumerState<DotPagesPage> {
   Object? _loadError;
   bool _busy = false;
   bool _allowPop = false;
+  final _pageCenterKey = GlobalKey();
 
   @override
   void initState() {
@@ -145,10 +153,172 @@ class _DotPagesPageState extends ConsumerState<DotPagesPage> {
     if (mounted) Navigator.of(context).pop();
   }
 
+  Future<void> _openPassage(JournalPage page) async {
+    final cfi = page.sourceCfi;
+    if (cfi == null || cfi.trim().isEmpty || !await _saveAll() || !mounted) {
+      return;
+    }
+    setState(() => _busy = true);
+    try {
+      final reader = readingPageKey.currentState;
+      if (reader != null) {
+        if (reader.widget.book.id != widget.book.id) {
+          throw StateError('Another book is already open');
+        }
+        // Reuse the reader that this journal was opened from.
+        final player = epubPlayerKey.currentState;
+        if (player == null) throw StateError('The reader is not ready');
+        await player.previewPassage(cfi);
+        if (!mounted) return;
+        if (!identical(reader, readingPageKey.currentState) ||
+            !reader.mounted) {
+          throw StateError('The reader was closed');
+        }
+        reader.hideBottomBar();
+        setState(() => _allowPop = true);
+        await WidgetsBinding.instance.endOfFrame;
+        if (!mounted) return;
+        Navigator.of(context).pop();
+        return;
+      }
+      await pushToReadingPage(ref, context, widget.book, cfi: cfi);
+    } catch (error, stackTrace) {
+      AnxLog.warning('Could not open journal passage', error, stackTrace);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(L10n.of(context).journalPassageOpenFailed)),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  Future<void> _deletePage(JournalPage page) async {
+    if (_busy || _allowPop || page.id == null) return;
+    setState(() => _busy = true);
+    try {
+      final l10n = L10n.of(context);
+      final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text(l10n.journalDeletePage),
+          content: Text(l10n.journalDeletePageConfirm),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: Text(l10n.commonCancel),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              style: TextButton.styleFrom(
+                foregroundColor: Theme.of(context).colorScheme.error,
+              ),
+              child: Text(l10n.commonDelete),
+            ),
+          ],
+        ),
+      );
+      if (confirmed != true || !mounted) return;
+      await _dao.deletePage(page.id!);
+      if (!mounted) return;
+      setState(() => _pages = [
+            for (final other in _pages)
+              if (other.id != page.id) other,
+          ]);
+      ref.invalidate(journalHomeProvider);
+    } catch (error, stackTrace) {
+      _showSaveError(error, stackTrace);
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  Widget _page(JournalPage page) {
+    final controller = _controllers[page.id];
+    if (controller == null) return const SizedBox.shrink();
+    final theme = Theme.of(context);
+    final l10n = L10n.of(context);
+    return Padding(
+      key: ValueKey('journal-page-${page.id}'),
+      padding: const EdgeInsets.only(bottom: 16),
+      child: _DotPaper(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (page.hasSource)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (page.sourceExcerpt?.isNotEmpty ?? false)
+                      SelectableText(
+                        page.sourceExcerpt!,
+                        style: theme.textTheme.bodyLarge,
+                      ),
+                    if (page.sourceChapter?.isNotEmpty ?? false)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8),
+                        child: Text(
+                          page.sourceChapter!,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ),
+                    Wrap(
+                      spacing: 8,
+                      children: [
+                        if (page.sourceCfi?.trim().isNotEmpty ?? false)
+                          TextButton.icon(
+                            onPressed: _busy || _allowPop
+                                ? null
+                                : () => _openPassage(page),
+                            icon: const Icon(Icons.menu_book_outlined),
+                            label: Text(l10n.journalOpenPassage),
+                          ),
+                        TextButton.icon(
+                          onPressed: _busy || _allowPop
+                              ? null
+                              : () => _deletePage(page),
+                          icon: const Icon(Icons.delete_outline),
+                          label: Text(l10n.journalDeletePage),
+                        ),
+                      ],
+                    ),
+                    const Divider(),
+                  ],
+                ),
+              ),
+            TextField(
+              controller: controller,
+              readOnly: _busy || _allowPop,
+              maxLines: null,
+              minLines: page.hasSource ? 4 : 8,
+              textCapitalization: TextCapitalization.sentences,
+              style: theme.textTheme.bodyLarge,
+              decoration: InputDecoration(
+                hintText: page.hasSource
+                    ? l10n.journalThoughtsHint
+                    : l10n.journalPageHint,
+                border: InputBorder.none,
+                contentPadding: const EdgeInsets.all(16),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = L10n.of(context);
     final theme = Theme.of(context);
+    final requestedIndex =
+        _pages.indexWhere((page) => page.id == widget.initialPageId);
+    final firstIndex = requestedIndex < 0 ? 0 : requestedIndex;
 
     return PopScope(
       canPop: _allowPop || (_pages.isEmpty && !_busy),
@@ -177,44 +347,38 @@ class _DotPagesPageState extends ConsumerState<DotPagesPage> {
                           style: theme.textTheme.bodyLarge,
                         ),
                       )
-                    : ListView.builder(
-                        padding: EdgeInsets.only(
-                          left: 16,
-                          right: 16,
-                          top: 12,
-                          // Room for the button, the gesture inset, and the
-                          // keyboard when it is up.
-                          bottom: 120 +
-                              MediaQuery.viewPaddingOf(context).bottom +
-                              MediaQuery.viewInsetsOf(context).bottom,
-                        ),
-                        itemCount: _pages.length,
-                        itemBuilder: (context, index) {
-                          final page = _pages[index];
-                          final controller = _controllers[page.id];
-                          if (controller == null) {
-                            return const SizedBox.shrink();
-                          }
-                          return Padding(
-                            padding: const EdgeInsets.only(bottom: 16),
-                            child: _DotPaper(
-                              child: TextField(
-                                controller: controller,
-                                readOnly: _busy || _allowPop,
-                                maxLines: null,
-                                minLines: 8,
-                                textCapitalization:
-                                    TextCapitalization.sentences,
-                                style: theme.textTheme.bodyLarge,
-                                decoration: InputDecoration(
-                                  hintText: l10n.journalPageHint,
-                                  border: InputBorder.none,
-                                  contentPadding: const EdgeInsets.all(16),
-                                ),
+                    : CustomScrollView(
+                        center: _pageCenterKey,
+                        keyboardDismissBehavior:
+                            ScrollViewKeyboardDismissBehavior.onDrag,
+                        slivers: [
+                          if (firstIndex > 0)
+                            SliverPadding(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 16),
+                              sliver: SliverList.builder(
+                                itemCount: firstIndex,
+                                itemBuilder: (context, index) =>
+                                    _page(_pages[firstIndex - index - 1]),
                               ),
                             ),
-                          );
-                        },
+                          SliverPadding(
+                            key: _pageCenterKey,
+                            padding: EdgeInsets.only(
+                              left: 16,
+                              right: 16,
+                              top: 12,
+                              bottom: 120 +
+                                  MediaQuery.viewPaddingOf(context).bottom +
+                                  MediaQuery.viewInsetsOf(context).bottom,
+                            ),
+                            sliver: SliverList.builder(
+                              itemCount: _pages.length - firstIndex,
+                              itemBuilder: (context, index) =>
+                                  _page(_pages[firstIndex + index]),
+                            ),
+                          ),
+                        ],
                       ),
       ),
     );
@@ -231,22 +395,24 @@ class _DotPaper extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isLight = theme.brightness == Brightness.light;
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: isLight
-            ? PaperfoldTokens.light.surfaceLow
-            : theme.colorScheme.surfaceContainer,
-        borderRadius: BorderRadius.circular(6),
-        border: Border.all(
-          color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
+    return Align(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 760),
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            color: theme.colorScheme.surfaceContainerLow,
+            borderRadius: BorderRadius.circular(6),
+            border: Border.all(
+              color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
+            ),
+          ),
+          child: CustomPaint(
+            painter: _DotGridPainter(
+              dot: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.22),
+            ),
+            child: child,
+          ),
         ),
-      ),
-      child: CustomPaint(
-        painter: _DotGridPainter(
-          dot: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.22),
-        ),
-        child: child,
       ),
     );
   }

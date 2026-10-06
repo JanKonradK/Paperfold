@@ -479,58 +479,64 @@ Future<void> pushToReadingPage(
   String? cfi,
   String? heroTag,
 }) async {
-  if (book.isDeleted) {
-    AnxToast.show(L10n.of(context).bookDeleted);
-    return;
-  }
+  if (!context.mounted || !ref.context.mounted) return;
+  try {
+    if (book.isDeleted) {
+      AnxToast.show(L10n.of(context).bookDeleted);
+      return;
+    }
+    if (ref.read(currentReadingProvider).isReading) return;
 
-  if (!File(book.fileFullPath).existsSync()) {
-    ref.read(syncProvider.notifier).downloadBook(book);
-    return;
-  }
+    if (!File(book.fileFullPath).existsSync()) {
+      await ref.read(syncProvider.notifier).downloadBook(book);
+      if (!context.mounted || !ref.context.mounted) return;
+      if (!File(book.fileFullPath).existsSync()) return;
+    }
 
-  final initialThemes = await themeDao.selectThemes();
-  ref.read(currentReadingProvider.notifier).start(
-        CurrentReadingState(
-          book: book,
-          cfi: cfi,
+    final initialThemes = await themeDao.selectThemes();
+    if (!context.mounted || !ref.context.mounted) return;
+    final currentReading = ref.read(currentReadingProvider.notifier);
+    // A second tap can finish loading themes after the first reader opened.
+    if (currentReading.isReading) return;
+    final navigator = Navigator.of(context, rootNavigator: true);
+    final container = ProviderScope.containerOf(context, listen: false);
+    currentReading.start(CurrentReadingState(book: book, cfi: cfi));
+
+    try {
+      await navigator.push(
+        // Fade the shelf's opened page into the reader.
+        PageRouteBuilder<void>(
+          transitionDuration: const Duration(milliseconds: 220),
+          reverseTransitionDuration: const Duration(milliseconds: 220),
+          pageBuilder: (context, animation, secondaryAnimation) => ReadingPage(
+            key: readingPageKey,
+            book: book,
+            cfi: cfi,
+            initialThemes: initialThemes,
+            heroTag: heroTag,
+          ),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) =>
+              FadeTransition(opacity: animation, child: child),
         ),
       );
-
-  final currentReading = ref.read(currentReadingProvider.notifier);
-  final chapterContentBridge = ref.read(chapterContentBridgeProvider.notifier);
-  final tocSearch = ref.read(tocSearchProvider.notifier);
-
-  await Navigator.push(
-    navigatorKey.currentContext!,
-    // A fade, not a slide. The shelf has already raised the page the book
-    // opened onto and this route draws the same page underneath, so there is
-    // nothing for a slide to reveal: it only added a third distinct screen
-    // between the tap and the first line of text. Faded, the handover from one
-    // route to the other cannot be seen at all.
-    PageRouteBuilder<void>(
-      transitionDuration: const Duration(milliseconds: 220),
-      reverseTransitionDuration: const Duration(milliseconds: 220),
-      pageBuilder: (context, animation, secondaryAnimation) => ReadingPage(
-        key: readingPageKey,
-        book: book,
-        cfi: cfi,
-        initialThemes: initialThemes,
-        heroTag: heroTag,
-      ),
-      transitionsBuilder: (context, animation, secondaryAnimation, child) =>
-          FadeTransition(opacity: animation, child: child),
-    ),
-  ).then((_) {
-    AnxLog.info('ReadingPage: poped: ${book.title}');
-    currentReading.finish();
-    chapterContentBridge.state = null;
-    tocSearch.clear();
-    // The reader no longer rebuilds the library on every page turn, so the
-    // shelves pick up the new position here instead, once.
-    ref.read(bookListProvider.notifier).refresh();
-    AnxLog.info('Pop successfully ReadingPage: ${book.title}');
-  });
+    } finally {
+      // Shelf tiles can be rebuilt while reading. Their WidgetRef may already
+      // be disposed, but the app's providers still need to end this session.
+      if (navigator.mounted) {
+        currentReading.finish();
+        container.read(chapterContentBridgeProvider.notifier).state = null;
+        container.read(tocSearchProvider.notifier).clear();
+        container.invalidate(bookListProvider);
+      }
+    }
+  } catch (error, stackTrace) {
+    AnxLog.warning('Could not open book: ${book.title}', error, stackTrace);
+    if (context.mounted) {
+      ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+        SnackBar(content: Text(L10n.of(context).commonFailed)),
+      );
+    }
+  }
 }
 
 void updateBookRating(Book book, double rating) {

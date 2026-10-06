@@ -15,7 +15,7 @@ import 'package:paperfold/enums/sync_direction.dart';
 import 'package:paperfold/providers/sync_status.dart';
 import 'package:paperfold/providers/shelf_home.dart';
 import 'package:paperfold/service/convert_to_epub/txt/convert_from_txt.dart';
-import 'package:paperfold/page/journal/book_review_page.dart';
+import 'package:paperfold/page/journal/book_journal_page.dart';
 import 'package:paperfold/service/md5_service.dart';
 import 'package:paperfold/service/book.dart';
 import 'package:paperfold/utils/get_path/get_base_path.dart';
@@ -270,7 +270,7 @@ class BookBottomSheet extends ConsumerWidget {
       Navigator.of(context).pop();
       Navigator.of(context).push(
         MaterialPageRoute<void>(
-          builder: (context) => BookReviewPage(book: book),
+          builder: (context) => BookJournalPage(book: book),
         ),
       );
     }

@@ -1,4 +1,5 @@
 import 'package:paperfold/dao/base_dao.dart';
+import 'package:paperfold/dao/search_pattern.dart';
 import 'package:paperfold/dao/shelf.dart';
 import 'package:paperfold/enums/book_status.dart';
 import 'package:paperfold/models/book.dart';
@@ -117,18 +118,44 @@ class BookDao extends BaseDao {
     );
   }
 
-  Future<List<Book>> searchBooks(String keyword) async {
+  Future<List<Book>> searchBooks(
+    String keyword, {
+    int? bookId,
+    DateTime? from,
+    DateTime? to,
+    int? limit,
+  }) async {
     final query = keyword.trim();
-    if (query.isEmpty) {
+    if (query.isEmpty || (limit != null && limit <= 0)) {
       return const [];
+    }
+
+    final pattern = searchPattern(query);
+    final where = [
+      'is_deleted = 0',
+      r"(title LIKE ? ESCAPE '\' OR author LIKE ? ESCAPE '\')",
+    ];
+    final arguments = <Object?>[pattern, pattern];
+    if (bookId != null) {
+      where.add('id = ?');
+      arguments.add(bookId);
+    }
+    if (from != null) {
+      where.add('update_time >= ?');
+      arguments.add(from.toIso8601String());
+    }
+    if (to != null) {
+      where.add('update_time <= ?');
+      arguments.add(to.toIso8601String());
     }
 
     return queryList(
       table,
       mapper: Book.fromDb,
-      where: 'is_deleted = 0 AND (title LIKE ? OR author LIKE ?)',
-      whereArgs: ['%$query%', '%$query%'],
-      orderBy: 'update_time DESC',
+      where: where.join(' AND '),
+      whereArgs: arguments,
+      orderBy: 'update_time DESC, id DESC',
+      limit: limit,
     );
   }
 

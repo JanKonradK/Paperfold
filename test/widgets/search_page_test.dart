@@ -4,7 +4,10 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:paperfold/config/shared_preference_provider.dart';
 import 'package:paperfold/dao/search_repository.dart';
 import 'package:paperfold/l10n/generated/L10n.dart';
+import 'package:paperfold/models/book.dart';
+import 'package:paperfold/models/search_journal_result.dart';
 import 'package:paperfold/models/search_result_data.dart';
+import 'package:paperfold/page/search/search_journal_tile.dart';
 import 'package:paperfold/page/search/search_page.dart';
 import 'package:paperfold/providers/search.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -12,6 +15,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 class _SearchRepository extends SearchRepository {
   final queries = <String>[];
   bool fail = false;
+  SearchResultData result = SearchResultData.empty;
 
   @override
   Future<SearchResultData> search(
@@ -23,7 +27,7 @@ class _SearchRepository extends SearchRepository {
   }) async {
     queries.add(keyword);
     if (fail) throw StateError('Search unavailable');
-    return SearchResultData.empty;
+    return result;
   }
 }
 
@@ -80,6 +84,87 @@ void main() {
     expect(find.text('This could not be loaded.'), findsNothing);
     expect(tester.widget<TextField>(find.byType(TextField)).controller!.text,
         'moon');
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('journal-only matches show their book, kind and literal excerpt',
+      (tester) async {
+    final book = Book.mock().copyWith(title: 'The left hand of darkness');
+    final repository = _SearchRepository()
+      ..result = SearchResultData(
+        books: [],
+        noteGroups: [],
+        journalResults: [
+          SearchJournalResult(
+            book: book,
+            id: 12,
+            kind: SearchJournalKind.review,
+            text:
+                '${List.filled(80, 'Earlier words').join(' ')} literal [a+b] kept.',
+          ),
+          SearchJournalResult(
+            book: book,
+            id: 93,
+            kind: SearchJournalKind.page,
+            pageIndex: 4,
+            text: 'A second [a+b] thought.',
+          ),
+        ],
+      );
+    await pumpSearch(tester, repository);
+    await tester.enterText(find.byType(TextField), '[a+b]');
+    await tester.testTextInput.receiveAction(TextInputAction.search);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Journal'), findsOneWidget);
+    expect(find.text('Review'), findsOneWidget);
+    expect(find.text('Dot page 5'), findsOneWidget);
+    expect(find.byType(SearchJournalTile), findsNWidgets(2));
+    expect(find.text('The left hand of darkness'), findsNWidgets(2));
+    final highlights = tester
+        .widgetList<Text>(find.byType(Text))
+        .where((text) => text.textSpan is TextSpan)
+        .expand(
+            (text) => (text.textSpan! as TextSpan).children ?? <InlineSpan>[])
+        .whereType<TextSpan>()
+        .where((span) => span.style?.fontWeight == FontWeight.w700);
+    expect(highlights.map((span) => span.text), ['[a+b]', '[a+b]']);
+    expect(find.text('Nothing here'), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('journal results fit narrow screens with larger text',
+      (tester) async {
+    tester.view.physicalSize = const Size(320, 760);
+    tester.view.devicePixelRatio = 1;
+    tester.platformDispatcher.textScaleFactorTestValue = 1.6;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+    final repository = _SearchRepository()
+      ..result = SearchResultData(
+        books: [],
+        noteGroups: [],
+        journalResults: [
+          SearchJournalResult(
+            book: Book.mock().copyWith(
+              title:
+                  'A very long book title with a long subtitle for a small screen',
+            ),
+            id: 1,
+            kind: SearchJournalKind.page,
+            pageIndex: 99,
+            text:
+                'A memory worth keeping. ${List.filled(20, 'More writing.').join(' ')}',
+          ),
+        ],
+      );
+    await pumpSearch(tester, repository);
+    await tester.enterText(find.byType(TextField), 'memory');
+    await tester.testTextInput.receiveAction(TextInputAction.search);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Dot page 100'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 }

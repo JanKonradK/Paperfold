@@ -326,6 +326,7 @@ class BookNotesList extends ConsumerWidget {
     final notifier = ref.read(bookNotesControllerProvider(book).notifier);
     return BookNoteTile(
       note: bookNote,
+      book: book,
       onTap: () {
         if (state.isSelecting) {
           notifier.toggleSelection(bookNote);

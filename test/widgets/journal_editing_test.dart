@@ -7,10 +7,12 @@ import 'package:paperfold/dao/journal.dart';
 import 'package:paperfold/enums/book_status.dart';
 import 'package:paperfold/l10n/generated/L10n.dart';
 import 'package:paperfold/models/book.dart';
+import 'package:paperfold/models/book_note.dart';
 import 'package:paperfold/models/book_review.dart';
 import 'package:paperfold/models/journal_page.dart';
 import 'package:paperfold/page/journal/book_review_page.dart';
 import 'package:paperfold/page/journal/dot_pages_page.dart';
+import 'package:paperfold/widgets/book_notes/add_to_journal_button.dart';
 
 final _book = Book(
   id: 7,
@@ -34,6 +36,7 @@ class _JournalDao extends JournalDao {
   };
   bool failLoad = false;
   bool failSave = false;
+  bool failAdd = false;
   Completer<BookReview>? reviewLoad;
   Completer<void>? saveWait;
   int reviewWrites = 0;
@@ -73,11 +76,33 @@ class _JournalDao extends JournalDao {
   }
 
   @override
+  Future<int> addPageFromNote(BookNote note) async {
+    if (failAdd) throw StateError('Save failed');
+    final id = pages.length + 1;
+    pages[id] = JournalPage(
+      id: id,
+      bookId: note.bookId,
+      pageIndex: id - 1,
+      body: note.readerNote ?? '',
+      sourceCfi: note.cfi,
+      sourceExcerpt: note.content,
+      sourceChapter: note.chapter,
+    );
+    return id;
+  }
+
+  @override
   Future<int?> savePage(JournalPage page) async {
     if (failSave) throw StateError('Save failed');
     await saveWait?.future;
     pages[page.id!] = page;
     return page.id;
+  }
+
+  @override
+  Future<int> deletePage(int pageId) async {
+    if (failSave) throw StateError('Delete failed');
+    return pages.remove(pageId) == null ? 0 : 1;
   }
 }
 
@@ -220,6 +245,105 @@ void main() {
     await _open(tester, BookReviewPage(book: _book, dao: _JournalDao()),
         textScale: 2);
     await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets(
+      'a selected journal page opens in view and earlier pages remain reachable',
+      (tester) async {
+    final dao = _JournalDao();
+    for (var id = 1; id <= 10; id++) {
+      dao.pages[id] = JournalPage(
+        id: id,
+        bookId: 7,
+        pageIndex: id - 1,
+        body: 'Thoughts on page $id',
+      );
+    }
+    await _open(tester, DotPagesPage(book: _book, dao: dao, initialPageId: 8));
+    await tester.pumpAndSettle();
+    expect(find.text('Thoughts on page 8').hitTestable(), findsOneWidget);
+    await tester.drag(find.byType(CustomScrollView), const Offset(0, 650));
+    await tester.pumpAndSettle();
+    expect(find.text('Thoughts on page 8').hitTestable(), findsNothing);
+    expect(find.byType(TextField).hitTestable(), findsWidgets);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('adding a passage reports failure and keeps the source for retry',
+      (tester) async {
+    final dao = _JournalDao()..failAdd = true;
+    final note = BookNote(
+      id: 1,
+      bookId: 7,
+      content: 'The exact saved passage.',
+      cfi: 'epubcfi(/6/2!/4/2:8)',
+      chapter: 'Chapter one',
+      type: 'highlight',
+      color: 'ffff00',
+      readerNote: 'My thought.',
+      updateTime: DateTime(2026),
+    );
+    await _open(
+        tester,
+        Scaffold(
+          body: AddToJournalButton(note: note, book: _book, dao: dao),
+        ));
+    await tester.tap(find.text('Add to journal'));
+    await tester.pumpAndSettle();
+    expect(find.text('The passage could not be added. Try again.'),
+        findsOneWidget);
+    expect(find.byType(DotPagesPage), findsNothing);
+    expect(note.content, 'The exact saved passage.');
+    expect(note.cfi, 'epubcfi(/6/2!/4/2:8)');
+    expect(dao.pages.length, 1);
+
+    dao.failAdd = false;
+    await tester.tap(find.text('Add to journal'));
+    await tester.pumpAndSettle();
+    expect(find.byType(DotPagesPage), findsOneWidget);
+    expect(find.text(note.content).hitTestable(), findsOneWidget);
+    expect(find.text('Open passage'), findsOneWidget);
+    expect(find.text('My thought.'), findsOneWidget);
+    expect(dao.pages[2]!.sourceCfi, note.cfi);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('deleting a sourced page preserves drafts on cancel and failure',
+      (tester) async {
+    final dao = _JournalDao();
+    dao.pages[1] = const JournalPage(
+      id: 1,
+      bookId: 7,
+      pageIndex: 0,
+      sourceCfi: 'epubcfi(/6/2!/4/2:8)',
+      sourceExcerpt: 'Keep this quote.',
+    );
+    await _open(tester, DotPagesPage(book: _book, dao: dao));
+    await tester.enterText(find.byType(TextField).first, 'Unsaved thoughts.');
+    await tester.tap(find.text('Delete page'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Cancel'));
+    await tester.pumpAndSettle();
+    expect(find.text('Unsaved thoughts.'), findsOneWidget);
+    expect(dao.pages.length, 1);
+
+    dao.failSave = true;
+    await tester.tap(find.text('Delete page'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Delete'));
+    await tester.pumpAndSettle();
+    expect(find.text('Unsaved thoughts.'), findsOneWidget);
+    expect(find.text('Keep this quote.'), findsOneWidget);
+    expect(dao.pages.length, 1);
+
+    dao.failSave = false;
+    await tester.tap(find.text('Delete page'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Delete'));
+    await tester.pumpAndSettle();
+    expect(dao.pages, isEmpty);
+    expect(find.text('No pages yet.'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 }

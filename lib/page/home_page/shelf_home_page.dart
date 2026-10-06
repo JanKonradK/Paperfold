@@ -20,7 +20,7 @@ import 'package:paperfold/dao/wishlist.dart';
 import 'package:paperfold/models/book.dart';
 import 'package:paperfold/models/wishlist_item.dart';
 import 'package:paperfold/page/book_detail.dart';
-import 'package:paperfold/page/journal/book_review_page.dart';
+import 'package:paperfold/page/journal/book_journal_page.dart';
 import 'package:paperfold/page/opds/opds_catalogs_page.dart';
 import 'package:paperfold/page/search/search_page.dart';
 import 'package:paperfold/providers/book_list.dart';
@@ -34,6 +34,7 @@ import 'package:paperfold/widgets/bookshelf/book_bottom_sheet.dart';
 import 'package:paperfold/widgets/bookshelf/book_cover.dart';
 import 'package:paperfold/widgets/bookshelf/book_spine.dart';
 import 'package:paperfold/widgets/bookshelf/bookcase.dart';
+import 'package:paperfold/widgets/bookshelf/continue_reading_banner.dart';
 import 'package:paperfold/widgets/bookshelf/shelf_controls/shelf_book_actions.dart';
 import 'package:paperfold/widgets/bookshelf/shelf_controls/shelf_controls.dart';
 import 'package:paperfold/widgets/bookshelf/shelf_stage.dart';
@@ -49,12 +50,14 @@ enum _AddBooksRoute { device, catalogs }
 
 class ShelfHomeBookActions {
   const ShelfHomeBookActions({
+    this.open,
     this.details,
     this.shelves,
     this.customise,
     this.notes,
   });
 
+  final ValueChanged<Book>? open;
   final ValueChanged<Book>? details;
   final ValueChanged<Book>? shelves;
   final ValueChanged<Book>? customise;
@@ -118,6 +121,7 @@ class _ShelfHomePageState extends ConsumerState<ShelfHomePage>
   int _shelfIndex = 0;
   bool _dragging = false;
   bool _holding = false;
+  bool _openingBook = false;
 
   @override
   bool get wantKeepAlive => true;
@@ -251,9 +255,20 @@ class _ShelfHomePageState extends ConsumerState<ShelfHomePage>
   }
 
   Future<void> _openBook(Book book) async {
-    await pushToReadingPage(ref, context, book);
-    if (mounted) {
-      await ref.read(shelfHomeProvider.notifier).refresh();
+    if (_openingBook) return;
+    final override = widget.bookActions.open;
+    if (override != null) {
+      override(book);
+      return;
+    }
+    setState(() => _openingBook = true);
+    try {
+      await pushToReadingPage(ref, context, book);
+      if (mounted) {
+        await ref.read(shelfHomeProvider.notifier).refresh();
+      }
+    } finally {
+      if (mounted) setState(() => _openingBook = false);
     }
   }
 
@@ -383,8 +398,9 @@ class _ShelfHomePageState extends ConsumerState<ShelfHomePage>
       return;
     }
     await Navigator.of(context).push<void>(
-      MaterialPageRoute(builder: (context) => BookReviewPage(book: book)),
+      MaterialPageRoute(builder: (context) => BookJournalPage(book: book)),
     );
+    if (mounted) await ref.read(shelfHomeProvider.notifier).refresh();
   }
 
   List<ShelfRow> _shelfRows(
@@ -451,7 +467,7 @@ class _ShelfHomePageState extends ConsumerState<ShelfHomePage>
         // Stable actions keep the sync subscription attached during loading.
         actions: [
           IconButton(
-            tooltip: l10n.searchBooksOrNotes,
+            tooltip: l10n.searchLibraryHint,
             onPressed: () => Navigator.of(context).push(
               MaterialPageRoute(builder: (context) => const SearchPage()),
             ),
@@ -485,7 +501,7 @@ class _ShelfHomePageState extends ConsumerState<ShelfHomePage>
                   children: [
                     const Icon(Icons.search),
                     const SizedBox(width: 12),
-                    Flexible(child: Text(l10n.searchBooksOrNotes)),
+                    Flexible(child: Text(l10n.searchLibraryHint)),
                   ],
                 ),
               ),
@@ -529,137 +545,176 @@ class _ShelfHomePageState extends ConsumerState<ShelfHomePage>
               for (final section in sections)
                 for (final book in section.books) 'book-${book.id}': book,
             };
-            return Column(
-              children: [
-                Padding(
-                  padding: const EdgeInsetsDirectional.fromSTEB(24, 8, 12, 4),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          rows.isEmpty
-                              ? l10n.shelfHomeTitle
-                              : rows[activeIndex].name,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: Theme.of(context).textTheme.headlineSmall,
-                        ),
+            final resumeBook = continueReadingBook(data.readingNow);
+            return LayoutBuilder(builder: (context, constraints) {
+              return Column(
+                children: [
+                  ConstrainedBox(
+                    constraints:
+                        BoxConstraints(maxHeight: constraints.maxHeight * 0.5),
+                    child: SingleChildScrollView(
+                      key: const ValueKey('shelf-header-scroll'),
+                      primary: false,
+                      child: Column(
+                        children: [
+                          if (resumeBook != null && !_holding)
+                            Padding(
+                              padding: const EdgeInsets.fromLTRB(20, 4, 20, 8),
+                              child: ContinueReadingBanner(
+                                key: const ValueKey('library-continue-reading'),
+                                book: resumeBook,
+                                onOpen: _openingBook
+                                    ? null
+                                    : () => _openBook(resumeBook),
+                              ),
+                            ),
+                          Padding(
+                            padding: const EdgeInsetsDirectional.fromSTEB(
+                                24, 8, 12, 4),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    rows.isEmpty
+                                        ? l10n.shelfHomeTitle
+                                        : rows[activeIndex].name,
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .headlineSmall,
+                                  ),
+                                ),
+                                IconButton(
+                                  key: const ValueKey('shelf-sort-control'),
+                                  tooltip: l10n.shelfSortControl,
+                                  onPressed: () =>
+                                      showShelfSortSheet(context, controls),
+                                  icon: const Icon(Icons.sort_rounded),
+                                ),
+                                Badge.count(
+                                  count: controls.filterCount,
+                                  isLabelVisible: controls.hasFilters,
+                                  child: IconButton(
+                                    key: const ValueKey('shelf-filter-control'),
+                                    tooltip: l10n.shelfFilterControl,
+                                    onPressed: () => showShelfFilterSheet(
+                                        context, controls, data.tags),
+                                    icon: const Icon(Icons.filter_alt_outlined),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          SizedBox(
+                            height:
+                                38 + MediaQuery.textScalerOf(context).scale(14),
+                            child: ListView.separated(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 20),
+                              scrollDirection: Axis.horizontal,
+                              itemCount: rows.length,
+                              separatorBuilder: (context, index) =>
+                                  const SizedBox(width: 8),
+                              itemBuilder: (context, index) => ChoiceChip(
+                                key: ValueKey('shelf-tab-$index'),
+                                label: Text(rows[index].name),
+                                selected: index == activeIndex,
+                                showCheckmark: false,
+                                onSelected: _holding
+                                    ? null
+                                    : (_) => _bookcaseKey.currentState
+                                        ?.climbTo(index),
+                              ),
+                            ),
+                          ),
+                          ShelfFilterChips(controls: controls, tags: data.tags),
+                        ],
                       ),
-                      IconButton(
-                        key: const ValueKey('shelf-sort-control'),
-                        tooltip: l10n.shelfSortControl,
-                        onPressed: () => showShelfSortSheet(context, controls),
-                        icon: const Icon(Icons.sort_rounded),
-                      ),
-                      Badge.count(
-                        count: controls.filterCount,
-                        isLabelVisible: controls.hasFilters,
-                        child: IconButton(
-                          key: const ValueKey('shelf-filter-control'),
-                          tooltip: l10n.shelfFilterControl,
-                          onPressed: () => showShelfFilterSheet(
-                              context, controls, data.tags),
-                          icon: const Icon(Icons.filter_alt_outlined),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                SizedBox(
-                  height: 38 + MediaQuery.textScalerOf(context).scale(14),
-                  child: ListView.separated(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    scrollDirection: Axis.horizontal,
-                    itemCount: rows.length,
-                    separatorBuilder: (context, index) =>
-                        const SizedBox(width: 8),
-                    itemBuilder: (context, index) => ChoiceChip(
-                      key: ValueKey('shelf-tab-$index'),
-                      label: Text(rows[index].name),
-                      selected: index == activeIndex,
-                      showCheckmark: false,
-                      onSelected: _holding
-                          ? null
-                          : (_) => _bookcaseKey.currentState?.climbTo(index),
                     ),
                   ),
-                ),
-                ShelfFilterChips(controls: controls, tags: data.tags),
-                Expanded(
-                  child: Padding(
-                    padding: EdgeInsets.only(bottom: _holding ? 0 : 72),
-                    child: Bookcase(
-                      key: _bookcaseKey,
-                      showSignposts: false,
-                      shelves: rows,
-                      initialShelf: activeIndex,
-                      onHoldingChanged: (holding) {
-                        setState(() => _holding = holding);
-                        widget.backHandle?._setCanTakeBack(holding);
-                      },
-                      onShelfChanged: (index) {
-                        if (_shelfIndex != index) {
-                          setState(() => _shelfIndex = index);
-                        }
-                      },
-                      onOpen: (shelfBook) async {
-                        final book = booksById[shelfBook.id];
-                        if (book != null) {
-                          await _openBook(book);
-                        } else {
-                          await _openShelf(sections.last);
-                        }
-                        _bookcaseKey.currentState?.activeStage?.reset();
-                      },
-                      optionsBuilder: (context, shelfBook) {
-                        final book = booksById[shelfBook.id];
-                        if (book == null) return const SizedBox.shrink();
-                        return ShelfBookOptionBar(
-                          onDetails: () => _openDetails(book),
-                          onShelves: () => _openShelves(book),
-                          onCustomise: () => _openCustomise(book),
-                          onNotes: () => _openNotes(book),
-                        );
-                      },
-                      emptyBuilder: (context, shelf) {
-                        final index = rows.indexWhere(
-                          (candidate) => candidate.name == shelf.name,
-                        );
-                        final sourceCount =
-                            index < 0 ? 0 : sections[index].count;
-                        final filteredEmpty =
-                            controls.hasFilters && sourceCount > 0;
-                        return _BookcaseEmptyState(
-                          shelfName: shelf.name,
-                          message: filteredEmpty
-                              ? l10n.shelfNoFilterResults
-                              : l10n.emptyShelf,
-                          actionLabel: filteredEmpty
-                              ? l10n.shelfClearFilters
-                              : index == 0
-                                  ? l10n.shelfAddBooksTooltip
-                                  : index == 4
-                                      ? l10n.addBookToBuyAction
-                                      : null,
-                          actionIcon: filteredEmpty
-                              ? Icons.filter_alt_off_outlined
-                              : Icons.add_rounded,
-                          onAction: filteredEmpty
-                              ? controls.clearFilters
-                              : index == 0
-                                  ? _openAddBooksSheet
-                                  : index == 4
-                                      ? _addWishlistBook
-                                      : null,
-                        );
-                      },
-                      pickUpHint: l10n.shelfPickUpHint,
-                      openHint: l10n.shelfOpenHint,
+                  Expanded(
+                    child: Padding(
+                      padding: EdgeInsets.only(
+                        bottom: _holding
+                            ? 0
+                            : constraints.maxHeight < 400
+                                ? 12
+                                : 72,
+                      ),
+                      child: Bookcase(
+                        key: _bookcaseKey,
+                        showSignposts: false,
+                        shelves: rows,
+                        initialShelf: activeIndex,
+                        onHoldingChanged: (holding) {
+                          setState(() => _holding = holding);
+                          widget.backHandle?._setCanTakeBack(holding);
+                        },
+                        onShelfChanged: (index) {
+                          if (_shelfIndex != index) {
+                            setState(() => _shelfIndex = index);
+                          }
+                        },
+                        onOpen: (shelfBook) async {
+                          final book = booksById[shelfBook.id];
+                          if (book != null) {
+                            await _openBook(book);
+                          } else {
+                            await _openShelf(sections.last);
+                          }
+                          _bookcaseKey.currentState?.activeStage?.reset();
+                        },
+                        optionsBuilder: (context, shelfBook) {
+                          final book = booksById[shelfBook.id];
+                          if (book == null) return const SizedBox.shrink();
+                          return ShelfBookOptionBar(
+                            onDetails: () => _openDetails(book),
+                            onShelves: () => _openShelves(book),
+                            onCustomise: () => _openCustomise(book),
+                            onNotes: () => _openNotes(book),
+                          );
+                        },
+                        emptyBuilder: (context, shelf) {
+                          final index = rows.indexWhere(
+                            (candidate) => candidate.name == shelf.name,
+                          );
+                          final sourceCount =
+                              index < 0 ? 0 : sections[index].count;
+                          final filteredEmpty =
+                              controls.hasFilters && sourceCount > 0;
+                          return _BookcaseEmptyState(
+                            shelfName: shelf.name,
+                            message: filteredEmpty
+                                ? l10n.shelfNoFilterResults
+                                : l10n.emptyShelf,
+                            actionLabel: filteredEmpty
+                                ? l10n.shelfClearFilters
+                                : index == 0
+                                    ? l10n.shelfAddBooksTooltip
+                                    : index == 4
+                                        ? l10n.addBookToBuyAction
+                                        : null,
+                            actionIcon: filteredEmpty
+                                ? Icons.filter_alt_off_outlined
+                                : Icons.add_rounded,
+                            onAction: filteredEmpty
+                                ? controls.clearFilters
+                                : index == 0
+                                    ? _openAddBooksSheet
+                                    : index == 4
+                                        ? _addWishlistBook
+                                        : null,
+                          );
+                        },
+                        pickUpHint: l10n.shelfPickUpHint,
+                        openHint: l10n.shelfOpenHint,
+                      ),
                     ),
                   ),
-                ),
-              ],
-            );
+                ],
+              );
+            });
           },
           loading: () => const _ShelfLoadingView(),
           error: (error, stackTrace) => _ShelfLoadError(
@@ -845,7 +900,7 @@ class _BookcaseEmptyState extends StatelessWidget {
       container: true,
       label: shelfName,
       child: Center(
-        child: Padding(
+        child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -890,7 +945,7 @@ class _ShelfLoadingView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: Padding(
+      child: SingleChildScrollView(
         padding: const EdgeInsets.all(32),
         child: Column(
           mainAxisSize: MainAxisSize.min,

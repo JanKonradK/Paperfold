@@ -4,6 +4,7 @@ import 'dart:async';
 import 'package:paperfold/config/shared_preference_provider.dart';
 import 'package:paperfold/models/book.dart';
 import 'package:paperfold/models/search_note_group.dart';
+import 'package:paperfold/page/search/search_journal_tile.dart';
 import 'package:paperfold/providers/search.dart';
 import 'package:paperfold/service/book.dart';
 import 'package:paperfold/widgets/book_notes/book_note_tile.dart';
@@ -76,7 +77,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
           controller: _controller,
           focusNode: _focusNode,
           decoration: InputDecoration(
-            hintText: L10n.of(context).searchBooksOrNotes,
+            hintText: L10n.of(context).searchLibraryHint,
             prefixIcon: const Icon(Icons.search),
             suffixIcon: _controller.text.isEmpty
                 ? null
@@ -113,6 +114,11 @@ class _SearchPageState extends ConsumerState<SearchPage> {
                 ),
               );
             }
+            if (result.books.isEmpty &&
+                result.noteGroups.isEmpty &&
+                result.journalResults.isEmpty) {
+              return Center(child: Text(L10n.of(context).nothingHere));
+            }
             return SingleChildScrollView(
               keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
               child: Center(
@@ -123,14 +129,32 @@ class _SearchPageState extends ConsumerState<SearchPage> {
                     child: Column(
                       spacing: 24,
                       children: [
-                        _SearchResult(
-                            title: L10n.of(context).books,
-                            empty: result.books.isEmpty,
-                            child: _SearchBookResult(books: result.books)),
-                        _SearchResult(
-                            title: L10n.of(context).notes,
-                            empty: result.noteGroups.isEmpty,
-                            child: _SearchNoteResult(group: result.noteGroups)),
+                        if (result.books.isNotEmpty)
+                          _SearchResult(
+                              title: L10n.of(context).books,
+                              child: _SearchBookResult(books: result.books)),
+                        if (result.noteGroups.isNotEmpty)
+                          _SearchResult(
+                              title: L10n.of(context).notes,
+                              child:
+                                  _SearchNoteResult(group: result.noteGroups)),
+                        if (result.journalResults.isNotEmpty)
+                          _SearchResult(
+                            title: L10n.of(context).navJournal,
+                            child: Column(
+                              children: [
+                                for (var index = 0;
+                                    index < result.journalResults.length;
+                                    index++) ...[
+                                  if (index > 0) const Divider(height: 1),
+                                  SearchJournalTile(
+                                    result: result.journalResults[index],
+                                    query: query,
+                                  ),
+                                ],
+                              ],
+                            ),
+                          ),
                       ],
                     ),
                   ),
@@ -155,12 +179,10 @@ class _SearchResult extends ConsumerWidget {
   const _SearchResult({
     required this.title,
     required this.child,
-    required this.empty,
   });
 
   final String title;
   final Widget child;
-  final bool empty;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -178,14 +200,7 @@ class _SearchResult extends ConsumerWidget {
         FilledContainer(
           width: double.infinity,
           padding: const EdgeInsets.all(12.0),
-          child: empty
-              ? Center(
-                  child: Text(
-                    L10n.of(context).nothingHere,
-                    style: Theme.of(context).textTheme.bodyMedium,
-                  ),
-                )
-              : child,
+          child: child,
         ),
       ],
     );
@@ -253,6 +268,7 @@ class _SearchNoteResult extends ConsumerWidget {
                         (note) => Padding(
                           padding: const EdgeInsets.only(bottom: 12),
                           child: BookNoteTile(
+                            book: item.book,
                             backgroundColor:
                                 Theme.of(context).scaffoldBackgroundColor,
                             note: note,

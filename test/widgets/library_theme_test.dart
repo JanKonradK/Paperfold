@@ -4,9 +4,28 @@ import 'package:paperfold/config/paperfold_tokens.dart';
 import 'package:paperfold/config/shared_preference_provider.dart';
 import 'package:paperfold/widgets/bookshelf/book_spine.dart';
 import 'package:paperfold/widgets/paperfold_library_theme.dart';
+import 'package:paperfold/utils/color_scheme.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
+  testWidgets('library and paper components can animate between themes',
+      (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    await Prefs().initPrefs();
+    await tester.pumpWidget(MaterialApp(home: Builder(builder: (context) {
+      final paper = colorSchema(Prefs(), context, Brightness.light);
+      return Theme(
+        data: paper,
+        child: Builder(builder: (context) {
+          final library = paperfoldLibraryTheme(Theme.of(context));
+          expect(() => ThemeData.lerp(library, paper, 0.5), returnsNormally);
+          return const SizedBox.shrink();
+        }),
+      );
+    })));
+    expect(tester.takeException(), isNull);
+  });
+
   test('burgundy library keeps gold and body text readable', () async {
     SharedPreferences.setMockInitialValues({});
     await Prefs().initPrefs();

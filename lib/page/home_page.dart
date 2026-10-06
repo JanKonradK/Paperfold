@@ -17,7 +17,8 @@ import 'package:paperfold/utils/get_path/get_temp_dir.dart';
 import 'package:paperfold/utils/load_default_font.dart';
 import 'package:paperfold/utils/log/common.dart';
 import 'package:paperfold/utils/platform_utils.dart';
-import 'package:paperfold/page/journal/book_review_page.dart';
+import 'package:paperfold/page/journal/book_journal_page.dart';
+import 'package:paperfold/page/search/search_page.dart';
 import 'package:paperfold/page/journal/month_tracker_page.dart';
 import 'package:paperfold/page/journal/reading_challenge_page.dart';
 import 'package:paperfold/providers/journal_home.dart';
@@ -587,6 +588,15 @@ class _JournalDestination extends ConsumerWidget {
         backgroundColor: paper ? Colors.transparent : null,
         appBar: AppBar(
           title: Text(l10n.navJournal),
+          actions: [
+            IconButton(
+              tooltip: l10n.searchLibraryHint,
+              icon: const Icon(Icons.search),
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute<void>(builder: (_) => const SearchPage()),
+              ),
+            ),
+          ],
           backgroundColor: paper ? Colors.transparent : null,
           surfaceTintColor: Colors.transparent,
         ),
@@ -655,7 +665,7 @@ class _JournalDestination extends ConsumerWidget {
                           onTap: () => Navigator.of(context).push(
                             MaterialPageRoute<void>(
                               builder: (context) =>
-                                  BookReviewPage(book: entry.book),
+                                  BookJournalPage(book: entry.book),
                             ),
                           ),
                         );
