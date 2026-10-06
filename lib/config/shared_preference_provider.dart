@@ -902,6 +902,13 @@ class Prefs extends ChangeNotifier {
     return prefs.getBool('shelfUniformSpines') ?? false;
   }
 
+  set shelfCoverView(bool value) {
+    prefs.setBool('shelfCoverView', value);
+    notifyListeners();
+  }
+
+  bool get shelfCoverView => prefs.get('shelfCoverView') == true;
+
   set bookshelfFolderStyle(BookshelfFolderStyle style) {
     prefs.setString('bookshelfFolderStyle', style.code);
     notifyListeners();

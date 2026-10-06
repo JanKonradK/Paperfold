@@ -170,12 +170,13 @@ void main() {
   });
 
   group('credentials', () {
-    test('an empty password clears the entry rather than storing nothing',
-        () async {
+    test('an explicitly empty password is preserved until deletion', () async {
       final OpdsCredentials credentials = InMemoryOpdsCredentials();
       await credentials.write(7, 'secret');
       await credentials.write(7, '');
 
+      expect(await credentials.read(7), '');
+      await credentials.delete(7);
       expect(await credentials.read(7), isNull);
     });
 
@@ -188,6 +189,54 @@ void main() {
   });
 
   group('fetching a feed', () {
+    test('requests have bounded send and receive timeouts', () async {
+      final adapter = _ScriptedAdapter((_) => _body(_feed));
+      await OpdsClient(dio: _dio(adapter)).fetchFeed(_catalog());
+      expect(adapter.requests.single.sendTimeout, const Duration(seconds: 30));
+      expect(
+          adapter.requests.single.receiveTimeout, const Duration(seconds: 30));
+    });
+
+    test('embedded credentials are rejected before requests and redirects',
+        () async {
+      final adapter =
+          _ScriptedAdapter((_) => ResponseBody.fromString('', 302, headers: {
+                'location': ['https://reader:secret@books.example/feed']
+              }));
+      final client = OpdsClient(dio: _dio(adapter));
+      final rejected = throwsA(isA<OpdsException>().having(
+          (error) => error.toString(),
+          'diagnostic',
+          isNot(contains('secret'))));
+      await expectLater(
+          client.fetchFeed(_catalog(),
+              url: Uri.parse('https://reader:secret@books.example/feed')),
+          rejected);
+      expect(adapter.requests, isEmpty);
+      await expectLater(client.fetchFeed(_catalog()), rejected);
+      expect(adapter.requests, hasLength(1));
+    });
+
+    test(
+        'a cancelled download stays cancellation rather than a network failure',
+        () async {
+      final directory = await Directory.systemTemp.createTemp('opds-cancel-');
+      addTearDown(() => directory.delete(recursive: true));
+      final adapter = _ScriptedAdapter(
+          (_) => _body('book', contentType: 'application/epub+zip'));
+      final token = CancelToken()..cancel();
+      await expectLater(
+          OpdsClient(dio: _dio(adapter)).download(
+            _catalog(),
+            Uri.parse('https://books.example/book.epub'),
+            '${directory.path}/book.epub',
+            cancelToken: token,
+          ),
+          throwsA(isA<DioException>().having(
+              (error) => CancelToken.isCancel(error), 'cancelled', isTrue)));
+      expect(adapter.requests, isEmpty);
+    });
+
     test('catalog credentials never follow links to another origin', () async {
       final credentials = InMemoryOpdsCredentials();
       await credentials.write(7, 'secret');
@@ -321,6 +370,18 @@ void main() {
         adapter.requests.single.headers['Authorization'],
         'Basic ${base64Encode(utf8.encode('reader:hunter2'))}',
       );
+    });
+
+    test('email-only catalog sign-in sends an explicitly empty password',
+        () async {
+      final credentials = InMemoryOpdsCredentials();
+      await credentials.write(7, '');
+      final adapter = _ScriptedAdapter((_) => _body(_feed));
+      await OpdsClient(dio: _dio(adapter), credentials: credentials).fetchFeed(
+        _catalog(authType: OpdsAuthType.basic, username: 'reader@example.com'),
+      );
+      expect(adapter.requests.single.headers['Authorization'],
+          'Basic ${base64Encode(utf8.encode('reader@example.com:'))}');
     });
 
     test('no password means no header at all', () async {

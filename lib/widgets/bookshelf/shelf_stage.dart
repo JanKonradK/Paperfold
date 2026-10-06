@@ -1,13 +1,12 @@
 import 'dart:async';
-import 'dart:io';
 import 'dart:math' as math;
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:paperfold/config/paperfold_tokens.dart';
 import 'package:paperfold/enums/book_binding.dart';
 import 'package:paperfold/widgets/bookshelf/book_spine.dart';
+import 'package:paperfold/widgets/bookshelf/book_cover.dart';
 import 'package:paperfold/widgets/ornament.dart';
 
 /// The shelf also holds wishlist entries, so it does not depend on a database row.
@@ -82,6 +81,7 @@ class ShelfStage extends StatefulWidget {
     this.optionsBuilder,
     this.pickUpHint,
     this.openHint,
+    this.showCovers = false,
   });
 
   final List<ShelfBook> books;
@@ -95,6 +95,7 @@ class ShelfStage extends StatefulWidget {
   final Widget Function(BuildContext context, ShelfBook book)? optionsBuilder;
   final String? pickUpHint;
   final String? openHint;
+  final bool showCovers;
 
   // The option bar also uses this height outside the stage.
   static const double headBand = 64;
@@ -115,6 +116,8 @@ class ShelfStageState extends State<ShelfStage> {
   int _index = 0;
   int _operation = 0;
   bool _accessibleList = false;
+  int _coverColumns = 1;
+  double _coverRowExtent = 0;
 
   ShelfPhase get phase => _phase;
   int get index => _index;
@@ -133,6 +136,11 @@ class ShelfStageState extends State<ShelfStage> {
   @override
   void didUpdateWidget(covariant ShelfStage oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (oldWidget.showCovers != widget.showCovers) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _reveal(_index);
+      });
+    }
     final selectedId =
         oldWidget.books.isEmpty ? null : oldWidget.books[_index].id;
     final retained = widget.books.indexWhere((book) => book.id == selectedId);
@@ -213,7 +221,7 @@ class ShelfStageState extends State<ShelfStage> {
     _setPhase(ShelfPhase.shelved);
     if (book != null) {
       widget.onReturned?.call(book);
-      _bookFocus[book.id]?.requestFocus();
+      _focusAfterLayout(book.id);
     }
   }
 
@@ -237,16 +245,43 @@ class ShelfStageState extends State<ShelfStage> {
 
   double _width(ShelfBook book) => book.spineWidth;
 
+  void _focusAfterLayout(String id) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && _phase == ShelfPhase.shelved && current?.id == id) {
+        _bookFocus[id]?.requestFocus();
+      }
+    });
+  }
+
   Future<void> _reveal(int index, {bool focus = false}) async {
     if (!mounted || !_row.hasClients || index >= widget.books.length) return;
     final id = widget.books[index].id;
+    if (widget.showCovers && !_accessibleList) {
+      final top = (index ~/ _coverColumns) * _coverRowExtent;
+      final position = _row.position;
+      final bottom = top + _coverRowExtent;
+      final offset = top < position.pixels
+          ? top
+          : bottom > position.pixels + position.viewportDimension
+              ? bottom - position.viewportDimension
+              : position.pixels;
+      final bounded = offset.clamp(0.0, position.maxScrollExtent);
+      if (_instant) {
+        _row.jumpTo(bounded);
+      } else {
+        await _row.animateTo(bounded,
+            duration: ShelfStage.runDuration, curve: Curves.easeOutCubic);
+      }
+      if (mounted && focus) _focusAfterLayout(id);
+      return;
+    }
     if (_accessibleList) {
       final itemContext = _bookFocus[id]?.context;
       if (itemContext != null) {
         await Scrollable.ensureVisible(itemContext,
             duration: _instant ? Duration.zero : ShelfStage.runDuration);
       }
-      if (mounted && focus) _bookFocus[id]?.requestFocus();
+      if (mounted && focus) _focusAfterLayout(id);
       return;
     }
     var left = 24.0;
@@ -267,7 +302,7 @@ class ShelfStageState extends State<ShelfStage> {
       await _row.animateTo(bounded,
           duration: ShelfStage.runDuration, curve: Curves.easeOutCubic);
     }
-    if (mounted && focus) _bookFocus[id]?.requestFocus();
+    if (mounted && focus) _focusAfterLayout(id);
   }
 
   KeyEventResult _handleKey(FocusNode node, KeyEvent event) {
@@ -281,13 +316,21 @@ class ShelfStageState extends State<ShelfStage> {
       return KeyEventResult.ignored;
     }
     final key = event.logicalKey;
+    final vertical = widget.showCovers || _accessibleList;
     if (key != LogicalKeyboardKey.arrowLeft &&
-        key != LogicalKeyboardKey.arrowRight) {
+        key != LogicalKeyboardKey.arrowRight &&
+        !(vertical &&
+            (key == LogicalKeyboardKey.arrowUp ||
+                key == LogicalKeyboardKey.arrowDown))) {
       return KeyEventResult.ignored;
     }
     final rtl = Directionality.of(context) == TextDirection.rtl;
-    final next = (key == LogicalKeyboardKey.arrowRight) != rtl;
-    final target = (_index + (next ? 1 : -1)).clamp(0, widget.books.length - 1);
+    final step = switch (key) {
+      LogicalKeyboardKey.arrowUp => -(_accessibleList ? 1 : _coverColumns),
+      LogicalKeyboardKey.arrowDown => _accessibleList ? 1 : _coverColumns,
+      _ => (key == LogicalKeyboardKey.arrowRight) != rtl ? 1 : -1,
+    };
+    final target = (_index + step).clamp(0, widget.books.length - 1);
     _select(target);
     unawaited(_reveal(target, focus: true));
     return KeyEventResult.handled;
@@ -320,6 +363,7 @@ class ShelfStageState extends State<ShelfStage> {
 
   Widget _shelf(BoxConstraints constraints) {
     if (_accessibleList) return _bookList();
+    if (widget.showCovers) return _coverGrid(constraints);
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final height = math.max(72.0, math.min(330.0, constraints.maxHeight - 100));
@@ -413,6 +457,73 @@ class ShelfStageState extends State<ShelfStage> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _coverGrid(BoxConstraints constraints) {
+    const gap = 20.0;
+    final available = constraints.maxWidth - 48;
+    _coverColumns = ((available + gap) / 116).floor().clamp(2, 8);
+    final width = (available - gap * (_coverColumns - 1)) / _coverColumns;
+    final scaler = MediaQuery.textScalerOf(context);
+    final height = width / 0.68;
+    final labelHeight = scaler.scale(14) * 2.4 + scaler.scale(12) * 1.3 + 22;
+    _coverRowExtent = height + labelHeight + gap;
+    final theme = Theme.of(context);
+    return GridView.builder(
+      key: const ValueKey('shelf-covers'),
+      controller: _row,
+      padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: _coverColumns,
+        mainAxisExtent: height + labelHeight,
+        crossAxisSpacing: gap,
+        mainAxisSpacing: gap,
+      ),
+      itemCount: widget.books.length,
+      itemBuilder: (context, index) {
+        final book = widget.books[index];
+        final node = _bookFocus.putIfAbsent(book.id, () => FocusNode());
+        return Semantics(
+          button: true,
+          label:
+              [book.title, if (book.author.isNotEmpty) book.author].join(', '),
+          hint: widget.pickUpHint,
+          onTap: () => pickUpAt(index),
+          excludeSemantics: true,
+          child: InkWell(
+            key: ValueKey('shelf-cover-${book.id}'),
+            focusNode: node,
+            onFocusChange: (focused) {
+              if (focused && _phase == ShelfPhase.shelved) _select(index);
+            },
+            onTap: () => pickUpAt(index),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SizedBox(
+                    height: height,
+                    width: width,
+                    child: _FlatCover(book: book)),
+                const SizedBox(height: 10),
+                Text(book.title,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.titleSmall?.copyWith(height: 1.2)),
+                if (book.author.isNotEmpty) ...[
+                  const SizedBox(height: 3),
+                  Text(book.author,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                          height: 1.3)),
+                ],
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -587,6 +698,7 @@ class _FlatSpine extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ink = visual.foreground;
+    final bindingStyle = BookSpine.stableHash(book.bindingKey) % 3;
     final title = book.volume == null
         ? book.title
         : book.title.replaceFirst(
@@ -612,8 +724,9 @@ class _FlatSpine extends StatelessWidget {
       child: LayoutBuilder(builder: (context, constraints) {
         final compact = constraints.maxHeight < 230;
         final scaler = MediaQuery.textScalerOf(context);
-        final titleLineHeight = scaler.scale(14) * 1.05;
-        final authorHeight = scaler.scale(9) * 1.1 + 5;
+        final titleSize = constraints.maxWidth >= 68 ? 16.0 : 14.0;
+        final titleLineHeight = scaler.scale(titleSize) * 1.1;
+        final authorHeight = scaler.scale(10) * 1.1 + 6;
         final textSpace = constraints.maxWidth - 12;
         final showAuthor = !compact &&
             book.author.isNotEmpty &&
@@ -626,10 +739,10 @@ class _FlatSpine extends StatelessWidget {
           padding:
               EdgeInsets.symmetric(horizontal: 6, vertical: compact ? 8 : 14),
           child: Column(children: [
-            _rule(ink),
-            if (book.binding == BookBinding.hardback) ...[
-              const SizedBox(height: 3),
-              _rule(ink),
+            _band(ink, bindingStyle),
+            if (!compact && bindingStyle == 1) ...[
+              const SizedBox(height: 12),
+              _seal(ink),
             ],
             Expanded(
               child: Padding(
@@ -646,21 +759,21 @@ class _FlatSpine extends StatelessWidget {
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(
                               color: ink,
-                              fontSize: 14,
+                              fontSize: titleSize,
                               fontWeight: FontWeight.w400,
                               fontFamily: PaperfoldTypeTokens.journalFamily,
-                              height: 1.05,
+                              height: 1.1,
                             )),
                       ),
                       if (showAuthor) ...[
-                        const SizedBox(height: 5),
+                        const SizedBox(height: 6),
                         Text(book.author,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(
                               color: ink,
                               fontFamily: PaperfoldTypeTokens.chromeFamily,
-                              fontSize: 9,
+                              fontSize: 10,
                               height: 1.1,
                               letterSpacing: 0.25,
                             )),
@@ -670,7 +783,7 @@ class _FlatSpine extends StatelessWidget {
                 ),
               ),
             ),
-            _rule(ink),
+            _band(ink, bindingStyle),
             if (book.volume != null) ...[
               const SizedBox(height: 7),
               Text(book.volume!,
@@ -682,9 +795,9 @@ class _FlatSpine extends StatelessWidget {
                     fontSize: compact ? 16 : 20,
                     height: 1.1,
                   )),
-            ] else ...[
-              const SizedBox(height: 3),
-              _rule(ink),
+            ] else if (!compact) ...[
+              const SizedBox(height: 10),
+              _seal(ink),
             ],
           ]),
         );
@@ -696,6 +809,30 @@ class _FlatSpine extends StatelessWidget {
       height: 0.75,
       width: double.infinity,
       child: ColoredBox(color: ink.withValues(alpha: 0.55)));
+
+  Widget _band(Color ink, int style) => Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _rule(ink),
+          if (book.binding == BookBinding.hardback || style == 2) ...[
+            SizedBox(height: style == 2 ? 5 : 3),
+            _rule(ink),
+          ],
+        ],
+      );
+
+  Widget _seal(Color ink) => SizedBox(
+        width: 7,
+        height: 7,
+        child: Transform.rotate(
+          angle: math.pi / 4,
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              border: Border.all(color: ink.withValues(alpha: 0.7), width: 0.8),
+            ),
+          ),
+        ),
+      );
 }
 
 class _FlatCover extends StatelessWidget {
@@ -706,27 +843,31 @@ class _FlatCover extends StatelessWidget {
   Widget build(BuildContext context) {
     final visual =
         BookSpine.resolveVisual(book.bindingKey, Theme.of(context).colorScheme);
-    final fallback = ColoredBox(
-      color: visual.background,
-      child: Stack(fit: StackFit.expand, children: [
-        Padding(
-            padding: const EdgeInsets.all(12),
-            child: Ornament(
-                ornament: PaperfoldOrnament.rectangularVineFrame,
-                tint: visual.foreground.withValues(alpha: 0.65))),
-        Center(
-            child: Padding(
-                padding: const EdgeInsets.all(28),
-                child: Text(book.title,
-                    maxLines: 5,
-                    overflow: TextOverflow.ellipsis,
-                    textAlign: TextAlign.center,
-                    style: Theme.of(context)
-                        .textTheme
-                        .titleLarge
-                        ?.copyWith(color: visual.foreground)))),
-      ]),
-    );
+    final fallback = LayoutBuilder(builder: (context, constraints) {
+      final width = constraints.maxWidth;
+      return ColoredBox(
+        color: visual.background,
+        child: Stack(fit: StackFit.expand, children: [
+          Padding(
+              padding: EdgeInsets.all(width * 0.07),
+              child: Ornament(
+                  ornament: PaperfoldOrnament.rectangularVineFrame,
+                  tint: visual.foreground.withValues(alpha: 0.65))),
+          Center(
+              child: Padding(
+                  padding: EdgeInsets.all(width * 0.17),
+                  child: Text(book.title,
+                      maxLines: 5,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                          fontFamily: PaperfoldTypeTokens.journalFamily,
+                          fontSize: (width * 0.12).clamp(12.0, 24.0),
+                          height: 1.2,
+                          color: visual.foreground)))),
+        ]),
+      );
+    });
     return DecoratedBox(
       decoration: BoxDecoration(boxShadow: [
         BoxShadow(
@@ -736,14 +877,7 @@ class _FlatCover extends StatelessWidget {
       ]),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(2),
-        child: book.coverPath == null ||
-                book.coverPath!.isEmpty ||
-                kIsWeb ||
-                !File(book.coverPath!).existsSync()
-            ? fallback
-            : Image.file(File(book.coverPath!),
-                fit: BoxFit.cover,
-                errorBuilder: (_, error, stackTrace) => fallback),
+        child: BookCoverImage(path: book.coverPath, fallback: fallback),
       ),
     );
   }

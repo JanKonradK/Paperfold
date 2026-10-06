@@ -14,8 +14,8 @@ abstract interface class OpdsCredentials {
   /// The password for [catalogId], or null when none was stored.
   Future<String?> read(int catalogId);
 
-  /// Stores [password] for [catalogId]. An empty password clears the entry
-  /// rather than storing nothing under a key that then looks set.
+  /// Stores [password], including an explicitly empty password. Some servers
+  /// require a user name with no password. Use [delete] to remove credentials.
   Future<void> write(int catalogId, String password);
 
   /// Removes the password for [catalogId]. Safe to call when none exists.
@@ -34,14 +34,10 @@ class KeystoreOpdsCredentials implements OpdsCredentials {
   static String keyFor(int catalogId) => 'opds_catalog_password_$catalogId';
 
   @override
-  Future<String?> read(int catalogId) =>
-      _storage.read(key: keyFor(catalogId));
+  Future<String?> read(int catalogId) => _storage.read(key: keyFor(catalogId));
 
   @override
   Future<void> write(int catalogId, String password) {
-    if (password.isEmpty) {
-      return delete(catalogId);
-    }
     return _storage.write(key: keyFor(catalogId), value: password);
   }
 
@@ -58,10 +54,6 @@ class InMemoryOpdsCredentials implements OpdsCredentials {
 
   @override
   Future<void> write(int catalogId, String password) async {
-    if (password.isEmpty) {
-      _passwords.remove(catalogId);
-      return;
-    }
     _passwords[catalogId] = password;
   }
 

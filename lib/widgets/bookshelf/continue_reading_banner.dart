@@ -27,10 +27,12 @@ class ContinueReadingBanner extends StatelessWidget {
     super.key,
     required this.book,
     required this.onOpen,
+    this.compact = false,
   });
 
   final Book book;
   final VoidCallback? onOpen;
+  final bool compact;
 
   @override
   Widget build(BuildContext context) {
@@ -54,66 +56,75 @@ class ContinueReadingBanner extends StatelessWidget {
       ].join(', '),
       onTap: onOpen,
       excludeSemantics: true,
-      child: Material(
-        color: scheme.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(12),
-        clipBehavior: Clip.antiAlias,
-        child: InkWell(
-          onTap: onOpen,
-          child: Padding(
-            padding: const EdgeInsets.all(12),
-            child: Row(
-              children: [
-                MediaQuery.withNoTextScaling(
-                  child: BookCover(book: book, width: 44, height: 66),
-                ),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
+      child: compact
+          ? SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: onOpen,
+                icon: const Icon(Icons.menu_book_outlined),
+                label: Text(l10n.tileContinueReadingTitle),
+              ),
+            )
+          : Material(
+              color: scheme.surfaceContainerLow,
+              borderRadius: BorderRadius.circular(12),
+              clipBehavior: Clip.antiAlias,
+              child: InkWell(
+                onTap: onOpen,
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Row(
                     children: [
-                      Text(
-                        book.title,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: theme.textTheme.titleMedium,
+                      MediaQuery.withNoTextScaling(
+                        child: BookCover(book: book, width: 44, height: 66),
                       ),
-                      const SizedBox(height: 4),
-                      Wrap(
-                        spacing: 12,
-                        runSpacing: 2,
-                        children: [
-                          Text(
-                            l10n.tileContinueReadingTitle,
-                            style: theme.textTheme.labelLarge
-                                ?.copyWith(color: scheme.primary),
-                          ),
-                          Text(
-                            progressLabel,
-                            style: theme.textTheme.bodySmall
-                                ?.copyWith(color: scheme.onSurfaceVariant),
-                          ),
-                        ],
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              book.title,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: theme.textTheme.titleMedium,
+                            ),
+                            const SizedBox(height: 4),
+                            Wrap(
+                              spacing: 12,
+                              runSpacing: 2,
+                              children: [
+                                Text(
+                                  l10n.tileContinueReadingTitle,
+                                  style: theme.textTheme.labelLarge
+                                      ?.copyWith(color: scheme.primary),
+                                ),
+                                Text(
+                                  progressLabel,
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                      color: scheme.onSurfaceVariant),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            LinearProgressIndicator(
+                              value: progress,
+                              minHeight: 2,
+                              color: scheme.primary,
+                              backgroundColor:
+                                  scheme.outlineVariant.withValues(alpha: 0.45),
+                            ),
+                          ],
+                        ),
                       ),
-                      const SizedBox(height: 8),
-                      LinearProgressIndicator(
-                        value: progress,
-                        minHeight: 2,
-                        color: scheme.primary,
-                        backgroundColor:
-                            scheme.outlineVariant.withValues(alpha: 0.45),
-                      ),
+                      const SizedBox(width: 12),
+                      Icon(Icons.arrow_forward_rounded, color: scheme.primary),
                     ],
                   ),
                 ),
-                const SizedBox(width: 12),
-                Icon(Icons.arrow_forward_rounded, color: scheme.primary),
-              ],
+              ),
             ),
-          ),
-        ),
-      ),
     );
   }
 }

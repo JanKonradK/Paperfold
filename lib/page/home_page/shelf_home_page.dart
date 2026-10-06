@@ -13,6 +13,7 @@ import 'package:desktop_drop/desktop_drop.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:paperfold/config/shared_preference_provider.dart';
 import 'package:paperfold/enums/book_binding.dart';
 import 'package:paperfold/enums/book_status.dart';
 import 'package:paperfold/l10n/generated/L10n.dart';
@@ -428,8 +429,12 @@ class _ShelfHomePageState extends ConsumerState<ShelfHomePage>
     super.build(context);
     return Theme(
       data: paperfoldLibraryTheme(Theme.of(context)),
-      child:
-          Consumer(builder: (context, ref, _) => _buildLibrary(context, ref)),
+      child: ListenableBuilder(
+        listenable: Prefs(),
+        builder: (context, _) => Consumer(
+          builder: (context, ref, _) => _buildLibrary(context, ref),
+        ),
+      ),
     );
   }
 
@@ -547,6 +552,8 @@ class _ShelfHomePageState extends ConsumerState<ShelfHomePage>
             };
             final resumeBook = continueReadingBook(data.readingNow);
             return LayoutBuilder(builder: (context, constraints) {
+              final largeText =
+                  MediaQuery.textScalerOf(context).scale(16) >= 24;
               return Column(
                 children: [
                   ConstrainedBox(
@@ -563,6 +570,8 @@ class _ShelfHomePageState extends ConsumerState<ShelfHomePage>
                               child: ContinueReadingBanner(
                                 key: const ValueKey('library-continue-reading'),
                                 book: resumeBook,
+                                compact:
+                                    largeText || constraints.maxHeight < 480,
                                 onOpen: _openingBook
                                     ? null
                                     : () => _openBook(resumeBook),
@@ -580,10 +589,37 @@ class _ShelfHomePageState extends ConsumerState<ShelfHomePage>
                                         : rows[activeIndex].name,
                                     maxLines: 2,
                                     overflow: TextOverflow.ellipsis,
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .headlineSmall,
+                                    style: largeText
+                                        ? Theme.of(context)
+                                            .textTheme
+                                            .titleMedium
+                                        : Theme.of(context)
+                                            .textTheme
+                                            .headlineSmall,
                                   ),
+                                ),
+                                PopupMenuButton<bool>(
+                                  key: const ValueKey('shelf-view-control'),
+                                  tooltip: l10n.shelfBookView,
+                                  enabled: !_holding,
+                                  initialValue: Prefs().shelfCoverView,
+                                  icon: Icon(Prefs().shelfCoverView
+                                      ? Icons.grid_view_rounded
+                                      : Icons.view_week_outlined),
+                                  onSelected: (value) =>
+                                      Prefs().shelfCoverView = value,
+                                  itemBuilder: (context) => [
+                                    CheckedPopupMenuItem(
+                                      value: false,
+                                      checked: !Prefs().shelfCoverView,
+                                      child: Text(l10n.shelfViewSpines),
+                                    ),
+                                    CheckedPopupMenuItem(
+                                      value: true,
+                                      checked: Prefs().shelfCoverView,
+                                      child: Text(l10n.shelfViewCoverGrid),
+                                    ),
+                                  ],
                                 ),
                                 IconButton(
                                   key: const ValueKey('shelf-sort-control'),
@@ -644,6 +680,7 @@ class _ShelfHomePageState extends ConsumerState<ShelfHomePage>
                       ),
                       child: Bookcase(
                         key: _bookcaseKey,
+                        showCovers: Prefs().shelfCoverView,
                         showSignposts: false,
                         shelves: rows,
                         initialShelf: activeIndex,
@@ -862,7 +899,7 @@ ShelfBook shelfBookFromBook(Book book) => ShelfBook(
       author: book.author,
       binding: book.binding(),
       blurb: book.description,
-      coverPath: book.coverFullPath,
+      coverPath: book.coverPath.isEmpty ? null : book.coverFullPath,
       progress: normaliseShelfProgress(book.readingPercentage),
       finished: book.status == BookStatus.finished,
       series: book.series,

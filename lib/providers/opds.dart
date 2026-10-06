@@ -14,7 +14,9 @@ final opdsClientProvider = Provider<OpdsClient>(
   (Ref ref) => OpdsClient(credentials: ref.watch(opdsCredentialsProvider)),
 );
 
-/// The catalogs the reader has, with the two free ones seeded on first read.
+final opdsCatalogDaoProvider = Provider<CatalogDao>((ref) => catalogDao);
+
+/// Saved catalogs only. Built-in suggestions live in the discovery hub.
 final opdsCatalogsProvider =
     AsyncNotifierProvider<OpdsCatalogsController, List<OpdsCatalog>>(
   OpdsCatalogsController.new,
@@ -35,14 +37,24 @@ class OpdsCatalogsController extends AsyncNotifier<List<OpdsCatalog>> {
     String? username,
     String? password,
   }) async {
-    final int id = await catalogDao.addCatalog(
+    if (!isOpdsWebUri(url)) {
+      throw ArgumentError('Catalog addresses must not contain credentials.');
+    }
+    final dao = ref.read(opdsCatalogDaoProvider);
+    final int id = await dao.addCatalog(
       name: name,
       url: url,
       authType: authType,
       username: username,
     );
-    if (password != null && password.isNotEmpty) {
-      await ref.read(opdsCredentialsProvider).write(id, password);
+    try {
+      if (authType == OpdsAuthType.basic) {
+        // Some catalogs authenticate an email address with an empty password.
+        await ref.read(opdsCredentialsProvider).write(id, password ?? '');
+      }
+    } catch (_) {
+      await dao.deleteCatalog(id);
+      rethrow;
     }
     await refresh();
     return id;
@@ -58,14 +70,12 @@ class OpdsCatalogsController extends AsyncNotifier<List<OpdsCatalog>> {
   /// password behind with nothing left to name it.
   Future<void> remove(int catalogId) async {
     await ref.read(opdsCredentialsProvider).delete(catalogId);
-    await catalogDao.deleteCatalog(catalogId);
+    await ref.read(opdsCatalogDaoProvider).deleteCatalog(catalogId);
     await refresh();
   }
 
-  Future<List<OpdsCatalog>> _load() async {
-    await catalogDao.seedDefaultsIfEmpty();
-    return catalogDao.listCatalogs();
-  }
+  Future<List<OpdsCatalog>> _load() =>
+      ref.read(opdsCatalogDaoProvider).listCatalogs();
 }
 
 /// Which feed of which catalog a browse screen is showing.
@@ -93,8 +103,8 @@ class OpdsFeedRequest {
 ///
 /// Keyed by the request, so following a link and coming back does not refetch,
 /// and two catalogs never share a cached feed.
-final opdsFeedProvider =
-    FutureProvider.family<OpdsFeed, OpdsFeedRequest>((Ref ref, OpdsFeedRequest request) {
+final opdsFeedProvider = FutureProvider.family<OpdsFeed, OpdsFeedRequest>(
+    (Ref ref, OpdsFeedRequest request) {
   return ref
       .watch(opdsClientProvider)
       .fetchFeed(request.catalog, url: request.url);

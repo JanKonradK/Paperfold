@@ -1,17 +1,19 @@
 import 'dart:io';
 
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:paperfold/l10n/generated/L10n.dart';
 import 'package:paperfold/models/opds_catalog.dart';
+import 'package:paperfold/page/opds/open_book_website.dart';
+import 'package:paperfold/providers/book_list.dart';
 import 'package:paperfold/providers/opds.dart';
 import 'package:paperfold/service/book.dart';
 import 'package:paperfold/service/opds/opds.dart';
 import 'package:paperfold/service/opds/opds_client.dart';
 import 'package:paperfold/utils/get_path/get_temp_dir.dart';
 import 'package:paperfold/utils/log/common.dart';
-import 'package:paperfold/utils/toast/common.dart';
-import 'package:paperfold/widgets/ornament.dart';
+import 'package:paperfold/widgets/common/message_block.dart';
 
 /// One feed of one catalog.
 ///
@@ -46,21 +48,29 @@ class OpdsBrowsePage extends ConsumerWidget {
           overflow: TextOverflow.ellipsis,
         ),
       ),
-      body: feed.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (Object error, StackTrace stackTrace) => _FeedError(
-          message: _messageFor(l10n, error),
-          onRetry: () => ref.invalidate(opdsFeedProvider(request)),
+      body: SafeArea(
+        child: Align(
+          alignment: Alignment.topCenter,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 760),
+            child: feed.when(
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (Object error, StackTrace stackTrace) => _FeedError(
+                message: _messageFor(l10n, error),
+                onRetry: () => ref.invalidate(opdsFeedProvider(request)),
+              ),
+              data: (OpdsFeed data) {
+                if (data.isEmpty) {
+                  return _FeedError(
+                    message: l10n.opdsFeedEmpty,
+                    onRetry: () => ref.invalidate(opdsFeedProvider(request)),
+                  );
+                }
+                return _FeedList(catalog: catalog, feed: data);
+              },
+            ),
+          ),
         ),
-        data: (OpdsFeed data) {
-          if (data.isEmpty) {
-            return _FeedError(
-              message: l10n.opdsFeedEmpty,
-              onRetry: () => ref.invalidate(opdsFeedProvider(request)),
-            );
-          }
-          return _FeedList(catalog: catalog, feed: data);
-        },
       ),
     );
   }
@@ -95,9 +105,7 @@ class _FeedList extends ConsumerWidget {
     final L10n l10n = L10n.of(context);
 
     return ListView(
-      padding: EdgeInsets.only(
-        bottom: 96 + MediaQuery.viewPaddingOf(context).bottom,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
       children: <Widget>[
         for (final OpdsLink shelf in feed.navigation)
           ListTile(
@@ -153,13 +161,26 @@ class _PublicationTile extends ConsumerStatefulWidget {
   ConsumerState<_PublicationTile> createState() => _PublicationTileState();
 }
 
-class _PublicationTileState extends ConsumerState<_PublicationTile> {
+class _PublicationTileState extends ConsumerState<_PublicationTile>
+    with AutomaticKeepAliveClientMixin<_PublicationTile> {
   bool _downloading = false;
+  CancelToken? _cancelToken;
+
+  @override
+  bool get wantKeepAlive => _downloading;
+
+  @override
+  void dispose() {
+    _cancelToken?.cancel();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     final L10n l10n = L10n.of(context);
-    final List<OpdsLink> downloads = widget.entry.acquisitionLinks;
+    final List<OpdsLink> downloads = widget.entry.downloadLinks;
+    final website = widget.entry.websiteHref;
 
     return ListTile(
       minTileHeight: 56,
@@ -177,87 +198,145 @@ class _PublicationTileState extends ConsumerState<_PublicationTile> {
               overflow: TextOverflow.ellipsis,
             ),
       trailing: _downloading
-          ? const SizedBox(
-              width: 24,
-              height: 24,
-              child: CircularProgressIndicator(strokeWidth: 2),
+          ? Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SizedBox.square(
+                  dimension: 24,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    semanticsLabel: _cancelToken == null
+                        ? l10n.importing
+                        : l10n.opdsDownload,
+                  ),
+                ),
+                if (_cancelToken != null)
+                  IconButton(
+                    icon: const Icon(Icons.close),
+                    tooltip: l10n.commonCancel,
+                    onPressed: () => _cancelToken?.cancel(),
+                  ),
+              ],
             )
-          : IconButton(
-              icon: const Icon(Icons.download_outlined),
-              tooltip: l10n.opdsDownload,
-              onPressed:
-                  downloads.isEmpty ? null : () => _download(downloads.first),
-            ),
+          : downloads.isEmpty && website != null
+              ? IconButton(
+                  icon: const Icon(Icons.open_in_new),
+                  tooltip: l10n.onlineOpenWebsite,
+                  onPressed: () => openBookWebsite(context, website),
+                )
+              : IconButton(
+                  icon: const Icon(Icons.download_outlined),
+                  tooltip: downloads.isEmpty
+                      ? l10n.opdsUnsupportedDownload
+                      : l10n.opdsDownload,
+                  onPressed:
+                      downloads.isEmpty ? null : () => _chooseFormat(downloads),
+                ),
     );
   }
 
+  Future<void> _chooseFormat(List<OpdsLink> downloads) async {
+    if (_downloading) return;
+    final selected = downloads.length == 1
+        ? downloads.single
+        : await showModalBottomSheet<OpdsLink>(
+            context: context,
+            isScrollControlled: true,
+            useSafeArea: true,
+            builder: (context) => ConstrainedBox(
+              constraints: BoxConstraints(
+                maxHeight: MediaQuery.sizeOf(context).height * 0.8,
+                maxWidth: 640,
+              ),
+              child: ListView(
+                shrinkWrap: true,
+                padding: const EdgeInsets.fromLTRB(16, 24, 16, 24),
+                children: [
+                  Text(L10n.of(context).opdsChooseFormat,
+                      style: Theme.of(context).textTheme.titleLarge),
+                  const SizedBox(height: 8),
+                  Text(widget.entry.title),
+                  const SizedBox(height: 16),
+                  for (final link in downloads)
+                    ListTile(
+                      title: Text(link.downloadExtension!.toUpperCase()),
+                      subtitle: link.title == null ? null : Text(link.title!),
+                      trailing: const Icon(Icons.download_outlined),
+                      onTap: () => Navigator.of(context).pop(link),
+                    ),
+                ],
+              ),
+            ),
+          );
+    if (selected != null && mounted) await _download(selected);
+  }
+
   Future<void> _download(OpdsLink link) async {
+    if (_downloading || !link.isDirectDownload) return;
     final L10n l10n = L10n.of(context);
-    setState(() => _downloading = true);
+    final container = ProviderScope.containerOf(context, listen: false);
+    final rootNavigator = Navigator.of(context, rootNavigator: true);
+    final client = ref.read(opdsClientProvider);
+    final cancelToken = CancelToken();
+    setState(() {
+      _downloading = true;
+      _cancelToken = cancelToken;
+    });
+    updateKeepAlive();
     Directory? downloadDir;
 
     try {
       final Directory temp = await getAnxTempDir();
       downloadDir = await temp.createTemp('opds-');
-      final String path = '${downloadDir.path}/${_fileNameFor(link)}';
-      if (!mounted) return;
-      await ref.read(opdsClientProvider).download(
-            widget.catalog,
-            link.href,
-            path,
-          );
-      // The import path already knows how to read a book file. Section 9.2
-      // says to point it at the download, not to write a second one.
-      if (!mounted) return;
+      final String path = '${downloadDir.path}/book.${link.downloadExtension!}';
+      if (!mounted || cancelToken.isCancelled) return;
+      await client.download(
+        widget.catalog,
+        link.href,
+        path,
+        cancelToken: cancelToken,
+      );
+      if (!mounted || cancelToken.isCancelled) return;
+      // Metadata import cannot be interrupted safely. Its completion must
+      // refresh the library even when the reader has left this catalog.
+      setState(() => _cancelToken = null);
       await importBook(File(path), ref);
-      if (mounted) {
-        AnxToast.show(l10n.opdsDownloaded(widget.entry.title));
+      if (!mounted && rootNavigator.mounted)
+        container.invalidate(bookListProvider);
+      _showMessage(l10n.opdsDownloaded(widget.entry.title));
+    } on DioException catch (error) {
+      if (!CancelToken.isCancel(error)) {
+        _showMessage(l10n.opdsImportFailed);
       }
     } on OpdsException catch (error) {
-      if (mounted) {
-        AnxToast.show(OpdsBrowsePage._messageFor(l10n, error));
-      }
-    } catch (error, stackTrace) {
-      AnxLog.severe('OPDS import failed', error, stackTrace);
-      if (mounted) AnxToast.show('${l10n.commonError}: $error');
+      _showMessage(OpdsBrowsePage._messageFor(l10n, error));
+    } catch (_) {
+      AnxLog.warning('OPDS import failed');
+      _showMessage(l10n.opdsImportFailed);
     } finally {
       if (mounted) {
-        setState(() => _downloading = false);
+        setState(() {
+          _downloading = false;
+          _cancelToken = null;
+        });
+        updateKeepAlive();
       }
       if (downloadDir != null) {
         try {
           await downloadDir.delete(recursive: true);
-        } on FileSystemException catch (error) {
-          AnxLog.warning('Could not remove OPDS download: $error');
+        } on FileSystemException {
+          AnxLog.warning('Could not remove OPDS download');
         }
       }
     }
   }
 
-  /// A file name the import path can read.
-  ///
-  /// The last path segment is usually right, but a catalog may serve a book
-  /// from a query string with no name in it at all.
-  String _fileNameFor(OpdsLink link) {
-    final String segment =
-        link.href.pathSegments.isEmpty ? '' : link.href.pathSegments.last;
-    final safeSegment =
-        segment.replaceAll(RegExp(r'[<>:"/\\|?*\x00-\x1f]'), '_');
-    if (safeSegment.length <= 120 &&
-        allowBookExtensions
-            .contains(safeSegment.split('.').last.toLowerCase())) {
-      return 'book-$safeSegment';
+  void _showMessage(String message) {
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(message)),
+      );
     }
-    final String extension = switch (link.type) {
-      'application/epub+zip' => 'epub',
-      'application/pdf' => 'pdf',
-      'application/x-mobipocket-ebook' => 'mobi',
-      'application/vnd.amazon.ebook' => 'azw3',
-      _ => 'epub',
-    };
-    final String safe =
-        widget.entry.title.replaceAll(RegExp(r'[^A-Za-z0-9 _-]'), '').trim();
-    return 'book-${safe.runes.take(80).map(String.fromCharCode).join()}.$extension';
   }
 }
 
@@ -271,33 +350,24 @@ class _FeedError extends StatelessWidget {
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
 
-    return Center(
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 420),
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: <Widget>[
-              const Ornament(
-                ornament: PaperfoldOrnament.circularWreath,
-                width: 104,
-                height: 104,
-              ),
-              const SizedBox(height: 16),
-              Text(
-                message,
-                textAlign: TextAlign.center,
-                style: theme.textTheme.bodyLarge,
-              ),
-              const SizedBox(height: 16),
-              OutlinedButton(
-                onPressed: onRetry,
-                child: Text(L10n.of(context).commonOk),
-              ),
-            ],
+    return MessageBlock(
+      maxWidth: 420,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
+          const Icon(Icons.menu_book_outlined, size: 40),
+          const SizedBox(height: 16),
+          Text(
+            message,
+            textAlign: TextAlign.center,
+            style: theme.textTheme.bodyLarge,
           ),
-        ),
+          const SizedBox(height: 16),
+          OutlinedButton(
+            onPressed: onRetry,
+            child: Text(L10n.of(context).commonRetry),
+          ),
+        ],
       ),
     );
   }

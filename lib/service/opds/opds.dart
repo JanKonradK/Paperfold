@@ -94,6 +94,11 @@ bool isOpdsCatalog(String? value) {
       parsed.parameters['profile']?.toLowerCase() == 'opds-catalog';
 }
 
+bool isOpdsWebUri(Uri value) =>
+    (value.scheme == 'http' || value.scheme == 'https') &&
+    value.host.isNotEmpty &&
+    value.userInfo.isEmpty;
+
 class OpdsPrice {
   const OpdsPrice({required this.currency, required this.value});
 
@@ -126,9 +131,43 @@ class OpdsLink {
 
   bool get isCatalog => isOpdsCatalog(type);
 
-  /// A link that hands over a file. These are the download links.
+  /// An acquisition option, which can be a download, purchase, or loan.
   bool get isAcquisition =>
       rels.any((String rel) => rel.startsWith(OpdsRel.acquisition));
+
+  /// Purchase, borrowing, samples and DRM-license links are not book files.
+  bool get isDirectDownload =>
+      isOpdsWebUri(href) &&
+      !rels.any((rel) =>
+          rel.startsWith('${OpdsRel.acquisition}/') &&
+          rel != '${OpdsRel.acquisition}/open-access') &&
+      rels.any((rel) =>
+          rel == OpdsRel.acquisition ||
+          rel == '${OpdsRel.acquisition}/open-access') &&
+      downloadExtension != null;
+
+  String? get downloadExtension {
+    final mediaType = OpdsMediaType.parse(type ?? '').mediaType;
+    final extension = switch (mediaType) {
+      'application/epub+zip' => 'epub',
+      'application/pdf' => 'pdf',
+      'application/x-mobipocket-ebook' => 'mobi',
+      'application/vnd.amazon.ebook' => 'azw3',
+      'application/x-fictionbook+xml' => 'fb2',
+      'text/plain' => 'txt',
+      _ => null,
+    };
+    if (extension != null) return extension;
+    // Some catalogs omit the media type. An explicit HTML/DRM type must
+    // never be overridden by a filename that happens to end in .epub.
+    if (mediaType.isNotEmpty && mediaType != 'application/octet-stream') {
+      return null;
+    }
+    final suffix = href.path.split('.').last.toLowerCase();
+    return const {'epub', 'pdf', 'mobi', 'azw3', 'fb2', 'txt'}.contains(suffix)
+        ? suffix
+        : null;
+  }
 
   /// A facet the server says is the one currently applied.
   bool get isActiveFacet => rels.contains('self');
@@ -163,6 +202,17 @@ class OpdsEntry {
   List<OpdsLink> get acquisitionLinks => links
       .where((OpdsLink link) => link.isAcquisition)
       .toList(growable: false);
+
+  List<OpdsLink> get downloadLinks =>
+      links.where((link) => link.isDirectDownload).toList(growable: false);
+
+  Uri? get websiteHref => links
+      .where((link) =>
+          isOpdsWebUri(link.href) &&
+          OpdsMediaType.parse(link.type ?? '').mediaType == 'text/html' &&
+          (link.isAcquisition || link.rels.contains('alternate')))
+      .firstOrNull
+      ?.href;
 
   Uri? get coverHref => _first(OpdsRel.cover);
   Uri? get thumbnailHref => _first(OpdsRel.thumbnail);

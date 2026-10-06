@@ -29,6 +29,7 @@ class Bookcase extends StatefulWidget {
     this.pickUpHint,
     this.openHint,
     this.showSignposts = true,
+    this.showCovers = false,
   });
 
   final List<ShelfRow> shelves;
@@ -52,6 +53,7 @@ class Bookcase extends StatefulWidget {
   final String? pickUpHint;
   final String? openHint;
   final bool showSignposts;
+  final bool showCovers;
 
   @override
   State<Bookcase> createState() => BookcaseState();
@@ -130,7 +132,9 @@ class BookcaseState extends State<Bookcase> {
         PageView.builder(
           controller: _climb,
           scrollDirection: Axis.vertical,
-          physics: _holding
+          // The cover grid owns vertical scrolling. Shelf chips still switch
+          // pages, without a grid gesture moving to a different collection.
+          physics: _holding || widget.showCovers
               ? const NeverScrollableScrollPhysics()
               : const PageScrollPhysics(),
           itemCount: widget.shelves.length,
@@ -143,6 +147,7 @@ class BookcaseState extends State<Bookcase> {
               key: _keyFor(index),
               books: shelf.books,
               shelfName: shelf.name,
+              showCovers: widget.showCovers,
               onOpen: widget.onOpen,
               optionsBuilder: widget.optionsBuilder,
               pickUpHint: widget.pickUpHint,

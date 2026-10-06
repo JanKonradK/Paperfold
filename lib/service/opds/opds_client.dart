@@ -31,7 +31,8 @@ class OpdsException implements Exception {
 /// and the failure cases.
 class OpdsClient {
   OpdsClient({Dio? dio, OpdsCredentials? credentials})
-      : _dio = dio ?? Dio(),
+      : _dio = dio ??
+            Dio(BaseOptions(connectTimeout: const Duration(seconds: 15))),
         _credentials = credentials ?? const KeystoreOpdsCredentials();
 
   final Dio _dio;
@@ -53,8 +54,8 @@ class OpdsClient {
 
     try {
       response = await _request(catalog, target);
-    } on DioException catch (error) {
-      throw OpdsException(OpdsFailure.network, detail: error.message);
+    } on DioException {
+      throw const OpdsException(OpdsFailure.network);
     }
 
     final int status = response.statusCode ?? 0;
@@ -77,8 +78,8 @@ class OpdsClient {
         baseUri: response.realUri,
         contentType: response.headers.value('content-type'),
       );
-    } catch (error) {
-      throw OpdsException(OpdsFailure.notAFeed, detail: error.toString());
+    } catch (_) {
+      throw const OpdsException(OpdsFailure.notAFeed);
     }
   }
 
@@ -92,6 +93,7 @@ class OpdsClient {
     Uri url,
     String savePath, {
     void Function(int received, int total)? onProgress,
+    CancelToken? cancelToken,
   }) async {
     try {
       final Response<dynamic> response = await _request(
@@ -99,6 +101,7 @@ class OpdsClient {
         url,
         savePath: savePath,
         onProgress: onProgress,
+        cancelToken: cancelToken,
       );
 
       final int status = response.statusCode ?? 0;
@@ -112,7 +115,8 @@ class OpdsClient {
         throw OpdsException(OpdsFailure.server, statusCode: status);
       }
     } on DioException catch (error) {
-      throw OpdsException(OpdsFailure.network, detail: error.message);
+      if (CancelToken.isCancel(error)) rethrow;
+      throw const OpdsException(OpdsFailure.network);
     }
   }
 
@@ -126,10 +130,10 @@ class OpdsClient {
     Uri target, {
     String? savePath,
     void Function(int received, int total)? onProgress,
+    CancelToken? cancelToken,
   }) async {
     for (var redirects = 0; redirects <= 5; redirects++) {
-      if ((target.scheme != 'https' && target.scheme != 'http') ||
-          target.host.isEmpty) {
+      if (!isOpdsWebUri(target)) {
         throw const OpdsException(OpdsFailure.network,
             detail: 'Invalid catalog link');
       }
@@ -141,11 +145,15 @@ class OpdsClient {
         responseType: ResponseType.plain,
         followRedirects: false,
         validateStatus: (_) => true,
+        receiveTimeout: const Duration(seconds: 30),
+        sendTimeout: const Duration(seconds: 30),
       );
       final response = savePath == null
           ? await _dio.getUri<String>(target, options: options)
           : await _dio.downloadUri(target, savePath,
-              options: options, onReceiveProgress: onProgress);
+              options: options,
+              onReceiveProgress: onProgress,
+              cancelToken: cancelToken);
       final location = response.headers.value('location');
       if (!const [301, 302, 303, 307, 308].contains(response.statusCode) ||
           location == null) {

@@ -2,7 +2,20 @@
 
 Paperfold is an e-book reader, a note application, and a reading journal.
 
-## Version 1.75.1
+## Version 2.0
+
+- Keep spines as the default library view, or select the saved cover view.
+- See distinct spine bands, larger titles on wide spines, and matching series bindings.
+- Find direct downloads in Project Gutenberg and Ebooks libres et gratuits.
+- Open Standard Ebooks, Global Grey, Open Library, and Libby from the online hub.
+- Select a supported download format. Cancel a download or retry after a failure.
+- Load cover thumbnails at their display size. Keep a readable cover if its image is missing or damaged.
+- Sort large libraries with fewer repeated operations.
+
+Library loans and protected books stay in their own services. Custom OPDS catalogs remain available.
+See [2.0 checks and measurements](docs/paperfold-2.0.md).
+
+## Journal and reader
 
 - Continue reading from the library with one tap.
 - Open a book's journal to find its review, pages, and highlights.
@@ -45,6 +58,7 @@ Anxcye. The author of Anx Reader does not endorse Paperfold.
 
 - The home screen is a bookcase with upright spines. Select a spine to show
   the cover, progress, and book actions.
+- Select **Book view > Covers** for a cover grid. The application saves this choice.
 - Put a book on one of five shelves.
 - Get more books from an OPDS catalog.
 

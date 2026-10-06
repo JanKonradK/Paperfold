@@ -44,7 +44,7 @@ const String _feed = '''
 </feed>
 ''';
 
-Widget _host(List<Override> overrides) {
+Widget _host(List<Override> overrides, {double textScale = 1}) {
   return ProviderScope(
     overrides: overrides,
     child: MaterialApp(
@@ -54,13 +54,19 @@ Widget _host(List<Override> overrides) {
         useMaterial3: true,
         colorScheme: PaperfoldTokens.colorScheme(Brightness.light),
       ),
+      builder: (context, child) => MediaQuery(
+        data: MediaQuery.of(context)
+            .copyWith(textScaler: TextScaler.linear(textScale)),
+        child: child!,
+      ),
       home: OpdsBrowsePage(catalog: _catalog),
     ),
   );
 }
 
 Override _feedOverride(Object Function() result) {
-  return opdsFeedProvider.overrideWith((Ref ref, OpdsFeedRequest request) async {
+  return opdsFeedProvider
+      .overrideWith((Ref ref, OpdsFeedRequest request) async {
     final Object value = result();
     if (value is OpdsFeed) {
       return value;
@@ -70,6 +76,102 @@ Override _feedOverride(Object Function() result) {
 }
 
 void main() {
+  OpdsFeed bookWithLinks(List<OpdsLink> links) => OpdsFeed(
+        title: 'Shelf',
+        publications: [
+          OpdsEntry(title: 'A book with several choices', links: links)
+        ],
+        navigation: const [],
+        facetGroups: const [],
+      );
+
+  testWidgets('format selection excludes purchase and unsupported links',
+      (tester) async {
+    final feed = bookWithLinks([
+      OpdsLink(
+          rels: ['${OpdsRel.acquisition}/buy'],
+          href: Uri.parse('https://books.example/buy'),
+          type: 'application/epub+zip'),
+      OpdsLink(
+          rels: [OpdsRel.acquisition],
+          href: Uri.parse('https://books.example/download?format=epub'),
+          type: 'application/epub+zip'),
+      OpdsLink(
+          rels: [OpdsRel.acquisition],
+          href: Uri.parse('https://books.example/download?format=pdf'),
+          type: 'application/pdf'),
+      OpdsLink(
+          rels: [OpdsRel.acquisition],
+          href: Uri.parse('https://books.example/download?format=zip'),
+          type: 'application/zip'),
+    ]);
+    await tester.pumpWidget(_host([_feedOverride(() => feed)]));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip('Download'));
+    await tester.pumpAndSettle();
+    expect(find.text('Choose a format'), findsOneWidget);
+    expect(find.text('EPUB'), findsOneWidget);
+    expect(find.text('PDF'), findsOneWidget);
+    expect(find.text('ZIP'), findsNothing);
+    Navigator.of(tester.element(find.text('Choose a format'))).pop();
+    await tester.pumpAndSettle();
+    expect(find.byTooltip('Download'), findsOneWidget);
+  });
+
+  testWidgets(
+      'web purchase and borrowing options never display a download action',
+      (tester) async {
+    for (final relation in ['buy', 'borrow']) {
+      final feed = bookWithLinks([
+        OpdsLink(
+            rels: ['${OpdsRel.acquisition}/$relation'],
+            href: Uri.parse('https://books.example/$relation'),
+            type: 'text/html'),
+      ]);
+      await tester.pumpWidget(_host([_feedOverride(() => feed)]));
+      await tester.pumpAndSettle();
+      expect(find.byTooltip('Open website'), findsOneWidget);
+      expect(find.byIcon(Icons.download_outlined), findsNothing);
+      await tester.pumpWidget(const SizedBox());
+    }
+  });
+
+  testWidgets('format selection and retry fit narrow screens with large text',
+      (tester) async {
+    tester.view.physicalSize = const Size(320, 640);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final feed = bookWithLinks([
+      for (final (format, type) in [
+        ('epub', 'application/epub+zip'),
+        ('pdf', 'application/pdf')
+      ])
+        OpdsLink(
+            rels: [OpdsRel.acquisition],
+            href: Uri.parse('https://books.example/book.$format'),
+            type: type),
+    ]);
+    await tester.pumpWidget(_host([_feedOverride(() => feed)], textScale: 2));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip('Download'));
+    await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(find.text('PDF').hitTestable(), 150,
+        scrollable: find.descendant(
+            of: find.byType(BottomSheet), matching: find.byType(Scrollable)));
+    expect(find.text('PDF').hitTestable(), findsOneWidget);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox());
+    await tester.pumpWidget(_host([
+      _feedOverride(() => const OpdsException(OpdsFailure.network)),
+    ], textScale: 2));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Retry'));
+    await tester.pumpAndSettle();
+    expect(find.text('The catalog could not be reached.'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('a feed shows its shelves, its books and its next page',
       (WidgetTester tester) async {
     final OpdsFeed parsed = parseOpdsFeed(
