@@ -111,6 +111,7 @@ class Prefs extends ChangeNotifier {
       prefsBackupVersionKey: prefsBackupSchemaVersion,
     };
     for (final String key in prefs.getKeys()) {
+      if (key == 'customStoragePath' || key == 'pendingStoragePath') continue;
       final Object? value = prefs.get(key);
       final Map<String, Object?>? encoded = encodePrefsBackupEntry(value);
       if (encoded != null) {
@@ -123,7 +124,9 @@ class Prefs extends ChangeNotifier {
   Future<void> applyPrefsBackupMap(Map<String, dynamic> backup) async {
     for (final MapEntry<String, dynamic> entry in backup.entries) {
       final String key = entry.key;
-      if (key == prefsBackupVersionKey) {
+      if (key == prefsBackupVersionKey ||
+          key == 'customStoragePath' ||
+          key == 'pendingStoragePath') {
         continue;
       }
       final dynamic entryValue = entry.value;
@@ -145,7 +148,7 @@ class Prefs extends ChangeNotifier {
           if (value is String) await prefs.setString(key, value);
           break;
         case 'stringList':
-          if (value is List) {
+          if (value is List && value.every((element) => element is String)) {
             final List<String> list =
                 value.map((dynamic v) => v as String).toList();
             await prefs.setStringList(key, list);
@@ -728,6 +731,16 @@ class Prefs extends ChangeNotifier {
     } else {
       prefs.setString('customStoragePath', value);
     }
+    notifyListeners();
+  }
+
+  String? get pendingStoragePath => prefs.getString('pendingStoragePath');
+
+  Future<void> setPendingStoragePath(String? value) async {
+    final saved = value == null
+        ? await prefs.remove('pendingStoragePath')
+        : await prefs.setString('pendingStoragePath', value);
+    if (!saved) throw StateError('Could not save the storage location');
     notifyListeners();
   }
 

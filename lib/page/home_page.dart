@@ -27,6 +27,7 @@ import 'package:paperfold/providers/sync.dart';
 import 'package:paperfold/config/shared_preference_provider.dart';
 import 'package:paperfold/utils/toast/common.dart';
 import 'package:paperfold/widgets/ornament.dart';
+import 'package:paperfold/widgets/common/load_failure.dart';
 import 'package:paperfold/widgets/paperfold_glass_surface.dart';
 import 'package:paperfold/widgets/paperfold_logo_mark.dart';
 import 'package:paperfold/widgets/paperfold_library_theme.dart';
@@ -74,13 +75,14 @@ class _HomePageState extends ConsumerState<HomePage> {
   /// press before it now only says so.
   bool _leaving = false;
   Timer? _leavingTimer;
+  Object? _startupError;
 
   static const Duration _leavingWindow = Duration(seconds: 3);
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => initAnx());
+    initAnx();
   }
 
   @override
@@ -111,6 +113,7 @@ class _HomePageState extends ConsumerState<HomePage> {
 
   Future<void> _checkWindowsWebview() async {
     final availableVersion = await WebViewEnvironment.getAvailableVersion();
+    if (!mounted) return;
     AnxLog.info('WebView2 version: $availableVersion');
 
     if (availableVersion == null) {
@@ -158,10 +161,17 @@ class _HomePageState extends ConsumerState<HomePage> {
   }
 
   Future<void> initAnx() async {
-    await Future.wait([
-      widget.databaseReady,
-      if (widget.startupRevealReady case final revealReady?) revealReady,
-    ]);
+    try {
+      await Future.wait([
+        widget.databaseReady,
+        if (widget.startupRevealReady case final revealReady?) revealReady,
+      ]);
+    } catch (error, stackTrace) {
+      AnxLog.severe('Could not start library services', error, stackTrace);
+      if (mounted) setState(() => _startupError = error);
+      return;
+    }
+    await WidgetsBinding.instance.endOfFrame;
     if (!mounted) {
       return;
     }
@@ -171,12 +181,15 @@ class _HomePageState extends ConsumerState<HomePage> {
     InitializationCheck.check();
     if (Prefs().webdavStatus) {
       await Sync().init();
+      if (!mounted) return;
       await Sync().syncData(SyncDirection.both, ref, trigger: SyncTrigger.auto);
+      if (!mounted) return;
     }
     loadDefaultFont();
 
     if (AnxPlatform.isWindows) {
       await _checkWindowsWebview();
+      if (!mounted) return;
     }
 
     if (AnxPlatform.isAndroid || AnxPlatform.isIOS || AnxPlatform.isOhos) {
@@ -191,6 +204,16 @@ class _HomePageState extends ConsumerState<HomePage> {
   @override
   Widget build(BuildContext context) {
     final l10n = L10n.of(context);
+    if (_startupError != null) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Paperfold')),
+        body: LoadFailure.page(
+          title: l10n.appStartupFailed,
+          body: l10n.appStartupFailedBody,
+          error: _startupError,
+        ),
+      );
+    }
     final destinations = [
       (
         icon: Icons.menu_book_outlined,
@@ -220,6 +243,8 @@ class _HomePageState extends ConsumerState<HomePage> {
         return;
       }
       setState(() {
+        _leaving = false;
+        _leavingTimer?.cancel();
         _destination = index;
         _destinationHistory = [..._destinationHistory, index];
       });
@@ -257,11 +282,13 @@ class _HomePageState extends ConsumerState<HomePage> {
           // Only the armed second press leaves. Everything else is ours to
           // answer, so that the last back on the shelf asks before it closes the
           // application rather than closing it.
-          canPop: _leaving,
+          canPop: _leaving &&
+              _destinationHistory.length <= 1 &&
+              !(_destination == 1 && _libraryBack.canTakeBack),
           onPopInvokedWithResult: (didPop, result) {
             if (didPop) return;
             // The Library first. Only one of the three may act on one press.
-            if (_libraryBack.takeBack()) return;
+            if (_destination == 1 && _libraryBack.takeBack()) return;
             if (_destinationHistory.length > 1) {
               handleBack(didPop, result);
               return;
@@ -570,6 +597,7 @@ class _JournalDestination extends ConsumerWidget {
             await ref.read(monthTrackerProvider.notifier).refresh();
           },
           child: CustomScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
             slivers: [
               trackers,
               ...entries.when(
@@ -582,10 +610,11 @@ class _JournalDestination extends ConsumerWidget {
                 error: (error, stackTrace) => [
                   SliverFillRemaining(
                     hasScrollBody: false,
-                    child: _DestinationEmptyState(
-                      ornament: PaperfoldOrnament.rectangularVineFrame,
-                      title: l10n.journalPlaceholderTitle,
-                      body: l10n.journalPlaceholderBody,
+                    child: LoadFailure.page(
+                      title: l10n.journalLoadFailed,
+                      error: error,
+                      onRetry: () =>
+                          ref.read(journalHomeProvider.notifier).refresh(),
                     ),
                   ),
                 ],
@@ -635,12 +664,8 @@ class _JournalDestination extends ConsumerWidget {
                   ];
                 },
               ),
-              // The floating glass bar overlays content, so the last row needs
-              // room to clear it as well as the gesture inset.
-              SliverToBoxAdapter(
-                child: SizedBox(
-                  height: 96 + MediaQuery.viewPaddingOf(context).bottom,
-                ),
+              const SliverToBoxAdapter(
+                child: SizedBox(height: 24),
               ),
             ],
           ),

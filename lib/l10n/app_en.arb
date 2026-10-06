@@ -5,6 +5,8 @@
   "appVersion": "Version",
   "appLicense": "License",
   "appAuthor": "Author",
+  "commonShowPassword": "Show password",
+  "commonHidePassword": "Hide password",
   "navBarStatistics": "Statistics",
   "navBarNotes": "Notes",
   "navBarSettings": "Settings",
@@ -999,5 +1001,10 @@
   "readingPageGoToCurrentLocation": "Go to where you are reading",
   "readingPageBackgroundColour": "Background colour",
   "readingPageTextColour": "Text colour",
-  "readingPageDeleteTheme": "Delete this theme"
+  "readingPageDeleteTheme": "Delete this theme",
+  "journalSaveFailed": "Your changes could not be saved. Stay on this page and try again.",
+  "journalLoadFailed": "Your journal could not be loaded.",
+  "storageMigrationScheduled": "Restart the app to move your library to the selected folder.",
+  "appStartupFailed": "Paperfold could not start.",
+  "appStartupFailedBody": "Close the app and open it again. If the problem continues, check that the library folder is available."
 }

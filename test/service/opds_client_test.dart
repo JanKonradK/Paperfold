@@ -9,6 +9,7 @@
 //   flutter test test/service/opds_client_test.dart
 
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -127,8 +128,7 @@ void main() {
       final OpdsCredentials credentials = InMemoryOpdsCredentials();
       await credentials.write(id, secret);
 
-      final List<Map<String, Object?>> rows =
-          await db.query(CatalogDao.table);
+      final List<Map<String, Object?>> rows = await db.query(CatalogDao.table);
       for (final Map<String, Object?> row in rows) {
         for (final Object? value in row.values) {
           expect(
@@ -188,6 +188,92 @@ void main() {
   });
 
   group('fetching a feed', () {
+    test('catalog credentials never follow links to another origin', () async {
+      final credentials = InMemoryOpdsCredentials();
+      await credentials.write(7, 'secret');
+      final adapter = _ScriptedAdapter((_) => _body(_feed));
+      final client = OpdsClient(dio: _dio(adapter), credentials: credentials);
+      final catalog =
+          _catalog(authType: OpdsAuthType.basic, username: 'reader');
+      for (final target in [
+        'https://other.example/feed',
+        'https://cdn.books.example/feed',
+        'http://books.example/feed',
+        'https://books.example:8443/feed',
+      ]) {
+        await client.fetchFeed(catalog, url: Uri.parse(target));
+      }
+      expect(
+          adapter.requests.every(
+              (request) => !request.headers.containsKey('Authorization')),
+          isTrue);
+    });
+
+    test('redirects retain same-origin auth and strip it before a new origin',
+        () async {
+      final credentials = InMemoryOpdsCredentials();
+      await credentials.write(7, 'secret');
+      final adapter = _ScriptedAdapter((request) {
+        final location = switch (request.uri.path) {
+          '/opds/root.xml' => '/redirect',
+          '/redirect' => 'https://cdn.books.example/final/feed',
+          _ => null,
+        };
+        return location == null
+            ? _body(_feed)
+            : ResponseBody.fromString('', 302, headers: {
+                'location': [location]
+              });
+      });
+      final feed =
+          await OpdsClient(dio: _dio(adapter), credentials: credentials)
+              .fetchFeed(
+                  _catalog(authType: OpdsAuthType.basic, username: 'reader'));
+      expect(adapter.requests, hasLength(3));
+      expect(adapter.requests[0].headers, contains('Authorization'));
+      expect(adapter.requests[1].headers, contains('Authorization'));
+      expect(adapter.requests[2].headers, isNot(contains('Authorization')));
+      expect(feed.publications.single.acquisitionLinks.single.href.host,
+          'cdn.books.example');
+    });
+
+    test('download redirects never forward the catalog password', () async {
+      final directory = await Directory.systemTemp.createTemp('opds-auth-');
+      addTearDown(() => directory.delete(recursive: true));
+      final credentials = InMemoryOpdsCredentials();
+      await credentials.write(7, 'secret');
+      final adapter =
+          _ScriptedAdapter((request) => request.uri.host == 'books.example'
+              ? ResponseBody.fromString('', 302, headers: {
+                  'location': ['https://cdn.books.example/book.epub'],
+                })
+              : _body('book', contentType: 'application/epub+zip'));
+      final file = File('${directory.path}/book.epub');
+      await OpdsClient(dio: _dio(adapter), credentials: credentials).download(
+        _catalog(authType: OpdsAuthType.basic, username: 'reader'),
+        Uri.parse('https://books.example/book.epub'),
+        file.path,
+      );
+      expect(await file.readAsString(), 'book');
+      expect(adapter.requests.last.headers, isNot(contains('Authorization')));
+    });
+
+    test('malformed JSON field types are classified as invalid feeds',
+        () async {
+      final client = OpdsClient(
+        dio: _dio(_ScriptedAdapter((_) => _body(
+              '{"metadata":{"title":"Catalog"},"publications":"invalid"}',
+              contentType: 'application/opds+json',
+            ))),
+      );
+      await expectLater(
+          client.fetchFeed(_catalog()),
+          throwsA(
+            isA<OpdsException>()
+                .having((e) => e.failure, 'failure', OpdsFailure.notAFeed),
+          ));
+    });
+
     test('a feed comes back parsed', () async {
       final _ScriptedAdapter adapter =
           _ScriptedAdapter((RequestOptions options) => _body(_feed));

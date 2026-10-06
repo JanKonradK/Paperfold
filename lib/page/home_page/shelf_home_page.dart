@@ -167,12 +167,8 @@ class _ShelfHomePageState extends ConsumerState<ShelfHomePage>
     required String sourcePath,
     required String fileName,
   }) async {
-    final tempDir = await getAnxTempDir();
-    final targetPath = path.join(tempDir.path, fileName);
-    final targetFile = File(targetPath);
-    if (await targetFile.exists()) {
-      await targetFile.delete();
-    }
+    final tempDir = await (await getAnxTempDir()).createTemp('import-');
+    final targetPath = path.join(tempDir.path, path.basename(fileName));
     return File(sourcePath).copy(targetPath);
   }
 
@@ -293,6 +289,7 @@ class _ShelfHomePageState extends ConsumerState<ShelfHomePage>
       title: entry.title,
       author: entry.author,
     );
+    if (!mounted) return;
     await ref.read(shelfHomeProvider.notifier).refresh();
   }
 

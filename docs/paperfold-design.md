@@ -2,7 +2,8 @@
 name: Paperfold
 description: Burgundy library, gold details, warm paper.
 colors:
-  cover: "#391214"
+  cover: "#350D18"
+  dark-sienna: "#391214"
   foil: "#B7A179"
   paper: "#F6F2EA"
   ink: "#160F0C"

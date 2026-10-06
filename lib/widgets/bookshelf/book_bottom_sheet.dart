@@ -21,6 +21,7 @@ import 'package:paperfold/service/book.dart';
 import 'package:paperfold/utils/get_path/get_base_path.dart';
 import 'package:paperfold/utils/share_file.dart';
 import 'package:paperfold/utils/toast/common.dart';
+import 'package:paperfold/utils/log/common.dart';
 import 'package:paperfold/widgets/bookshelf/book_cover.dart';
 import 'package:paperfold/widgets/delete_confirm.dart';
 import 'package:paperfold/widgets/icon_and_text.dart';
@@ -42,11 +43,22 @@ class BookBottomSheet extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     Future<void> handleDelete(BuildContext context) async {
-      Navigator.pop(context);
-      await bookDao.deleteBook(book.id);
-      ref.read(bookListProvider.notifier).refresh();
-      File(book.fileFullPath).delete();
-      File(book.coverFullPath).delete();
+      try {
+        await bookDao.deleteBook(book.id);
+        if (context.mounted) {
+          ref.read(bookListProvider.notifier).refresh();
+          Navigator.pop(context);
+        }
+        for (final localPath in [book.fileFullPath, book.coverFullPath]) {
+          final file = File(localPath);
+          if (await file.exists()) await file.delete();
+        }
+      } catch (error, stackTrace) {
+        AnxLog.warning('Could not delete book', error, stackTrace);
+        if (context.mounted) {
+          AnxToast.show(L10n.of(context).commonFailed);
+        }
+      }
     }
 
     void handleDetail(BuildContext context) {

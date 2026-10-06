@@ -6,10 +6,10 @@ import 'package:paperfold/models/book.dart';
 import 'package:paperfold/models/search_note_group.dart';
 import 'package:paperfold/providers/search.dart';
 import 'package:paperfold/service/book.dart';
-import 'package:paperfold/utils/error_handler.dart';
 import 'package:paperfold/widgets/book_notes/book_note_tile.dart';
 import 'package:paperfold/widgets/bookshelf/book_item.dart';
 import 'package:paperfold/widgets/common/container/filled_container.dart';
+import 'package:paperfold/widgets/common/load_failure.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -56,8 +56,10 @@ class _SearchPageState extends ConsumerState<SearchPage> {
   }
 
   void _clearQuery() {
+    _debounce?.cancel();
     _controller.clear();
     ref.read(searchQueryProvider.notifier).state = '';
+    _focusNode.requestFocus();
   }
 
   @override
@@ -80,6 +82,8 @@ class _SearchPageState extends ConsumerState<SearchPage> {
                 ? null
                 : IconButton(
                     icon: const Icon(Icons.clear),
+                    tooltip:
+                        MaterialLocalizations.of(context).clearButtonTooltip,
                     onPressed: _clearQuery,
                   ),
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(32)),
@@ -90,6 +94,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
           onSubmitted: (value) {
             _debounce?.cancel();
             ref.read(searchQueryProvider.notifier).state = value;
+            _focusNode.unfocus();
           },
         ),
       ),
@@ -97,38 +102,50 @@ class _SearchPageState extends ConsumerState<SearchPage> {
 
     return Scaffold(
       appBar: appBar,
-      body: asyncResult.when(
-        data: (result) {
-          if (query.trim().isEmpty) {
-            return Center(
-              child: Text(
-                L10n.of(context).startTypingToSearch,
+      body: SafeArea(
+        top: false,
+        child: asyncResult.when(
+          data: (result) {
+            if (query.trim().isEmpty) {
+              return Center(
+                child: Text(
+                  L10n.of(context).startTypingToSearch,
+                ),
+              );
+            }
+            return SingleChildScrollView(
+              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 960),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      spacing: 24,
+                      children: [
+                        _SearchResult(
+                            title: L10n.of(context).books,
+                            empty: result.books.isEmpty,
+                            child: _SearchBookResult(books: result.books)),
+                        _SearchResult(
+                            title: L10n.of(context).notes,
+                            empty: result.noteGroups.isEmpty,
+                            child: _SearchNoteResult(group: result.noteGroups)),
+                      ],
+                    ),
+                  ),
+                ),
               ),
             );
-          }
-          return SingleChildScrollView(
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                spacing: 24,
-                children: [
-                  _SearchResult(
-                      title: L10n.of(context).books,
-                      empty: result.books.isEmpty,
-                      child: _SearchBookResult(books: result.books)),
-                  _SearchResult(
-                      title: L10n.of(context).notes,
-                      empty: result.noteGroups.isEmpty,
-                      child: _SearchNoteResult(group: result.noteGroups)),
-                ],
-              ),
-            ),
-          );
-        },
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, stack) {
-          return errorHandler(error);
-        },
+          },
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (error, stack) {
+            return LoadFailure.page(
+              error: error,
+              onRetry: () async => ref.invalidate(searchResultProvider),
+            );
+          },
+        ),
       ),
     );
   }

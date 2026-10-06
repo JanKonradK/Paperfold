@@ -33,14 +33,14 @@ abstract final class BookSpine {
   static const double _bookHeight = 280;
 
   static final List<Color> _bookclothBackgrounds = List<Color>.unmodifiable([
+    PaperfoldTokens.darkSienna,
+    PaperfoldTokens.spicedHotChocolate,
+    PaperfoldTokens.softDove,
+    PaperfoldTokens.moonRock,
     PaperfoldTokens.cover.ground,
-    const Color(0xFF52423D),
-    const Color(0xFFC0BAB3),
-    const Color(0xFF887D77),
-    const Color(0xFF6D343A),
     const Color(0xFFE7DFD0),
-    const Color(0xFFAD8E68),
-    const Color(0xFF30221E),
+    PaperfoldTokens.cover.foil,
+    PaperfoldTokens.blackRaspberry,
   ]);
 
   static final Map<

@@ -1,5 +1,7 @@
 {
   "ar": [
+    "commonShowPassword",
+    "commonHidePassword",
     "settingsAppearanceUsePaperfoldTheme",
     "pageTurnFold",
     "pageTurnCurl",
@@ -213,10 +215,17 @@
     "readingPageGoToCurrentLocation",
     "readingPageBackgroundColour",
     "readingPageTextColour",
-    "readingPageDeleteTheme"
+    "readingPageDeleteTheme",
+    "journalSaveFailed",
+    "journalLoadFailed",
+    "storageMigrationScheduled",
+    "appStartupFailed",
+    "appStartupFailedBody"
   ],
 
   "de": [
+    "commonShowPassword",
+    "commonHidePassword",
     "settingsAppearanceUsePaperfoldTheme",
     "pageTurnFold",
     "pageTurnCurl",
@@ -430,10 +439,17 @@
     "readingPageGoToCurrentLocation",
     "readingPageBackgroundColour",
     "readingPageTextColour",
-    "readingPageDeleteTheme"
+    "readingPageDeleteTheme",
+    "journalSaveFailed",
+    "journalLoadFailed",
+    "storageMigrationScheduled",
+    "appStartupFailed",
+    "appStartupFailedBody"
   ],
 
   "es": [
+    "commonShowPassword",
+    "commonHidePassword",
     "settingsAppearanceUsePaperfoldTheme",
     "pageTurnFold",
     "pageTurnCurl",
@@ -647,10 +663,17 @@
     "readingPageGoToCurrentLocation",
     "readingPageBackgroundColour",
     "readingPageTextColour",
-    "readingPageDeleteTheme"
+    "readingPageDeleteTheme",
+    "journalSaveFailed",
+    "journalLoadFailed",
+    "storageMigrationScheduled",
+    "appStartupFailed",
+    "appStartupFailedBody"
   ],
 
   "fr": [
+    "commonShowPassword",
+    "commonHidePassword",
     "settingsAppearanceUsePaperfoldTheme",
     "pageTurnFold",
     "pageTurnCurl",
@@ -864,10 +887,17 @@
     "readingPageGoToCurrentLocation",
     "readingPageBackgroundColour",
     "readingPageTextColour",
-    "readingPageDeleteTheme"
+    "readingPageDeleteTheme",
+    "journalSaveFailed",
+    "journalLoadFailed",
+    "storageMigrationScheduled",
+    "appStartupFailed",
+    "appStartupFailedBody"
   ],
 
   "it": [
+    "commonShowPassword",
+    "commonHidePassword",
     "settingsAppearanceUsePaperfoldTheme",
     "pageTurnFold",
     "pageTurnCurl",
@@ -1081,10 +1111,17 @@
     "readingPageGoToCurrentLocation",
     "readingPageBackgroundColour",
     "readingPageTextColour",
-    "readingPageDeleteTheme"
+    "readingPageDeleteTheme",
+    "journalSaveFailed",
+    "journalLoadFailed",
+    "storageMigrationScheduled",
+    "appStartupFailed",
+    "appStartupFailedBody"
   ],
 
   "ja": [
+    "commonShowPassword",
+    "commonHidePassword",
     "settingsAppearanceUsePaperfoldTheme",
     "pageTurnFold",
     "pageTurnCurl",
@@ -1298,10 +1335,17 @@
     "readingPageGoToCurrentLocation",
     "readingPageBackgroundColour",
     "readingPageTextColour",
-    "readingPageDeleteTheme"
+    "readingPageDeleteTheme",
+    "journalSaveFailed",
+    "journalLoadFailed",
+    "storageMigrationScheduled",
+    "appStartupFailed",
+    "appStartupFailedBody"
   ],
 
   "ko": [
+    "commonShowPassword",
+    "commonHidePassword",
     "settingsAppearanceUsePaperfoldTheme",
     "pageTurnFold",
     "pageTurnCurl",
@@ -1515,10 +1559,17 @@
     "readingPageGoToCurrentLocation",
     "readingPageBackgroundColour",
     "readingPageTextColour",
-    "readingPageDeleteTheme"
+    "readingPageDeleteTheme",
+    "journalSaveFailed",
+    "journalLoadFailed",
+    "storageMigrationScheduled",
+    "appStartupFailed",
+    "appStartupFailedBody"
   ],
 
   "pt": [
+    "commonShowPassword",
+    "commonHidePassword",
     "settingsAppearanceUsePaperfoldTheme",
     "pageTurnFold",
     "pageTurnCurl",
@@ -1732,10 +1783,17 @@
     "readingPageGoToCurrentLocation",
     "readingPageBackgroundColour",
     "readingPageTextColour",
-    "readingPageDeleteTheme"
+    "readingPageDeleteTheme",
+    "journalSaveFailed",
+    "journalLoadFailed",
+    "storageMigrationScheduled",
+    "appStartupFailed",
+    "appStartupFailedBody"
   ],
 
   "ro": [
+    "commonShowPassword",
+    "commonHidePassword",
     "settingsAppearanceUsePaperfoldTheme",
     "pageTurnFold",
     "pageTurnCurl",
@@ -1949,10 +2007,17 @@
     "readingPageGoToCurrentLocation",
     "readingPageBackgroundColour",
     "readingPageTextColour",
-    "readingPageDeleteTheme"
+    "readingPageDeleteTheme",
+    "journalSaveFailed",
+    "journalLoadFailed",
+    "storageMigrationScheduled",
+    "appStartupFailed",
+    "appStartupFailedBody"
   ],
 
   "ru": [
+    "commonShowPassword",
+    "commonHidePassword",
     "settingsAppearanceUsePaperfoldTheme",
     "pageTurnFold",
     "pageTurnCurl",
@@ -2166,10 +2231,17 @@
     "readingPageGoToCurrentLocation",
     "readingPageBackgroundColour",
     "readingPageTextColour",
-    "readingPageDeleteTheme"
+    "readingPageDeleteTheme",
+    "journalSaveFailed",
+    "journalLoadFailed",
+    "storageMigrationScheduled",
+    "appStartupFailed",
+    "appStartupFailedBody"
   ],
 
   "tr": [
+    "commonShowPassword",
+    "commonHidePassword",
     "settingsAppearanceUsePaperfoldTheme",
     "pageTurnFold",
     "pageTurnCurl",
@@ -2383,10 +2455,17 @@
     "readingPageGoToCurrentLocation",
     "readingPageBackgroundColour",
     "readingPageTextColour",
-    "readingPageDeleteTheme"
+    "readingPageDeleteTheme",
+    "journalSaveFailed",
+    "journalLoadFailed",
+    "storageMigrationScheduled",
+    "appStartupFailed",
+    "appStartupFailedBody"
   ],
 
   "zh": [
+    "commonShowPassword",
+    "commonHidePassword",
     "settingsAppearanceUsePaperfoldTheme",
     "pageTurnFold",
     "pageTurnCurl",
@@ -2586,10 +2665,17 @@
     "readingPageGoToCurrentLocation",
     "readingPageBackgroundColour",
     "readingPageTextColour",
-    "readingPageDeleteTheme"
+    "readingPageDeleteTheme",
+    "journalSaveFailed",
+    "journalLoadFailed",
+    "storageMigrationScheduled",
+    "appStartupFailed",
+    "appStartupFailedBody"
   ],
 
   "zh_CN": [
+    "commonShowPassword",
+    "commonHidePassword",
     "settingsAppearanceUsePaperfoldTheme",
     "pageTurnFold",
     "pageTurnCurl",
@@ -2789,10 +2875,17 @@
     "readingPageGoToCurrentLocation",
     "readingPageBackgroundColour",
     "readingPageTextColour",
-    "readingPageDeleteTheme"
+    "readingPageDeleteTheme",
+    "journalSaveFailed",
+    "journalLoadFailed",
+    "storageMigrationScheduled",
+    "appStartupFailed",
+    "appStartupFailedBody"
   ],
 
   "zh_LZH": [
+    "commonShowPassword",
+    "commonHidePassword",
     "settingsAppearanceUsePaperfoldTheme",
     "pageTurnFold",
     "pageTurnCurl",
@@ -3006,10 +3099,17 @@
     "readingPageGoToCurrentLocation",
     "readingPageBackgroundColour",
     "readingPageTextColour",
-    "readingPageDeleteTheme"
+    "readingPageDeleteTheme",
+    "journalSaveFailed",
+    "journalLoadFailed",
+    "storageMigrationScheduled",
+    "appStartupFailed",
+    "appStartupFailedBody"
   ],
 
   "zh_TW": [
+    "commonShowPassword",
+    "commonHidePassword",
     "settingsAppearanceUsePaperfoldTheme",
     "pageTurnFold",
     "pageTurnCurl",
@@ -3223,6 +3323,11 @@
     "readingPageGoToCurrentLocation",
     "readingPageBackgroundColour",
     "readingPageTextColour",
-    "readingPageDeleteTheme"
+    "readingPageDeleteTheme",
+    "journalSaveFailed",
+    "journalLoadFailed",
+    "storageMigrationScheduled",
+    "appStartupFailed",
+    "appStartupFailedBody"
   ]
 }

@@ -77,6 +77,7 @@ dependencies:
   uuid: ^4.5.1
   desktop_drop: ^0.5.0
   freezed_annotation: ^3.0.0
+  json_annotation: ^4.9.0
   flutter_heatmap_calendar:
     git:
       url: https://github.com/Anxcye/flutter_heatmap_calendar

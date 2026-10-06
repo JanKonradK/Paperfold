@@ -115,6 +115,28 @@ void main() {
     }
   });
 
+  testWidgets('hidden tools leave the focus and accessibility tree immediately',
+      (tester) async {
+    final handle = tester.ensureSemantics();
+    try {
+      await tester.pumpWidget(host(chrome()));
+      await tester.pumpAndSettle();
+      expect(find.semantics.byLabel('Progress'), findsOne);
+      final backFocus = Focus.of(tester.element(find.byIcon(Icons.arrow_back)));
+      backFocus.requestFocus();
+      await tester.pump();
+      expect(backFocus.hasFocus, isTrue);
+
+      await tester.pumpWidget(host(chrome(visible: false)));
+      await tester.pump();
+      expect(backFocus.hasFocus, isFalse);
+      expect(find.semantics.byLabel('Progress'), findsNothing);
+      expect(find.semantics.byLabel('The Left Hand of Darkness'), findsNothing);
+    } finally {
+      handle.dispose();
+    }
+  });
+
   testWidgets('the open tool is announced as selected', (tester) async {
     final handle = tester.ensureSemantics();
     await tester.pumpWidget(host(chrome(activeTool: ReaderTool.progress)));

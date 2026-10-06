@@ -49,22 +49,10 @@ class OpdsClient {
   /// pass the link they followed.
   Future<OpdsFeed> fetchFeed(OpdsCatalog catalog, {Uri? url}) async {
     final Uri target = url ?? catalog.url;
-    final Response<String> response;
+    final Response<dynamic> response;
 
     try {
-      response = await _dio.getUri<String>(
-        target,
-        options: Options(
-          headers: <String, String>{
-            'Accept': acceptHeader,
-            ...await _authorization(catalog),
-          },
-          responseType: ResponseType.plain,
-          // Every status is handled here rather than thrown as a DioException,
-          // so a 401 can be told from a broken connection.
-          validateStatus: (int? status) => true,
-        ),
-      );
+      response = await _request(catalog, target);
     } on DioException catch (error) {
       throw OpdsException(OpdsFailure.network, detail: error.message);
     }
@@ -89,7 +77,7 @@ class OpdsClient {
         baseUri: response.realUri,
         contentType: response.headers.value('content-type'),
       );
-    } on Exception catch (error) {
+    } catch (error) {
       throw OpdsException(OpdsFailure.notAFeed, detail: error.toString());
     }
   }
@@ -106,14 +94,11 @@ class OpdsClient {
     void Function(int received, int total)? onProgress,
   }) async {
     try {
-      final Response<dynamic> response = await _dio.downloadUri(
+      final Response<dynamic> response = await _request(
+        catalog,
         url,
-        savePath,
-        onReceiveProgress: onProgress,
-        options: Options(
-          headers: await _authorization(catalog),
-          validateStatus: (int? status) => true,
-        ),
+        savePath: savePath,
+        onProgress: onProgress,
       );
 
       final int status = response.statusCode ?? 0;
@@ -136,8 +121,48 @@ class OpdsClient {
   /// A catalog set to Basic with no stored password sends no header. The
   /// server answers 401, and the browse screen asks. That is better than
   /// sending an empty password and calling the result a server error.
-  Future<Map<String, String>> _authorization(OpdsCatalog catalog) async {
-    if (catalog.authType != OpdsAuthType.basic) {
+  Future<Response<dynamic>> _request(
+    OpdsCatalog catalog,
+    Uri target, {
+    String? savePath,
+    void Function(int received, int total)? onProgress,
+  }) async {
+    for (var redirects = 0; redirects <= 5; redirects++) {
+      if ((target.scheme != 'https' && target.scheme != 'http') ||
+          target.host.isEmpty) {
+        throw const OpdsException(OpdsFailure.network,
+            detail: 'Invalid catalog link');
+      }
+      final options = Options(
+        headers: {
+          if (savePath == null) 'Accept': acceptHeader,
+          ...await _authorization(catalog, target),
+        },
+        responseType: ResponseType.plain,
+        followRedirects: false,
+        validateStatus: (_) => true,
+      );
+      final response = savePath == null
+          ? await _dio.getUri<String>(target, options: options)
+          : await _dio.downloadUri(target, savePath,
+              options: options, onReceiveProgress: onProgress);
+      final location = response.headers.value('location');
+      if (!const [301, 302, 303, 307, 308].contains(response.statusCode) ||
+          location == null) {
+        return response;
+      }
+      target = target.resolve(location);
+    }
+    throw const OpdsException(OpdsFailure.network,
+        detail: 'Too many redirects');
+  }
+
+  Future<Map<String, String>> _authorization(
+      OpdsCatalog catalog, Uri target) async {
+    if (catalog.authType != OpdsAuthType.basic ||
+        catalog.url.scheme != target.scheme ||
+        catalog.url.host != target.host ||
+        catalog.url.port != target.port) {
       return const <String, String>{};
     }
     final String? password = await _credentials.read(catalog.id);

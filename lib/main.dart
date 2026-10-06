@@ -18,6 +18,7 @@ import 'package:paperfold/utils/get_path/macos_migration.dart';
 import 'package:paperfold/utils/color_scheme.dart';
 import 'package:paperfold/utils/error/common.dart';
 import 'package:paperfold/utils/get_path/get_base_path.dart';
+import 'package:paperfold/utils/get_path/storage_migration.dart';
 import 'package:paperfold/utils/log/common.dart';
 import 'package:paperfold/utils/window_position_validator.dart';
 import 'package:paperfold/providers/sync.dart';
@@ -33,6 +34,7 @@ final heroineController = HeroineController();
 
 /// Whether macOS data migration is needed (checked at startup)
 bool _needsMigration = false;
+bool _storageMigrationFailed = false;
 MigrationCheckResult? _migrationCheckResult;
 
 /// This process-level flag is set once in [main] and consumed once by MyApp.
@@ -47,8 +49,11 @@ bool _takeColdStartOpening() {
 }
 
 Future<void> _initializeStorage() async {
+  if (AnxPlatform.isWindows) {
+    _storageMigrationFailed = !await applyPendingStorageMigration();
+  }
   await initBasePath();
-  AnxLog.init();
+  await AnxLog.init();
   AnxError.init();
 }
 
@@ -57,11 +62,10 @@ Future<void> _startServerAfter(Future<void> storageReady) async {
   await Server().start();
 }
 
-Future<void> _startDataServices() {
+Future<void> _startDataServices() async {
   final storageReady = _initializeStorage();
   final databaseReady = DBHelper().initDB(after: storageReady);
-  unawaited(_startServerAfter(storageReady));
-  return databaseReady;
+  await Future.wait([databaseReady, _startServerAfter(storageReady)]);
 }
 
 Future<void> main() async {
@@ -128,11 +132,30 @@ class _MyAppState extends ConsumerState<MyApp>
     }
     WidgetsBinding.instance.addObserver(this);
     windowManager.addListener(this);
+    _showStorageMigrationFailure();
+  }
+
+  Future<void> _showStorageMigrationFailure() async {
+    try {
+      await widget.databaseReady;
+      await _openingFinished.future;
+      if (!mounted || !_storageMigrationFailed) return;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        final context = navigatorKey.currentContext;
+        if (!mounted || context == null) return;
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(L10n.of(context).storageMigrationFailed),
+        ));
+      });
+    } catch (_) {
+      // HomePage shows the startup failure and restart guidance.
+    }
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    windowManager.removeListener(this);
     super.dispose();
   }
 
@@ -325,6 +348,9 @@ class _MigrationWrapperState extends State<_MigrationWrapper> {
     if (_migrationComplete) {
       return HomePage(databaseReady: DBHelper().database);
     }
-    return MigrationPage(onMigrationComplete: _onMigrationComplete);
+    return MigrationPage(
+      checkResult: widget.migrationCheckResult,
+      onMigrationComplete: _onMigrationComplete,
+    );
   }
 }

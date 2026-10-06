@@ -21,6 +21,17 @@ void main() {
       expect(BookSpine.contrast(foreground, scheme.surface),
           greaterThanOrEqualTo(4.5));
     }
+    for (final surface in [
+      scheme.surfaceContainerLowest,
+      scheme.surfaceContainerLow,
+      scheme.surfaceContainer,
+      scheme.surfaceContainerHigh,
+      scheme.surfaceContainerHighest,
+    ]) {
+      for (final ink in [scheme.onSurface, scheme.onSurfaceVariant]) {
+        expect(BookSpine.contrast(ink, surface), greaterThanOrEqualTo(4.5));
+      }
+    }
     final base = ThemeData();
     Prefs().eInkMode = true;
     expect(paperfoldLibraryTheme(base), same(base));

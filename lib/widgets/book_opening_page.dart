@@ -2,20 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
-/// The page a book opens onto, drawn identically by the shelf and by the
-/// reader.
-///
-/// There used to be three covering surfaces between a tap on a shelf and the
-/// first line of text: the book's own cover magnified on the shelf, a sliding
-/// route, and then a second full-screen cover inside the reader fading on a
-/// six-hundred-millisecond timer that had nothing to do with whether the book
-/// had loaded. The reader saw the same cover twice, a slide in between, and
-/// then text appearing whenever it happened to be ready.
-///
-/// One surface now. The shelf raises it as the board swings, the reader is
-/// already drawing the same thing underneath, and it lifts when the text is
-/// genuinely there. Because both sides paint the same colours and the same
-/// words, the handover from one route to the other cannot be seen.
+/// A loading page that follows the active theme until the book is ready.
 class BookOpeningPage extends StatelessWidget {
   const BookOpeningPage({
     super.key,
@@ -36,35 +23,16 @@ class BookOpeningPage extends StatelessWidget {
   /// anything to wait for, so it brings the title up first and the mark after.
   final bool showMark;
 
-  /// The paper by day and by night.
-  ///
-  /// The light pair is what the cold-start opening lands on, so a book opened
-  /// from the shelf and a book opened by starting the application arrive in
-  /// the same place. The dark pair exists because the shelf is true black:
-  /// landing on cream at night is a flash in the face, and the reader is on
-  /// its way into a night theme anyway.
-  static const Color paper = Color(0xFFFAF6EE);
-  static const Color ink = Color(0xFF3A2E28);
-  static const Color paperDark = Color(0xFF121110);
-  static const Color inkDark = Color(0xFFE8E0D2);
-
-  static Color paperFor(Brightness brightness) =>
-      brightness == Brightness.dark ? paperDark : paper;
-
-  static Color inkFor(Brightness brightness) =>
-      brightness == Brightness.dark ? inkDark : ink;
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final brightness = theme.brightness;
-    final foreground = inkFor(brightness);
+    final foreground = theme.colorScheme.onSurface;
 
     return ColoredBox(
-      color: paperFor(brightness),
+      color: theme.colorScheme.surface,
       child: Center(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 32),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(32),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -72,9 +40,8 @@ class BookOpeningPage extends StatelessWidget {
               // is in it, so the title does not move when the mark arrives.
               SizedBox(
                 height: _WaitingMark.diameter,
-                child: showMark
-                    ? _WaitingMark(turn: turn, ink: foreground)
-                    : null,
+                child:
+                    showMark ? _WaitingMark(turn: turn, ink: foreground) : null,
               ),
               const SizedBox(height: 28),
               Text(

@@ -5,7 +5,6 @@ import 'package:paperfold/models/book_note.dart';
 import 'package:paperfold/utils/convert_string_to_uint8list.dart';
 import 'package:paperfold/utils/save_file_to_download.dart';
 import 'package:csv/csv.dart';
-import 'package:fast_gbk/fast_gbk.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart';
 import 'package:paperfold/utils/toast/common.dart';
@@ -18,10 +17,10 @@ Future<void> exportNotes(
   ExportType exportType, {
   bool mergeChapterHeadings = false,
 }) async {
-  BuildContext context = navigatorKey.currentContext!;
   if (notesList.isEmpty) {
     return;
   }
+  BuildContext context = navigatorKey.currentContext!;
 
   final groups = _groupNotesByChapter(notesList, mergeChapterHeadings);
 
@@ -81,7 +80,7 @@ Future<void> exportNotes(
             note.readerNote,
             note.type,
             '#${note.color}',
-            note.createTime!.toIso8601String(),
+            note.createTime?.toIso8601String() ?? '',
             note.updateTime.toIso8601String(),
           ]);
         })
@@ -90,7 +89,7 @@ Future<void> exportNotes(
       final string = const ListToCsvConverter().convert(list);
 
       String? filePath = await saveFileToDownload(
-          bytes: Uint8List.fromList(gbk.encode(string)),
+          bytes: convertStringToUint8List('\uFEFF$string'),
           fileName: '${book.title}.csv',
           mimeType: 'text/csv');
       if (filePath != null) {

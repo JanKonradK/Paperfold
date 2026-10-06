@@ -31,9 +31,6 @@ class _StorageSettingsState extends ConsumerState<StorageSettings>
   // Custom storage location state
   String? _selectedNewPath;
   bool _isMigrating = false;
-  String _migrationCurrentItem = '';
-  int _migrationProgress = 0;
-  int _migrationTotal = 6;
   String? _currentStoragePath;
 
   @override
@@ -48,6 +45,7 @@ class _StorageSettingsState extends ConsumerState<StorageSettings>
     if (mounted) {
       setState(() {
         _currentStoragePath = path;
+        _selectedNewPath = Prefs().pendingStoragePath;
       });
     }
   }
@@ -60,7 +58,7 @@ class _StorageSettingsState extends ConsumerState<StorageSettings>
 
   Future<void> _selectNewPath() async {
     final result = await FilePicker.platform.getDirectoryPath();
-    if (result == null) return;
+    if (result == null || !mounted) return;
 
     // Check if directory is empty
     final isEmpty = await isDirectoryEmpty(result);
@@ -94,64 +92,46 @@ class _StorageSettingsState extends ConsumerState<StorageSettings>
       return;
     }
 
+    if (!mounted) return;
     setState(() {
       _selectedNewPath = result;
     });
   }
 
   Future<void> _startMigration() async {
-    if (_selectedNewPath == null || _currentStoragePath == null) return;
-
-    setState(() {
-      _isMigrating = true;
-      _migrationProgress = 0;
-      _migrationCurrentItem = '';
-    });
-
-    final success = await performStorageMigration(
-      sourcePath: _currentStoragePath!,
-      destinationPath: _selectedNewPath!,
-      onProgress: (currentItem, progress, total) {
-        if (mounted) {
-          setState(() {
-            _migrationCurrentItem = currentItem;
-            _migrationProgress = progress;
-            _migrationTotal = total;
-          });
-        }
-      },
-    );
-
-    if (mounted) {
-      setState(() {
-        _isMigrating = false;
-      });
-
-      if (success) {
-        Prefs().customStoragePath = _selectedNewPath;
-        setState(() {
-          _currentStoragePath = _selectedNewPath;
-          _selectedNewPath = null;
-        });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(L10n.of(context).storageMigrationSuccess),
-          ),
-        );
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(L10n.of(context).storageMigrationFailed),
-            backgroundColor: Theme.of(context).colorScheme.error,
-          ),
-        );
-      }
+    if (_selectedNewPath == null || _isMigrating) return;
+    setState(() => _isMigrating = true);
+    try {
+      // A live SQLite database must never be moved. Startup applies this
+      // request before the database, log, reader server, or sync can write.
+      await Prefs().setPendingStoragePath(_selectedNewPath);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(L10n.of(context).storageMigrationScheduled),
+      ));
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(L10n.of(context).storageMigrationFailed),
+        backgroundColor: Theme.of(context).colorScheme.error,
+      ));
+    } finally {
+      if (mounted) setState(() => _isMigrating = false);
     }
   }
 
   Future<void> _resetToDefaultPath() async {
     final defaultPath = await getDefaultStoragePath();
-    if (_currentStoragePath == defaultPath) return;
+    if (!mounted || _currentStoragePath == defaultPath) return;
+
+    if (!await isStorageDestinationEmpty(defaultPath)) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(L10n.of(context).storagePathNotEmpty),
+      ));
+      return;
+    }
+    if (!mounted) return;
 
     setState(() {
       _selectedNewPath = defaultPath;
@@ -277,11 +257,14 @@ class _StorageSettingsState extends ConsumerState<StorageSettings>
                       ),
                       trailing: IconButton(
                         icon: const Icon(Icons.close),
-                        onPressed: () {
-                          setState(() {
-                            _selectedNewPath = null;
-                          });
-                        },
+                        tooltip: L10n.of(context).commonCancel,
+                        onPressed: _isMigrating
+                            ? null
+                            : () async {
+                                await Prefs().setPendingStoragePath(null);
+                                if (!mounted) return;
+                                setState(() => _selectedNewPath = null);
+                              },
                       ),
                     ),
                   ],
@@ -316,33 +299,6 @@ class _StorageSettingsState extends ConsumerState<StorageSettings>
                       ],
                     ),
                   ),
-                  // Migration progress
-                  if (_isMigrating) ...[
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                      child: Column(
-                        children: [
-                          LinearProgressIndicator(
-                            value: _migrationTotal > 0
-                                ? _migrationProgress / _migrationTotal
-                                : null,
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            _migrationCurrentItem.isNotEmpty
-                                ? '${L10n.of(context).migrationCurrentItem}: $_migrationCurrentItem'
-                                : L10n.of(context).migrationPreparing,
-                            style: Theme.of(context).textTheme.bodySmall,
-                          ),
-                          Text(
-                            '$_migrationProgress / $_migrationTotal',
-                            style: Theme.of(context).textTheme.bodySmall,
-                          ),
-                          const SizedBox(height: 16),
-                        ],
-                      ),
-                    ),
-                  ],
                 ],
               ),
             ),

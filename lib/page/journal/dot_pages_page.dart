@@ -6,6 +6,8 @@ import 'package:paperfold/l10n/generated/L10n.dart';
 import 'package:paperfold/models/book.dart';
 import 'package:paperfold/models/journal_page.dart';
 import 'package:paperfold/providers/journal_home.dart';
+import 'package:paperfold/utils/log/common.dart';
+import 'package:paperfold/widgets/common/load_failure.dart';
 
 /// Free journal space for one book: blank dot pages the reader writes on.
 ///
@@ -31,6 +33,9 @@ class _DotPagesPageState extends ConsumerState<DotPagesPage> {
   List<JournalPage> _pages = const [];
   final Map<int, TextEditingController> _controllers = {};
   bool _loading = true;
+  Object? _loadError;
+  bool _busy = false;
+  bool _allowPop = false;
 
   @override
   void initState() {
@@ -47,40 +52,97 @@ class _DotPagesPageState extends ConsumerState<DotPagesPage> {
   }
 
   Future<void> _load() async {
-    final pages = await _dao.listPages(widget.book.id);
-    if (!mounted) {
-      return;
-    }
     setState(() {
-      _pages = pages;
-      for (final page in pages) {
-        final id = page.id;
-        if (id != null) {
-          _controllers
-              .putIfAbsent(id, () => TextEditingController(text: page.body))
-              .text = page.body;
-        }
-      }
-      _loading = false;
+      _loading = true;
+      _loadError = null;
     });
+    try {
+      final pages = await _dao.listPages(widget.book.id);
+      if (!mounted) return;
+      setState(() {
+        _pages = pages;
+        for (final page in pages) {
+          final id = page.id;
+          if (id != null) {
+            // Adding a page must keep the drafts already in the editor.
+            _controllers.putIfAbsent(
+                id, () => TextEditingController(text: page.body));
+          }
+        }
+      });
+    } catch (error) {
+      if (mounted) setState(() => _loadError = error);
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
   }
 
   Future<void> _addPage() async {
-    await _dao.addPage(widget.book.id);
-    await _load();
+    if (_busy) return;
+    setState(() => _busy = true);
+    try {
+      await _dao.addPage(widget.book.id);
+      if (mounted) await _load();
+    } catch (error, stackTrace) {
+      _showSaveError(error, stackTrace);
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
   }
 
   /// Writes every page whose text changed. A page emptied of text is deleted
   /// by the DAO, so leaving a blank page behind does not litter the journal.
-  Future<void> _saveAll() async {
-    for (final page in _pages) {
-      final controller = _controllers[page.id];
-      if (controller == null || controller.text == page.body) {
-        continue;
+  Future<bool> _saveAll() async {
+    if (_busy) return false;
+    // Capture text before any write yields; controllers belong to this route.
+    final changed = [
+      for (final page in _pages)
+        if (_controllers[page.id] case final controller?)
+          if (controller.text != page.body)
+            page.copyWith(body: controller.text),
+    ];
+    setState(() => _busy = true);
+    try {
+      for (final page in changed) {
+        final id = await _dao.savePage(page);
+        if (!mounted) return false;
+        // A retry must start with the writes that already succeeded, including
+        // a page deletion, rather than trying to update a removed row.
+        setState(() {
+          _pages = [
+            for (final original in _pages)
+              if (original.id != page.id)
+                original
+              else if (id != null)
+                page.copyWith(id: id),
+          ];
+        });
       }
-      await _dao.savePage(page.copyWith(body: controller.text));
+      if (!mounted) return false;
+      if (changed.isNotEmpty) ref.invalidate(journalHomeProvider);
+      return true;
+    } catch (error, stackTrace) {
+      _showSaveError(error, stackTrace);
+      return false;
+    } finally {
+      if (mounted) setState(() => _busy = false);
     }
-    await ref.read(journalHomeProvider.notifier).refresh();
+  }
+
+  void _showSaveError(Object error, StackTrace stackTrace) {
+    AnxLog.warning('Could not save journal pages', error, stackTrace);
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(L10n.of(context).journalSaveFailed)),
+      );
+    }
+  }
+
+  Future<void> _leave() async {
+    if (!await _saveAll() || !mounted || _allowPop) return;
+    setState(() => _allowPop = true);
+    await WidgetsBinding.instance.endOfFrame;
+    if (mounted) Navigator.of(context).pop();
   }
 
   @override
@@ -89,64 +151,71 @@ class _DotPagesPageState extends ConsumerState<DotPagesPage> {
     final theme = Theme.of(context);
 
     return PopScope(
+      canPop: _allowPop || (_pages.isEmpty && !_busy),
       onPopInvokedWithResult: (didPop, result) {
-        if (didPop) {
-          _saveAll();
-        }
+        if (!didPop) _leave();
       },
       child: Scaffold(
         appBar: AppBar(title: Text(l10n.journalDotPages)),
         floatingActionButton: FloatingActionButton(
           tooltip: l10n.journalAddPage,
-          onPressed: _addPage,
+          onPressed: _loading || _busy || _loadError != null ? null : _addPage,
           child: const Icon(Icons.add),
         ),
-        body: _loading
-            ? const Center(child: CircularProgressIndicator())
-            : _pages.isEmpty
-                ? Center(
-                    child: Text(
-                      l10n.journalNoPages,
-                      style: theme.textTheme.bodyLarge,
-                    ),
-                  )
-                : ListView.builder(
-                    padding: EdgeInsets.only(
-                      left: 16,
-                      right: 16,
-                      top: 12,
-                      // Room for the button, the gesture inset, and the
-                      // keyboard when it is up.
-                      bottom: 120 +
-                          MediaQuery.viewPaddingOf(context).bottom +
-                          MediaQuery.viewInsetsOf(context).bottom,
-                    ),
-                    itemCount: _pages.length,
-                    itemBuilder: (context, index) {
-                      final page = _pages[index];
-                      final controller = _controllers[page.id];
-                      if (controller == null) {
-                        return const SizedBox.shrink();
-                      }
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 16),
-                        child: _DotPaper(
-                          child: TextField(
-                            controller: controller,
-                            maxLines: null,
-                            minLines: 8,
-                            textCapitalization: TextCapitalization.sentences,
-                            style: theme.textTheme.bodyLarge,
-                            decoration: InputDecoration(
-                              hintText: l10n.journalPageHint,
-                              border: InputBorder.none,
-                              contentPadding: const EdgeInsets.all(16),
-                            ),
-                          ),
+        body: _loadError != null
+            ? LoadFailure.page(
+                title: l10n.journalLoadFailed,
+                error: _loadError,
+                onRetry: _load,
+              )
+            : _loading
+                ? const Center(child: CircularProgressIndicator())
+                : _pages.isEmpty
+                    ? Center(
+                        child: Text(
+                          l10n.journalNoPages,
+                          style: theme.textTheme.bodyLarge,
                         ),
-                      );
-                    },
-                  ),
+                      )
+                    : ListView.builder(
+                        padding: EdgeInsets.only(
+                          left: 16,
+                          right: 16,
+                          top: 12,
+                          // Room for the button, the gesture inset, and the
+                          // keyboard when it is up.
+                          bottom: 120 +
+                              MediaQuery.viewPaddingOf(context).bottom +
+                              MediaQuery.viewInsetsOf(context).bottom,
+                        ),
+                        itemCount: _pages.length,
+                        itemBuilder: (context, index) {
+                          final page = _pages[index];
+                          final controller = _controllers[page.id];
+                          if (controller == null) {
+                            return const SizedBox.shrink();
+                          }
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 16),
+                            child: _DotPaper(
+                              child: TextField(
+                                controller: controller,
+                                readOnly: _busy || _allowPop,
+                                maxLines: null,
+                                minLines: 8,
+                                textCapitalization:
+                                    TextCapitalization.sentences,
+                                style: theme.textTheme.bodyLarge,
+                                decoration: InputDecoration(
+                                  hintText: l10n.journalPageHint,
+                                  border: InputBorder.none,
+                                  contentPadding: const EdgeInsets.all(16),
+                                ),
+                              ),
+                            ),
+                          );
+                        },
+                      ),
       ),
     );
   }

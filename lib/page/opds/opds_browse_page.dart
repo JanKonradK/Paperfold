@@ -9,6 +9,7 @@ import 'package:paperfold/service/book.dart';
 import 'package:paperfold/service/opds/opds.dart';
 import 'package:paperfold/service/opds/opds_client.dart';
 import 'package:paperfold/utils/get_path/get_temp_dir.dart';
+import 'package:paperfold/utils/log/common.dart';
 import 'package:paperfold/utils/toast/common.dart';
 import 'package:paperfold/widgets/ornament.dart';
 
@@ -17,7 +18,8 @@ import 'package:paperfold/widgets/ornament.dart';
 /// A feed holds shelves, books, or both. Following a shelf pushes another one
 /// of these, so Back walks the catalog the way Back walks anything else.
 class OpdsBrowsePage extends ConsumerWidget {
-  const OpdsBrowsePage({super.key, required this.catalog, this.url, this.title});
+  const OpdsBrowsePage(
+      {super.key, required this.catalog, this.url, this.title});
 
   final OpdsCatalog catalog;
 
@@ -192,10 +194,13 @@ class _PublicationTileState extends ConsumerState<_PublicationTile> {
   Future<void> _download(OpdsLink link) async {
     final L10n l10n = L10n.of(context);
     setState(() => _downloading = true);
+    Directory? downloadDir;
 
     try {
       final Directory temp = await getAnxTempDir();
-      final String path = '${temp.path}/${_fileNameFor(link)}';
+      downloadDir = await temp.createTemp('opds-');
+      final String path = '${downloadDir.path}/${_fileNameFor(link)}';
+      if (!mounted) return;
       await ref.read(opdsClientProvider).download(
             widget.catalog,
             link.href,
@@ -203,6 +208,7 @@ class _PublicationTileState extends ConsumerState<_PublicationTile> {
           );
       // The import path already knows how to read a book file. Section 9.2
       // says to point it at the download, not to write a second one.
+      if (!mounted) return;
       await importBook(File(path), ref);
       if (mounted) {
         AnxToast.show(l10n.opdsDownloaded(widget.entry.title));
@@ -211,9 +217,19 @@ class _PublicationTileState extends ConsumerState<_PublicationTile> {
       if (mounted) {
         AnxToast.show(OpdsBrowsePage._messageFor(l10n, error));
       }
+    } catch (error, stackTrace) {
+      AnxLog.severe('OPDS import failed', error, stackTrace);
+      if (mounted) AnxToast.show('${l10n.commonError}: $error');
     } finally {
       if (mounted) {
         setState(() => _downloading = false);
+      }
+      if (downloadDir != null) {
+        try {
+          await downloadDir.delete(recursive: true);
+        } on FileSystemException catch (error) {
+          AnxLog.warning('Could not remove OPDS download: $error');
+        }
       }
     }
   }
@@ -225,8 +241,12 @@ class _PublicationTileState extends ConsumerState<_PublicationTile> {
   String _fileNameFor(OpdsLink link) {
     final String segment =
         link.href.pathSegments.isEmpty ? '' : link.href.pathSegments.last;
-    if (segment.contains('.')) {
-      return segment;
+    final safeSegment =
+        segment.replaceAll(RegExp(r'[<>:"/\\|?*\x00-\x1f]'), '_');
+    if (safeSegment.length <= 120 &&
+        allowBookExtensions
+            .contains(safeSegment.split('.').last.toLowerCase())) {
+      return 'book-$safeSegment';
     }
     final String extension = switch (link.type) {
       'application/epub+zip' => 'epub',
@@ -235,10 +255,9 @@ class _PublicationTileState extends ConsumerState<_PublicationTile> {
       'application/vnd.amazon.ebook' => 'azw3',
       _ => 'epub',
     };
-    final String safe = widget.entry.title
-        .replaceAll(RegExp(r'[^A-Za-z0-9 _-]'), '')
-        .trim();
-    return '${safe.isEmpty ? 'book' : safe}.$extension';
+    final String safe =
+        widget.entry.title.replaceAll(RegExp(r'[^A-Za-z0-9 _-]'), '').trim();
+    return 'book-${safe.runes.take(80).map(String.fromCharCode).join()}.$extension';
   }
 }
 

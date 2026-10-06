@@ -79,20 +79,27 @@ abstract final class PaperfoldTypeTokens {
 }
 
 abstract final class PaperfoldTokens {
+  // The five colours from the supplied palette.
+  static const Color softDove = Color(0xFFC0BAB3);
+  static const Color spicedHotChocolate = Color(0xFF52423D);
+  static const Color moonRock = Color(0xFF887D77);
+  static const Color darkSienna = Color(0xFF391214);
+  static const Color blackRaspberry = Color(0xFF160F0C);
+
   // Keep the surface role names stable for book bindings and existing callers.
   static const PaperfoldSurfacePalette surfaces = PaperfoldSurfacePalette(
-    sageGreen: Color(0xFF887D77),
+    sageGreen: moonRock,
     dustyRose: Color(0xFF8B625F),
     goldenTan: Color(0xFFB7A179),
-    warmBeige: Color(0xFFC0BAB3),
-    terracottaBrown: Color(0xFF52423D),
+    warmBeige: softDove,
+    terracottaBrown: spicedHotChocolate,
   );
 
   static const PaperfoldPagePalette light = PaperfoldPagePalette(
     ground: Color(0xFFF6F2EA),
-    ink: Color(0xFF160F0C),
-    inkSoft: Color(0xFF52423D),
-    accent: Color(0xFF391214),
+    ink: blackRaspberry,
+    inkSoft: spicedHotChocolate,
+    accent: darkSienna,
     surfaceLowest: Color(0xFFFCF9F3),
     surfaceLow: Color(0xFFF0EAE1),
     surface: Color(0xFFEAE3D9),
@@ -104,7 +111,7 @@ abstract final class PaperfoldTokens {
   static const PaperfoldPagePalette darkTrueBlack = PaperfoldPagePalette(
     ground: Color(0xFF000000),
     ink: Color(0xFFF6F2EA),
-    inkSoft: Color(0xFFC0BAB3),
+    inkSoft: softDove,
     accent: Color(0xFFB7A179),
     surfaceLowest: Color(0xFF000000),
     surfaceLow: Color(0xFF0C0908),
@@ -115,9 +122,9 @@ abstract final class PaperfoldTokens {
 
   /// Raspberry-black paper, with a warm tonal ramp for sheets and controls.
   static const PaperfoldPagePalette darkNearBlack = PaperfoldPagePalette(
-    ground: Color(0xFF160F0C),
+    ground: blackRaspberry,
     ink: Color(0xFFF6F2EA),
-    inkSoft: Color(0xFFC0BAB3),
+    inkSoft: softDove,
     accent: Color(0xFFB7A179),
     surfaceLowest: Color(0xFF100B09),
     surfaceLow: Color(0xFF211714),
@@ -133,21 +140,21 @@ abstract final class PaperfoldTokens {
   /// Smoked wood and stone tones keep the books distinct from the furniture.
   static const PaperfoldWoodPalette woodLight = PaperfoldWoodPalette(
     board: Color(0xFFA99B8C),
-    edge: Color(0xFF887D77),
-    back: Color(0xFF52423D),
-    onWood: Color(0xFF160F0C),
+    edge: moonRock,
+    back: spicedHotChocolate,
+    onWood: blackRaspberry,
   );
 
   static const PaperfoldWoodPalette woodDark = PaperfoldWoodPalette(
-    board: Color(0xFF52423D),
+    board: spicedHotChocolate,
     edge: Color(0xFF3F302C),
     back: Color(0xFF2A1D1A),
     onWood: Color(0xFFF6F2EA),
   );
 
-  // The saturated cover world stays separate from the quiet page palette.
+  // Match the supplied cover image; Dark Sienna is its raised surface.
   static const PaperfoldCoverPalette cover = PaperfoldCoverPalette(
-    ground: Color(0xFF391214),
+    ground: Color(0xFF350D18),
     foil: Color(0xFFB7A179),
   );
 

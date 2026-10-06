@@ -4,6 +4,7 @@ import 'package:paperfold/config/shared_preference_provider.dart';
 import 'package:paperfold/utils/get_path/get_base_path.dart';
 import 'package:paperfold/utils/log/common.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as path;
 import 'package:shelf/shelf.dart' as shelf;
 import 'package:shelf/shelf_io.dart' as io;
@@ -29,7 +30,7 @@ class Server {
 
     var handler = const shelf.Pipeline()
         .addMiddleware(shelf.logRequests())
-        .addHandler(_handleRequests);
+        .addHandler(handleRequest);
 
     int port = Prefs().lastServerPort;
 
@@ -74,11 +75,20 @@ class Server {
     return _tempFileName!;
   }
 
-  Future<shelf.Response> _handleRequests(shelf.Request request) async {
+  void clearTempFile() {
+    _tempFile = null;
+    _tempFileName = null;
+  }
+
+  @visibleForTesting
+  Future<shelf.Response> handleRequest(shelf.Request request) async {
     final uriPath = request.requestedUri.path;
     AnxLog.info('Server: Request for $uriPath');
 
     if (_tempFileName != null && uriPath == "/${_tempFileName!}") {
+      if (_tempFile == null || !await _tempFile!.exists()) {
+        return shelf.Response.notFound('Book not found');
+      }
       return shelf.Response.ok(
         _tempFile?.openRead(),
         headers: {
@@ -113,8 +123,7 @@ class Server {
             'assets/fonts/SourceHanSerifSC-Regular.otf',
         'SourceHanSerifSC-Bold.otf': 'assets/fonts/SourceHanSerifSC-Bold.otf',
       };
-      final assetPath =
-          bundled[path.basename(Uri.decodeComponent(uriPath))];
+      final assetPath = bundled[path.basename(Uri.decodeComponent(uriPath))];
       if (assetPath == null) {
         return shelf.Response.notFound('Font not found');
       }
@@ -122,8 +131,7 @@ class Server {
       return shelf.Response.ok(
         data.buffer.asUint8List(),
         headers: {
-          'Content-Type':
-              assetPath.endsWith('.otf') ? 'font/otf' : 'font/ttf',
+          'Content-Type': assetPath.endsWith('.otf') ? 'font/otf' : 'font/ttf',
           'Access-Control-Allow-Origin': '*',
           'cache-control': 'public, max-age=31536000',
         },
@@ -132,7 +140,7 @@ class Server {
       Directory fontDir = getFontDir();
       final file = File(
           '${fontDir.path}/${path.basename(Uri.decodeComponent(uriPath))}');
-      if (!file.existsSync()) {
+      if (!_isInside(fontDir, file)) {
         return shelf.Response.notFound('Font not found');
       }
       return shelf.Response.ok(
@@ -194,7 +202,7 @@ class Server {
     final bookPath = Uri.decodeComponent(request.url.path.substring(5));
     final file = File(bookPath);
     AnxLog.info('Server: Request for book: $bookPath');
-    if (!file.existsSync()) {
+    if (!_isInside(getFileDir(), file)) {
       return shelf.Response.notFound('Book not found');
     }
     final headers = {
@@ -212,7 +220,11 @@ class Server {
     } else if (bgimgPath.startsWith('local/')) {
       final path =
           getBgimgDir().path + Platform.pathSeparator + bgimgPath.substring(6);
-      file = (await File(path).readAsBytes()).buffer;
+      final image = File(path);
+      if (!_isInside(getBgimgDir(), image)) {
+        return shelf.Response.notFound('Bgimg not found');
+      }
+      file = (await image.readAsBytes()).buffer;
     } else {
       return shelf.Response.notFound('Bgimg not found');
     }
@@ -221,5 +233,15 @@ class Server {
       'Access-Control-Allow-Origin': '*',
     };
     return shelf.Response.ok(file.asUint8List(), headers: headers);
+  }
+
+  bool _isInside(Directory directory, File file) {
+    try {
+      return file.existsSync() &&
+          path.isWithin(directory.resolveSymbolicLinksSync(),
+              file.resolveSymbolicLinksSync());
+    } on FileSystemException {
+      return false;
+    }
   }
 }

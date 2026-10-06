@@ -147,6 +147,14 @@ ThemeData colorSchema(
             )
         };
 
+  return paperfoldComponentTheme(themeData);
+}
+
+/// Shared typography and surfaces for the paper pages and burgundy library.
+ThemeData paperfoldComponentTheme(ThemeData themeData) {
+  final colorScheme = themeData.colorScheme;
+  final brightness = colorScheme.brightness;
+  final gropedBackgroundColor = colorScheme.surface;
   final textTheme = _paperfoldTextTheme(themeData.textTheme);
   const surfaceShape = RoundedRectangleBorder(
     borderRadius: BorderRadius.all(Radius.circular(16)),

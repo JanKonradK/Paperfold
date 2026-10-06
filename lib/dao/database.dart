@@ -2,12 +2,10 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:paperfold/enums/book_status.dart';
-import 'package:paperfold/models/book.dart';
 import 'package:paperfold/utils/get_path/get_cache_dir.dart';
 import 'package:paperfold/utils/platform_utils.dart';
 
 import 'package:paperfold/config/shared_preference_provider.dart';
-import 'package:paperfold/service/book.dart';
 import 'package:paperfold/utils/get_path/get_base_path.dart';
 import 'package:paperfold/utils/get_path/databases_path.dart';
 import 'package:paperfold/utils/log/common.dart';
@@ -265,6 +263,7 @@ class DBHelper {
   static final DBHelper _instance = DBHelper._internal();
   static Database? _database;
   static Future<Database>? _databaseFuture;
+  static Future<void>? _replacement;
   static bool updatedDB = false;
 
   factory DBHelper() {
@@ -282,11 +281,39 @@ class DBHelper {
   /// connection or reading a null database. [after] lets startup finish the
   /// storage paths before the database opens.
   Future<Database> initDB({Future<void>? after}) {
+    final replacement = _replacement;
+    if (replacement != null) {
+      return replacement.then((_) => initDB(after: after));
+    }
+    return _initDB(after: after);
+  }
+
+  Future<Database> _initDB({Future<void>? after}) {
     final database = _database;
     if (database != null) {
       return Future.value(database);
     }
     return _databaseFuture ??= _openAndCacheDatabase(after: after);
+  }
+
+  /// Blocks new DAO connections until replacement and recovery finish.
+  /// The callback's `reopen` can open the new database without joining its own
+  /// wait. Pending startup opens finish before the old connection is closed.
+  static Future<T> withDatabaseClosed<T>(
+    Future<T> Function(Future<Database> Function() reopen) replace,
+  ) async {
+    while (_replacement != null) {
+      await _replacement;
+    }
+    final released = Completer<void>();
+    _replacement = released.future;
+    try {
+      await close();
+      return await replace(() => _instance._initDB());
+    } finally {
+      _replacement = null;
+      released.complete();
+    }
   }
 
   Future<Database> _openAndCacheDatabase({Future<void>? after}) async {
@@ -593,12 +620,8 @@ class DBHelper {
       case 3:
         // remove former book style
         Prefs().removeBookStyle();
-        final books = (await db.query('tb_books')).map(Book.fromDb);
-        for (final book in books) {
-          if (!File(book.coverFullPath).existsSync()) {
-            await resetBookCover(book);
-          }
-        }
+        // Cover extraction needs the reader server and an open database.
+        // Startup migration has neither; missing covers use the shelf fallback.
         continue case4;
       case4:
       case 4:

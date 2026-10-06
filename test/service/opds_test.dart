@@ -123,7 +123,8 @@ void main() {
         isTrue,
       );
       expect(
-        isOpdsCatalog('application/atom+xml; profile="opds-catalog"; kind=acquisition'),
+        isOpdsCatalog(
+            'application/atom+xml; profile="opds-catalog"; kind=acquisition'),
         isTrue,
         reason: 'servers quote and space their parameters differently',
       );
@@ -212,8 +213,7 @@ void main() {
     });
 
     test('a feed that declares no namespace still parses', () {
-      final OpdsFeed bare =
-          parseOpdsFeed(_atomBareNavigation, baseUri: _base);
+      final OpdsFeed bare = parseOpdsFeed(_atomBareNavigation, baseUri: _base);
 
       expect(bare.title, 'Library');
       expect(bare.navigation.single.title, 'By author');
@@ -271,6 +271,23 @@ void main() {
   });
 
   group('a server that says nothing useful', () {
+    test('a generic JSON media type still reads an OPDS 2.0 catalog', () {
+      final feed = parseOpdsFeed(_opds2,
+          baseUri: _base, contentType: 'application/json');
+      expect(feed.publications.single.title, 'The Farthest Shore');
+    });
+
+    test('well-formed login pages and unrelated JSON are not empty catalogs',
+        () {
+      for (final body in [
+        '<html><body>Sign in</body></html>',
+        '{"error":"Sign in"}'
+      ]) {
+        expect(
+            () => parseOpdsFeed(body, baseUri: _base), throwsFormatException);
+      }
+    });
+
     test('a JSON body is read as OPDS 2.0 with no content type', () {
       final OpdsFeed feed = parseOpdsFeed(_opds2, baseUri: _base);
       expect(feed.publications.single.title, 'The Farthest Shore');

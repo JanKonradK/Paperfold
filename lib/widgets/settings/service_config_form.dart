@@ -23,6 +23,7 @@ class ServiceConfigForm extends StatefulWidget {
 
 class _ServiceConfigFormState extends State<ServiceConfigForm> {
   late Map<String, dynamic> _currentConfig;
+  final Map<String, TextEditingController> _controllers = {};
   // Track password visibility for each password field
   final Map<String, bool> _passwordVisibility = {};
 
@@ -36,17 +37,39 @@ class _ServiceConfigFormState extends State<ServiceConfigForm> {
   void didUpdateWidget(ServiceConfigForm oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.initialConfig != widget.initialConfig) {
-      setState(() {
-        _currentConfig = Map.from(widget.initialConfig);
-      });
+      _currentConfig = Map.from(widget.initialConfig);
+      for (final item in widget.configItems) {
+        final controller = _controllers[item.key];
+        final text = _fieldText(item);
+        if (controller != null && controller.text != text) {
+          controller.text = text;
+        }
+      }
     }
   }
+
+  @override
+  void dispose() {
+    for (final controller in _controllers.values) {
+      controller.dispose();
+    }
+    super.dispose();
+  }
+
+  String _fieldText(ConfigItem item) =>
+      (_currentConfig[item.key] ?? item.defaultValue ?? '').toString();
+
+  TextEditingController _controller(ConfigItem item) =>
+      _controllers.putIfAbsent(
+        item.key,
+        () => TextEditingController(text: _fieldText(item)),
+      );
 
   void _updateConfig(String key, dynamic value) {
     setState(() {
       _currentConfig[key] = value;
     });
-    widget.onConfigChanged(_currentConfig);
+    widget.onConfigChanged(Map.from(_currentConfig));
   }
 
   void _togglePasswordVisibility(String key) {
@@ -75,14 +98,10 @@ class _ServiceConfigFormState extends State<ServiceConfigForm> {
           decoration: InputDecoration(
             labelText: item.label,
             helperText: item.description,
+            helperMaxLines: 4,
             border: const OutlineInputBorder(),
           ),
-          controller: TextEditingController(
-            text: _currentConfig[item.key]?.toString() ??
-                item.defaultValue?.toString() ??
-                '',
-          )..selection = TextSelection.collapsed(
-              offset: _currentConfig[item.key]?.toString().length ?? 0),
+          controller: _controller(item),
           onChanged: (value) => _updateConfig(item.key, value),
         );
 
@@ -90,23 +109,25 @@ class _ServiceConfigFormState extends State<ServiceConfigForm> {
         final isVisible = _passwordVisibility[item.key] ?? false;
         return TextField(
           obscureText: !isVisible,
+          autocorrect: false,
+          enableSuggestions: false,
           decoration: InputDecoration(
             labelText: item.label,
             helperText: item.description,
+            helperMaxLines: 4,
             border: const OutlineInputBorder(),
             suffixIcon: IconButton(
+              isSelected: isVisible,
+              tooltip: isVisible
+                  ? L10n.of(context).commonHidePassword
+                  : L10n.of(context).commonShowPassword,
               icon: Icon(
                 isVisible ? Icons.visibility_off : Icons.visibility,
               ),
               onPressed: () => _togglePasswordVisibility(item.key),
             ),
           ),
-          controller: TextEditingController(
-            text: _currentConfig[item.key]?.toString() ??
-                item.defaultValue?.toString() ??
-                '',
-          )..selection = TextSelection.collapsed(
-              offset: _currentConfig[item.key]?.toString().length ?? 0),
+          controller: _controller(item),
           onChanged: (value) => _updateConfig(item.key, value),
         );
 
@@ -115,15 +136,11 @@ class _ServiceConfigFormState extends State<ServiceConfigForm> {
           decoration: InputDecoration(
             labelText: item.label,
             helperText: item.description,
+            helperMaxLines: 4,
             border: const OutlineInputBorder(),
           ),
           keyboardType: TextInputType.number,
-          controller: TextEditingController(
-            text: _currentConfig[item.key]?.toString() ??
-                item.defaultValue?.toString() ??
-                '',
-          )..selection = TextSelection.collapsed(
-              offset: _currentConfig[item.key]?.toString().length ?? 0),
+          controller: _controller(item),
           onChanged: (value) =>
               _updateConfig(item.key, int.tryParse(value) ?? 0),
         );
@@ -205,8 +222,10 @@ class _ServiceConfigFormState extends State<ServiceConfigForm> {
           decoration: InputDecoration(
             labelText: item.label,
             helperText: item.description,
+            helperMaxLines: 4,
             border: const OutlineInputBorder(),
           ),
+          isExpanded: true,
           value: currentValue,
           items: item.options!.map((option) {
             return DropdownMenuItem<String>(
@@ -280,27 +299,22 @@ class _ServiceConfigFormState extends State<ServiceConfigForm> {
                   Expanded(
                     child: Text(
                       item.defaultValue?.toString() ?? '',
-                      style: const TextStyle(fontSize: 14),
+                      style: Theme.of(context).textTheme.bodyMedium,
                     ),
                   ),
                 ],
               ),
               if (item.link != null)
                 Padding(
-                  padding: const EdgeInsetsDirectional.only(
-                      start: 28.0, top: 4.0),
-                  child: GestureDetector(
-                    onTap: () => launchUrl(
+                  padding:
+                      const EdgeInsetsDirectional.only(start: 28.0, top: 4.0),
+                  child: TextButton(
+                    onPressed: () => launchUrl(
                       Uri.parse(item.link!),
                       mode: LaunchMode.externalApplication,
                     ),
                     child: Text(
                       L10n.of(context).settingsNarrateClickForHelp,
-                      style: TextStyle(
-                        color: Theme.of(context).primaryColor,
-                        decoration: TextDecoration.underline,
-                        fontSize: 14,
-                      ),
                     ),
                   ),
                 ),

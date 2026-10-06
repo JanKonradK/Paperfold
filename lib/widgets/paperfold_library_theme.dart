@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:paperfold/config/paperfold_tokens.dart';
 import 'package:paperfold/config/shared_preference_provider.dart';
+import 'package:paperfold/utils/color_scheme.dart';
 
 /// The library is the burgundy cover; the rest of the app is its paper.
 ThemeData paperfoldLibraryTheme(ThemeData base) {
@@ -11,30 +12,30 @@ ThemeData paperfoldLibraryTheme(ThemeData base) {
     trueBlack: false,
   ).copyWith(
     surface: PaperfoldTokens.cover.ground,
-    surfaceContainerLowest: PaperfoldTokens.cover.ground,
-    surfaceContainerLow: const Color(0xFF421D20),
-    surfaceContainer: const Color(0xFF4B2729),
-    surfaceContainerHigh: const Color(0xFF543033),
-    surfaceContainerHighest: const Color(0xFF5D393B),
+    surfaceDim: PaperfoldTokens.blackRaspberry,
+    surfaceBright: PaperfoldTokens.spicedHotChocolate,
+    surfaceContainerLowest: PaperfoldTokens.blackRaspberry,
+    surfaceContainerLow: PaperfoldTokens.darkSienna,
+    surfaceContainer: const Color(0xFF422629),
+    surfaceContainerHigh: const Color(0xFF4A3431),
+    surfaceContainerHighest: PaperfoldTokens.spicedHotChocolate,
+    shadow: PaperfoldTokens.blackRaspberry,
     primary: PaperfoldTokens.cover.foil,
     onPrimary: PaperfoldTokens.cover.ground,
     primaryContainer: PaperfoldTokens.cover.foil,
     onPrimaryContainer: PaperfoldTokens.cover.ground,
   );
-  return ThemeData(
+  final theme = paperfoldComponentTheme(ThemeData(
     useMaterial3: true,
     colorScheme: scheme,
-    scaffoldBackgroundColor: scheme.surface,
     textTheme: base.textTheme.apply(
       bodyColor: scheme.onSurface,
       displayColor: scheme.onSurface,
     ),
-    appBarTheme: AppBarTheme(
-      backgroundColor: scheme.surface,
+  ));
+  return theme.copyWith(
+    appBarTheme: theme.appBarTheme.copyWith(
       foregroundColor: scheme.primary,
-      surfaceTintColor: Colors.transparent,
-      elevation: 0,
-      scrolledUnderElevation: 0,
       systemOverlayStyle: SystemUiOverlayStyle.light,
     ),
     dividerColor: scheme.primary.withValues(alpha: 0.25),

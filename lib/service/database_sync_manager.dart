@@ -11,7 +11,6 @@ import 'package:path/path.dart';
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
-// import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 /// Database safe sync manager
 /// Provides safe database download, validation and recovery mechanisms
@@ -33,21 +32,19 @@ class DatabaseSyncManager {
     required String remoteDbFileName,
     void Function(int received, int total)? onProgress,
   }) async {
-    final databasesPath = await getAnxDataBasesPath();
     final cacheDir = AnxPlatform.isOhos
         ? '${await getAnxDataBasesPath()}/cache'
         : (await getAnxCacheDir()).path;
-    final localDbPath = join(databasesPath, 'app_database.db');
 
     // Generate temp file name (use timestamp to ensure uniqueness)
     final timestamp = DateTime.now().millisecondsSinceEpoch;
     final tempDbName = '$_tempDbPrefix$timestamp.db';
     final tempDbPath = join(cacheDir, tempDbName);
-
     try {
       AnxLog.info('DatabaseSync: Starting safe database download');
       AnxLog.info('DatabaseSync: Remote file: $remoteDbFileName');
       AnxLog.info('DatabaseSync: Temp file: $tempDbPath');
+      await io.Directory(cacheDir).create(recursive: true);
 
       // Step 1: Download to temp file
       await client.downloadFile(
@@ -56,60 +53,81 @@ class DatabaseSyncManager {
         onProgress: onProgress,
       );
 
-      AnxLog.info('DatabaseSync: Download completed, starting validation');
-
-      // Step 2: Validate downloaded database
-      final validationResult = await _validateDatabase(tempDbPath);
-      if (!validationResult.isValid) {
-        await _cleanupTempFile(tempDbPath);
-        return DatabaseSyncResult.failure(
-          'Database validation failed: ${validationResult.error}',
-          DatabaseSyncFailureType.validationFailed,
-        );
-      }
-
-      AnxLog.info(
-          'DatabaseSync: Validation passed, proceeding with replacement');
-
-      // Step 3: Backup current database
-      final backupPath = await _createBackup(localDbPath);
-      AnxLog.info('DatabaseSync: Created backup at: $backupPath');
-
-      // Step 4: Atomic replace database
-      await _atomicReplaceDatabase(tempDbPath, localDbPath);
-
-      // Step 5: Validate replaced database
-      final finalValidation = await _validateDatabase(localDbPath);
-      if (!finalValidation.isValid) {
-        AnxLog.severe(
-            'DatabaseSync: Final validation failed, recovering from backup');
-        await _recoverFromBackup(backupPath, localDbPath);
-        return DatabaseSyncResult.failure(
-          'Database replacement validation failed, recovered from backup',
-          DatabaseSyncFailureType.replacementFailed,
-        );
-      }
-
-      // Step 6: Cleanup and maintain backups
-      await _cleanupOldBackups();
-      await _cleanupTempFile(tempDbPath);
-
-      AnxLog.info(
-          'DatabaseSync: Safe database download completed successfully');
-      return DatabaseSyncResult.success('Database synchronized successfully');
+      return await restoreDatabase(tempDbPath);
     } catch (e) {
-      AnxLog.severe('DatabaseSync: Error during safe download: $e');
+      return DatabaseSyncResult.failure('Database download failed: $e',
+          DatabaseSyncFailureType.downloadFailed);
+    } finally {
       await _cleanupTempFile(tempDbPath);
-
-      return DatabaseSyncResult.failure(
-        'Database sync failed: $e',
-        DatabaseSyncFailureType.downloadFailed,
-      );
     }
   }
 
+  /// Replace the database only after validation, with rollback if opening fails.
+  static Future<DatabaseSyncResult> restoreDatabase(String sourcePath) async {
+    final localDbPath = join(await getAnxDataBasesPath(), 'app_database.db');
+    final validationResult = await validateDatabase(sourcePath);
+    if (!validationResult.isValid) {
+      return DatabaseSyncResult.failure(
+        'Database validation failed: ${validationResult.error}',
+        DatabaseSyncFailureType.validationFailed,
+      );
+    }
+    return DBHelper.withDatabaseClosed((reopen) async {
+      String? backupPath;
+      var replacing = false;
+      try {
+        AnxLog.info(
+            'DatabaseSync: Validation passed, proceeding with replacement');
+
+        // Step 3: Backup current database
+        backupPath = await _createBackup(localDbPath);
+        AnxLog.info('DatabaseSync: Created backup at: $backupPath');
+
+        // Step 4: Atomic replace database
+        replacing = true;
+        await _atomicReplaceDatabase(sourcePath, localDbPath);
+
+        // Step 5: Validate replaced database
+        final finalValidation = await validateDatabase(localDbPath);
+        if (!finalValidation.isValid) {
+          throw StateError(
+              'Database replacement validation failed: ${finalValidation.error}');
+        }
+        await reopen();
+
+        // Step 6: Cleanup and maintain backups
+        await _cleanupOldBackups();
+
+        AnxLog.info(
+            'DatabaseSync: Safe database download completed successfully');
+        return DatabaseSyncResult.success('Database synchronized successfully');
+      } catch (e) {
+        AnxLog.severe('DatabaseSync: Error during replacement: $e');
+        if (replacing && backupPath != null) {
+          try {
+            await _recoverFromBackup(backupPath, localDbPath);
+            await reopen();
+          } catch (recoveryError) {
+            return DatabaseSyncResult.failure(
+              'Database sync failed: $e. Recovery failed: $recoveryError. '
+              'Backup saved at $backupPath',
+              DatabaseSyncFailureType.replacementFailed,
+            );
+          }
+        }
+
+        return DatabaseSyncResult.failure(
+          'Database sync failed: $e',
+          replacing
+              ? DatabaseSyncFailureType.replacementFailed
+              : DatabaseSyncFailureType.downloadFailed,
+        );
+      }
+    });
+  }
+
   /// Validate database integrity
-  static Future<DatabaseValidationResult> _validateDatabase(
+  static Future<DatabaseValidationResult> validateDatabase(
       String dbPath) async {
     try {
       // Check if file exists and is not empty
@@ -123,13 +141,6 @@ class DatabaseSyncManager {
         // Database file should be at least 1KB
         return DatabaseValidationResult.invalid(
             'Database file too small: ${fileSize}B');
-      }
-
-      // First, ensure the database is converted from WAL mode to DELETE mode
-      // This is necessary because downloaded databases may be in WAL mode
-      // and SQLite can't open them properly without the WAL files
-      if (!AnxPlatform.isOhos) {
-        await DBHelper.fixDatabaseHeader(dbPath);
       }
 
       // Initialize FFI for desktop platforms
@@ -175,10 +186,6 @@ class DatabaseSyncManager {
             await db.rawQuery('SELECT COUNT(*) as count FROM tb_books');
         final count = bookCount.first['count'] as int;
 
-        if (count == 0) {
-          return DatabaseValidationResult.invalid('Books table is empty');
-        }
-
         // Check database version
         final versionResult = await db.rawQuery('PRAGMA user_version');
         final dbVersion = versionResult.first.values.first as int;
@@ -187,6 +194,9 @@ class DatabaseSyncManager {
           return DatabaseValidationResult.invalid(
               'Database version ($dbVersion) is newer than current version ($currentDbVersion)');
         }
+
+        // Let SQLite checkpoint any bundled WAL before the database is copied.
+        await db.rawQuery('PRAGMA journal_mode = DELETE');
 
         AnxLog.info(
             'DatabaseSync: Validation passed - $count books found, version $dbVersion');
@@ -205,9 +215,7 @@ class DatabaseSyncManager {
     final timestamp = DateTime.now().toIso8601String().replaceAll(':', '-');
     final backupName = '$_backupDbPrefix$timestamp.db';
     final backupPath = join(cacheDir.path, backupName);
-
-    // Ensure database is closed
-    await DBHelper.close();
+    await cacheDir.create(recursive: true);
 
     // Copy file
     await io.File(localDbPath).copy(backupPath);
@@ -218,19 +226,18 @@ class DatabaseSyncManager {
   /// Atomic replace database
   static Future<void> _atomicReplaceDatabase(
       String tempDbPath, String localDbPath) async {
-    // Ensure database is closed
-    await DBHelper.close();
-
     // Clean up local WAL files before replacement
     // This is critical on ALL platforms to avoid stale WAL/SHM files conflicting with the new DB
     await DBHelper.cleanupWalFiles(localDbPath);
 
-    // Use file move operation for atomic replacement
-    final tempFile = io.File(tempDbPath);
-    await tempFile.copy(localDbPath);
-
-    // Re-initialize database
-    await DBHelper().initDB();
+    // Stage beside the destination so rename stays on the same filesystem.
+    final stagedPath = '$localDbPath.incoming';
+    try {
+      await io.File(tempDbPath).copy(stagedPath);
+      await io.File(stagedPath).rename(localDbPath);
+    } finally {
+      await _cleanupTempFile(stagedPath);
+    }
   }
 
   /// Recover database from backup
@@ -242,7 +249,6 @@ class DatabaseSyncManager {
       await DBHelper.cleanupWalFiles(localDbPath);
 
       await io.File(backupPath).copy(localDbPath);
-      await DBHelper().initDB();
 
       AnxLog.info(
           'DatabaseSync: Successfully recovered from backup: $backupPath');

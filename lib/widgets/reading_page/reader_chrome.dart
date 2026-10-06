@@ -62,47 +62,54 @@ class ReaderChrome extends StatelessWidget {
     final media = MediaQuery.of(context);
     final duration = media.disableAnimations ? Duration.zero : _duration;
 
-    return IgnorePointer(
-      ignoring: !visible,
-      child: Stack(
-        children: [
-          Positioned.fill(
-            child: AnimatedOpacity(
-              opacity: visible ? 1 : 0,
-              duration: duration,
-              curve: _curve,
-              child: GestureDetector(
-                onTap: onDismiss,
-                behavior: HitTestBehavior.opaque,
-                child: ColoredBox(color: Colors.black.withValues(alpha: 0.32)),
+    return ExcludeFocus(
+      excluding: !visible,
+      child: ExcludeSemantics(
+        excluding: !visible,
+        child: IgnorePointer(
+          ignoring: !visible,
+          child: Stack(
+            children: [
+              Positioned.fill(
+                child: AnimatedOpacity(
+                  opacity: visible ? 1 : 0,
+                  duration: duration,
+                  curve: _curve,
+                  child: GestureDetector(
+                    onTap: onDismiss,
+                    behavior: HitTestBehavior.opaque,
+                    child:
+                        ColoredBox(color: Colors.black.withValues(alpha: 0.32)),
+                  ),
+                ),
               ),
-            ),
-          ),
-          Align(
-            alignment: Alignment.topCenter,
-            child: _Reveal(
-              visible: visible,
-              duration: duration,
-              from: const Offset(0, -1),
-              child: SafeArea(
-                bottom: false,
-                child: _constrain(_topBar(context)),
+              Align(
+                alignment: Alignment.topCenter,
+                child: _Reveal(
+                  visible: visible,
+                  duration: duration,
+                  from: const Offset(0, -1),
+                  child: SafeArea(
+                    bottom: false,
+                    child: _constrain(_topBar(context)),
+                  ),
+                ),
               ),
-            ),
-          ),
-          Align(
-            alignment: Alignment.bottomCenter,
-            child: _Reveal(
-              visible: visible,
-              duration: duration,
-              from: const Offset(0, 1),
-              child: SafeArea(
-                top: false,
-                child: _constrain(_bottomShell(context, media)),
+              Align(
+                alignment: Alignment.bottomCenter,
+                child: _Reveal(
+                  visible: visible,
+                  duration: duration,
+                  from: const Offset(0, 1),
+                  child: SafeArea(
+                    top: false,
+                    child: _constrain(_bottomShell(context, media)),
+                  ),
+                ),
               ),
-            ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
@@ -303,9 +310,8 @@ class _Tab extends StatelessWidget {
                   curve: ReaderChrome._curve,
                   height: 48,
                   decoration: BoxDecoration(
-                    color: selected
-                        ? scheme.primaryContainer
-                        : Colors.transparent,
+                    color:
+                        selected ? scheme.primaryContainer : Colors.transparent,
                     borderRadius: BorderRadius.circular(24),
                   ),
                   child: Icon(
