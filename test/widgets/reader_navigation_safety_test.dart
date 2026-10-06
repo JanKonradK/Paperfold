@@ -71,7 +71,7 @@ class _WebView extends Fake implements InAppWebViewController {
 }
 
 class _Player extends EpubPlayer {
-  _Player({required super.key, required super.book})
+  const _Player({required super.key, required super.book})
       : super(
           initialThemes: const [],
           showOrHideAppBarAndBottomBar: _noop,
@@ -230,5 +230,8 @@ void main() {
     expect(book.lastReadPosition, 'final-reading-location');
     await tester.pumpWidget(const SizedBox());
     expect(tester.takeException(), isNull);
-  });
+    // This integration test uses the app's native Windows database bootstrap.
+    // Linux CI still runs the portable DAO and migration tests; the app does
+    // not yet implement a native Linux database platform.
+  }, skip: !Platform.isWindows);
 }
