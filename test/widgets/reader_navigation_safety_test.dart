@@ -102,6 +102,29 @@ Widget _app(Widget child) => MaterialApp(
     );
 
 void main() {
+  testWidgets('reader brightness follows saved mode instead of app chrome',
+      (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    await Prefs().initPrefs();
+    final player = EpubPlayerState();
+    tester.platformDispatcher.platformBrightnessTestValue = Brightness.dark;
+    addTearDown(tester.platformDispatcher.clearPlatformBrightnessTestValue);
+    await tester.pumpWidget(MaterialApp(
+      theme: ThemeData.dark(),
+      home: const SizedBox(),
+    ));
+    expect(player.isDarkMode, isFalse);
+    await Prefs().saveThemeModeToPrefs('dark');
+    expect(player.isDarkMode, isTrue);
+    await Prefs().saveThemeModeToPrefs('system');
+    expect(player.isDarkMode, isTrue);
+    tester.platformDispatcher.platformBrightnessTestValue = Brightness.light;
+    expect(player.isDarkMode, isFalse);
+    await Prefs().saveThemeModeToPrefs('dark');
+    Prefs().eInkMode = true;
+    expect(player.isDarkMode, isFalse);
+  });
+
   testWidgets('opening awaits failed downloads and tolerates a removed caller',
       (tester) async {
     var status = Completer<SyncStatusModel>();

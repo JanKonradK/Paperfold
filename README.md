@@ -2,15 +2,18 @@
 
 Paperfold is an e-book reader, a note application, and a reading journal.
 
-## Version 1.75
+## Version 1.75.1
 
 - Continue reading from the library with one tap.
 - Open a book's journal to find its review, pages, and highlights.
 - Add a saved passage to the journal. Keep the quote and a link to its location.
 - Search books, highlights, reviews, and journal pages.
 - Export a book's journal to Markdown.
+- Find Highlights, Reading challenge, and Month tracker together in Journal.
+- Open Statistics and Settings directly from the main navigation.
 
-The update keeps the burgundy library, warm paper, and existing reader themes.
+Journal now uses the app's burgundy surfaces. The reader keeps its saved page theme.
+Tracker editors keep the entered value if a save fails.
 The database upgrade adds passage fields without replacing existing writing.
 
 ## Fork notice
@@ -35,7 +38,7 @@ Anxcye. The author of Anx Reader does not endorse Paperfold.
 ### Keep a journal
 
 - Write a review of a book.
-- Use the dot pages, the month tracker, and the reading challenge.
+- Write journal pages, record daily page totals, and set a yearly reading target.
 - Read the reading time statistics and the heatmap.
 
 ### Hold a library

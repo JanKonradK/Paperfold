@@ -10,9 +10,11 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:paperfold/config/paperfold_tokens.dart';
 import 'package:paperfold/config/shared_preference_provider.dart';
 import 'package:paperfold/l10n/generated/L10n.dart';
+import 'package:paperfold/main.dart';
 import 'package:paperfold/page/home_page.dart';
 import 'package:paperfold/utils/color_scheme.dart';
 import 'package:paperfold/widgets/bookshelf/bookcase.dart';
+import 'package:paperfold/widgets/paperfold_library_theme.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../test/widgets/shelf_home_fixtures.dart';
@@ -29,10 +31,12 @@ void main() {
     SharedPreferences.setMockInitialValues(<String, Object>{});
     await Prefs().initPrefs();
     fakeData = populatedData();
-    final titles = ['Rascal Does Not Dream of Santa Claus, Vol. 13',
+    final titles = [
+      'Rascal Does Not Dream of Santa Claus, Vol. 13',
       'Rascal Does Not Dream of Logical Witch, Vol. 3',
       'Rascal Does Not Dream of Petite Devil Kohai, Vol. 2',
-      'Rascal Does Not Dream of a Lost Singer, Vol. 10'];
+      'Rascal Does Not Dream of a Lost Singer, Vol. 10'
+    ];
     for (var i = 0; i < fakeData.readingNow.length; i++) {
       final book = fakeData.readingNow[i];
       book.title = titles[i];
@@ -66,19 +70,20 @@ void main() {
       ProviderScope(
         overrides: newTestOverrides(),
         child: MaterialApp(
+          navigatorKey: navigatorKey,
           debugShowCheckedModeBanner: false,
           locale: const Locale('en'),
           localizationsDelegates: L10n.localizationsDelegates,
           supportedLocales: L10n.supportedLocales,
-          home: Builder(
-            builder: (context) => RepaintBoundary(
+          builder: (context, child) => Theme(
+            data: paperfoldLibraryTheme(
+                colorSchema(Prefs(), context, Brightness.light)),
+            child: RepaintBoundary(
               key: boundary,
-              child: Theme(
-                data: colorSchema(Prefs(), context, Brightness.light),
-                child: HomePage(databaseReady: databaseReady.future),
-              ),
+              child: child!,
             ),
           ),
+          home: HomePage(databaseReady: databaseReady.future),
         ),
       ),
     );
@@ -90,9 +95,6 @@ void main() {
           const AssetImage('assets/images/paperfold_wordmark.png'),
           boundary.currentContext!,
         );
-        await precacheImage(
-            const AssetImage('assets/images/paperfold_paper.jpg'),
-            boundary.currentContext!);
         await Future<void>.delayed(const Duration(milliseconds: 100));
       });
       await tester.pumpAndSettle();
@@ -108,6 +110,26 @@ void main() {
       });
     }
 
+    Future<void> selectDestination(int index) async {
+      const labels = ['Journal', 'Library', 'Statistics', 'Settings'];
+      final rail = find.byType(NavigationRail);
+      await tester.tap(rail.evaluate().isEmpty
+          ? find.byKey(ValueKey('navigation-tab-$index'))
+          : find.descendant(of: rail, matching: find.text(labels[index])));
+      await tester.pumpAndSettle();
+    }
+
+    Future<void> captureOtherDestinations(String size) async {
+      for (final (index, name) in [
+        (0, 'journal'),
+        (2, 'statistics'),
+        (3, 'settings'),
+      ]) {
+        await selectDestination(index);
+        await capture('$name-$size');
+      }
+    }
+
     await capture('library-phone');
     final stage =
         tester.state<BookcaseState>(find.byType(Bookcase)).activeStage!;
@@ -115,16 +137,17 @@ void main() {
     await capture('book-phone');
     unawaited(stage.putBack());
     await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const ValueKey('navigation-tab-0')));
-    await capture('journal-phone');
-    await tester.tap(find.byKey(const ValueKey('navigation-tab-2')));
-    await capture('more-phone');
-    await tester.tap(find.byKey(const ValueKey('navigation-tab-1')));
+    await captureOtherDestinations('phone');
+    await selectDestination(1);
     tester.view.physicalSize = const Size(1100, 800);
     await capture('library-desktop');
+    await captureOtherDestinations('desktop');
+    await selectDestination(1);
     tester.view.physicalSize = const Size(320, 568);
     tester.binding.platformDispatcher.textScaleFactorTestValue = 2;
     await capture('library-large-text');
+    await captureOtherDestinations('large-text');
+    await tester.pumpWidget(const SizedBox.shrink());
     debugDisableShadows = previousShadowSetting;
   });
 }

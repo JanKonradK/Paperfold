@@ -1,6 +1,8 @@
-// The reading challenge page: the shelf, the year, and the target dialog.
+// The reading challenge page: progress, real books, and safe target changes.
 //
 //   flutter test test/widgets/reading_challenge_page_test.dart
+
+import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart';
@@ -56,6 +58,9 @@ class _Fake extends ReadingChallengeController {
 
   final ReadingChallengeData data;
   final List<int> saved = <int>[];
+  bool failSave = false;
+  int saveCalls = 0;
+  Completer<void>? pendingSave;
 
   @override
   Future<ReadingChallengeData> build() async {
@@ -69,6 +74,9 @@ class _Fake extends ReadingChallengeController {
 
   @override
   Future<int> setTarget(int target) async {
+    saveCalls++;
+    await pendingSave?.future;
+    if (failSave) throw StateError('storage unavailable');
     saved.add(target);
     return target;
   }
@@ -122,8 +130,8 @@ Widget _host(ReadingChallengeController Function() controller) {
 }
 
 int _countSemantics(WidgetTester tester) {
-  final SemanticsNode root = tester.binding.renderViews.single.owner!
-      .semanticsOwner!.rootSemanticsNode!;
+  final SemanticsNode root = tester
+      .binding.renderViews.single.owner!.semanticsOwner!.rootSemanticsNode!;
   int total = 0;
   void visit(SemanticsNode node) {
     total++;
@@ -224,41 +232,71 @@ void main() {
       await tester.pumpAndSettle();
       expect(fake.saved, <int>[12]);
     });
+
+    testWidgets('waits for a save and retains the target after failure',
+        (tester) async {
+      final fake = _Fake(_data())
+        ..failSave = true
+        ..pendingSave = Completer<void>();
+      await tester.pumpWidget(_host(() => fake));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byIcon(Icons.flag_outlined));
+      await tester.pumpAndSettle();
+      final field =
+          find.byKey(const ValueKey<String>('challenge-target-field'));
+      await tester.enterText(field, '42');
+      await tester.tap(find.text('Save'));
+      await tester.pump();
+      expect(find.byType(AlertDialog), findsOneWidget);
+      expect(tester.widget<FilledButton>(find.byType(FilledButton)).onPressed,
+          isNull);
+      expect(fake.saveCalls, 1);
+
+      fake.pendingSave!.complete();
+      await tester.pumpAndSettle();
+      expect(find.text('Your target could not be saved. Try again.'),
+          findsOneWidget);
+      expect(
+          tester
+              .widget<EditableText>(find.byType(EditableText))
+              .controller
+              .text,
+          '42');
+      fake.failSave = false;
+      await tester.tap(find.text('Save'));
+      await tester.pumpAndSettle();
+      expect(fake.saved, [42]);
+      expect(find.byType(AlertDialog), findsNothing);
+      expect(tester.takeException(), isNull);
+    });
   });
 
-  group('the shelf', () {
-    testWidgets('paints books, never a decorative empty spine',
+  group('the challenge', () {
+    testWidgets('shows real books without creating rows for the target',
         (WidgetTester tester) async {
       final SemanticsHandle handle = tester.ensureSemantics();
       await tester.pumpWidget(_host(() => _Fake(_data(target: 999))));
       await tester.pumpAndSettle();
 
-      expect(find.semantics.byLabel('Spine 1: A Wizard of Earthsea'), findsOne);
-      expect(find.semantics.byLabel('Spine 3: Tehanu'), findsOne);
-      expect(find.semantics.byLabel('Spine 4 is empty.'), findsNothing);
       expect(
-        find.semantics.byLabel(
-          'Reading challenge shelf. 2 of 999 books read, 1 being read now.',
-        ),
-        findsOne,
+        tester
+            .widgetList<ListTile>(find.byType(ListTile))
+            .map((tile) => (tile.title! as Text).data),
+        ['A Wizard of Earthsea', 'The Tombs of Atuan', 'Tehanu'],
       );
-
-      // The budget the old one-node-per-slot shelf blew: 999 slots meant a
-      // thousand semantics nodes on one screen.
       expect(_countSemantics(tester), lessThan(50));
       handle.dispose();
     });
 
-    testWidgets('a large target does not grow the shelf',
+    testWidgets('a large target keeps a compact progress summary',
         (WidgetTester tester) async {
       await tester.pumpWidget(_host(() => _Fake(_data(target: 999))));
       await tester.pumpAndSettle();
 
-      final Size shelf = tester.getSize(
-        find.byKey(const ValueKey<String>('challenge-shelf')),
+      final Size summary = tester.getSize(
+        find.byKey(const ValueKey<String>('challenge-progress')),
       );
-      // Three books, one row. 999 slots would have been about 25 000 pixels.
-      expect(shelf.height, lessThan(200));
+      expect(summary.height, lessThan(400));
     });
 
     testWidgets('a book keeps a 48 dp target and a tap action',
@@ -267,22 +305,22 @@ void main() {
       await tester.pumpWidget(_host(() => _Fake(_data())));
       await tester.pumpAndSettle();
 
-      final SemanticsNode spine = find.semantics
-          .byLabel('Spine 1: A Wizard of Earthsea')
+      final SemanticsNode book = find.semantics
+          .byLabel(RegExp('A Wizard of Earthsea'))
           .evaluate()
           .single;
-      expect(spine.rect.width, greaterThanOrEqualTo(48));
-      expect(spine.rect.height, greaterThanOrEqualTo(48));
-      expect(spine.getSemanticsData().hasAction(SemanticsAction.tap), isTrue);
+      expect(book.rect.width, greaterThanOrEqualTo(48));
+      expect(book.rect.height, greaterThanOrEqualTo(48));
+      expect(book.getSemanticsData().hasAction(SemanticsAction.tap), isTrue);
       handle.dispose();
     });
 
-    testWidgets('states the progress, the pace and the legend',
+    testWidgets('states progress, pace, and book status sections',
         (WidgetTester tester) async {
       await tester.pumpWidget(_host(() => _Fake(_data())));
       await tester.pumpAndSettle();
 
-      expect(find.text('2026 reading challenge'), findsOne);
+      expect(find.text('2026'), findsOne);
       expect(find.text('2 of 100 books'), findsOne);
       expect(find.text('A steady pace is 61 books by this point.'), findsOne);
       expect(find.text('Read'), findsOne);
@@ -291,7 +329,7 @@ void main() {
       expect(find.text('Want to read'), findsNothing);
     });
 
-    testWidgets('a legend key appears only for a state on the shelf',
+    testWidgets('a status section appears only when it contains books',
         (WidgetTester tester) async {
       await tester.pumpWidget(
         _host(() => _Fake(_data(readingNow: const <Book>[]))),
@@ -321,7 +359,7 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('No books on this shelf yet'), findsOne);
+      expect(find.text('No books in this challenge yet'), findsOne);
       expect(
         find.text(
           'Mark a book as Reading or finish a book to start filling the challenge.',
@@ -329,7 +367,7 @@ void main() {
         findsOne,
       );
       expect(
-        find.byKey(const ValueKey<String>('challenge-shelf')),
+        find.byType(ListTile),
         findsNothing,
       );
     });
@@ -340,18 +378,18 @@ void main() {
       await tester.pumpWidget(_host(_YearAware.new));
       await tester.pumpAndSettle();
 
-      expect(find.text('2026 reading challenge'), findsOne);
+      expect(find.text('2026'), findsOne);
       await tester.tap(
         find.byKey(const ValueKey<String>('challenge-previous-year')),
       );
       await tester.pumpAndSettle();
-      expect(find.text('2025 reading challenge'), findsOne);
+      expect(find.text('2025'), findsOne);
 
       await tester.tap(
         find.byKey(const ValueKey<String>('challenge-next-year')),
       );
       await tester.pumpAndSettle();
-      expect(find.text('2026 reading challenge'), findsOne);
+      expect(find.text('2026'), findsOne);
     });
 
     testWidgets('a failed load offers a retry', (WidgetTester tester) async {
@@ -359,12 +397,37 @@ void main() {
       await tester.pumpWidget(_host(() => broken));
       await tester.pumpAndSettle();
 
-      expect(find.text('The shelves could not be opened.'), findsOne);
+      expect(find.text('This could not be loaded.'), findsOne);
 
       final int before = broken.loads;
       await tester.tap(find.text('Retry'));
       await tester.pumpAndSettle();
       expect(broken.loads, greaterThan(before));
+    });
+
+    testWidgets('progress and target editing fit a narrow screen at 2x text',
+        (tester) async {
+      tester.view.physicalSize = const Size(320, 760);
+      tester.view.devicePixelRatio = 1;
+      tester.platformDispatcher.textScaleFactorTestValue = 2;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+      await tester.pumpWidget(_host(() => _Fake(_data())));
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+      final target = find.byIcon(Icons.flag_outlined).hitTestable();
+      await tester.scrollUntilVisible(
+        target,
+        250,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.pumpAndSettle();
+      expect(target, findsOneWidget);
+      await tester.tap(target);
+      await tester.pumpAndSettle();
+      expect(find.byType(TextFormField), findsOneWidget);
+      expect(tester.takeException(), isNull);
     });
   });
 }

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:paperfold/dao/reading_time.dart';
 import 'package:paperfold/enums/chart_mode.dart';
 import 'package:paperfold/enums/hint_key.dart';
@@ -8,7 +10,17 @@ import 'package:paperfold/page/journal/month_tracker_page.dart';
 import 'package:paperfold/page/journal/reading_challenge_page.dart';
 import 'package:paperfold/providers/month_tracker.dart';
 import 'package:paperfold/providers/reading_challenge.dart';
+import 'package:paperfold/providers/book_daily_reading_provider.dart';
+import 'package:paperfold/providers/heatmap_data.dart';
+import 'package:paperfold/providers/last_read_book_provider.dart';
+import 'package:paperfold/providers/random_highlight_provider.dart';
+import 'package:paperfold/providers/reading_completion_provider.dart';
+import 'package:paperfold/providers/reading_duration_trend_provider.dart';
+import 'package:paperfold/providers/reading_streak_provider.dart';
+import 'package:paperfold/providers/statictics_summary_value.dart';
 import 'package:paperfold/providers/statistic_data.dart';
+import 'package:paperfold/providers/total_reading_time.dart';
+import 'package:paperfold/utils/log/common.dart';
 import 'package:paperfold/utils/date/convert_seconds.dart';
 import 'package:paperfold/utils/date/week_of_year.dart';
 import 'package:paperfold/widgets/bookshelf/book_cover.dart';
@@ -25,9 +37,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 
 class StatisticPage extends ConsumerStatefulWidget {
-  const StatisticPage({super.key, this.controller});
+  const StatisticPage({super.key, this.controller, this.active = true});
 
   final ScrollController? controller;
+  final bool active;
 
   @override
   ConsumerState<StatisticPage> createState() => _StatisticPageState();
@@ -48,9 +61,47 @@ class _StatisticPageState extends ConsumerState<StatisticPage> {
     // auto-dispose and every section that watched it sat at one end of the
     // scroll view, so scrolling to the middle disposed it. Coming back rebuilt
     // it loading, which collapsed a section's extent and threw the offset to
-    // the top. This still drops the data when the page closes, so reopening
-    // reads fresh numbers.
+    // the top. Returning to a retained tab refreshes this data below.
     ref.listenManual(statisticDataProvider, (_, __) {});
+  }
+
+  @override
+  void didUpdateWidget(covariant StatisticPage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.active && !oldWidget.active) {
+      // Provider notifications must happen after the tab's build completes.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && widget.active) unawaited(_refreshData());
+      });
+    }
+  }
+
+  Future<void> _refreshData() async {
+    ref.invalidate(totalReadingTimeProvider);
+    ref.invalidate(heatmapDataProvider);
+    ref.invalidate(staticticsSummaryValueProvider);
+    ref.invalidate(readingStreakProvider);
+    ref.invalidate(readingDurationTrendProvider);
+    ref.invalidate(readingCompletionProvider);
+    ref.invalidate(lastReadBookProvider);
+    ref.invalidate(randomHighlightProvider);
+    ref.invalidate(bookDailyReadingProvider);
+    ref.invalidate(readingChallengeProvider);
+    ref.invalidate(monthTrackerProvider);
+    try {
+      await ref.read(statisticDataProvider.notifier).refresh();
+    } catch (error, stackTrace) {
+      AnxLog.warning('Could not refresh statistics', error, stackTrace);
+      if (!mounted || !widget.active) return;
+      final l10n = L10n.of(context);
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(l10n.commonLoadFailedTitle),
+        action: SnackBarAction(
+          label: l10n.commonRetry,
+          onPressed: _refreshData,
+        ),
+      ));
+    }
   }
 
   @override

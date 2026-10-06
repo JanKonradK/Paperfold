@@ -166,7 +166,7 @@ void main() {
     await tester.scrollUntilVisible(find.text('Review'), 250,
         scrollable: find.byType(Scrollable).first);
     expect(tester.takeException(), isNull);
-    await tester.scrollUntilVisible(find.text('Dot pages'), 250,
+    await tester.scrollUntilVisible(find.text('Journal pages'), 250,
         scrollable: find.byType(Scrollable).first);
     expect(tester.takeException(), isNull);
   });

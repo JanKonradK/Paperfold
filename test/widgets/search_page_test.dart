@@ -118,7 +118,7 @@ void main() {
 
     expect(find.text('Journal'), findsOneWidget);
     expect(find.text('Review'), findsOneWidget);
-    expect(find.text('Dot page 5'), findsOneWidget);
+    expect(find.text('Journal page 5'), findsOneWidget);
     expect(find.byType(SearchJournalTile), findsNWidgets(2));
     expect(find.text('The left hand of darkness'), findsNWidgets(2));
     final highlights = tester
@@ -164,7 +164,7 @@ void main() {
     await tester.testTextInput.receiveAction(TextInputAction.search);
     await tester.pumpAndSettle();
 
-    expect(find.text('Dot page 100'), findsOneWidget);
+    expect(find.text('Journal page 100'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 }

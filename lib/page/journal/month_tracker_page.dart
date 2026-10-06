@@ -7,56 +7,36 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:paperfold/config/paperfold_tokens.dart';
 import 'package:paperfold/l10n/generated/L10n.dart';
 import 'package:paperfold/providers/month_tracker.dart';
+import 'package:paperfold/utils/log/common.dart';
 
-/// The circular month tracker: one segment per day, keyed by pages read.
-///
-/// tb_reading_time already stores minutes per day and the statistics page
-/// draws those. This is the other measure, and the reference sheet asks for a
-/// ring rather than a bar chart. plan.md Section 8.
+/// Daily page totals, with both a visual ring and a native date entry path.
 class MonthTrackerPage extends ConsumerWidget {
   const MonthTrackerPage({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final L10n l10n = L10n.of(context);
-    final AsyncValue<MonthTrackerData> tracker =
-        ref.watch(monthTrackerProvider);
-    final DateTime month = ref.watch(trackedMonthProvider);
-    final DateTime now = DateTime.now();
-    final DateTime currentMonth = DateTime(now.year, now.month);
-
-    void step(int months) {
-      ref.read(trackedMonthProvider.notifier).state =
-          DateTime(month.year, month.month + months);
-    }
-
+    final l10n = L10n.of(context);
+    final tracker = ref.watch(monthTrackerProvider);
     return Scaffold(
-      appBar: AppBar(
-        title: Text(l10n.monthTrackerTitle),
-        actions: <Widget>[
-          IconButton(
-            key: const ValueKey<String>('month-tracker-previous'),
-            icon: const Icon(Icons.chevron_left),
-            tooltip: l10n.monthTrackerPreviousMonth,
-            onPressed: () => step(-1),
+      appBar: AppBar(title: Text(l10n.monthTrackerTitle)),
+      body: SafeArea(
+        child: Align(
+          alignment: Alignment.topCenter,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 760),
+            child: tracker.when(
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (error, stackTrace) => _MonthMessage(
+                title: l10n.commonLoadFailedTitle,
+                body: l10n.statisticTrackerLoadError,
+                actionLabel: l10n.commonRetry,
+                onAction: () =>
+                    ref.read(monthTrackerProvider.notifier).refresh(),
+              ),
+              data: (data) => _MonthTrackerView(data: data),
+            ),
           ),
-          IconButton(
-            key: const ValueKey<String>('month-tracker-next'),
-            icon: const Icon(Icons.chevron_right),
-            tooltip: l10n.monthTrackerNextMonth,
-            onPressed: month.isBefore(currentMonth) ? () => step(1) : null,
-          ),
-        ],
-      ),
-      body: tracker.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (Object error, StackTrace stackTrace) => _MonthMessage(
-          title: l10n.shelfLoadErrorTitle,
-          body: l10n.statisticTrackerLoadError,
-          actionLabel: l10n.commonRetry,
-          onAction: () => ref.read(monthTrackerProvider.notifier).refresh(),
         ),
-        data: (MonthTrackerData data) => _MonthTrackerView(data: data),
       ),
     );
   }
@@ -69,58 +49,117 @@ class _MonthTrackerView extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final L10n l10n = L10n.of(context);
-    final ThemeData theme = Theme.of(context);
-    final MaterialLocalizations material = MaterialLocalizations.of(context);
+    final l10n = L10n.of(context);
+    final theme = Theme.of(context);
+    final material = MaterialLocalizations.of(context);
+    final month = ref.watch(trackedMonthProvider);
+    final now = DateTime.now();
+    final currentMonth = DateTime(now.year, now.month);
+
+    void step(int amount) {
+      ref.read(trackedMonthProvider.notifier).state =
+          DateTime(month.year, month.month + amount);
+    }
+
+    Future<void> chooseDay() async {
+      final day = await showDatePicker(
+        context: context,
+        helpText: l10n.monthTrackerChooseDay,
+        initialDate: DateTime(data.year, data.month, data.today ?? 1),
+        firstDate: DateTime(data.year, data.month),
+        lastDate: DateTime(data.year, data.month + 1, 0),
+      );
+      if (day != null && context.mounted) {
+        await _editTrackerDay(context, ref, data, day.day);
+      }
+    }
 
     return RefreshIndicator(
       onRefresh: () => ref.read(monthTrackerProvider.notifier).refresh(),
       child: ListView(
-        padding: EdgeInsets.only(
-          left: 16,
-          right: 16,
-          top: 16,
-          bottom: 96 + MediaQuery.viewPaddingOf(context).bottom,
-        ),
-        children: <Widget>[
-          Text(
-            material.formatMonthYear(DateTime(data.year, data.month)),
-            style: theme.textTheme.headlineSmall,
-          ),
-          const SizedBox(height: 4),
-          Text(
-            l10n.monthTrackerPagesTotal(data.totalPages),
-            style: theme.textTheme.bodyLarge,
-          ),
-          Text(
-            l10n.monthTrackerDaysRead(data.daysRead),
-            style: theme.textTheme.bodyMedium
-                ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
+        children: [
+          Row(
+            children: [
+              IconButton(
+                key: const ValueKey<String>('month-tracker-previous'),
+                icon: const Icon(Icons.chevron_left),
+                tooltip: l10n.monthTrackerPreviousMonth,
+                onPressed:
+                    month.year > 1 || month.month > 1 ? () => step(-1) : null,
+              ),
+              Expanded(
+                child: Text(
+                  material.formatMonthYear(DateTime(data.year, data.month)),
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.headlineSmall,
+                ),
+              ),
+              IconButton(
+                key: const ValueKey<String>('month-tracker-next'),
+                icon: const Icon(Icons.chevron_right),
+                tooltip: l10n.monthTrackerNextMonth,
+                onPressed: month.isBefore(currentMonth) ? () => step(1) : null,
+              ),
+            ],
           ),
           const SizedBox(height: 20),
-          Text(
-            l10n.monthTrackerPagesPerDay,
-            style: theme.textTheme.titleMedium,
+          Wrap(
+            alignment: WrapAlignment.spaceBetween,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: 20,
+            runSpacing: 16,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(l10n.monthTrackerPagesTotal(data.totalPages),
+                      style: theme.textTheme.titleLarge),
+                  const SizedBox(height: 4),
+                  Text(
+                    l10n.monthTrackerDaysRead(data.daysRead),
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+              FilledButton.icon(
+                onPressed: chooseDay,
+                icon: const Icon(Icons.edit_calendar_outlined),
+                label: Text(l10n.monthTrackerRecordPages),
+              ),
+            ],
           ),
+          const SizedBox(height: 24),
+          Text(l10n.monthTrackerPagesPerDay,
+              style: theme.textTheme.titleMedium),
           const SizedBox(height: 12),
-          if (data.daysRead == 0) ...<Widget>[
+          MonthTrackerRing(data: data),
+          const SizedBox(height: 20),
+          const _RingLegend(),
+          const SizedBox(height: 24),
+          if (data.daysRead == 0) ...[
             _MonthEmptyState(
               title: l10n.monthTrackerEmptyTitle,
               body: l10n.monthTrackerEmptyBody,
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 16),
           ],
-          MonthTrackerRing(data: data),
-          const SizedBox(height: 20),
-          const _RingLegend(),
+          Text(
+            l10n.monthTrackerManualEntryHint,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
         ],
       ),
     );
   }
 }
 
-/// The painted ring shared by the tracker page and the Statistics section.
-/// One canvas holds all day segments and labels.
+/// Shared by the tracker and Statistics. Each day remains directly editable.
 class MonthTrackerRing extends ConsumerWidget {
   const MonthTrackerRing({
     super.key,
@@ -130,38 +169,29 @@ class MonthTrackerRing extends ConsumerWidget {
 
   @visibleForTesting
   final double maximumDiameter;
-
   final MonthTrackerData data;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final L10n l10n = L10n.of(context);
-    final ColorScheme scheme = Theme.of(context).colorScheme;
-    final TextDirection textDirection = Directionality.of(context);
-    final double scale =
-        MediaQuery.textScalerOf(context).scale(1).clamp(1.0, 1.6);
-
+    final l10n = L10n.of(context);
+    final scheme = Theme.of(context).colorScheme;
+    final textDirection = Directionality.of(context);
+    final scale = MediaQuery.textScalerOf(context).scale(1).clamp(1.0, 1.6);
     return LayoutBuilder(
-      builder: (BuildContext context, BoxConstraints constraints) {
-        final double diameter = math.min(
-          constraints.maxWidth,
-          maximumDiameter * scale,
-        );
-        final _RingLayout layout = _RingLayout(
+      builder: (context, constraints) {
+        final diameter =
+            math.min(constraints.maxWidth, maximumDiameter * scale);
+        final layout = _RingLayout(
           diameter: diameter,
           days: data.dayCount,
           scale: scale,
         );
-
-        void openDay(int day) => _editDay(context, ref, day);
-
+        void openDay(int day) => _editTrackerDay(context, ref, data, day);
         return Center(
           child: GestureDetector(
-            onTapUp: (TapUpDetails details) {
-              final int? day = layout.dayAt(details.localPosition);
-              if (day != null) {
-                openDay(day);
-              }
+            onTapUp: (details) {
+              final day = layout.dayAt(details.localPosition);
+              if (day != null) openDay(day);
             },
             child: CustomPaint(
               size: Size.square(diameter),
@@ -174,7 +204,7 @@ class MonthTrackerRing extends ConsumerWidget {
                   data.daysRead,
                   data.totalPages,
                 ),
-                dayLabel: (int day) => l10n.monthTrackerDaySemanticLabel(
+                dayLabel: (day) => l10n.monthTrackerDaySemanticLabel(
                   day,
                   data.pagesFor(day),
                 ),
@@ -187,66 +217,126 @@ class MonthTrackerRing extends ConsumerWidget {
       },
     );
   }
+}
 
-  Future<void> _editDay(BuildContext context, WidgetRef ref, int day) async {
-    final L10n l10n = L10n.of(context);
-    final MaterialLocalizations material = MaterialLocalizations.of(context);
-    final int currentPages = data.pagesFor(day);
-    final bool wasRecorded = data.isRecorded(day);
-    String pageText = wasRecorded ? currentPages.toString() : '';
-
-    final int? pages = await showDialog<int>(
+Future<void> _editTrackerDay(
+  BuildContext context,
+  WidgetRef ref,
+  MonthTrackerData data,
+  int day,
+) =>
+    showDialog<void>(
       context: context,
-      builder: (BuildContext context) => AlertDialog(
-        title: Text(
-          material.formatFullDate(DateTime(data.year, data.month, day)),
-        ),
+      builder: (_) => _DayPagesDialog(
+        day: DateTime(data.year, data.month, day),
+        currentPages: data.isRecorded(day) ? data.pagesFor(day) : null,
+        onSave: (pages) => ref.read(monthTrackerProvider.notifier).setPages(
+              DateTime(data.year, data.month, day),
+              pages,
+            ),
+      ),
+    );
+
+class _DayPagesDialog extends StatefulWidget {
+  const _DayPagesDialog({
+    required this.day,
+    required this.currentPages,
+    required this.onSave,
+  });
+
+  final DateTime day;
+  final int? currentPages;
+  final Future<void> Function(int) onSave;
+
+  @override
+  State<_DayPagesDialog> createState() => _DayPagesDialogState();
+}
+
+class _DayPagesDialogState extends State<_DayPagesDialog> {
+  late String _text = widget.currentPages?.toString() ?? '';
+  String? _error;
+  bool _saving = false;
+
+  Future<void> _submit() async {
+    if (_saving) return;
+    final pages = int.tryParse(_text.trim());
+    if (pages == null || pages < 0) {
+      setState(() => _error = L10n.of(context).monthTrackerInvalidPages);
+      return;
+    }
+    setState(() {
+      _saving = true;
+      _error = null;
+    });
+    try {
+      await widget.onSave(pages);
+      if (mounted) Navigator.of(context).pop();
+    } catch (error, stackTrace) {
+      AnxLog.warning('Could not save daily pages', error, stackTrace);
+      if (mounted) {
+        setState(() => _error = L10n.of(context).monthTrackerSaveFailed);
+      }
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = L10n.of(context);
+    return PopScope(
+      canPop: !_saving,
+      child: AlertDialog(
+        scrollable: true,
+        title:
+            Text(MaterialLocalizations.of(context).formatFullDate(widget.day)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            Text(
-              wasRecorded
-                  ? l10n.monthTrackerDayCurrentPages(currentPages)
-                  : l10n.monthTrackerDayNotRecorded,
-            ),
+          children: [
+            Text(widget.currentPages != null
+                ? l10n.monthTrackerDayCurrentPages(widget.currentPages!)
+                : l10n.monthTrackerDayNotRecorded),
             const SizedBox(height: 16),
             TextFormField(
-              initialValue: pageText,
-              onChanged: (String value) => pageText = value,
+              key: const ValueKey<String>('month-page-total-field'),
+              initialValue: _text,
+              enabled: !_saving,
               autofocus: true,
               keyboardType: TextInputType.number,
-              inputFormatters: <TextInputFormatter>[
-                FilteringTextInputFormatter.digitsOnly,
-              ],
+              textInputAction: TextInputAction.done,
+              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
               decoration: InputDecoration(
                 labelText: l10n.monthTrackerNewPagesLabel,
                 suffixText: l10n.monthTrackerPagesLabel,
+                errorText: _error,
+                errorMaxLines: 3,
               ),
-              onFieldSubmitted: (String value) =>
-                  Navigator.of(context).pop(int.tryParse(value.trim())),
+              onChanged: (value) {
+                _text = value;
+                if (_error != null) setState(() => _error = null);
+              },
+              onFieldSubmitted: (_) => _submit(),
             ),
           ],
         ),
-        actions: <Widget>[
+        actions: [
           TextButton(
-            onPressed: () => Navigator.of(context).pop(),
+            onPressed: _saving ? null : () => Navigator.of(context).pop(),
             child: Text(l10n.commonCancel),
           ),
-          TextButton(
-            onPressed: () =>
-                Navigator.of(context).pop(int.tryParse(pageText.trim())),
-            child: Text(l10n.commonSave),
+          FilledButton(
+            onPressed: _saving ? null : _submit,
+            child: _saving
+                ? const SizedBox.square(
+                    dimension: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : Text(l10n.commonSave),
           ),
         ],
       ),
     );
-    if (context.mounted && pages != null) {
-      await ref.read(monthTrackerProvider.notifier).setPages(
-            DateTime(data.year, data.month, day),
-            pages,
-          );
-    }
   }
 }
 
@@ -462,7 +552,7 @@ class _MonthRingPainter extends CustomPainter {
       '${data.totalPages}',
       scheme.onSurface,
       totalSize,
-      PaperfoldTypeTokens.journalFamily,
+      PaperfoldTypeTokens.chromeFamily,
     );
     if (total.width > maximumWidth && total.width > 0) {
       totalSize *= maximumWidth / total.width;
@@ -471,7 +561,7 @@ class _MonthRingPainter extends CustomPainter {
         '${data.totalPages}',
         scheme.onSurface,
         totalSize,
-        PaperfoldTypeTokens.journalFamily,
+        PaperfoldTypeTokens.chromeFamily,
       );
     }
     final TextPainter unit = _centreText(
@@ -650,7 +740,9 @@ class _RingLegendKey extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 8),
-        Text(label, style: Theme.of(context).textTheme.labelLarge),
+        Flexible(
+          child: Text(label, style: Theme.of(context).textTheme.labelLarge),
+        ),
       ],
     );
   }
@@ -721,7 +813,7 @@ class _MonthMessage extends StatelessWidget {
     final ThemeData theme = Theme.of(context);
 
     return Center(
-      child: Padding(
+      child: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 420),

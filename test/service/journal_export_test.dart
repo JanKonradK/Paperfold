@@ -69,11 +69,11 @@ void main() {
     final markdown = journalToMarkdown(book, null, pages, l10n);
 
     expect(markdown, isNot(contains('## Review')));
-    expect(markdown, isNot(contains('### Dot page 2')));
-    expect(markdown.indexOf('### Dot page 1'),
-        lessThan(markdown.indexOf('### Dot page 3')));
-    expect(markdown.indexOf('### Dot page 3'),
-        lessThan(markdown.indexOf('### Dot page 4')));
+    expect(markdown, isNot(contains('### Journal page 2')));
+    expect(markdown.indexOf('### Journal page 1'),
+        lessThan(markdown.indexOf('### Journal page 3')));
+    expect(markdown.indexOf('### Journal page 3'),
+        lessThan(markdown.indexOf('### Journal page 4')));
     expect(markdown, contains('**Chapter Title:** Winter'));
     expect(markdown, contains('> A passage  \n> Its second line'));
     expect(markdown, contains(r'CFI: epubcfi\(/6/2\[chapter\]\!/4/2/1:0\)'));

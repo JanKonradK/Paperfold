@@ -4,9 +4,14 @@ import 'package:paperfold/config/paperfold_tokens.dart';
 import 'package:paperfold/config/shared_preference_provider.dart';
 import 'package:paperfold/utils/color_scheme.dart';
 
-/// The library is the burgundy cover; the rest of the app is its paper.
+/// Shared burgundy chrome for the default brand theme, including pushed routes.
+/// Explicit dark, custom, and eInk themes keep their selected surfaces.
 ThemeData paperfoldLibraryTheme(ThemeData base) {
-  if (Prefs().eInkMode || !Prefs().useBrandTheme) return base;
+  if (Prefs().eInkMode ||
+      !Prefs().useBrandTheme ||
+      base.brightness == Brightness.dark) {
+    return base;
+  }
   final scheme = PaperfoldTokens.colorScheme(
     Brightness.dark,
     trueBlack: false,

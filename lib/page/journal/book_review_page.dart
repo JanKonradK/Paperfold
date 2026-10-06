@@ -9,7 +9,7 @@ import 'package:paperfold/providers/journal_home.dart';
 import 'package:paperfold/utils/log/common.dart';
 import 'package:paperfold/widgets/common/load_failure.dart';
 
-/// The review sheet for one book. plan.md Section 3.2 fixes the six ratings.
+/// The review for one book. plan.md Section 3.2 fixes the six ratings.
 ///
 /// The sheet saves on leaving rather than behind a Save button: this is a
 /// journal, and a reader who writes a thought and presses Back should not lose
@@ -152,7 +152,7 @@ class _BookReviewPageState extends ConsumerState<BookReviewPage> {
             IconButton(
               tooltip: l10n.reviewOpenPages,
               icon: const Icon(Icons.article_outlined),
-              // Save before leaving: the dot pages write to the same journal,
+              // Save before leaving: the pages write to the same journal,
               // and coming back to a stale sheet would lose this one's edits.
               onPressed: review == null || _saving || _openingPages
                   ? null
@@ -184,84 +184,96 @@ class _BookReviewPageState extends ConsumerState<BookReviewPage> {
                 ? const Center(child: CircularProgressIndicator())
                 : AbsorbPointer(
                     absorbing: _saving || _allowPop,
-                    child: ListView(
-                      padding: EdgeInsets.only(
-                        left: 16,
-                        right: 16,
-                        top: 8,
-                        // The keyboard must never sit on top of the field being
-                        // typed into. plan.md Section 5.3 makes the IME inset
-                        // non-negotiable.
-                        bottom: 32 + MediaQuery.viewInsetsOf(context).bottom,
-                      ),
-                      children: [
-                        _RatingRow(
-                          label: l10n.reviewRatingOverall,
-                          value: review.ratingOverall,
-                          onChanged: (value) => _setRating(
-                            (r) => r.copyWith(ratingOverall: value),
+                    child: SafeArea(
+                      top: false,
+                      child: Align(
+                        alignment: Alignment.topCenter,
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 760),
+                          child: ListView(
+                            keyboardDismissBehavior:
+                                ScrollViewKeyboardDismissBehavior.onDrag,
+                            padding: EdgeInsets.only(
+                              left: 20,
+                              right: 20,
+                              top: 16,
+                              // The keyboard must never sit on top of the field being
+                              // typed into. plan.md Section 5.3 makes the IME inset
+                              // non-negotiable.
+                              bottom:
+                                  32 + MediaQuery.viewInsetsOf(context).bottom,
+                            ),
+                            children: [
+                              _RatingRow(
+                                label: l10n.reviewRatingOverall,
+                                value: review.ratingOverall,
+                                onChanged: (value) => _setRating(
+                                  (r) => r.copyWith(ratingOverall: value),
+                                ),
+                              ),
+                              _RatingRow(
+                                label: l10n.reviewRatingPlot,
+                                value: review.ratingPlot,
+                                onChanged: (value) => _setRating(
+                                    (r) => r.copyWith(ratingPlot: value)),
+                              ),
+                              _RatingRow(
+                                label: l10n.reviewRatingEnding,
+                                value: review.ratingEnding,
+                                onChanged: (value) => _setRating(
+                                    (r) => r.copyWith(ratingEnding: value)),
+                              ),
+                              _RatingRow(
+                                label: l10n.reviewRatingWorld,
+                                value: review.ratingWorld,
+                                onChanged: (value) => _setRating(
+                                    (r) => r.copyWith(ratingWorld: value)),
+                              ),
+                              _RatingRow(
+                                label: l10n.reviewRatingCharacters,
+                                value: review.ratingCharacters,
+                                onChanged: (value) => _setRating(
+                                    (r) => r.copyWith(ratingCharacters: value)),
+                              ),
+                              _RatingRow(
+                                label: l10n.reviewRatingSpice,
+                                value: review.ratingSpice,
+                                // Drawn with a chili rather than a star. The stored value
+                                // is the same number.
+                                icon: Icons.local_fire_department_rounded,
+                                onChanged: (value) => _setRating(
+                                    (r) => r.copyWith(ratingSpice: value)),
+                              ),
+                              const SizedBox(height: 8),
+                              _Field(
+                                  label: l10n.reviewGenre,
+                                  controller: _genre,
+                                  readOnly: _saving || _allowPop),
+                              _Field(
+                                  label: l10n.reviewFormat,
+                                  controller: _format,
+                                  readOnly: _saving || _allowPop),
+                              _Field(
+                                label: l10n.reviewFavoriteCharacter,
+                                controller: _character,
+                                readOnly: _saving || _allowPop,
+                              ),
+                              _Field(
+                                label: l10n.reviewFavoriteQuote,
+                                controller: _quote,
+                                readOnly: _saving || _allowPop,
+                                maxLines: 3,
+                              ),
+                              _Field(
+                                label: l10n.reviewThoughts,
+                                controller: _thoughts,
+                                readOnly: _saving || _allowPop,
+                                maxLines: 8,
+                              ),
+                            ],
                           ),
                         ),
-                        _RatingRow(
-                          label: l10n.reviewRatingPlot,
-                          value: review.ratingPlot,
-                          onChanged: (value) =>
-                              _setRating((r) => r.copyWith(ratingPlot: value)),
-                        ),
-                        _RatingRow(
-                          label: l10n.reviewRatingEnding,
-                          value: review.ratingEnding,
-                          onChanged: (value) => _setRating(
-                              (r) => r.copyWith(ratingEnding: value)),
-                        ),
-                        _RatingRow(
-                          label: l10n.reviewRatingWorld,
-                          value: review.ratingWorld,
-                          onChanged: (value) =>
-                              _setRating((r) => r.copyWith(ratingWorld: value)),
-                        ),
-                        _RatingRow(
-                          label: l10n.reviewRatingCharacters,
-                          value: review.ratingCharacters,
-                          onChanged: (value) => _setRating(
-                              (r) => r.copyWith(ratingCharacters: value)),
-                        ),
-                        _RatingRow(
-                          label: l10n.reviewRatingSpice,
-                          value: review.ratingSpice,
-                          // Drawn with a chili rather than a star. The stored value
-                          // is the same number.
-                          icon: Icons.local_fire_department_rounded,
-                          onChanged: (value) =>
-                              _setRating((r) => r.copyWith(ratingSpice: value)),
-                        ),
-                        const SizedBox(height: 8),
-                        _Field(
-                            label: l10n.reviewGenre,
-                            controller: _genre,
-                            readOnly: _saving || _allowPop),
-                        _Field(
-                            label: l10n.reviewFormat,
-                            controller: _format,
-                            readOnly: _saving || _allowPop),
-                        _Field(
-                          label: l10n.reviewFavoriteCharacter,
-                          controller: _character,
-                          readOnly: _saving || _allowPop,
-                        ),
-                        _Field(
-                          label: l10n.reviewFavoriteQuote,
-                          controller: _quote,
-                          readOnly: _saving || _allowPop,
-                          maxLines: 3,
-                        ),
-                        _Field(
-                          label: l10n.reviewThoughts,
-                          controller: _thoughts,
-                          readOnly: _saving || _allowPop,
-                          maxLines: 8,
-                        ),
-                      ],
+                      ),
                     ),
                   ),
       ),
@@ -333,6 +345,7 @@ class _Field extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: TextField(
@@ -340,9 +353,12 @@ class _Field extends StatelessWidget {
         readOnly: readOnly,
         maxLines: maxLines,
         textCapitalization: TextCapitalization.sentences,
+        style: theme.textTheme.bodyLarge,
         decoration: InputDecoration(
           labelText: label,
-          border: const OutlineInputBorder(),
+          filled: true,
+          fillColor: theme.colorScheme.surfaceContainerLow,
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
         ),
       ),
     );

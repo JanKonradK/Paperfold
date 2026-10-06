@@ -27,7 +27,6 @@ import 'package:paperfold/providers/reading_challenge.dart';
 import 'package:paperfold/providers/sync.dart';
 import 'package:paperfold/config/shared_preference_provider.dart';
 import 'package:paperfold/utils/toast/common.dart';
-import 'package:paperfold/widgets/ornament.dart';
 import 'package:paperfold/widgets/common/load_failure.dart';
 import 'package:paperfold/widgets/paperfold_glass_surface.dart';
 import 'package:paperfold/widgets/paperfold_logo_mark.dart';
@@ -62,6 +61,7 @@ class HomePage extends ConsumerStatefulWidget {
 class _HomePageState extends ConsumerState<HomePage> {
   int _destination = 1;
   List<int> _destinationHistory = [1];
+  final Set<int> _visitedDestinations = {1};
 
   /// The Library's claim on the back gesture, so a held book goes back on its
   /// shelf before back starts walking the tab history.
@@ -227,26 +227,41 @@ class _HomePageState extends ConsumerState<HomePage> {
         label: l10n.navLibrary,
       ),
       (
-        icon: Icons.more_horiz,
-        selectedIcon: Icons.more,
-        label: l10n.navMore,
+        icon: Icons.insights_outlined,
+        selectedIcon: Icons.insights,
+        label: l10n.navBarStatistics,
+      ),
+      (
+        icon: Icons.settings_outlined,
+        selectedIcon: Icons.settings,
+        label: l10n.navBarSettings,
       ),
     ];
     final pages = [
       const _JournalDestination(),
       ShelfHomePage(backHandle: _libraryBack),
-      const _MorePlaceholder(),
+      StatisticPage(active: _destination == 2),
+      const SettingsHomePage(),
     ];
+
+    void refreshJournalOnReturn(int index) {
+      if (index != 0 || !_visitedDestinations.contains(0)) return;
+      unawaited(ref.read(journalHomeProvider.notifier).refresh());
+      unawaited(ref.read(readingChallengeProvider.notifier).refresh());
+      unawaited(ref.read(monthTrackerProvider.notifier).refresh());
+    }
 
     void selectDestination(int index) {
       VibrationService.heavy();
       if (index == _destination) {
         return;
       }
+      refreshJournalOnReturn(index);
       setState(() {
         _leaving = false;
         _leavingTimer?.cancel();
         _destination = index;
+        _visitedDestinations.add(index);
         _destinationHistory = [..._destinationHistory, index];
       });
     }
@@ -262,21 +277,31 @@ class _HomePageState extends ConsumerState<HomePage> {
         );
         _destination = _destinationHistory.last;
       });
+      refreshJournalOnReturn(_destination);
     }
 
     final pageStack = IndexedStack(
       key: _pageStackKey,
       index: _destination,
-      children: pages,
+      children: [
+        for (var index = 0; index < pages.length; index++)
+          _visitedDestinations.contains(index)
+              ? ExcludeFocus(
+                  excluding: index != _destination,
+                  child: TickerMode(
+                    enabled: index == _destination,
+                    child: pages[index],
+                  ),
+                )
+              : const SizedBox.shrink(),
+      ],
     );
 
     // Rebuilt whenever the Library takes or releases its claim, because
     // `canPop` is read at build time and a book leaves the shelf without this
     // page rebuilding for any other reason.
     return Theme(
-      data: _destination == 1
-          ? paperfoldLibraryTheme(Theme.of(context))
-          : Theme.of(context),
+      data: paperfoldLibraryTheme(Theme.of(context)),
       child: ListenableBuilder(
         listenable: _libraryBack,
         builder: (context, child) => PopScope<Object?>(
@@ -360,7 +385,7 @@ class _HomePageState extends ConsumerState<HomePage> {
             return Scaffold(
               // The bar gets its own strip of the screen and the page stops
               // above it. Under `extendBody` the shelf ran on behind the glass,
-              // so a book title, a shelf name and the three destinations were
+              // so a book title, a shelf name and the destinations were
               // all printed over one another at the foot of the Library.
               extendBody: false,
               body: pageStack,
@@ -403,80 +428,88 @@ class _SlidingNavigationBar extends StatelessWidget {
     final mediaQuery = MediaQuery.of(context);
     final disableAnimations = MediaQuery.disableAnimationsOf(context);
     final largeText = MediaQuery.textScalerOf(context).scale(12) > 18;
-    final barHeight = largeText ? 96.0 : 56.0;
     final bottomInset = math.max(
       mediaQuery.padding.bottom,
       mediaQuery.systemGestureInsets.bottom,
     );
 
-    return Padding(
-      padding: EdgeInsetsDirectional.fromSTEB(12, 4, 12, bottomInset + 8),
-      child: SizedBox(
-        height: barHeight,
-        child: PaperfoldGlassSurface(
-          // Nothing passes behind this bar any more: `extendBody` is off, so
-          // the page stops above it and the only thing left to blur is the
-          // scaffold's flat ground. The filter cost a full-width readback on
-          // every frame and blurred a solid colour into the same colour.
-          borderRadius: const BorderRadius.all(Radius.circular(28)),
-          allowBlur: false,
-          child: Padding(
-            padding: const EdgeInsets.all(4),
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                final gap = largeText ? 0.0 : 8.0;
-                final slotWidth =
-                    (constraints.maxWidth - gap * (destinations.length - 1)) /
-                        destinations.length;
-                return Semantics(
-                  role: SemanticsRole.tabBar,
-                  explicitChildNodes: true,
-                  child: Stack(
-                    children: [
-                      AnimatedPositionedDirectional(
-                        key: const Key('sliding-navigation-indicator'),
-                        duration: disableAnimations
-                            ? Duration.zero
-                            : const Duration(milliseconds: 240),
-                        curve: Curves.easeOutCubic,
-                        top: 0,
-                        start: selectedIndex * (slotWidth + gap),
-                        width: slotWidth,
-                        height: barHeight - 8,
-                        child: DecoratedBox(
-                          decoration: BoxDecoration(
-                            color: scheme.primaryContainer,
-                            borderRadius: BorderRadius.circular(24),
+    return LayoutBuilder(builder: (context, available) {
+      final columns =
+          largeText && available.maxWidth < 480 ? 2 : destinations.length;
+      final rows = (destinations.length / columns).ceil();
+      final barHeight = rows > 1 ? 144.0 : (largeText ? 112.0 : 72.0);
+      return Padding(
+        padding: EdgeInsetsDirectional.fromSTEB(12, 4, 12, bottomInset + 8),
+        child: SizedBox(
+          height: barHeight,
+          child: PaperfoldGlassSurface(
+            // Nothing passes behind this bar any more: `extendBody` is off, so
+            // the page stops above it and the only thing left to blur is the
+            // scaffold's flat ground. The filter cost a full-width readback on
+            // every frame and blurred a solid colour into the same colour.
+            borderRadius: const BorderRadius.all(Radius.circular(28)),
+            allowBlur: false,
+            child: Padding(
+              padding: const EdgeInsets.all(4),
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final gap = largeText ? 0.0 : 8.0;
+                  final slotWidth =
+                      (constraints.maxWidth - gap * (columns - 1)) / columns;
+                  final slotHeight =
+                      (constraints.maxHeight - gap * (rows - 1)) / rows;
+                  return Semantics(
+                    role: SemanticsRole.tabBar,
+                    explicitChildNodes: true,
+                    child: Stack(
+                      children: [
+                        AnimatedPositionedDirectional(
+                          key: const Key('sliding-navigation-indicator'),
+                          duration: disableAnimations
+                              ? Duration.zero
+                              : const Duration(milliseconds: 240),
+                          curve: Curves.easeOutCubic,
+                          top: (selectedIndex ~/ columns) * (slotHeight + gap),
+                          start: (selectedIndex % columns) * (slotWidth + gap),
+                          width: slotWidth,
+                          height: slotHeight,
+                          child: DecoratedBox(
+                            decoration: BoxDecoration(
+                              color: scheme.primaryContainer,
+                              borderRadius: BorderRadius.circular(24),
+                            ),
                           ),
                         ),
-                      ),
-                      Row(
-                        children: [
-                          for (var index = 0;
-                              index < destinations.length;
-                              index++) ...[
-                            if (index > 0) SizedBox(width: gap),
-                            Expanded(
-                              child: _SlidingNavigationItem(
-                                tabIndex: index,
-                                destination: destinations[index],
-                                selected: index == selectedIndex,
-                                unselectedForeground: glass.foreground,
-                                onTap: () => onDestinationSelected(index),
+                        Wrap(
+                          spacing: gap,
+                          runSpacing: gap,
+                          children: [
+                            for (var index = 0;
+                                index < destinations.length;
+                                index++)
+                              SizedBox(
+                                width: slotWidth,
+                                height: slotHeight,
+                                child: _SlidingNavigationItem(
+                                  tabIndex: index,
+                                  destination: destinations[index],
+                                  selected: index == selectedIndex,
+                                  unselectedForeground: glass.foreground,
+                                  onTap: () => onDestinationSelected(index),
+                                ),
                               ),
-                            ),
                           ],
-                        ],
-                      ),
-                    ],
-                  ),
-                );
-              },
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
             ),
           ),
         ),
-      ),
-    );
+      );
+    });
   }
 }
 
@@ -523,9 +556,7 @@ class _SlidingNavigationItem extends StatelessWidget {
                     MediaQuery.textScalerOf(context).scale(12) > 18 ? 2 : 6,
               ),
               child: Flex(
-                direction: MediaQuery.textScalerOf(context).scale(12) > 18
-                    ? Axis.vertical
-                    : Axis.horizontal,
+                direction: Axis.vertical,
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Icon(
@@ -557,9 +588,7 @@ class _SlidingNavigationItem extends StatelessWidget {
   }
 }
 
-/// The Journal destination: every book the reader has actually written in,
-/// most recently touched first. A book with only blank pages does not appear,
-/// because a blank page is not writing.
+/// Reading tools and the book journals, in the same visual system as the library.
 class _JournalDestination extends ConsumerWidget {
   const _JournalDestination();
 
@@ -567,117 +596,116 @@ class _JournalDestination extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = L10n.of(context);
     final entries = ref.watch(journalHomeProvider);
-
-    // The trackers sit above the per-book list rather than on destinations of
-    // their own. The architecture is two destinations, cross-linked.
-    final trackers = const SliverToBoxAdapter(child: _JournalTrackerCards());
-
-    final paper = Theme.of(context).brightness == Brightness.light &&
-        Prefs().useBrandTheme &&
-        !Prefs().eInkMode;
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        image: paper
-            ? const DecorationImage(
-                image: AssetImage('assets/images/paperfold_paper.jpg'),
-                fit: BoxFit.cover,
-              )
-            : null,
-      ),
-      child: Scaffold(
-        backgroundColor: paper ? Colors.transparent : null,
-        appBar: AppBar(
-          title: Text(l10n.navJournal),
-          actions: [
-            IconButton(
-              tooltip: l10n.searchLibraryHint,
-              icon: const Icon(Icons.search),
-              onPressed: () => Navigator.of(context).push(
-                MaterialPageRoute<void>(builder: (_) => const SearchPage()),
-              ),
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(l10n.navJournal),
+        actions: [
+          IconButton(
+            tooltip: l10n.searchLibraryHint,
+            icon: const Icon(Icons.search),
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(builder: (_) => const SearchPage()),
             ),
-          ],
-          backgroundColor: paper ? Colors.transparent : null,
-          surfaceTintColor: Colors.transparent,
-        ),
-        body: RefreshIndicator(
-          onRefresh: () async {
-            await ref.read(journalHomeProvider.notifier).refresh();
-            await ref.read(readingChallengeProvider.notifier).refresh();
-            await ref.read(monthTrackerProvider.notifier).refresh();
-          },
-          child: CustomScrollView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            slivers: [
-              trackers,
-              ...entries.when(
-                loading: () => const [
-                  SliverFillRemaining(
-                    hasScrollBody: false,
-                    child: Center(child: CircularProgressIndicator()),
-                  ),
-                ],
-                error: (error, stackTrace) => [
-                  SliverFillRemaining(
-                    hasScrollBody: false,
-                    child: LoadFailure.page(
-                      title: l10n.journalLoadFailed,
-                      error: error,
-                      onRetry: () =>
-                          ref.read(journalHomeProvider.notifier).refresh(),
+          ),
+        ],
+      ),
+      body: Align(
+        alignment: Alignment.topCenter,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 760),
+          child: RefreshIndicator(
+            onRefresh: () async {
+              await Future.wait([
+                ref.read(journalHomeProvider.notifier).refresh(),
+                ref.read(readingChallengeProvider.notifier).refresh(),
+                ref.read(monthTrackerProvider.notifier).refresh(),
+              ]);
+            },
+            child: CustomScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              slivers: [
+                SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
+                  sliver: SliverList.list(children: [
+                    const _JournalTools(),
+                    const SizedBox(height: 28),
+                    Text(l10n.journalBooks,
+                        style: Theme.of(context).textTheme.titleLarge),
+                  ]),
+                ),
+                ...entries.when(
+                  loading: () => const [
+                    SliverFillRemaining(
+                      hasScrollBody: false,
+                      child: Center(child: CircularProgressIndicator()),
                     ),
-                  ),
-                ],
-                data: (data) {
-                  if (data.isEmpty) {
-                    return [
-                      SliverFillRemaining(
-                        hasScrollBody: false,
-                        child: _DestinationEmptyState(
-                          ornament: PaperfoldOrnament.rectangularVineFrame,
-                          title: l10n.journalPlaceholderTitle,
-                          body: l10n.journalPlaceholderBody,
+                  ],
+                  error: (error, stackTrace) => [
+                    SliverFillRemaining(
+                      hasScrollBody: false,
+                      child: LoadFailure.page(
+                        title: l10n.journalLoadFailed,
+                        error: error,
+                        onRetry: () =>
+                            ref.read(journalHomeProvider.notifier).refresh(),
+                      ),
+                    ),
+                  ],
+                  data: (data) {
+                    if (data.isEmpty) {
+                      return [
+                        SliverFillRemaining(
+                          hasScrollBody: false,
+                          child: _DestinationEmptyState(
+                            title: l10n.journalPlaceholderTitle,
+                            body: l10n.journalPlaceholderBody,
+                          ),
                         ),
+                      ];
+                    }
+                    return [
+                      SliverList.builder(
+                        itemCount: data.length,
+                        itemBuilder: (context, index) {
+                          final entry = data[index];
+                          final details = <String>[
+                            if (entry.review != null) l10n.journalReviewed,
+                            if (entry.pageCount > 0)
+                              l10n.journalPagesCount(entry.pageCount),
+                          ];
+                          return ListTile(
+                            contentPadding:
+                                const EdgeInsets.symmetric(horizontal: 20),
+                            minTileHeight: 64,
+                            leading: const Icon(Icons.menu_book_outlined),
+                            title: Text(entry.book.title,
+                                maxLines: 2, overflow: TextOverflow.ellipsis),
+                            subtitle: details.isEmpty
+                                ? null
+                                : Text(details.join(' · ')),
+                            trailing: const Icon(Icons.chevron_right),
+                            onTap: () async {
+                              await Navigator.of(context).push(
+                                MaterialPageRoute<void>(
+                                  builder: (_) =>
+                                      BookJournalPage(book: entry.book),
+                                ),
+                              );
+                              if (context.mounted) {
+                                await ref
+                                    .read(journalHomeProvider.notifier)
+                                    .refresh();
+                              }
+                            },
+                          );
+                        },
                       ),
                     ];
-                  }
-                  return [
-                    SliverList.builder(
-                      itemCount: data.length,
-                      itemBuilder: (context, index) {
-                        final entry = data[index];
-                        final details = <String>[
-                          if (entry.review != null) l10n.journalReviewed,
-                          if (entry.pageCount > 0)
-                            l10n.journalPagesCount(entry.pageCount),
-                        ];
-                        return ListTile(
-                          minTileHeight: 56,
-                          title: Text(
-                            entry.book.title,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          subtitle: details.isEmpty
-                              ? null
-                              : Text(details.join(' · ')),
-                          trailing: const Icon(Icons.chevron_right),
-                          onTap: () => Navigator.of(context).push(
-                            MaterialPageRoute<void>(
-                              builder: (context) =>
-                                  BookJournalPage(book: entry.book),
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                  ];
-                },
-              ),
-              const SliverToBoxAdapter(
-                child: SizedBox(height: 24),
-              ),
-            ],
+                  },
+                ),
+                const SliverToBoxAdapter(child: SizedBox(height: 24)),
+              ],
+            ),
           ),
         ),
       ),
@@ -685,228 +713,112 @@ class _JournalDestination extends ConsumerWidget {
   }
 }
 
-/// The two trackers, as summaries that open the full pages.
-class _JournalTrackerCards extends ConsumerWidget {
-  const _JournalTrackerCards();
+class _JournalTools extends ConsumerWidget {
+  const _JournalTools();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = L10n.of(context);
     final challenge = ref.watch(readingChallengeProvider);
     final month = ref.watch(monthTrackerProvider);
-
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-      // Two cards, so both match the taller one. IntrinsicHeight is the cheap
-      // way to do that; stretch alone asks for infinite height inside a sliver.
-      child: IntrinsicHeight(
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Expanded(
-              child: _TrackerCard(
-                icon: Icons.local_library_outlined,
-                title: l10n.challengeTitle,
-                // An unread summary must not claim a number it does not have.
-                detail: challenge.hasValue
-                    ? l10n.challengeProgress(
-                        challenge.requireValue.finishedCount,
-                        challenge.requireValue.target,
-                      )
-                    : null,
-                onTap: () => Navigator.of(context).push(
-                  MaterialPageRoute<void>(
-                    builder: (context) => const ReadingChallengePage(),
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _TrackerCard(
-                icon: Icons.donut_large_outlined,
-                title: l10n.monthTrackerTitle,
-                detail: month.hasValue
-                    ? l10n.monthTrackerPagesTotal(month.requireValue.totalPages)
-                    : null,
-                onTap: () => Navigator.of(context).push(
-                  MaterialPageRoute<void>(
-                    builder: (context) => const MonthTrackerPage(),
-                  ),
-                ),
-              ),
-            ),
-          ],
+    return Column(
+      children: [
+        _JournalTool(
+          icon: Icons.local_library_outlined,
+          title: l10n.challengeTitle,
+          detail: challenge.hasError
+              ? l10n.statisticTrackerLoadError
+              : challenge.hasValue
+                  ? '${challenge.requireValue.year} · '
+                      '${l10n.challengeProgress(challenge.requireValue.finishedCount, challenge.requireValue.target)}'
+                  : null,
+          page: const ReadingChallengePage(),
         ),
-      ),
+        const Divider(height: 1),
+        _JournalTool(
+          icon: Icons.calendar_month_outlined,
+          title: l10n.monthTrackerTitle,
+          detail: month.hasError
+              ? l10n.statisticTrackerLoadError
+              : month.hasValue
+                  ? '${MaterialLocalizations.of(context).formatMonthYear(DateTime(month.requireValue.year, month.requireValue.month))} · '
+                      '${l10n.monthTrackerPagesTotal(month.requireValue.totalPages)}'
+                  : null,
+          page: const MonthTrackerPage(),
+        ),
+        const Divider(height: 1),
+        _JournalTool(
+          icon: Icons.format_quote_outlined,
+          title: l10n.tileNotesTotalTitle,
+          detail: l10n.journalHighlightsOverview,
+          page: Scaffold(
+            appBar: AppBar(title: Text(l10n.tileNotesTotalTitle)),
+            body: const NotesPage(),
+          ),
+        ),
+      ],
     );
   }
 }
 
-class _TrackerCard extends StatelessWidget {
-  const _TrackerCard({
+class _JournalTool extends StatelessWidget {
+  const _JournalTool({
     required this.icon,
     required this.title,
     required this.detail,
-    required this.onTap,
+    required this.page,
   });
 
   final IconData icon;
   final String title;
   final String? detail;
-  final VoidCallback onTap;
+  final Widget page;
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Card(
-      margin: EdgeInsets.zero,
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onTap,
-        child: Padding(
-          // 12 dp of padding on a two-line card clears 48 dp comfortably.
-          padding: const EdgeInsets.all(12),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(icon, color: theme.colorScheme.primary),
-              const SizedBox(height: 8),
-              Text(title, style: theme.textTheme.titleSmall),
-              if (detail != null) ...[
-                const SizedBox(height: 2),
-                Text(
-                  detail!,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                ),
-              ],
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-enum _MoreRoute { highlights, statistics, settings }
-
-class _MorePlaceholder extends StatelessWidget {
-  const _MorePlaceholder();
-
-  void _openRoute(BuildContext context, _MoreRoute route) {
-    final l10n = L10n.of(context);
-
-    // Settings brings its own scaffold, because its wide layout puts the
-    // category list beside a detail pane and both belong under the one title.
-    final Widget page = switch (route) {
-      _MoreRoute.highlights => Scaffold(
-          appBar: AppBar(title: Text(l10n.tileNotesTotalTitle)),
-          body: const NotesPage(),
-        ),
-      _MoreRoute.statistics => Scaffold(
-          appBar: AppBar(title: Text(l10n.navBarStatistics)),
-          body: const StatisticPage(),
-        ),
-      _MoreRoute.settings => const SettingsHomePage(),
-    };
-    Navigator.of(context).push(
-      MaterialPageRoute<void>(builder: (context) => page),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = L10n.of(context);
-    // The owner chose a third destination specifically so nothing would be
-    // "hidden behind an icon". A popup menu in the app bar is exactly that, so
-    // the three inherited screens are visible rows instead.
-    // Catalogs moved to the Library's "Add books" sheet. Finding a book online
-    // is how a book arrives, so it belongs beside the file picker, not in a
-    // list of secondary screens.
-    final entries = <(_MoreRoute, IconData, String)>[
-      (
-        _MoreRoute.highlights,
-        Icons.format_quote_outlined,
-        l10n.tileNotesTotalTitle
-      ),
-      (_MoreRoute.statistics, Icons.insights_outlined, l10n.navBarStatistics),
-      (_MoreRoute.settings, Icons.settings_outlined, l10n.navBarSettings),
-    ];
-
-    return Scaffold(
-      appBar: AppBar(title: Text(l10n.navMore)),
-      body: ListView(
-        // The bar no longer overlays anything: `extendBody` is off, so the
-        // scaffold already stops this list above the bar and above the system
-        // inset. Clearing them a second time left about 130 logical pixels of
-        // nothing under the last row.
-        padding: const EdgeInsets.only(top: 8, bottom: 8),
-        children: [
-          for (final (route, icon, label) in entries)
-            ListTile(
-              leading: Icon(icon),
-              title: Text(label),
-              trailing: const Icon(Icons.chevron_right),
-              // ListTile already meets the 48 dp minimum; stated so a later
-              // dense: true does not quietly break it.
-              minTileHeight: 56,
-              onTap: () => _openRoute(context, route),
-            ),
-        ],
+    return ListTile(
+      contentPadding: EdgeInsets.zero,
+      minTileHeight: 76,
+      leading: Icon(icon, color: Theme.of(context).colorScheme.primary),
+      title: Text(title, style: Theme.of(context).textTheme.titleMedium),
+      subtitle: detail == null ? null : Text(detail!),
+      trailing: const Icon(Icons.chevron_right),
+      onTap: () => Navigator.of(context).push(
+        MaterialPageRoute<void>(builder: (_) => page),
       ),
     );
   }
 }
 
 class _DestinationEmptyState extends StatelessWidget {
-  const _DestinationEmptyState({
-    required this.ornament,
-    required this.title,
-    required this.body,
-  });
+  const _DestinationEmptyState({required this.title, required this.body});
 
-  final PaperfoldOrnament ornament;
   final String title;
   final String body;
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      top: false,
-      child: Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 440),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Ornament(
-                  ornament: ornament,
-                  width: 128,
-                  height: 128,
-                  tint: Theme.of(context).colorScheme.primary,
-                ),
-                const SizedBox(height: 28),
-                Text(
-                  title,
+    return Center(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(24),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 440),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.edit_note_outlined,
+                  size: 40, color: Theme.of(context).colorScheme.primary),
+              const SizedBox(height: 16),
+              Text(title,
                   textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.headlineSmall,
-                ),
-                const SizedBox(height: 10),
-                Text(
-                  body,
+                  style: Theme.of(context).textTheme.titleLarge),
+              const SizedBox(height: 8),
+              Text(body,
                   textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
-                ),
-              ],
-            ),
+                      )),
+            ],
           ),
         ),
       ),

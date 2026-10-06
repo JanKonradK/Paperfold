@@ -10,6 +10,7 @@ import 'package:paperfold/config/paperfold_tokens.dart';
 import 'package:paperfold/config/shared_preference_provider.dart';
 import 'package:paperfold/dao/journal.dart';
 import 'package:paperfold/dao/search_repository.dart';
+import 'package:paperfold/enums/book_status.dart';
 import 'package:paperfold/l10n/generated/L10n.dart';
 import 'package:paperfold/models/book.dart';
 import 'package:paperfold/models/book_review.dart';
@@ -18,9 +19,14 @@ import 'package:paperfold/models/search_journal_result.dart';
 import 'package:paperfold/models/search_result_data.dart';
 import 'package:paperfold/page/journal/book_journal_page.dart';
 import 'package:paperfold/page/journal/dot_pages_page.dart';
+import 'package:paperfold/page/journal/month_tracker_page.dart';
+import 'package:paperfold/page/journal/reading_challenge_page.dart';
 import 'package:paperfold/page/search/search_page.dart';
 import 'package:paperfold/providers/search.dart';
+import 'package:paperfold/providers/month_tracker.dart';
+import 'package:paperfold/providers/reading_challenge.dart';
 import 'package:paperfold/utils/color_scheme.dart';
+import 'package:paperfold/widgets/paperfold_library_theme.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 // Demo data only. Run: flutter test tool/preview_v175.dart --concurrency=1
@@ -100,6 +106,34 @@ class _PreviewSearchRepository extends SearchRepository {
       );
 }
 
+class _PreviewChallenge extends ReadingChallengeController {
+  @override
+  Future<ReadingChallengeData> build() async => ReadingChallengeData(
+        year: 2026,
+        target: 12,
+        finished: [
+          _book.copyWith(
+            id: 2,
+            title: 'The Dispossessed',
+            status: BookStatus.finished,
+            readingPercentage: 1,
+          ),
+        ],
+        readingNow: [_book],
+        today: DateTime(2026, 8, 13),
+      );
+}
+
+class _PreviewMonth extends MonthTrackerController {
+  @override
+  Future<MonthTrackerData> build() async => const MonthTrackerData(
+        year: 2026,
+        month: 8,
+        pagesByDay: {1: 15, 3: 24, 5: 12, 8: 38, 13: 27},
+        today: 13,
+      );
+}
+
 void main() {
   testWidgets('renders the v1.75 journal and search surfaces', (tester) async {
     // ignore: invalid_use_of_visible_for_testing_member
@@ -128,7 +162,9 @@ void main() {
     Directory('tool/preview').createSync(recursive: true);
 
     Future<void> capture(Widget page, String name, Size size,
-        {bool search = false, double textScale = 1}) async {
+        {bool search = false,
+        double textScale = 1,
+        TextDirection direction = TextDirection.ltr}) async {
       // A fresh scope prevents route and search state leaking between shots.
       await tester.pumpWidget(const SizedBox.shrink());
       tester.view.physicalSize = size;
@@ -141,6 +177,10 @@ void main() {
             overrides: [
               searchRepositoryProvider
                   .overrideWithValue(_PreviewSearchRepository()),
+              readingChallengeProvider.overrideWith(_PreviewChallenge.new),
+              trackedChallengeYearProvider.overrideWith((_) => 2026),
+              monthTrackerProvider.overrideWith(_PreviewMonth.new),
+              trackedMonthProvider.overrideWith((_) => DateTime(2026, 8)),
             ],
             child: MaterialApp(
               debugShowCheckedModeBanner: false,
@@ -148,8 +188,9 @@ void main() {
               localizationsDelegates: L10n.localizationsDelegates,
               supportedLocales: L10n.supportedLocales,
               builder: (context, child) => Theme(
-                data: colorSchema(Prefs(), context, Brightness.light),
-                child: child!,
+                data: paperfoldLibraryTheme(
+                    colorSchema(Prefs(), context, Brightness.light)),
+                child: Directionality(textDirection: direction, child: child!),
               ),
               home: page,
             ),
@@ -157,6 +198,9 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
+      if (page is DotPagesPage) {
+        expect(find.text('Journal pages'), findsOneWidget);
+      }
       if (search) {
         await tester.enterText(find.byType(TextField), 'winter');
         await tester.testTextInput.receiveAction(TextInputAction.search);
@@ -197,12 +241,38 @@ void main() {
         size,
       );
       await capture(const SearchPage(), 'search-$name', size, search: true);
+      await capture(const ReadingChallengePage(), 'challenge-$name', size);
+      await capture(const MonthTrackerPage(), 'month-$name', size);
     }
     await capture(
       BookJournalPage(book: _book, dao: _PreviewJournalDao()),
       'journal-large-text',
       const Size(320, 640),
       textScale: 2,
+    );
+    await capture(
+      DotPagesPage(book: _book, dao: _PreviewJournalDao()),
+      'passage-large-text',
+      const Size(320, 640),
+      textScale: 2,
+    );
+    await capture(
+      const ReadingChallengePage(),
+      'challenge-large-text',
+      const Size(320, 640),
+      textScale: 2,
+    );
+    await capture(
+      const MonthTrackerPage(),
+      'month-large-text',
+      const Size(320, 640),
+      textScale: 2,
+    );
+    await capture(
+      DotPagesPage(book: _book, dao: _PreviewJournalDao()),
+      'passage-rtl',
+      const Size(412, 915),
+      direction: TextDirection.rtl,
     );
     await tester.pumpWidget(const SizedBox.shrink());
     debugDisableShadows = previousShadowSetting;

@@ -13,7 +13,6 @@ import 'package:paperfold/enums/reading_info.dart';
 import 'package:paperfold/enums/translation_mode.dart';
 import 'package:paperfold/enums/writing_mode.dart';
 import 'package:paperfold/l10n/generated/L10n.dart';
-import 'package:paperfold/main.dart';
 import 'package:paperfold/models/book.dart';
 import 'package:paperfold/models/book_style.dart';
 import 'package:paperfold/models/bookmark.dart';
@@ -703,8 +702,7 @@ class EpubPlayerState extends ConsumerState<EpubPlayer>
   void getThemeColor() {
     if (Prefs().autoAdjustReadingTheme) {
       List<ReadTheme> themes = widget.initialThemes;
-      final isDayMode =
-          Theme.of(navigatorKey.currentContext!).brightness == Brightness.light;
+      final isDayMode = !isDarkMode;
       backgroundColor =
           isDayMode ? themes[0].backgroundColor : themes[1].backgroundColor;
       textColor = isDayMode ? themes[0].textColor : themes[1].textColor;
@@ -1517,8 +1515,18 @@ class EpubPlayerState extends ConsumerState<EpubPlayer>
     useHybridComposition: true,
   );
 
-  bool get isDarkMode =>
-      Theme.of(navigatorKey.currentContext!).brightness == Brightness.dark;
+  bool get isDarkMode {
+    // App chrome can be burgundy even when the reader uses a light page.
+    final prefs = Prefs();
+    if (prefs.eInkMode) return false;
+    return switch (prefs.themeMode) {
+      ThemeMode.light => false,
+      ThemeMode.dark => true,
+      ThemeMode.system =>
+        WidgetsBinding.instance.platformDispatcher.platformBrightness ==
+            Brightness.dark,
+    };
+  }
 
   void changeReadingInfo() {
     setState(() {});

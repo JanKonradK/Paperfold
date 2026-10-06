@@ -17,7 +17,7 @@ import 'package:paperfold/widgets/bookshelf/book_cover.dart';
 import 'package:paperfold/widgets/common/load_failure.dart';
 
 /// One place to return to a book, its passages, and the reader's own writing.
-/// Uses the existing paper theme and editors; opening it never creates a row.
+/// Uses the shared app theme and editors; opening it never creates a row.
 class BookJournalPage extends ConsumerStatefulWidget {
   const BookJournalPage({super.key, required this.book, this.dao});
 

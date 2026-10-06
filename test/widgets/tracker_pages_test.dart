@@ -221,14 +221,17 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Pages per day'), findsOne);
+      await tester.scrollUntilVisible(
+        find.text('No pages recorded this month').hitTestable(),
+        250,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.pumpAndSettle();
       expect(find.text('No pages recorded this month'), findsOne);
       expect(
         find.text('Tap a day number to add the page total for that day.'),
         findsOne,
       );
-
-      await tester.drag(find.byType(ListView), const Offset(0, -500));
-      await tester.pumpAndSettle();
 
       expect(find.text('No pages'), findsOne);
       expect(find.text('Fewer pages'), findsOne);

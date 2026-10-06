@@ -55,11 +55,14 @@ void main() {
     Prefs().eInkMode = true;
     expect(paperfoldLibraryTheme(base), same(base));
     Prefs().eInkMode = false;
+    final dark =
+        ThemeData(colorScheme: PaperfoldTokens.colorScheme(Brightness.dark));
+    expect(paperfoldLibraryTheme(dark), same(dark));
     Prefs().useBrandTheme = false;
     expect(paperfoldLibraryTheme(base), same(base));
   });
 
-  test('paper defaults keep saved theme and reader choices intact', () async {
+  test('brand chrome keeps saved theme and reader choices intact', () async {
     SharedPreferences.setMockInitialValues({});
     await Prefs().initPrefs();
     expect(Prefs().themeMode, ThemeMode.light);

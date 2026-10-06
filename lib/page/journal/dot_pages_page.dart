@@ -10,13 +10,7 @@ import 'package:paperfold/service/book.dart';
 import 'package:paperfold/utils/log/common.dart';
 import 'package:paperfold/widgets/common/load_failure.dart';
 
-/// Free journal space for one book: blank dot pages the reader writes on.
-///
-/// plan.md Section 8 calls this the dot page, and Section 12 warns that text
-/// input on a page surface is the hardest interaction in the project, because
-/// the keyboard, the insets and the book metaphor all fight each other. The
-/// resolution here is that the paper is a background, not a container the
-/// keyboard has to be fitted inside.
+/// Saved passages and free writing for one book, using the shared app theme.
 class DotPagesPage extends ConsumerStatefulWidget {
   const DotPagesPage({
     super.key,
@@ -242,7 +236,7 @@ class _DotPagesPageState extends ConsumerState<DotPagesPage> {
     return Padding(
       key: ValueKey('journal-page-${page.id}'),
       padding: const EdgeInsets.only(bottom: 16),
-      child: _DotPaper(
+      child: _JournalEntry(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -385,57 +379,22 @@ class _DotPagesPageState extends ConsumerState<DotPagesPage> {
   }
 }
 
-/// A sheet of dot paper. The dots are drawn, not an image asset, so they take
-/// the theme's ink colour and cost nothing to ship.
-class _DotPaper extends StatelessWidget {
-  const _DotPaper({required this.child});
+/// Keep prose to a readable width within the app's shared surface styling.
+class _JournalEntry extends StatelessWidget {
+  const _JournalEntry({required this.child});
 
   final Widget child;
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     return Align(
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 760),
-        child: DecoratedBox(
-          decoration: BoxDecoration(
-            color: theme.colorScheme.surfaceContainerLow,
-            borderRadius: BorderRadius.circular(6),
-            border: Border.all(
-              color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
-            ),
-          ),
-          child: CustomPaint(
-            painter: _DotGridPainter(
-              dot: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.22),
-            ),
-            child: child,
-          ),
+        child: Card(
+          margin: EdgeInsets.zero,
+          child: child,
         ),
       ),
     );
   }
-}
-
-class _DotGridPainter extends CustomPainter {
-  const _DotGridPainter({required this.dot});
-
-  final Color dot;
-
-  static const double _spacing = 20;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()..color = dot;
-    for (var y = _spacing; y < size.height; y += _spacing) {
-      for (var x = _spacing; x < size.width; x += _spacing) {
-        canvas.drawCircle(Offset(x, y), 1.1, paint);
-      }
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant _DotGridPainter oldDelegate) =>
-      dot != oldDelegate.dot;
 }

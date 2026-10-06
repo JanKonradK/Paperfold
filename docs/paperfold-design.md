@@ -1,6 +1,6 @@
 ---
 name: Paperfold
-description: Burgundy library, gold details, warm paper.
+description: Burgundy app surfaces, gold details, independent reader themes.
 colors:
   cover: "#350D18"
   dark-sienna: "#391214"
@@ -24,13 +24,16 @@ typography:
 
 ## Overview
 
-The library uses the burgundy cover and gold details. The journal and default light reader use warm paper and dark ink.
-The user confirmed this direction on 2026-09-17.
+The default app theme uses burgundy surfaces and gold controls in all sections.
+Journal uses plain surfaces with no paper texture or dot grid.
+The user requested this change on 2026-10-06.
+The reader keeps its separate page theme.
 
 ## Colors
 
-`lib/config/paperfold_tokens.dart` defines the palette. The library uses burgundy surfaces with gold controls. Stone, rose, gold, dove, and brown distinguish bindings.
-Keep saved reader themes, custom theme colors, both dark modes, and eInk mode. The library override excludes custom themes and eInk mode.
+`lib/config/paperfold_tokens.dart` defines the palette. Stone, rose, gold, dove, and brown distinguish bindings.
+Keep saved reader themes, custom theme colors, both dark modes, and eInk mode.
+The burgundy theme does not replace an explicit dark, custom, or eInk theme.
 
 ## Typography
 
@@ -40,6 +43,10 @@ Spine titles use 14 logical pixels, with smaller author credits and a separate v
 ## Layout
 
 Shelf choices remain visible above straight shelves. Upright spines scroll horizontally. Navigation stays below the content or uses a rail above 600 logical pixels.
+The destinations are Journal, Library, Statistics, and Settings. Library opens first.
+On narrow screens with large text, the navigation uses two rows to keep each label readable.
+Journal contains Reading challenge, Month tracker, Highlights, and book journals.
+Journal forms use a maximum width of 760 logical pixels.
 When text scales from 16 to at least 24 logical pixels, or shelf height is below 280, a vertical list shows horizontal titles.
 Books in a series share a height and binding color. Spine width follows the EPUB print page count, or a text-length estimate when print pages are absent. Unknown lengths use a neutral width. Metadata loads in the background and does not delay the library.
 

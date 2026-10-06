@@ -11,6 +11,29 @@ part 'statistic_data.g.dart';
 
 @riverpod
 class StatisticData extends _$StatisticData {
+  /// Refresh a retained tab without resetting its chart, day, or scroll extent.
+  Future<void> refresh() async {
+    final current = state.valueOrNull;
+    if (current == null) {
+      ref.invalidateSelf();
+      return;
+    }
+    final keepAlive = ref.keepAlive();
+    try {
+      final updated = await _fetchData(
+        current.mode,
+        current.isSelectingDay,
+        current.date,
+      );
+      // A newer selection or refresh wins if it completed while this read ran.
+      if (identical(state.valueOrNull, current)) {
+        state = AsyncValue.data(updated);
+      }
+    } finally {
+      keepAlive.close();
+    }
+  }
+
   Future<void> _updateState({
     ChartMode? mode,
     bool? isSelectingDay,

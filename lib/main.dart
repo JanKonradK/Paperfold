@@ -16,6 +16,7 @@ import 'package:paperfold/service/book_player/book_player_server.dart';
 import 'package:paperfold/service/network/http_proxy_overrides.dart';
 import 'package:paperfold/utils/get_path/macos_migration.dart';
 import 'package:paperfold/utils/color_scheme.dart';
+import 'package:paperfold/widgets/paperfold_library_theme.dart';
 import 'package:paperfold/utils/error/common.dart';
 import 'package:paperfold/utils/get_path/get_base_path.dart';
 import 'package:paperfold/utils/get_path/storage_migration.dart';
@@ -278,7 +279,8 @@ class _MyAppState extends ConsumerState<MyApp>
             supportedLocales: L10n.supportedLocales,
             title: 'Paperfold',
             themeMode: prefsNotifier.themeMode,
-            theme: colorSchema(prefsNotifier, context, Brightness.light),
+            theme: paperfoldLibraryTheme(
+                colorSchema(prefsNotifier, context, Brightness.light)),
             darkTheme: colorSchema(prefsNotifier, context, Brightness.dark),
             home: home,
           );
