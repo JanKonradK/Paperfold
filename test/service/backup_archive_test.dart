@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:archive/archive_io.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -70,5 +71,25 @@ void main() {
     }
     expect(
         await File(path.join(temporary.path, 'escaped.txt')).exists(), isFalse);
+  });
+
+  test('a corrupt backup is rejected before extracting files', () async {
+    final archive = Archive()
+      ..addFile(ArchiveFile('book.txt', 3, [1, 2, 3]));
+    final bytes = ZipEncoder().encodeBytes(archive, level: 0);
+    final header = ByteData.sublistView(bytes);
+    final contentOffset = 30 +
+        header.getUint16(26, Endian.little) +
+        header.getUint16(28, Endian.little);
+    bytes[contentOffset] ^= 0xff;
+    final zip = await File(path.join(temporary.path, 'corrupt.zip'))
+        .writeAsBytes(bytes);
+    final output = path.join(temporary.path, 'corrupt-output');
+
+    await expectLater(
+      extractZipFile({'zipFilePath': zip.path, 'destinationPath': output}),
+      throwsFormatException,
+    );
+    expect(await Directory(output).exists(), isFalse);
   });
 }

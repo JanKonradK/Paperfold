@@ -1,6 +1,7 @@
 import 'package:paperfold/dao/search_repository.dart';
 import 'package:paperfold/models/search_result_data.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/legacy.dart';
 
 final searchRepositoryProvider = Provider<SearchRepository>((ref) {
   return const SearchRepository();

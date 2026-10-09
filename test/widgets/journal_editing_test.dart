@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:paperfold/dao/journal.dart';
@@ -111,7 +111,7 @@ Future<void> _open(WidgetTester tester, Widget page,
   await tester.pumpWidget(
     ProviderScope(
       child: MaterialApp(
-        localizationsDelegates: L10n.localizationsDelegates,
+        localizationsDelegates: [L10n.delegate, ...GlobalMaterialLocalizations.delegates],
         supportedLocales: L10n.supportedLocales,
         locale: const Locale('en'),
         builder: (context, child) => MediaQuery(

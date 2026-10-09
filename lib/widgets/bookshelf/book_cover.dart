@@ -5,7 +5,7 @@ import 'package:paperfold/config/shared_preference_provider.dart';
 import 'package:paperfold/models/book.dart';
 import 'package:paperfold/config/paperfold_tokens.dart';
 import 'package:paperfold/widgets/bookshelf/book_spine.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 class BookCover extends StatelessWidget {
   const BookCover({

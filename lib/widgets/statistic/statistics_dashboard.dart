@@ -5,7 +5,7 @@ import 'package:paperfold/l10n/generated/L10n.dart';
 import 'package:paperfold/providers/dashboard_tiles_provider.dart';
 import 'package:paperfold/widgets/hint/hint_banner.dart';
 import 'package:paperfold/widgets/statistic/dashboard_tiles/dashboard_tile_registry.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:staggered_reorderable/staggered_reorderable.dart';
 

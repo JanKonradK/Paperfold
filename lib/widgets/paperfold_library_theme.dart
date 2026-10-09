@@ -1,43 +1,29 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:paperfold/config/paperfold_tokens.dart';
 import 'package:paperfold/config/shared_preference_provider.dart';
 import 'package:paperfold/utils/color_scheme.dart';
 
-/// Shared burgundy chrome for the default brand theme, including pushed routes.
-/// Explicit dark, custom, and eInk themes keep their selected surfaces.
+/// Burgundy is an explicit app theme. Cream, System, and Dark keep their own
+/// surfaces on every route; the reader's saved page theme stays independent.
 ThemeData paperfoldLibraryTheme(ThemeData base) {
   if (Prefs().eInkMode ||
       !Prefs().useBrandTheme ||
+      Prefs().appThemeMode != 'burgundy' ||
       base.brightness == Brightness.dark) {
     return base;
   }
-  final scheme = PaperfoldTokens.colorScheme(
-    Brightness.dark,
-    trueBlack: false,
-  ).copyWith(
-    surface: PaperfoldTokens.cover.ground,
-    surfaceDim: PaperfoldTokens.blackRaspberry,
-    surfaceBright: PaperfoldTokens.spicedHotChocolate,
-    surfaceContainerLowest: PaperfoldTokens.blackRaspberry,
-    surfaceContainerLow: PaperfoldTokens.darkSienna,
-    surfaceContainer: const Color(0xFF422629),
-    surfaceContainerHigh: const Color(0xFF4A3431),
-    surfaceContainerHighest: PaperfoldTokens.spicedHotChocolate,
-    shadow: PaperfoldTokens.blackRaspberry,
-    primary: PaperfoldTokens.cover.foil,
-    onPrimary: PaperfoldTokens.cover.ground,
-    primaryContainer: PaperfoldTokens.cover.foil,
-    onPrimaryContainer: PaperfoldTokens.cover.ground,
-  );
-  final theme = paperfoldComponentTheme(ThemeData(
-    useMaterial3: true,
-    colorScheme: scheme,
-    textTheme: base.textTheme.apply(
-      bodyColor: scheme.onSurface,
-      displayColor: scheme.onSurface,
+  final scheme = PaperfoldTokens.burgundyColorScheme();
+  final theme = paperfoldComponentTheme(
+    ThemeData(
+      useMaterial3: true,
+      colorScheme: scheme,
+      textTheme: base.textTheme.apply(
+        bodyColor: scheme.onSurface,
+        displayColor: scheme.onSurface,
+      ),
     ),
-  ));
+  );
   return theme.copyWith(
     appBarTheme: theme.appBarTheme.copyWith(
       foregroundColor: scheme.primary,

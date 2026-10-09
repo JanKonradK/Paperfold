@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:typed_data';
+
 import 'package:paperfold/config/shared_preference_provider.dart';
 import 'package:paperfold/utils/get_path/get_base_path.dart';
 import 'package:paperfold/utils/log/common.dart';
@@ -38,13 +39,16 @@ class Server {
       _server = await io.serve(handler, '127.0.0.1', port);
     } catch (e, s) {
       AnxLog.warning(
-          'Server: Failed to bind to port $port, trying random port $e', s);
+        'Server: Failed to bind to port $port, trying random port $e',
+        s,
+      );
       _server = await io.serve(handler, '127.0.0.1', 0);
     }
 
     Prefs().lastServerPort = _server!.port;
     AnxLog.info(
-        'Server: Serving at http://${_server?.address.host}:${_server?.port}');
+      'Server: Serving at http://${_server?.address.host}:${_server?.port}',
+    );
   }
 
   int get port {
@@ -139,7 +143,8 @@ class Server {
     } else if (uriPath.startsWith('/fonts/')) {
       Directory fontDir = getFontDir();
       final file = File(
-          '${fontDir.path}/${path.basename(Uri.decodeComponent(uriPath))}');
+        '${fontDir.path}/${path.basename(Uri.decodeComponent(uriPath))}',
+      );
       if (!_isInside(fontDir, file)) {
         return shelf.Response.notFound('Font not found');
       }
@@ -152,48 +157,45 @@ class Server {
         },
       );
     } else if (uriPath.startsWith('/foliate-js/')) {
-      if (uriPath.endsWith('.epub')) {
-        final file =
-            await rootBundle.load('assets/foliate-js/${uriPath.substring(12)}');
+      final relativePath = Uri.decodeComponent(uriPath.substring(12));
+      if (relativePath.startsWith('/') ||
+          relativePath.contains('\\') ||
+          relativePath.contains('\u0000') ||
+          relativePath.split('/').any((part) => part == '.' || part == '..')) {
+        return shelf.Response.notFound('Reader asset not found');
+      }
+      const contentTypes = {
+        '.html': 'text/html',
+        '.css': 'text/css',
+        '.js': 'application/javascript',
+        '.mjs': 'application/javascript',
+        '.json': 'application/json',
+        '.epub': 'application/epub+zip',
+        '.wasm': 'application/wasm',
+        '.svg': 'image/svg+xml',
+        '.ttf': 'font/ttf',
+        '.otf': 'font/otf',
+      };
+      try {
+        final data = await rootBundle.load('assets/foliate-js/$relativePath');
         return shelf.Response.ok(
-          file.buffer.asUint8List(),
+          data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes),
           headers: {
-            'Content-Type': 'application/epub+zip',
-            'Access-Control-Allow-Origin': '*', // Add this line
+            'Content-Type':
+                contentTypes[path.extension(relativePath)] ??
+                'application/octet-stream',
+            'Access-Control-Allow-Origin': '*',
           },
         );
+      } on FlutterError {
+        return shelf.Response.notFound('Reader asset not found');
       }
-      String content =
-          await _loadAsset('assets/foliate-js/${uriPath.substring(12)}');
-
-      // Determine content type based on file extension
-      String contentType;
-      if (uriPath.endsWith('.html')) {
-        contentType = 'text/html';
-      } else if (uriPath.endsWith('.css')) {
-        contentType = 'text/css';
-      } else if (uriPath.endsWith('.js')) {
-        contentType = 'application/javascript';
-      } else if (uriPath.endsWith('.json')) {
-        contentType = 'application/json';
-      } else {
-        contentType = 'application/octet-stream';
-      }
-
-      return shelf.Response.ok(
-        content,
-        headers: {
-          'Content-Type': contentType,
-        },
-      );
     } else if (uriPath.startsWith('/bgimg/')) {
       return await _handleBgimgRequest(request);
     } else {
       return shelf.Response.ok(
         'Request for "${request.url}"',
-        headers: {
-          'Access-Control-Allow-Origin': '*',
-        },
+        headers: {'Access-Control-Allow-Origin': '*'},
       );
     }
   }
@@ -238,8 +240,10 @@ class Server {
   bool _isInside(Directory directory, File file) {
     try {
       return file.existsSync() &&
-          path.isWithin(directory.resolveSymbolicLinksSync(),
-              file.resolveSymbolicLinksSync());
+          path.isWithin(
+            directory.resolveSymbolicLinksSync(),
+            file.resolveSymbolicLinksSync(),
+          );
     } on FileSystemException {
       return false;
     }

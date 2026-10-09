@@ -3,7 +3,7 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:ui' as ui;
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -91,7 +91,7 @@ void main() {
         navigatorKey: navigator,
         debugShowCheckedModeBanner: false,
         locale: const Locale('en'),
-        localizationsDelegates: L10n.localizationsDelegates,
+        localizationsDelegates: [L10n.delegate, ...GlobalMaterialLocalizations.delegates],
         supportedLocales: L10n.supportedLocales,
         theme: paperfoldLibraryTheme(paperfoldComponentTheme(ThemeData(
           useMaterial3: true,

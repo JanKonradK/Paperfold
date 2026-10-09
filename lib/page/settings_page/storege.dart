@@ -14,7 +14,7 @@ import 'package:paperfold/widgets/settings/settings_section.dart';
 import 'package:paperfold/widgets/settings/settings_tile.dart';
 import 'package:paperfold/widgets/settings/settings_title.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class StorageSettings extends ConsumerStatefulWidget {
@@ -57,7 +57,7 @@ class _StorageSettingsState extends ConsumerState<StorageSettings>
   }
 
   Future<void> _selectNewPath() async {
-    final result = await FilePicker.platform.getDirectoryPath();
+    final result = await FilePicker.getDirectoryPath();
     if (result == null || !mounted) return;
 
     // Check if directory is empty

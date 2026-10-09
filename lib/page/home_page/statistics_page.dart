@@ -32,7 +32,7 @@ import 'package:paperfold/widgets/statistic/statistics_dashboard_title.dart';
 import 'package:paperfold/widgets/common/load_failure.dart';
 import 'package:paperfold/widgets/statistic/statistics_dashboard.dart';
 import 'package:paperfold/widgets/tips/statistic_tips.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 

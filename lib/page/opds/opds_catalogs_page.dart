@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:paperfold/l10n/generated/L10n.dart';
 import 'package:paperfold/models/opds_catalog.dart';
@@ -20,7 +20,7 @@ class OpdsCatalogsPage extends ConsumerWidget {
     final AsyncValue<List<OpdsCatalog>> catalogs =
         ref.watch(opdsCatalogsProvider);
     final theme = Theme.of(context);
-    final saved = catalogs.valueOrNull ?? const <OpdsCatalog>[];
+    final saved = catalogs.value ?? const <OpdsCatalog>[];
     final suggestions = OnlineBookSource.values.where(
         (source) => source.isCatalog && !saved.any(source.matchesCatalog));
 

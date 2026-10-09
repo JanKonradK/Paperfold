@@ -22,7 +22,7 @@ import 'package:paperfold/widgets/settings/webdav_switch.dart';
 import 'package:archive/archive_io.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:path/path.dart' as path;
@@ -125,7 +125,7 @@ class _SyncSettingState extends ConsumerState<SyncSetting> {
     Future.microtask(() {
       SmartDialog.show(
         clickMaskDismiss: false,
-        backDismiss: false,
+        backType: SmartBackType.block,
         builder: (BuildContext context) => SimpleDialog(
           title: Center(child: Text(title)),
           children: const [
@@ -188,7 +188,7 @@ class _SyncSettingState extends ConsumerState<SyncSetting> {
     AnxLog.info('importData: start');
     if (!mounted) return;
 
-    FilePickerResult? result = await FilePicker.platform.pickFiles(
+    final result = await FilePicker.pickFile(
       type: FileType.custom,
       allowedExtensions: ['zip'],
     );
@@ -197,7 +197,7 @@ class _SyncSettingState extends ConsumerState<SyncSetting> {
       return;
     }
 
-    String? filePath = result.files.single.path;
+    String? filePath = result.path;
     if (filePath == null) {
       AnxLog.info('importData: cannot get file path');
       AnxToast.show(
@@ -379,8 +379,16 @@ Future<void> extractZipFile(Map<String, String> params) async {
 
   final input = InputFileStream(zipFilePath);
   try {
-    final archive = ZipDecoder().decodeBuffer(input, verify: true);
+    final decoder = ZipDecoder();
+    final archive = decoder.decodeStream(input);
     try {
+      // archive 4 no longer implements decodeStream(verify: true).
+      // Keep the checksum validation before restoring any backup content.
+      for (final header in decoder.directory.fileHeaders) {
+        if (header.file?.verifyCrc32() != true) {
+          throw const FormatException('Invalid checksum in backup archive.');
+        }
+      }
       for (final entry in archive) {
         final name = entry.name.replaceAll('\\', '/');
         final outputPath = path.join(destinationPath, name);

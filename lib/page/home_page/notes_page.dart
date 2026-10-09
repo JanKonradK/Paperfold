@@ -9,7 +9,7 @@ import 'package:paperfold/widgets/common/container/filled_container.dart';
 import 'package:paperfold/widgets/common/load_failure.dart';
 import 'package:paperfold/widgets/highlight_digit.dart';
 import 'package:paperfold/widgets/tips/notes_tips.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class NotesPage extends ConsumerStatefulWidget {

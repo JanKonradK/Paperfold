@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:paperfold/config/paperfold_tokens.dart';
 import 'package:paperfold/config/shared_preference_provider.dart';
@@ -15,7 +15,7 @@ Widget _host(Widget child, {Brightness brightness = Brightness.light}) {
   return MaterialApp(
     navigatorKey: navigatorKey,
     locale: const Locale('en'),
-    localizationsDelegates: L10n.localizationsDelegates,
+    localizationsDelegates: [L10n.delegate, ...GlobalMaterialLocalizations.delegates],
     supportedLocales: L10n.supportedLocales,
     theme: ThemeData(colorScheme: PaperfoldTokens.colorScheme(brightness)),
     home: Scaffold(body: child),

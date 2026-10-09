@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -18,8 +18,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'shelf_home_fixtures.dart';
 
 void main() {
-  testWidgets('four tabs stay usable at 320px with large text and safe Back',
-      (tester) async {
+  testWidgets('four tabs stay usable at 320px with large text and safe Back', (
+    tester,
+  ) async {
     SharedPreferences.setMockInitialValues({});
     await Prefs().initPrefs();
     fakeData = populatedData();
@@ -35,34 +36,39 @@ void main() {
     });
     await tester.binding.setSurfaceSize(const Size(320, 568));
     addTearDown(() => tester.binding.setSurfaceSize(null));
-    await tester.pumpWidget(ProviderScope(
-      overrides: newTestOverrides(),
-      child: MaterialApp(
-        navigatorKey: navigatorKey,
-        localizationsDelegates: L10n.localizationsDelegates,
-        supportedLocales: L10n.supportedLocales,
-        locale: const Locale('en'),
-        theme: paperfoldLibraryTheme(ThemeData(
-          fontFamily: PaperfoldTypeTokens.chromeFamily,
-          colorScheme: PaperfoldTokens.colorScheme(Brightness.light),
-        )),
-        builder: (context, child) => MediaQuery(
-          data: MediaQuery.of(context).copyWith(
-            textScaler: const TextScaler.linear(2),
-            disableAnimations: true,
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: newTestOverrides(),
+        child: MaterialApp(
+          navigatorKey: navigatorKey,
+          localizationsDelegates: [
+            L10n.delegate,
+            ...GlobalMaterialLocalizations.delegates,
+          ],
+          supportedLocales: L10n.supportedLocales,
+          locale: const Locale('en'),
+          theme: paperfoldLibraryTheme(
+            ThemeData(
+              fontFamily: PaperfoldTypeTokens.chromeFamily,
+              colorScheme: PaperfoldTokens.colorScheme(Brightness.light),
+            ),
           ),
-          child: ValueListenableBuilder(
-            valueListenable: direction,
-            builder: (_, value, child) => Directionality(
-              textDirection: value,
+          builder: (context, child) => MediaQuery(
+            data: MediaQuery.of(context).copyWith(
+              textScaler: const TextScaler.linear(2),
+              disableAnimations: true,
+            ),
+            child: ValueListenableBuilder(
+              valueListenable: direction,
+              builder: (_, value, child) =>
+                  Directionality(textDirection: value, child: child!),
               child: child!,
             ),
-            child: child!,
           ),
+          home: HomePage(databaseReady: startup.future),
         ),
-        home: HomePage(databaseReady: startup.future),
       ),
-    ));
+    );
     await tester.pumpAndSettle();
 
     Finder tab(int index) => find.byKey(ValueKey('navigation-tab-$index'));
@@ -72,20 +78,30 @@ void main() {
         expect(tab(index).hitTestable(), findsOneWidget);
         expect(tester.getSize(tab(index)).width, greaterThanOrEqualTo(48));
         expect(tester.getSize(tab(index)).height, greaterThanOrEqualTo(48));
-        expect(tester.widget<Semantics>(tab(index)).properties.label,
-            labels[index]);
+        expect(
+          tester.widget<Semantics>(tab(index)).properties.label,
+          labels[index],
+        );
         final label = find.descendant(
           of: find.descendant(
-              of: tab(index), matching: find.text(labels[index])),
+            of: tab(index),
+            matching: find.text(labels[index]),
+          ),
           matching: find.byType(RichText),
         );
-        expect(tester.renderObject<RenderParagraph>(label).didExceedMaxLines,
-            isFalse,
-            reason: '${labels[index]} must remain fully readable');
         expect(
-          tester.renderObject<RenderParagraph>(label).getBoxesForSelection(
+          tester.renderObject<RenderParagraph>(label).didExceedMaxLines,
+          isFalse,
+          reason: '${labels[index]} must remain fully readable',
+        );
+        expect(
+          tester
+              .renderObject<RenderParagraph>(label)
+              .getBoxesForSelection(
                 TextSelection(
-                    baseOffset: 0, extentOffset: labels[index].length),
+                  baseOffset: 0,
+                  extentOffset: labels[index].length,
+                ),
               ),
           hasLength(1),
           reason: '${labels[index]} must not split in the middle of the word',
@@ -97,19 +113,33 @@ void main() {
 
     final bookcase = tester.state<BookcaseState>(find.byType(Bookcase));
     final stage = bookcase.activeStage!;
+    final firstBook = find.byKey(const ValueKey('shelf-spine-book-1'));
+    tester.widget<InkWell>(firstBook).focusNode!.requestFocus();
+    await tester.pump();
+    await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
+    await tester.pumpAndSettle();
+    final nextBook = find.byKey(const ValueKey('shelf-spine-book-6'));
+    expect(stage.current!.id, 'book-6');
+    expect(bookcase.shelf, 0);
+    expect(bookcase.activeStage, same(stage));
+    expect(nextBook.hitTestable(), findsOneWidget);
+    expect(tester.widget<InkWell>(nextBook).focusNode!.hasFocus, isTrue);
     final lastBook = find.byKey(const ValueKey('shelf-spine-book-8'));
-    await tester.scrollUntilVisible(lastBook, 80,
-        scrollable: find.descendant(
-          of: find.byKey(const ValueKey('shelf-spines')),
-          matching: find.byType(Scrollable),
-        ));
+    await tester.scrollUntilVisible(
+      lastBook,
+      80,
+      scrollable: find.descendant(
+        of: find.byKey(const ValueKey('shelf-spines')),
+        matching: find.byType(Scrollable),
+      ),
+    );
     await tester.pumpAndSettle();
     expect(lastBook.hitTestable(), findsOneWidget);
     await tester.tap(lastBook);
     await tester.pumpAndSettle();
     expect(stage.phase, ShelfPhase.held);
 
-    // The held-book pane scrolls independently below the fixed shelf controls.
+    // The held-book pane scrolls independently around its fixed Read button.
     final open = find.byKey(const ValueKey('open-shelf-book'));
     await tester.ensureVisible(open);
     await tester.pumpAndSettle();
@@ -132,11 +162,15 @@ void main() {
     await tester.pumpAndSettle();
     expectUsableTabs();
     for (final index in [0, 2]) {
-      expect(tester.getCenter(tab(index)).dx,
-          greaterThan(tester.getCenter(tab(index + 1)).dx));
+      expect(
+        tester.getCenter(tab(index)).dx,
+        greaterThan(tester.getCenter(tab(index + 1)).dx),
+      );
     }
     expect(
-        tester.getCenter(tab(2)).dy, greaterThan(tester.getCenter(tab(0)).dy));
+      tester.getCenter(tab(2)).dy,
+      greaterThan(tester.getCenter(tab(0)).dy),
+    );
     await tester.binding.handlePopRoute();
     await tester.pumpAndSettle();
     expect(tester.widget<Semantics>(tab(2)).properties.selected, isTrue);
@@ -147,8 +181,11 @@ void main() {
     expect(stage.phase, ShelfPhase.held);
     await tester.binding.handlePopRoute();
     await tester.pumpAndSettle();
-    expect(stage.phase, ShelfPhase.held,
-        reason: 'an offstage library must not consume another tab\'s Back');
+    expect(
+      stage.phase,
+      ShelfPhase.held,
+      reason: 'an offstage library must not consume another tab\'s Back',
+    );
     expect(find.byType(Bookcase).hitTestable(), findsOneWidget);
 
     await tester.binding.handlePopRoute();
@@ -157,14 +194,16 @@ void main() {
     await tester.binding.handlePopRoute();
     await tester.pump();
     expect(
-        tester.widget<PopScope<Object?>>(find.byType(PopScope<Object?>)).canPop,
-        isTrue);
+      tester.widget<PopScope<Object?>>(find.byType(PopScope<Object?>)).canPop,
+      isTrue,
+    );
     await tester.tap(tab(3));
     await tester.pumpAndSettle();
     expect(
-        tester.widget<PopScope<Object?>>(find.byType(PopScope<Object?>)).canPop,
-        isFalse,
-        reason: 'changing destinations cancels the armed app exit');
+      tester.widget<PopScope<Object?>>(find.byType(PopScope<Object?>)).canPop,
+      isFalse,
+      reason: 'changing destinations cancels the armed app exit',
+    );
     expect(tester.takeException(), isNull);
     startup.completeError(StateError('Database unavailable'));
     await tester.pumpAndSettle();

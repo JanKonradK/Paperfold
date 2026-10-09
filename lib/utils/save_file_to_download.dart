@@ -40,16 +40,12 @@ Future<String?> saveFileToDownload(
       final filePath = await FlutterFileDialog.saveFile(params: params);
       return filePath;
     case AnxPlatformEnum.macos:
-      String? outputFile = await FilePicker.platform.saveFile(
+      bytes ??= await File(sourceFilePath!).readAsBytes();
+      final saved = await FilePicker.saveFile(
         fileName: fileName,
+        bytes: bytes,
       );
-      if (outputFile != null) {
-        bytes ??= await File(sourceFilePath!).readAsBytes();
-        final file = File(outputFile);
-        await file.writeAsBytes(bytes);
-        return outputFile;
-      }
-      return outputFile;
+      return saved?.toFilePath();
     case AnxPlatformEnum.windows:
       final downloadPath = await getDownloadPath();
       final fileSavePath = '$downloadPath/$fileName';

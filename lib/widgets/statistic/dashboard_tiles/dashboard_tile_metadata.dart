@@ -1,5 +1,5 @@
 import 'package:paperfold/widgets/statistic/dashboard_tiles/dashboard_tile_registry.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 class StatisticsDashboardTileMetadata {
   const StatisticsDashboardTileMetadata({

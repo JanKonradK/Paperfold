@@ -1,6 +1,6 @@
 import 'package:paperfold/l10n/generated/L10n.dart';
 import 'package:paperfold/utils/get_path/macos_migration.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 class MigrationPage extends StatefulWidget {
   final Future<void> Function() onMigrationComplete;

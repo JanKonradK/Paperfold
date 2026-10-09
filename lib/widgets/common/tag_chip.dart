@@ -2,7 +2,7 @@ import 'package:paperfold/config/shared_preference_provider.dart';
 import 'package:paperfold/l10n/generated/L10n.dart';
 import 'package:paperfold/widgets/common/color_picker_sheet.dart';
 import 'package:paperfold/widgets/delete_confirm.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:paperfold/utils/color/hash_color.dart';
 
 class TagChip extends StatelessWidget {

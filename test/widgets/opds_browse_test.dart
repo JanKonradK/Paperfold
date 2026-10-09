@@ -1,3 +1,4 @@
+import 'package:flutter_riverpod/misc.dart' show Override;
 // The OPDS browse screen.
 //
 // The load-bearing behaviour is that every failure reaches the reader as the
@@ -7,7 +8,7 @@
 //
 //   flutter test test/widgets/opds_browse_test.dart
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:paperfold/config/paperfold_tokens.dart';
@@ -48,7 +49,7 @@ Widget _host(List<Override> overrides, {double textScale = 1}) {
   return ProviderScope(
     overrides: overrides,
     child: MaterialApp(
-      localizationsDelegates: L10n.localizationsDelegates,
+      localizationsDelegates: [L10n.delegate, ...GlobalMaterialLocalizations.delegates],
       supportedLocales: L10n.supportedLocales,
       theme: ThemeData(
         useMaterial3: true,

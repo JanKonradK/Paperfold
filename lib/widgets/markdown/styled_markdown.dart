@@ -1,5 +1,5 @@
 import 'package:paperfold/widgets/markdown/selection_control.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:gpt_markdown/gpt_markdown.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 
@@ -24,19 +24,19 @@ class StyledMarkdown extends StatelessWidget {
     final baseFontSize = fontSize;
     return SelectableRegion(
       selectionControls: selectionControls(),
-      child: GptMarkdown(data,
-          followLinkColor: true,
-          style:
-              baseFontSize != null ? TextStyle(fontSize: baseFontSize) : null,
-          onLinkTap: (href, text) =>
-              launchUrlString(href, mode: LaunchMode.externalApplication),
-          linkBuilder: (context, text, url, style) => Text.rich(
-                text,
-                style: style.copyWith(
-                  color: theme.colorScheme.primary,
-                  decoration: TextDecoration.underline,
-                ),
-              )),
+      child: GptMarkdown(
+        data,
+        followLinkColor: true,
+        style: baseFontSize != null ? TextStyle(fontSize: baseFontSize) : null,
+        onLinkTap: (href, text) =>
+            launchUrlString(href, mode: LaunchMode.externalApplication),
+        styleSheet: GptMarkdownStyleSheet(
+          link: LinkStyle(
+            color: theme.colorScheme.primary,
+            decoration: TextDecoration.underline,
+          ),
+        ),
+      ),
     );
   }
 }

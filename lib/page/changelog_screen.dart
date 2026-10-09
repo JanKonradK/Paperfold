@@ -1,6 +1,6 @@
 import 'package:paperfold/l10n/generated/L10n.dart';
 import 'package:paperfold/widgets/markdown/styled_markdown.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:paperfold/utils/log/common.dart';
 

@@ -1,3 +1,4 @@
+import 'package:flutter_riverpod/misc.dart' show Override;
 // Scrolling the statistics page, which skipped a chunk and threw itself to the
 // top on the way up. Two faults: the auto-dispose `statisticDataProvider` lost
 // its last listener mid-scroll and came back loading, and each book card
@@ -6,7 +7,7 @@
 //
 //   flutter test test/widgets/statistics_scroll_test.dart
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:paperfold/config/paperfold_tokens.dart';
@@ -128,7 +129,7 @@ List<Override> _overrides(VoidCallback onFetch) {
 MaterialApp _app(Widget child, Brightness brightness) {
   return MaterialApp(
     navigatorKey: navigatorKey,
-    localizationsDelegates: L10n.localizationsDelegates,
+    localizationsDelegates: [L10n.delegate, ...GlobalMaterialLocalizations.delegates],
     supportedLocales: L10n.supportedLocales,
     theme: ThemeData(
       useMaterial3: true,

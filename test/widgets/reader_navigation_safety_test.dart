@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -95,7 +95,7 @@ class _PlayerState extends EpubPlayerState {
 }
 
 Widget _app(Widget child) => MaterialApp(
-      localizationsDelegates: L10n.localizationsDelegates,
+      localizationsDelegates: [L10n.delegate, ...GlobalMaterialLocalizations.delegates],
       supportedLocales: L10n.supportedLocales,
       locale: const Locale('en'),
       home: Scaffold(body: child),

@@ -4,7 +4,7 @@ import 'package:paperfold/models/book.dart';
 import 'package:paperfold/widgets/book_notes/add_to_journal_button.dart';
 import 'package:paperfold/utils/time_to_human.dart';
 import 'package:paperfold/widgets/common/container/filled_container.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 class BookNoteTile extends StatelessWidget {
   const BookNoteTile({

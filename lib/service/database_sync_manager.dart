@@ -9,7 +9,7 @@ import 'package:paperfold/l10n/generated/L10n.dart';
 import 'package:paperfold/main.dart';
 import 'package:path/path.dart';
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 /// Database safe sync manager

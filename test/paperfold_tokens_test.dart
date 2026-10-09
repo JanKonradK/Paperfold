@@ -1,6 +1,6 @@
 import 'dart:math' as math;
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:paperfold/config/paperfold_tokens.dart';
 
@@ -98,12 +98,7 @@ void _expectMaterialRoleContrast(ColorScheme scheme) {
     scheme.tertiaryContainer,
     'onTertiaryContainer/tertiaryContainer',
   );
-  _expectTextContrast(
-    scheme,
-    scheme.onError,
-    scheme.error,
-    'onError/error',
-  );
+  _expectTextContrast(scheme, scheme.onError, scheme.error, 'onError/error');
   _expectTextContrast(
     scheme,
     scheme.onInverseSurface,
@@ -113,6 +108,24 @@ void _expectMaterialRoleContrast(ColorScheme scheme) {
 }
 
 void main() {
+  test('burgundy sits between cream and dark with readable Material roles', () {
+    _expectMaterialRoleContrast(PaperfoldTokens.burgundyColorScheme());
+    expect(
+      _relativeLuminance(PaperfoldTokens.burgundy.ground),
+      greaterThan(_relativeLuminance(PaperfoldTokens.darkNearBlack.ground)),
+    );
+    expect(
+      _relativeLuminance(PaperfoldTokens.burgundy.ground),
+      lessThan(_relativeLuminance(PaperfoldTokens.light.ground)),
+    );
+    expect(
+      _contrastRatio(
+        PaperfoldTokens.burgundy.accent,
+        PaperfoldTokens.burgundy.surfaceHighest,
+      ),
+      greaterThanOrEqualTo(4.5),
+    );
+  });
   group('Paperfold contrast', () {
     test('light text and accent pass on paper', () {
       expect(
@@ -138,12 +151,15 @@ void main() {
     test('aged gold is readable on the burgundy cover', () {
       expect(
         _contrastRatio(
-            PaperfoldTokens.cover.foil, PaperfoldTokens.cover.ground),
+          PaperfoldTokens.cover.foil,
+          PaperfoldTokens.cover.ground,
+        ),
         greaterThanOrEqualTo(4.5),
       );
     });
 
     for (final (name, palette) in <(String, PaperfoldPagePalette)>[
+      ('burgundy', PaperfoldTokens.burgundy),
       ('true black', PaperfoldTokens.darkTrueBlack),
       ('near-black', PaperfoldTokens.darkNearBlack),
     ]) {
@@ -172,8 +188,11 @@ void main() {
           palette.surfaceHigh,
           palette.surfaceHighest,
         ];
-        expect(steps.toSet().length, steps.length,
-            reason: 'every $name surface step must be a distinct colour');
+        expect(
+          steps.toSet().length,
+          steps.length,
+          reason: 'every $name surface step must be a distinct colour',
+        );
         for (var i = 1; i < steps.length; i++) {
           expect(
             _relativeLuminance(steps[i]),
@@ -198,8 +217,9 @@ void main() {
   });
 
   test('the primary role swaps accents between brightnesses', () {
-    final ColorScheme lightScheme =
-        PaperfoldTokens.colorScheme(Brightness.light);
+    final ColorScheme lightScheme = PaperfoldTokens.colorScheme(
+      Brightness.light,
+    );
     final ColorScheme darkScheme = PaperfoldTokens.colorScheme(Brightness.dark);
 
     expect(lightScheme.primary, PaperfoldTokens.light.accent);
@@ -208,9 +228,7 @@ void main() {
   });
 
   test('light Material role pairings support body text', () {
-    _expectMaterialRoleContrast(
-      PaperfoldTokens.colorScheme(Brightness.light),
-    );
+    _expectMaterialRoleContrast(PaperfoldTokens.colorScheme(Brightness.light));
   });
 
   test('dark Material role pairings support body text on true black', () {

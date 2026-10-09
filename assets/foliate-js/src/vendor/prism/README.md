@@ -99,7 +99,7 @@ cd assets/foliate-js/src/vendor/prism
 
 ## Version
 
-Current version: **Prism.js 1.29.0**
+Current version: **Prism.js 1.30.0**
 
 ## Total Size
 

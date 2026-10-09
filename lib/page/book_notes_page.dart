@@ -12,9 +12,8 @@ import 'package:paperfold/widgets/book_notes/book_notes_list.dart';
 import 'package:paperfold/widgets/bookshelf/book_cover.dart';
 import 'package:paperfold/widgets/common/container/filled_container.dart';
 import 'package:paperfold/widgets/common/load_failure.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:icons_plus/icons_plus.dart';
 
 class BookNotesPage extends ConsumerStatefulWidget {
   const BookNotesPage({
@@ -204,7 +203,7 @@ class _BookNotesPageState extends ConsumerState<BookNotesPage> {
                                 onPressed: exporting
                                     ? null
                                     : () => export(ExportType.md),
-                                icon: const Icon(IonIcons.logo_markdown),
+                                icon: const Icon(Icons.code),
                                 label: const Text('Markdown'),
                               ),
                               OutlinedButton.icon(
@@ -340,7 +339,7 @@ class _BookNotesPageState extends ConsumerState<BookNotesPage> {
             child: ListView(
               padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
               children: [
-                _bookInfo(context, notes.valueOrNull?.totalNotes),
+                _bookInfo(context, notes.value?.totalNotes),
                 const SizedBox(height: 24),
                 BookNotesList(
                   book: widget.book,

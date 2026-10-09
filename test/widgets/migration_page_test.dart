@@ -1,6 +1,6 @@
 import 'dart:io';
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:paperfold/l10n/generated/L10n.dart';
 import 'package:paperfold/page/migration_page.dart';
@@ -16,7 +16,7 @@ void main() {
     var completed = false;
     await tester.pumpWidget(MaterialApp(
       locale: const Locale('en'),
-      localizationsDelegates: L10n.localizationsDelegates,
+      localizationsDelegates: [L10n.delegate, ...GlobalMaterialLocalizations.delegates],
       supportedLocales: L10n.supportedLocales,
       home: MigrationPage(
         checkResult: MigrationCheckResult(

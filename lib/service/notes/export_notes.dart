@@ -5,7 +5,7 @@ import 'package:paperfold/models/book_note.dart';
 import 'package:paperfold/utils/convert_string_to_uint8list.dart';
 import 'package:paperfold/utils/save_file_to_download.dart';
 import 'package:csv/csv.dart';
-import 'package:flutter/cupertino.dart';
+import 'package:cupertino_ui/cupertino_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:paperfold/utils/toast/common.dart';
 
@@ -86,7 +86,7 @@ Future<void> exportNotes(
         })
       ]);
 
-      final string = const ListToCsvConverter().convert(list);
+      final string = csv.encode(list);
 
       String? filePath = await saveFileToDownload(
           bytes: convertStringToUint8List('\uFEFF$string'),

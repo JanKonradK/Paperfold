@@ -1,6 +1,6 @@
 import 'package:paperfold/widgets/common/container/filled_container.dart';
 import 'package:paperfold/widgets/settings/settings_tile.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 abstract class AbstractSettingsSection extends StatelessWidget {
   const AbstractSettingsSection({super.key});

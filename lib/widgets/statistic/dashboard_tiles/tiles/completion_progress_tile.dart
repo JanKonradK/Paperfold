@@ -5,7 +5,7 @@ import 'package:paperfold/widgets/common/async_skeleton_wrapper.dart';
 import 'package:paperfold/widgets/statistic/dashboard_tiles/dashboard_tile_base.dart';
 import 'package:paperfold/widgets/statistic/dashboard_tiles/dashboard_tile_metadata.dart';
 import 'package:paperfold/widgets/statistic/dashboard_tiles/dashboard_tile_registry.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class CompletionProgressTile extends StatisticsDashboardTileBase {
@@ -32,6 +32,7 @@ class CompletionProgressTile extends StatisticsDashboardTileBase {
     final asyncValue = ref.watch(readingCompletionProvider);
     return AsyncSkeletonWrapper<List<Book>>(
       asyncValue: asyncValue,
+      onRetry: () async => ref.invalidate(readingCompletionProvider),
       mock: [Book.mock()],
       builder: (books, _) => _CompletionContent(books: books),
     );

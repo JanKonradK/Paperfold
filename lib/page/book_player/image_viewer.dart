@@ -8,7 +8,7 @@ import 'package:paperfold/utils/save_image_to_path.dart';
 import 'package:paperfold/utils/share_file.dart';
 import 'package:flutter/gestures.dart';
 import 'package:paperfold/l10n/generated/L10n.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:photo_view/photo_view.dart';
 
 class ImageViewer extends StatefulWidget {

@@ -15,7 +15,7 @@ import 'package:paperfold/widgets/book_share/excerpt_share_card.dart';
 import 'package:paperfold/widgets/icon_and_text.dart';
 import 'package:paperfold/widgets/show_loading.dart';
 import 'package:paperfold/widgets/common/load_failure.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';

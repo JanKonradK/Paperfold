@@ -32,7 +32,7 @@ import 'package:paperfold/widgets/common/tag_chip.dart';
 import 'package:paperfold/widgets/highlight_digit.dart';
 import 'package:paperfold/widgets/hint/hint_banner.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -59,7 +59,7 @@ class _BookDetailState extends ConsumerState<BookDetail> {
   /// word in a description. A tag that has not arrived yet only means the
   /// first frame guesses from the description alone.
   List<String> get _tagNames {
-    final state = ref.watch(bookTagEditorProvider(widget.book.id)).valueOrNull;
+    final state = ref.watch(bookTagEditorProvider(widget.book.id)).value;
     if (state == null) return const [];
     return [
       for (final tag in state.tags)
@@ -141,16 +141,15 @@ class _BookDetailState extends ConsumerState<BookDetail> {
             return;
           }
 
-          FilePickerResult? result = await FilePicker.platform.pickFiles(
+          final result = await FilePicker.pickFile(
             type: FileType.image,
-            allowMultiple: false,
           );
 
           if (result == null) {
             return;
           }
 
-          File image = File(result.files.single.path!);
+          File image = File(result.path!);
 
           AnxLog.info('BookDetail: Image path: ${image.path}');
           // Delete the existing cover image file

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:paperfold/l10n/generated/L10n.dart';
 import 'package:paperfold/widgets/paperfold_glass_surface.dart';
 

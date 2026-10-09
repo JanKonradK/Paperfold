@@ -23,7 +23,7 @@ import 'package:paperfold/utils/get_path/storage_migration.dart';
 import 'package:paperfold/utils/log/common.dart';
 import 'package:paperfold/utils/window_position_validator.dart';
 import 'package:paperfold/providers/sync.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:heroine/heroine.dart';
@@ -103,6 +103,8 @@ Future<void> main() async {
 
   runApp(
     ProviderScope(
+      // Failed operations use the app's visible Retry actions.
+      retry: (_, _) => null,
       child: MyApp(databaseReady: databaseReady),
     ),
   );
@@ -144,9 +146,9 @@ class _MyAppState extends ConsumerState<MyApp>
       WidgetsBinding.instance.addPostFrameCallback((_) {
         final context = navigatorKey.currentContext;
         if (!mounted || context == null) return;
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(L10n.of(context).storageMigrationFailed),
-        ));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(L10n.of(context).storageMigrationFailed)),
+        );
       });
     } catch (_) {
       // HomePage shows the startup failure and restart guidance.
@@ -198,11 +200,12 @@ class _MyAppState extends ConsumerState<MyApp>
     final isMaximized = await windowManager.isMaximized();
 
     Prefs().windowInfo = WindowInfo(
-        x: windowOffset.dx,
-        y: windowOffset.dy,
-        width: windowSize.width,
-        height: windowSize.height,
-        isMaximized: isMaximized);
+      x: windowOffset.dx,
+      y: windowOffset.dy,
+      width: windowSize.width,
+      height: windowSize.height,
+      isMaximized: isMaximized,
+    );
     AnxLog.info('onWindowClose: Offset: $windowOffset, Size: $windowSize');
   }
 
@@ -233,9 +236,7 @@ class _MyAppState extends ConsumerState<MyApp>
     final databaseReady = widget.databaseReady;
     final Widget home;
     if (_needsMigration) {
-      home = _MigrationWrapper(
-        migrationCheckResult: _migrationCheckResult!,
-      );
+      home = _MigrationWrapper(migrationCheckResult: _migrationCheckResult!);
     } else {
       assert(databaseReady != null);
       final homePage = HomePage(
@@ -243,19 +244,12 @@ class _MyAppState extends ConsumerState<MyApp>
         startupRevealReady: _openingFinished.future,
       );
       home = _playColdStartOpening
-          ? OpeningSequence(
-              onFinished: _handleOpeningFinished,
-              child: homePage,
-            )
+          ? OpeningSequence(onFinished: _handleOpeningFinished, child: homePage)
           : homePage;
     }
 
     return provider.MultiProvider(
-      providers: [
-        provider.ChangeNotifierProvider(
-          create: (_) => Prefs(),
-        ),
-      ],
+      providers: [provider.ChangeNotifierProvider(create: (_) => Prefs())],
       child: provider.Consumer<Prefs>(
         builder: (context, prefsNotifier, child) {
           return MaterialApp(
@@ -269,18 +263,25 @@ class _MyAppState extends ConsumerState<MyApp>
             ),
             navigatorObservers: [
               FlutterSmartDialog.observer,
-              heroineController
+              heroineController,
             ],
-            builder: FlutterSmartDialog.init(),
+            builder: FlutterSmartDialog.init(
+              builder: (context, child) =>
+                  MaterialUiCompatibilityBridge(child: child!),
+            ),
             navigatorKey: navigatorKey,
             locale: prefsNotifier.locale,
             localeListResolutionCallback: _resolveLocale,
-            localizationsDelegates: L10n.localizationsDelegates,
+            localizationsDelegates: [
+              L10n.delegate,
+              ...GlobalMaterialLocalizations.delegates,
+            ],
             supportedLocales: L10n.supportedLocales,
             title: 'Paperfold',
             themeMode: prefsNotifier.themeMode,
             theme: paperfoldLibraryTheme(
-                colorSchema(prefsNotifier, context, Brightness.light)),
+              colorSchema(prefsNotifier, context, Brightness.light),
+            ),
             darkTheme: colorSchema(prefsNotifier, context, Brightness.dark),
             home: home,
           );

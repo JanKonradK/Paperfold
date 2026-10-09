@@ -2,6 +2,18 @@
 
 Paperfold is an e-book reader, a note application, and a reading journal.
 
+## Version 2.1
+
+- Select Cream, Burgundy, Dark, or System in Appearance settings.
+- Use warm cream surfaces in light mode and burgundy surfaces for the middle theme.
+- See a wider range of binding colors from the supplied palette.
+- Select a book to see its cover, title, author, progress, and labeled actions.
+- Start or continue reading from the fixed button below the book details.
+- Use complete message sets in all 16 locale files.
+- Build with the updated Flutter, Dart, Android, and reader tools.
+
+See [2.1 changes and checks](docs/paperfold-2.1.md).
+
 ## Version 2.0
 
 - Keep spines as the default library view, or select the saved cover view.
@@ -25,7 +37,7 @@ See [2.0 checks and measurements](docs/paperfold-2.0.md).
 - Find Highlights, Reading challenge, and Month tracker together in Journal.
 - Open Statistics and Settings directly from the main navigation.
 
-Journal now uses the app's burgundy surfaces. The reader keeps its saved page theme.
+Journal follows the selected app theme. The reader keeps its saved page theme.
 Tracker editors keep the entered value if a save fails.
 The database upgrade adds passage fields without replacing existing writing.
 

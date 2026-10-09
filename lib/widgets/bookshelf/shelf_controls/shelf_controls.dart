@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:paperfold/enums/book_status.dart';
 import 'package:paperfold/l10n/generated/L10n.dart';
 import 'package:paperfold/models/tag.dart';

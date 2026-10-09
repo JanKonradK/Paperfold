@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -70,7 +70,7 @@ Future<void> _pumpNotes(
     ],
     child: MaterialApp(
       navigatorKey: navigatorKey,
-      localizationsDelegates: L10n.localizationsDelegates,
+      localizationsDelegates: [L10n.delegate, ...GlobalMaterialLocalizations.delegates],
       supportedLocales: L10n.supportedLocales,
       locale: const Locale('en'),
       home: BookNotesPage(book: book, numberOfNotes: 42, isMobile: true),

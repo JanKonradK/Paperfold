@@ -25,7 +25,14 @@ abstract interface class OpdsCredentials {
 /// The real store, backed by the platform keystore.
 class KeystoreOpdsCredentials implements OpdsCredentials {
   const KeystoreOpdsCredentials({FlutterSecureStorage? storage})
-      : _storage = storage ?? const FlutterSecureStorage();
+    : _storage =
+          storage ??
+          const FlutterSecureStorage(
+            aOptions: AndroidOptions(
+              resetOnError: false,
+              migrateWithBackup: true,
+            ),
+          );
 
   final FlutterSecureStorage _storage;
 

@@ -47,10 +47,9 @@ import 'package:paperfold/widgets/reading_page/style_widget.dart';
 import 'package:battery_plus/battery_plus.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:icons_plus/icons_plus.dart';
 import 'package:pointer_interceptor/pointer_interceptor.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -988,7 +987,7 @@ class EpubPlayerState extends ConsumerState<EpubPlayer>
           bookmarkExists = false;
         } else {
           BookmarkModel bookmark = await ref
-              .read(BookmarkProvider(widget.book.id).notifier)
+              .read(bookmarkProvider(widget.book.id).notifier)
               .addBookmark(
                 BookmarkModel(
                   bookId: widget.book.id,
@@ -1656,10 +1655,13 @@ class EpubPlayerState extends ConsumerState<EpubPlayer>
                       0, (textStyle.fontSize ?? 10) * 0.08, 2, 0),
                   child: Text('$_batteryLevel', style: batteryTextStyle),
                 ),
-                Icon(
-                  HeroIcons.battery_0,
-                  size: batteryIconSize,
-                  color: iconColor,
+                RotatedBox(
+                  quarterTurns: 1,
+                  child: Icon(
+                    Icons.battery_0_bar,
+                    size: batteryIconSize,
+                    color: iconColor,
+                  ),
                 ),
               ],
             );

@@ -6,7 +6,7 @@ import 'package:paperfold/utils/log/common.dart';
 import 'package:paperfold/utils/toast/common.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:saver_gallery/saver_gallery.dart';
@@ -83,7 +83,7 @@ class SaveImg {
         img,
         fileName: '$name.$extension',
         skipIfExists: false,
-        androidRelativePath: "Pictures/Paperfold",
+        albumPath: 'Paperfold',
       );
 
       SmartDialog.dismiss();

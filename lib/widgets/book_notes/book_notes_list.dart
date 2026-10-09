@@ -13,10 +13,9 @@ import 'package:paperfold/widgets/delete_confirm.dart';
 import 'package:paperfold/widgets/hint/hint_banner.dart';
 import 'package:paperfold/widgets/tips/notes_tips.dart';
 import 'package:paperfold/widgets/common/load_failure.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
-import 'package:icons_plus/icons_plus.dart';
 import 'package:sticky_headers/sticky_headers.dart';
 
 class BookNotesList extends ConsumerWidget {
@@ -102,7 +101,7 @@ class BookNotesList extends ConsumerWidget {
               }
             },
             icon: Icon(
-              allSelected ? EvaIcons.checkmark_circle : Icons.circle_outlined,
+              allSelected ? Icons.check_circle : Icons.circle_outlined,
               color: buttonColor,
             ),
           ),
@@ -122,8 +121,8 @@ class BookNotesList extends ConsumerWidget {
                 }
               }
             },
-            deleteIcon: Icon(EvaIcons.trash_2, color: buttonColor),
-            confirmIcon: const Icon(EvaIcons.close_circle, color: Colors.red),
+            deleteIcon: Icon(Icons.delete_outline, color: buttonColor),
+            confirmIcon: const Icon(Icons.cancel, color: Colors.red),
           ),
           if (!reading && exportNotes != null)
             IconButton(
@@ -143,7 +142,7 @@ class BookNotesList extends ConsumerWidget {
         IconButton(
           onPressed: () => _showFilterSheet(context, ref),
           icon: Icon(
-            state.showAllNotes ? EvaIcons.funnel_outline : EvaIcons.funnel,
+            state.showAllNotes ? Icons.filter_alt_outlined : Icons.filter_alt,
           ),
         ),
       ],
@@ -198,8 +197,8 @@ class BookNotesList extends ConsumerWidget {
                                 .toggleShowBookmarks(),
                             icon: Icon(
                               state.showBookmarks
-                                  ? EvaIcons.bookmark
-                                  : EvaIcons.bookmark_outline,
+                                  ? Icons.bookmark
+                                  : Icons.bookmark_border,
                               color: Theme.of(context).colorScheme.primary,
                             ),
                             label: Text(L10n.of(context).noteListShowBookmark),
@@ -267,8 +266,8 @@ class BookNotesList extends ConsumerWidget {
         if (isActive)
           Icon(
             current.direction == SortDirection.asc
-                ? EvaIcons.arrow_up
-                : EvaIcons.arrow_down,
+                ? Icons.arrow_upward
+                : Icons.arrow_downward,
           ),
       ],
     );
@@ -295,7 +294,7 @@ class BookNotesList extends ConsumerWidget {
       return IconButton(
         onPressed: () => notifier.toggleTypeColor(type.type, color),
         icon: Icon(
-          selected ? EvaIcons.checkmark_circle_2 : Icons.circle,
+          selected ? Icons.check_circle : Icons.circle,
           color: Color(int.parse('0x99$color')),
         ),
         iconSize: 35,
@@ -346,7 +345,7 @@ class BookNotesList extends ConsumerWidget {
               onPressed: () => notifier.toggleSelection(bookNote),
               icon: Icon(
                 state.selectedNoteIds.contains(bookNote.id)
-                    ? EvaIcons.checkmark_circle
+                    ? Icons.check_circle
                     : Icons.circle_outlined,
                 color: Theme.of(context).colorScheme.primary,
               ),
@@ -471,7 +470,7 @@ class BookNotesList extends ConsumerWidget {
                               return IconButton(
                                 icon: Icon(
                                   currentColor == color
-                                      ? EvaIcons.checkmark_circle_2
+                                      ? Icons.check_circle
                                       : Icons.circle,
                                   color: Color(int.parse('0x99$color')),
                                   size: 30,

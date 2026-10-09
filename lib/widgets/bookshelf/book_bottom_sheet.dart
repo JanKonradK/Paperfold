@@ -26,10 +26,9 @@ import 'package:paperfold/widgets/bookshelf/book_cover.dart';
 import 'package:paperfold/widgets/delete_confirm.dart';
 import 'package:paperfold/widgets/icon_and_text.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
-import 'package:icons_plus/icons_plus.dart';
 import 'package:path/path.dart' as p;
 
 class BookBottomSheet extends ConsumerWidget {
@@ -140,13 +139,12 @@ class BookBottomSheet extends ConsumerWidget {
     }
 
     Future<void> handleReplace(BuildContext context) async {
-      FilePickerResult? result = await FilePicker.platform.pickFiles(
+      final result = await FilePicker.pickFile(
         type: FileType.any,
-        allowMultiple: false,
       );
 
       if (result == null) return;
-      PlatformFile newFile = result.files.first;
+      PlatformFile newFile = result;
       String extension =
           p.extension(newFile.name).replaceAll('.', '').toLowerCase();
       if (!allowBookExtensions.contains(extension)) {
@@ -277,27 +275,27 @@ class BookBottomSheet extends ConsumerWidget {
 
     final actions = [
       {
-        "icon": EvaIcons.book_open,
+        "icon": Icons.menu_book_outlined,
         "text": L10n.of(context).navJournal,
         "onTap": () => handleJournal(context)
       },
       {
-        "icon": EvaIcons.share,
+        "icon": Icons.share_outlined,
         "text": L10n.of(context).shareFile,
         "onTap": () => handleShare()
       },
       {
-        "icon": EvaIcons.refresh,
+        "icon": Icons.refresh,
         "text": L10n.of(context).bookBottomSheetReplaceFile,
         "onTap": () => handleReplace(context)
       },
       {
-        "icon": EvaIcons.cloud_upload,
+        "icon": Icons.cloud_upload_outlined,
         "text": L10n.of(context).bookSyncStatusReleaseSpace,
         "onTap": () => handleUpload(context)
       },
       {
-        "icon": EvaIcons.more_vertical,
+        "icon": Icons.more_vert,
         "text": L10n.of(context).notesPageDetail,
         "onTap": () => handleDetail(context)
       },
@@ -323,12 +321,12 @@ class BookBottomSheet extends ConsumerWidget {
               handleDelete(context);
             },
             deleteIcon: IconAndText(
-              icon: const Icon(EvaIcons.trash),
+              icon: const Icon(Icons.delete_outline),
               text: L10n.of(context).commonDelete,
             ),
             confirmIcon: IconAndText(
               icon: const Icon(
-                EvaIcons.checkmark_circle_2,
+                Icons.check_circle,
                 color: Colors.red,
               ),
               text: L10n.of(context).commonConfirm,
@@ -352,7 +350,7 @@ class BookBottomSheet extends ConsumerWidget {
                 }).toList();
               },
               child: IconAndText(
-                icon: const Icon(EvaIcons.more_vertical),
+                icon: const Icon(Icons.more_vert),
                 text: L10n.of(context).more,
               ))
         ],

@@ -1,5 +1,16 @@
 # Changelog
 
+## 2.1.0
+
+- Select Cream, Burgundy, Dark, or System for the app theme.
+- Use warm cream surfaces in light mode and burgundy surfaces for the middle theme.
+- See more binding colors from the Paperfold palette.
+- Open a book screen with its cover, full title, author, and reading progress.
+- Find Journal, Details, Shelves, and Customise in labeled buttons.
+- Start or continue reading with the fixed button below the details.
+- Use complete translations in all 16 locale files.
+- Use the updated Flutter, Dart, Android, and reader tools.
+
 ## 1.15.0
 
 Paperfold's first version under its own name.

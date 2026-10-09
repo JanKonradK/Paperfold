@@ -1,6 +1,6 @@
 import 'dart:math' as math;
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// A loading page that follows the active theme until the book is ready.
 class BookOpeningPage extends StatelessWidget {

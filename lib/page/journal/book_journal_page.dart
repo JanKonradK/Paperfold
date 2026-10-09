@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:paperfold/dao/journal.dart';
 import 'package:paperfold/l10n/generated/L10n.dart';
@@ -260,7 +260,7 @@ class _BookJournalPageState extends ConsumerState<BookJournalPage> {
                     book: book,
                     numberOfNotes: ref
                             .read(bookNotesControllerProvider(book))
-                            .valueOrNull
+                            .value
                             ?.allNotes
                             .length ??
                         0,

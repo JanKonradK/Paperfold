@@ -1,6 +1,7 @@
+import 'package:flutter_riverpod/misc.dart' show Override;
 import 'dart:async';
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:paperfold/l10n/generated/L10n.dart';
@@ -39,7 +40,7 @@ Future<void> _openMonth(WidgetTester tester, _Month month) async {
   await tester.pumpWidget(ProviderScope(
     overrides: [monthTrackerProvider.overrideWith(() => month)],
     child: const MaterialApp(
-      localizationsDelegates: L10n.localizationsDelegates,
+      localizationsDelegates: [L10n.delegate, ...GlobalMaterialLocalizations.delegates],
       supportedLocales: L10n.supportedLocales,
       locale: Locale('en'),
       home: MonthTrackerPage(),
@@ -67,7 +68,7 @@ void main() {
       await tester.pumpWidget(ProviderScope(
         overrides: <Override>[monthTrackerProvider.overrideWith(() => month)],
         child: MaterialApp(
-          localizationsDelegates: L10n.localizationsDelegates,
+          localizationsDelegates: [L10n.delegate, ...GlobalMaterialLocalizations.delegates],
           supportedLocales: L10n.supportedLocales,
           home: const MonthTrackerPage(),
         ),

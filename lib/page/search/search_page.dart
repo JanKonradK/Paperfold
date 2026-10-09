@@ -11,7 +11,7 @@ import 'package:paperfold/widgets/book_notes/book_note_tile.dart';
 import 'package:paperfold/widgets/bookshelf/book_item.dart';
 import 'package:paperfold/widgets/common/container/filled_container.dart';
 import 'package:paperfold/widgets/common/load_failure.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class SearchPage extends ConsumerStatefulWidget {

@@ -106,8 +106,8 @@
   "notesTips_2": "Adicione uma nota enquanto lê!",
   "readingPageChapterPages": "Páginas do Capítulo",
   "readingPageCurrentPage": "Página Atual",
-  "readingPageAutoMarkSelection": "Auto-mark selection",
-  "readingPageAutoMarkSelectionTips": "Automatically highlight selected text with the last used style",
+  "readingPageAutoMarkSelection": "Marcar seleção automaticamente",
+  "readingPageAutoMarkSelectionTips": "Destacar automaticamente o texto selecionado com o último estilo usado",
   "readingPageAutoTranslateSelection": "Tradução Automática da Seleção",
   "translateError": "Erro de Tradução",
   "readingPageAtLeastTwoThemes": "Pelo menos 2 temas são necessários",
@@ -522,7 +522,7 @@
   "notesExportMergeChapters": "Mesclar capítulos",
   "notesExportMergeChaptersDescription": "Quando ativado, as notas do mesmo capítulo compartilham um único título.",
   "bookDetailEditHint": "Toque em Editar para alterar capa, título, tags e mais",
-  "tagsSectionTitle": "Tags",
+  "tagsSectionTitle": "Etiquetas",
   "tagsEmptyHint": "Sem tags",
   "tagsEditHint": "Toque em Editar para adicionar tags",
   "tagNewPlaceholder": "Nova tag",
@@ -574,5 +574,499 @@
   "historyClose": "Fechar",
   "useBookStyles": "Usar estilos do livro",
   "useBookStylesDescription": "Quando ativado, o aplicativo usará os estilos definidos no livro em vez de suas configurações personalizadas para altura da linha, peso da fonte, recuo de texto, espaçamento entre letras e espaçamento entre parágrafos",
-  "commonInputCannotBeEmpty": "A entrada não pode estar vazia"
+  "commonInputCannotBeEmpty": "A entrada não pode estar vazia",
+  "commonShowPassword": "Mostrar senha",
+  "commonHidePassword": "Ocultar senha",
+  "settingsCreamMode": "Creme",
+  "settingsBurgundyMode": "Bordô",
+  "settingsAppearanceUsePaperfoldTheme": "Usar o tema do Paperfold",
+  "pageTurnFold": "Dobra",
+  "pageTurnCurl": "Curvatura",
+  "pageTurnNoneDescription": "A próxima página aparece imediatamente.",
+  "pageTurnSlideDescription": "A página desliza para o lado. A opção mais fluida.",
+  "pageTurnFoldDescription": "A página desliza acompanhada de uma dobra.",
+  "pageTurnCurlDescription": "A página se levanta e se curva como papel. Requer uma captura de tela a cada mudança de página.",
+  "pageTurnScrollDescription": "Uma página contínua, sem mudanças de página.",
+  "settingsAdvancedNetwork": "Rede",
+  "settingsAdvancedHttpProxyEnabled": "Ativar proxy HTTP",
+  "settingsAdvancedHttpProxyConfig": "Configuração do proxy HTTP",
+  "settingsAdvancedHttpProxyHost": "Servidor proxy",
+  "settingsAdvancedHttpProxyHostHint": "por exemplo, 127.0.0.1",
+  "settingsAdvancedHttpProxyPort": "Porta do proxy",
+  "settingsAdvancedHttpProxyPortHint": "por exemplo, 7890",
+  "settingsAdvancedHttpProxyNotConfigured": "Não configurado",
+  "settingsAdvancedHttpProxyInvalidInput": "Servidor ou porta do proxy inválidos",
+  "settingsAdvancedHttpProxyTestUrl": "URL de teste",
+  "settingsAdvancedHttpProxyTest": "Testar conexão",
+  "settingsAdvancedHttpProxyTesting": "Testando…",
+  "settingsAdvancedHttpProxyTestSuccess": "Conexão bem-sucedida",
+  "settingsAdvancedHttpProxyTestFailed": "Falha na conexão",
+  "navLibrary": "Biblioteca",
+  "navJournal": "Diário",
+  "navMore": "Mais",
+  "shelfHomeTitle": "Minhas estantes",
+  "shelfReadingNow": "Lendo agora",
+  "shelfAllTimeFavourites": "Favoritos de todos os tempos",
+  "shelfToBeRead": "Para ler",
+  "shelfFinished": "Concluídos",
+  "shelfBooksToBuy": "Livros para comprar",
+  "emptyShelf": "Ainda não há livros aqui.",
+  "shelfViewCovers": "Mostrar capas",
+  "shelfViewLog": "Mostrar registro",
+  "shelfLogColumns": "Colunas",
+  "shelfLogAuthor": "Autor",
+  "shelfLogRating": "Avaliação",
+  "shelfLogStatus": "Estado",
+  "shelfLogDates": "Datas",
+  "shelvesLoading": "Abrindo suas estantes",
+  "shelfLoadErrorTitle": "Não foi possível abrir as estantes.",
+  "shelfLoadErrorBody": "Tente abrir as estantes novamente.",
+  "shelfAddBooksTooltip": "Adicionar livros",
+  "shelfAddBooksFromDevice": "Deste dispositivo",
+  "wishlistSpineSemanticLabel": "{title}, de {author}. Abrir livros para comprar.",
+  "wishlistSpineSemanticLabelNoAuthor": "{title}. Abrir livros para comprar.",
+  "bookCoverSemanticLabel": "Abrir {title}",
+  "bookOptionsSemanticHint": "Pressione e segure para ver as opções do livro",
+  "journalPlaceholderTitle": "Guarde suas reflexões aqui",
+  "journalPlaceholderBody": "Abra o diário de um livro na biblioteca para adicionar uma resenha ou suas reflexões.",
+  "journalPagesCount": "{count, plural, =1{1 página} other{{count} páginas}}",
+  "@journalPagesCount": {
+    "placeholders": {
+      "count": {
+        "type": "num",
+        "format": "compact"
+      }
+    }
+  },
+  "journalReviewed": "Resenhado",
+  "reviewRatingOverall": "Geral",
+  "reviewRatingPlot": "Enredo",
+  "reviewRatingEnding": "Final",
+  "reviewRatingWorld": "Universo",
+  "reviewRatingCharacters": "Personagens",
+  "reviewRatingSpice": "Erotismo",
+  "reviewGenre": "Gênero",
+  "reviewFormat": "Formato",
+  "reviewFavoriteCharacter": "Personagem favorito",
+  "reviewFavoriteQuote": "Citação favorita",
+  "reviewThoughts": "Reflexões",
+  "reviewOpenPages": "Páginas do diário",
+  "journalDotPages": "Páginas do diário",
+  "journalAddPage": "Adicionar uma página",
+  "journalPageHint": "Escreva o que quiser.",
+  "journalNoPages": "Ainda não há páginas.",
+  "addToAllTimeFavourites": "Adicionar aos favoritos de todos os tempos",
+  "removeFromAllTimeFavourites": "Remover dos favoritos de todos os tempos",
+  "addBookToBuyTitle": "Adicionar um livro para comprar",
+  "addBookToBuyAction": "Adicionar livro",
+  "challengeTitle": "Desafio de leitura",
+  "challengeYearTitle": "Desafio de leitura de {year}",
+  "@challengeYearTitle": {
+    "placeholders": {
+      "year": {
+        "type": "String"
+      }
+    }
+  },
+  "challengeProgress": "{finished} de {target} livros",
+  "@challengeProgress": {
+    "placeholders": {
+      "finished": {
+        "type": "int"
+      },
+      "target": {
+        "type": "int"
+      }
+    }
+  },
+  "challengeOverTarget": "{count, plural, =1{1 livro além da meta} other{{count} livros além da meta}}",
+  "@challengeOverTarget": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "challengeLegendFinished": "Lido",
+  "challengeLegendReading": "Lendo",
+  "challengeLegendEmpty": "Quero ler",
+  "challengeSetTarget": "Alterar a meta",
+  "challengeTargetLabel": "Livros neste ano",
+  "challengeShelfSemanticLabel": "Estante do desafio de leitura. {finished} de {target} livros lidos, {reading} em leitura.",
+  "@challengeShelfSemanticLabel": {
+    "placeholders": {
+      "finished": {
+        "type": "int"
+      },
+      "target": {
+        "type": "int"
+      },
+      "reading": {
+        "type": "int"
+      }
+    }
+  },
+  "challengeSlotFilled": "Lombada {slot}: {title}",
+  "@challengeSlotFilled": {
+    "placeholders": {
+      "slot": {
+        "type": "int"
+      },
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "challengeSlotEmpty": "A lombada {slot} está vazia.",
+  "@challengeSlotEmpty": {
+    "placeholders": {
+      "slot": {
+        "type": "int"
+      }
+    }
+  },
+  "monthTrackerTitle": "Acompanhamento mensal",
+  "monthTrackerPagesTotal": "{count, plural, =0{Nenhuma página neste mês} =1{1 página neste mês} other{{count} páginas neste mês}}",
+  "@monthTrackerPagesTotal": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "monthTrackerDaysRead": "{count, plural, =0{Nenhum dia de leitura} =1{1 dia de leitura} other{{count} dias de leitura}}",
+  "@monthTrackerDaysRead": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "monthTrackerPreviousMonth": "Mês anterior",
+  "monthTrackerNextMonth": "Próximo mês",
+  "monthTrackerRingSemanticLabel": "Páginas lidas a cada dia. {days} dias de leitura, {pages} páginas no total.",
+  "@monthTrackerRingSemanticLabel": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      },
+      "pages": {
+        "type": "int"
+      }
+    }
+  },
+  "monthTrackerDaySemanticLabel": "Dia {day}: {count, plural, =0{nenhuma página} =1{1 página} other{{count} páginas}}",
+  "@monthTrackerDaySemanticLabel": {
+    "placeholders": {
+      "day": {
+        "type": "int"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "monthTrackerPagesLabel": "Páginas",
+  "translateWorking": "Traduzindo",
+  "translateFromLanguage": "Traduzir de {language}",
+  "@translateFromLanguage": {
+    "placeholders": {
+      "language": {
+        "type": "String"
+      }
+    }
+  },
+  "translateToLanguage": "Traduzir para {language}",
+  "@translateToLanguage": {
+    "placeholders": {
+      "language": {
+        "type": "String"
+      }
+    }
+  },
+  "opdsCatalogs": "Catálogos",
+  "opdsFindBooksOnline": "Encontrar livros online",
+  "opdsCatalogsEmpty": "Ainda não há catálogos.",
+  "opdsAddCatalog": "Adicionar um catálogo",
+  "opdsCatalogName": "Nome",
+  "opdsCatalogUrl": "Endereço",
+  "opdsCatalogUsername": "Nome de usuário",
+  "opdsCatalogPassword": "Senha",
+  "opdsCatalogNeedsSignIn": "Requer login",
+  "opdsRemoveCatalog": "Remover catálogo",
+  "opdsRemoveCatalogBody": "Remover {name} e sua senha?",
+  "@opdsRemoveCatalogBody": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "opdsFeedEmpty": "Esta estante está vazia.",
+  "opdsNextPage": "Mais",
+  "opdsDownload": "Baixar",
+  "opdsDownloaded": "{title} está na sua estante.",
+  "@opdsDownloaded": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "opdsErrorNetwork": "Não foi possível acessar o catálogo.",
+  "opdsErrorUnauthorized": "O nome de usuário ou a senha estão incorretos.",
+  "opdsErrorNotFound": "O catálogo não tem um feed nesse endereço.",
+  "opdsErrorServer": "O catálogo retornou um erro.",
+  "opdsErrorNotAFeed": "Esse endereço é uma página da web, não um feed de catálogo.",
+  "opdsInvalidUrl": "Insira um endereço completo, como https://example.org/opds. Não inclua nome de usuário nem senha no endereço.",
+  "onlineCatalogsHeading": "Ler no Paperfold",
+  "onlineCatalogsBody": "Baixe arquivos de livros compatíveis diretamente destes catálogos.",
+  "onlineSavedCatalogs": "Seus catálogos",
+  "onlineWebsitesHeading": "Explorar na web",
+  "onlineWebsitesBody": "Estes sites abrem no navegador. Empréstimos e livros protegidos permanecem no respectivo serviço de leitura.",
+  "onlineGutenbergDescription": "Livros digitais clássicos em vários idiomas.",
+  "onlineEbooksGratuitsDescription": "Livros digitais em francês, em EPUB e outros formatos.",
+  "onlineStandardDescription": "Clássicos editados com cuidado. Baixe os arquivos pelo site.",
+  "onlineGlobalGreyDescription": "Textos clássicos em EPUB e PDF. Baixe o arquivo e depois importe-o.",
+  "onlineOpenLibraryDescription": "Encontre edições e leia ou pegue livros emprestados pela Open Library.",
+  "onlineLibbyDescription": "Pegue livros emprestados em bibliotecas participantes e leia no Libby.",
+  "onlineStandardAccess": "Este feed OPDS exige acesso de apoiador ou colaborador do Standard Ebooks.",
+  "onlineOpenWebsite": "Abrir site",
+  "onlineOpenWebsiteFailed": "Não foi possível abrir o site. Tente novamente.",
+  "opdsChooseFormat": "Escolher um formato",
+  "opdsImportFailed": "Não foi possível adicionar este livro. Tente outro formato ou tente novamente.",
+  "opdsCatalogSaveFailed": "Não foi possível salvar o catálogo. Os dados preenchidos foram mantidos; tente novamente.",
+  "opdsCatalogRemoveFailed": "Não foi possível remover o catálogo. Tente novamente.",
+  "opdsUnsupportedDownload": "Não há nenhum download compatível disponível.",
+  "shelfBookView": "Visualização dos livros",
+  "shelfViewSpines": "Lombadas",
+  "shelfViewCoverGrid": "Capas",
+  "bookBindingSectionTitle": "Encadernação",
+  "bookBindingAutomatic": "Automática",
+  "bookBindingHardback": "Capa dura",
+  "bookBindingSoftback": "Capa flexível",
+  "bookBindingWhyReader": "Você escolheu esta encadernação para este livro.",
+  "bookBindingWhyStatedFormat": "O livro informa o formato “{evidence}”.",
+  "@bookBindingWhyStatedFormat": {
+    "placeholders": {
+      "evidence": {
+        "type": "String"
+      }
+    }
+  },
+  "bookBindingWhyComic": "Mangás, quadrinhos e light novels usam capa flexível.",
+  "bookBindingWhyModern": "Publicado pela primeira vez em {year}, quando a capa flexível já era comum nas primeiras edições.",
+  "@bookBindingWhyModern": {
+    "placeholders": {
+      "year": {
+        "type": "String"
+      }
+    }
+  },
+  "bookBindingWhyEarly": "Publicado pela primeira vez em {year}, quando os livros novos tinham capa dura.",
+  "@bookBindingWhyEarly": {
+    "placeholders": {
+      "year": {
+        "type": "String"
+      }
+    }
+  },
+  "bookBindingWhyPublicDomain": "Uma transcrição em domínio público de um livro antigo.",
+  "bookBindingWhyDefault": "Este livro não informa a encadernação, então será usado o padrão da biblioteca.",
+  "bookModelSemanticLabel": "{title}, de {author}. Toque para abrir o livro.",
+  "@bookModelSemanticLabel": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "author": {
+        "type": "String"
+      }
+    }
+  },
+  "bookModelSemanticLabelNoAuthor": "{title}. Toque para abrir o livro.",
+  "@bookModelSemanticLabelNoAuthor": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsDefaultBinding": "Encadernação padrão",
+  "settingsDefaultBindingDescription": "Encadernação para livros sem informação de formato. Mangás, light novels e romances modernos continuam com capa flexível; livros antigos, com capa dura.",
+  "settingsBookshelfUniformSpines": "Lombadas uniformes",
+  "settingsBookshelfUniformSpinesDescription": "Mostrar todas as lombadas das estantes iniciais com a mesma espessura e altura.",
+  "challengePreviousYear": "Ano anterior",
+  "challengeNextYear": "Próximo ano",
+  "challengePaceAhead": "{count, plural, =1{1 livro à frente do ritmo previsto} other{{count} livros à frente do ritmo previsto}}",
+  "@challengePaceAhead": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "challengePaceBehind": "{count, plural, =1{1 livro atrás do ritmo previsto} other{{count} livros atrás do ritmo previsto}}",
+  "@challengePaceBehind": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "challengePaceOnTrack": "No ritmo previsto para o ano",
+  "challengePaceExpected": "Em ritmo constante, você teria lido {count, plural, =1{1 livro} other{{count} livros}} até agora.",
+  "@challengePaceExpected": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "challengeEmptyTitle": "Ainda não há livros neste desafio",
+  "challengeEmptyBody": "Marque um livro como “Lendo” ou termine um livro para começar a preencher o desafio.",
+  "challengeTargetRange": "Insira de 1 a 999 livros.",
+  "monthTrackerPagesPerDay": "Páginas por dia",
+  "monthTrackerLegendNoPages": "Nenhuma página",
+  "monthTrackerLegendFewerPages": "Menos páginas",
+  "monthTrackerLegendMorePages": "Mais páginas",
+  "monthTrackerLegendToday": "Hoje",
+  "monthTrackerEmptyTitle": "Nenhuma página registrada neste mês",
+  "monthTrackerEmptyBody": "Toque no número de um dia para adicionar o total de páginas desse dia.",
+  "monthTrackerDayCurrentPages": "{count, plural, =0{Este dia tem 0 páginas.} =1{Este dia tem 1 página.} other{Este dia tem {count} páginas.}}",
+  "@monthTrackerDayCurrentPages": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "monthTrackerDayNotRecorded": "Não há um total de páginas registrado para este dia.",
+  "monthTrackerNewPagesLabel": "Novo total de páginas",
+  "monthTrackerCentreUnit": "páginas",
+  "statisticTrackersTitle": "Acompanhamento de leitura",
+  "statisticReadingTimeUnit": "Gráficos de tempo de leitura · minutos por dia",
+  "statisticMeasureNote": "Os gráficos usam o tempo de leitura em minutos. O anel mensal usa páginas. São medidas diferentes.",
+  "statisticOpenChallenge": "Abrir desafio",
+  "statisticOpenMonthTracker": "Abrir acompanhamento mensal",
+  "statisticTrackerLoadError": "Os dados de acompanhamento não estão disponíveis.",
+  "shelfSortControl": "Ordenar esta estante",
+  "shelfFilterControl": "Filtrar esta estante",
+  "shelfFilterChipSemantic": "Filtro: {label}. Remover este filtro.",
+  "@shelfFilterChipSemantic": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "shelfSortTitle": "Ordenar livros",
+  "shelfSortDateAdded": "Data de adição",
+  "shelfSortSeries": "Ordem da série",
+  "shelfSortFirstToLast": "Do primeiro ao último",
+  "shelfSortLastToFirst": "Do último ao primeiro",
+  "shelfFilterTitle": "Filtrar livros",
+  "shelfFilterStatus": "Estado de leitura",
+  "shelfFilterRating": "Avaliação",
+  "shelfFilterTags": "Etiquetas",
+  "shelfUnknownTag": "Etiqueta excluída",
+  "shelfRatingAtLeast": "{rating} estrelas ou mais",
+  "@shelfRatingAtLeast": {
+    "placeholders": {
+      "rating": {
+        "type": "int"
+      }
+    }
+  },
+  "shelfClearFilters": "Limpar filtros",
+  "shelfNoFilterResults": "Nenhum livro corresponde a estes filtros.",
+  "appPressBackAgainToLeave": "Pressione Voltar novamente para sair do Paperfold",
+  "bookBindingAskTitle": "Como este livro é encadernado?",
+  "bookBindingAskBody": "Isso determina como {title} aparece na estante. Você pode mudar depois.",
+  "@bookBindingAskBody": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "bookBindingAskDecide": "Decidir por mim",
+  "shelfPickUpHint": "Escolher este livro",
+  "shelfOpenHint": "Abrir este livro",
+  "shelfBookOptions": "Opções do livro",
+  "shelfBookOptionDetails": "Detalhes",
+  "shelfBookOptionShelves": "Estantes",
+  "shelfBookOptionCustomise": "Personalizar",
+  "shelfBookOptionNotes": "Notas",
+  "shelfBookShelvesTitle": "Mover ou adicionar a uma estante",
+  "shelfBookCustomiseTitle": "Personalizar este livro",
+  "shelfBookCoverArt": "Imagem da capa",
+  "shelfBookChooseCoverArt": "Escolher imagem da capa",
+  "settingsAppearanceTrueBlack": "Preto puro",
+  "settingsAppearanceTrueBlackDescription": "Use preto puro nos fundos escuros. Em telas OLED, esses pixels ficam desligados. Desative para usar um preto mais suave.",
+  "settingsAppearanceEInkDescription": "Alto contraste para telas de papel eletrônico. Mantém o aplicativo no modo claro.",
+  "settingsAppearanceThemeColorBrand": "Paperfold",
+  "settingsAppearanceThemeColorCustom": "Personalizado",
+  "settingsDeveloperOptions": "Opções do desenvolvedor",
+  "settingsDeveloperOptionsEnable": "Ativar opções do desenvolvedor",
+  "settingsDeveloperOptionsEnableDescription": "Desative para ocultar a opção de desenvolvedor nas configurações.",
+  "settingsDeveloperOptionsEnabledToast": "Opções do desenvolvedor ativadas",
+  "settingsDeveloperVibrationTest": "Teste de vibração",
+  "settingsDeveloperVibrationTestDescription": "Verifique o que o dispositivo suporta e teste cada padrão.",
+  "settingsQuickSettings": "Configurações rápidas",
+  "commonLoadFailedTitle": "Não foi possível carregar este item.",
+  "commonLoadFailedBody": "Ocorreu um erro ao ler seus livros. Tente novamente.",
+  "notesLoadFailed": "Não foi possível carregar suas notas.",
+  "statisticsLoadFailed": "Não foi possível carregar suas estatísticas de leitura.",
+  "notesExportCopy": "Copiar",
+  "notesExportPlainText": "Texto simples",
+  "commonNoOptions": "Nenhuma opção",
+  "commonClose": "Fechar",
+  "readingPageGoToCurrentLocation": "Ir para a posição de leitura",
+  "readingPageBackgroundColour": "Cor do fundo",
+  "readingPageTextColour": "Cor do texto",
+  "readingPageDeleteTheme": "Excluir este tema",
+  "journalSaveFailed": "Não foi possível salvar suas alterações. Permaneça nesta página e tente novamente.",
+  "journalLoadFailed": "Não foi possível carregar seu diário.",
+  "storageMigrationScheduled": "Reinicie o aplicativo para mover sua biblioteca para a pasta selecionada.",
+  "appStartupFailed": "Não foi possível iniciar o Paperfold.",
+  "appStartupFailedBody": "Feche o aplicativo e abra-o novamente. Se o problema continuar, verifique se a pasta da biblioteca está disponível.",
+  "searchLibraryHint": "Buscar em livros, notas e diário",
+  "searchJournalReview": "Resenha",
+  "searchJournalPage": "Página do diário {number}",
+  "@searchJournalPage": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "journalBooks": "Diários dos livros",
+  "journalHighlightsOverview": "Releia trechos e notas da sua biblioteca.",
+  "challengeSaveFailed": "Não foi possível salvar sua meta. Tente novamente.",
+  "monthTrackerSaveFailed": "Não foi possível salvar o total de páginas. Tente novamente.",
+  "monthTrackerInvalidPages": "Insira um número inteiro de páginas, igual ou maior que 0.",
+  "monthTrackerRecordPages": "Registrar páginas",
+  "monthTrackerChooseDay": "Escolher um dia",
+  "monthTrackerManualEntryHint": "Registre o total de páginas de cada dia. O tempo de leitura é acompanhado separadamente.",
+  "journalAddPassage": "Adicionar ao diário",
+  "journalOpenPassage": "Abrir trecho",
+  "journalPassageAdded": "Trecho adicionado ao diário.",
+  "journalPassageSaveFailed": "Não foi possível adicionar o trecho. Tente novamente.",
+  "journalThoughtsHint": "Escreva suas reflexões sobre este trecho…",
+  "journalBookOverview": "Seu diário de leitura",
+  "journalReviewEmpty": "Registre sua avaliação, seus momentos favoritos e suas reflexões.",
+  "journalPagesEmpty": "Guarde trechos e escreva com suas próprias palavras.",
+  "journalHighlightsHint": "Reveja seus destaques e adicione um trecho ao diário.",
+  "journalExport": "Exportar diário",
+  "journalExportEmpty": "Adicione uma resenha ou uma página antes de exportar seu diário.",
+  "journalExportFailed": "Não foi possível exportar seu diário. Tente novamente.",
+  "journalExportSaved": "Seu diário foi exportado.",
+  "journalNoReview": "Ainda não há resenha",
+  "journalReadBook": "Ler livro",
+  "journalDeletePage": "Excluir página",
+  "journalDeletePageConfirm": "Excluir esta página e o trecho salvo? Esta ação não pode ser desfeita.",
+  "journalPassageOpenFailed": "Não foi possível abrir o trecho. Tente novamente.",
+  "notesExportFailed": "Não foi possível exportar suas notas. Tente novamente.",
+  "journalReturnToReading": "Voltar à leitura"
 }

@@ -1,3 +1,4 @@
+import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:paperfold/enums/book_status.dart';
 import 'package:paperfold/enums/chart_mode.dart';

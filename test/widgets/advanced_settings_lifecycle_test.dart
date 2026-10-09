@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:paperfold/config/shared_preference_provider.dart';
 import 'package:paperfold/l10n/generated/L10n.dart';
@@ -18,7 +18,7 @@ final _stats = MD5Statistics(
 );
 
 Widget _host(Future<MD5Statistics> Function() load) => MaterialApp(
-      localizationsDelegates: L10n.localizationsDelegates,
+      localizationsDelegates: [L10n.delegate, ...GlobalMaterialLocalizations.delegates],
       supportedLocales: L10n.supportedLocales,
       locale: const Locale('en'),
       home: Scaffold(body: AdvancedSetting(loadMd5Statistics: load)),

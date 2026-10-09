@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:paperfold/config/paperfold_tokens.dart';
@@ -24,7 +24,7 @@ Future<void> _pumpShelfHome(
       overrides: newTestOverrides(),
       child: MaterialApp(
         locale: const Locale('en'),
-        localizationsDelegates: L10n.localizationsDelegates,
+        localizationsDelegates: [L10n.delegate, ...GlobalMaterialLocalizations.delegates],
         supportedLocales: L10n.supportedLocales,
         theme: ThemeData(
           useMaterial3: true,

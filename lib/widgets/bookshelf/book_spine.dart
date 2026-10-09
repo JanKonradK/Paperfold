@@ -1,6 +1,6 @@
 import 'dart:math' as math;
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:paperfold/config/paperfold_tokens.dart';
 import 'package:paperfold/utils/log/common.dart';
 
@@ -34,25 +34,19 @@ abstract final class BookSpine {
 
   static final List<Color> _bookclothBackgrounds = List<Color>.unmodifiable([
     PaperfoldTokens.darkSienna,
-    PaperfoldTokens.spicedHotChocolate,
     PaperfoldTokens.softDove,
-    PaperfoldTokens.moonRock,
-    PaperfoldTokens.cover.ground,
-    const Color(0xFFE7DFD0),
-    PaperfoldTokens.cover.foil,
+    const Color(0xFF78434B),
+    const Color(0xFF5A2636),
+    PaperfoldTokens.spicedHotChocolate,
+    const Color(0xFFE8D8BC),
     PaperfoldTokens.blackRaspberry,
+    const Color(0xFFAD8C66),
+    PaperfoldTokens.moonRock,
+    const Color(0xFFB89B91),
   ]);
 
-  static final Map<
-      (
-        String,
-        Color,
-        Color,
-        Color,
-        Color,
-        Color,
-      ),
-      BookSpineVisual> _visualCache = {};
+  static final Map<(String, Color, Color, Color, Color, Color), BookSpineVisual>
+  _visualCache = {};
 
   static int stableHash(String value) {
     var hash = 2166136261;
@@ -121,9 +115,7 @@ abstract final class BookSpine {
         background = PaperfoldTokens.light.ground;
         foreground = PaperfoldTokens.light.ink;
         bestContrast = contrast(foreground, background);
-        AnxLog.warning(
-          'Spine $stableId used the safe paper and ink fallback.',
-        );
+        AnxLog.warning('Spine $stableId used the safe paper and ink fallback.');
       }
 
       return BookSpineVisual(

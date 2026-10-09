@@ -1,3 +1,4 @@
+import 'package:flutter_riverpod/misc.dart' show Override;
 // The month ring, the challenge data, and the Statistics tracker sections.
 //
 // The ring draws on one canvas rather than one widget per day, which plan.md
@@ -10,7 +11,7 @@
 //
 //   flutter test test/widgets/tracker_pages_test.dart
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/semantics.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -91,7 +92,7 @@ Widget _host(Widget child, List<Override> overrides) {
   return ProviderScope(
     overrides: overrides,
     child: MaterialApp(
-      localizationsDelegates: L10n.localizationsDelegates,
+      localizationsDelegates: [L10n.delegate, ...GlobalMaterialLocalizations.delegates],
       supportedLocales: L10n.supportedLocales,
       theme: ThemeData(
         useMaterial3: true,

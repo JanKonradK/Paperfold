@@ -13,7 +13,7 @@ import 'package:paperfold/widgets/settings/settings_section.dart';
 import 'package:paperfold/widgets/settings/settings_tile.dart';
 import 'package:paperfold/widgets/settings/theme_mode.dart';
 import 'package:paperfold/widgets/settings/webdav_switch.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// One settings category.

@@ -4,7 +4,7 @@ import 'package:paperfold/l10n/generated/L10n.dart';
 import 'package:paperfold/main.dart';
 import 'package:paperfold/models/book.dart';
 import 'package:paperfold/models/statistic_data_model.dart';
-import 'package:flutter/cupertino.dart';
+import 'package:cupertino_ui/cupertino_ui.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'statistic_data.g.dart';
@@ -13,7 +13,7 @@ part 'statistic_data.g.dart';
 class StatisticData extends _$StatisticData {
   /// Refresh a retained tab without resetting its chart, day, or scroll extent.
   Future<void> refresh() async {
-    final current = state.valueOrNull;
+    final current = state.value;
     if (current == null) {
       ref.invalidateSelf();
       return;
@@ -26,7 +26,7 @@ class StatisticData extends _$StatisticData {
         current.date,
       );
       // A newer selection or refresh wins if it completed while this read ran.
-      if (identical(state.valueOrNull, current)) {
+      if (identical(state.value, current)) {
         state = AsyncValue.data(updated);
       }
     } finally {
@@ -39,7 +39,7 @@ class StatisticData extends _$StatisticData {
     bool? isSelectingDay,
     DateTime? date,
   }) async {
-    final currentState = state.valueOrNull!;
+    final currentState = state.value!;
     final newMode = mode ?? currentState.mode;
     final newIsSelectingDay = isSelectingDay ?? currentState.isSelectingDay;
     final newDate = date ?? currentState.date;
@@ -60,7 +60,7 @@ class StatisticData extends _$StatisticData {
   Future<void> setDate(DateTime date) => _updateState(date: date);
 
   Future<void> touchMonth(int index) async {
-    final date = state.valueOrNull!.date;
+    final date = state.value!.date;
     final newDate = DateTime(date.year, index + 1, 1);
     const mode = ChartMode.month;
     const isSelectingDay = false;
@@ -70,7 +70,7 @@ class StatisticData extends _$StatisticData {
 
   Future<void> touchDay(int days, int index) async {
     bool isWeek = days == 7;
-    final date = state.valueOrNull!.date;
+    final date = state.value!.date;
     final newDate = isWeek
         ? date.subtract(Duration(days: date.weekday - 1 - index))
         : DateTime(date.year, date.month, index + 1);

@@ -1,10 +1,11 @@
+import 'package:flutter_riverpod/misc.dart' show Override;
 // The reading challenge page: progress, real books, and safe target changes.
 //
 //   flutter test test/widgets/reading_challenge_page_test.dart
 
 import 'dart:async';
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/semantics.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -117,7 +118,7 @@ Widget _host(ReadingChallengeController Function() controller) {
       readingChallengeProvider.overrideWith(controller),
     ],
     child: MaterialApp(
-      localizationsDelegates: L10n.localizationsDelegates,
+      localizationsDelegates: [L10n.delegate, ...GlobalMaterialLocalizations.delegates],
       supportedLocales: L10n.supportedLocales,
       locale: const Locale('en'),
       theme: ThemeData(

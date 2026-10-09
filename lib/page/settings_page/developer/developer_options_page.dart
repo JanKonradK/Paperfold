@@ -1,7 +1,7 @@
 import 'package:paperfold/config/shared_preference_provider.dart';
 import 'package:paperfold/l10n/generated/L10n.dart';
 import 'package:paperfold/page/settings_page/developer/vibration_test_page.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 class DeveloperOptionsPage extends StatelessWidget {
   const DeveloperOptionsPage({super.key});

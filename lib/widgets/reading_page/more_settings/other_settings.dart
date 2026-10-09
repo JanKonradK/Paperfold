@@ -9,7 +9,7 @@ import 'package:paperfold/widgets/common/anx_segmented_button.dart';
 import 'package:paperfold/widgets/reading_page/more_settings/page_turning/diagram.dart';
 import 'package:paperfold/widgets/reading_page/more_settings/page_turning/page_turn_dropdown.dart';
 import 'package:paperfold/widgets/reading_page/more_settings/page_turning/types_and_icons.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 class OtherSettings extends StatefulWidget {
   const OtherSettings({super.key});

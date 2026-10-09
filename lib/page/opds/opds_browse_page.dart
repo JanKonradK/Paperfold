@@ -1,7 +1,7 @@
 import 'dart:io';
 
 import 'package:dio/dio.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:paperfold/l10n/generated/L10n.dart';
 import 'package:paperfold/models/opds_catalog.dart';
@@ -41,7 +41,7 @@ class OpdsBrowsePage extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          feed.valueOrNull?.title.isNotEmpty ?? false
+          feed.value?.title.isNotEmpty ?? false
               ? feed.requireValue.title
               : (title ?? catalog.name),
           maxLines: 1,

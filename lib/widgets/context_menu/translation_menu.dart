@@ -3,7 +3,7 @@ import 'package:paperfold/enums/lang_list.dart';
 import 'package:paperfold/l10n/generated/L10n.dart';
 import 'package:paperfold/service/translate/index.dart';
 import 'package:paperfold/widgets/common/axis_flex.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:pointer_interceptor/pointer_interceptor.dart';
 import 'dart:async';
 

@@ -23,7 +23,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Read Flutter version
         id: flutter_version
@@ -44,7 +44,7 @@ jobs:
 
       - name: Checkout pull request
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.pr_number != '' }}
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           ref: refs/pull/${{ inputs.pr_number }}/merge
 
@@ -52,6 +52,19 @@ jobs:
         run: |
           flutter --version
           flutter pub get
+
+      - name: Set up reader build tools
+        uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: assets/foliate-js/package-lock.json
+
+      - name: Build reader
+        working-directory: assets/foliate-js
+        run: |
+          npm ci --no-fund
+          npm run build
 
       - name: Generate localization
         run: flutter gen-l10n

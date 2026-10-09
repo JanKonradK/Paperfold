@@ -32,7 +32,7 @@ import 'package:paperfold/widgets/paperfold_glass_surface.dart';
 import 'package:paperfold/widgets/paperfold_logo_mark.dart';
 import 'package:paperfold/widgets/paperfold_library_theme.dart';
 import 'package:paperfold/widgets/settings/about.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/semantics.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';

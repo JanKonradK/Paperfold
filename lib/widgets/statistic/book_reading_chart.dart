@@ -1,6 +1,6 @@
 import 'package:paperfold/utils/date/convert_seconds.dart';
 import 'package:fl_chart/fl_chart.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:intl/intl.dart';
 
 /// Shared line chart used for reading trend visualisations.

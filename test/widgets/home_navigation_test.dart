@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:paperfold/config/paperfold_tokens.dart';
@@ -63,7 +63,7 @@ void main() {
             // The locale stays English so the labels stay assertable. Only the
             // direction and the animation setting change.
             locale: const Locale('en'),
-            localizationsDelegates: L10n.localizationsDelegates,
+            localizationsDelegates: [L10n.delegate, ...GlobalMaterialLocalizations.delegates],
             supportedLocales: L10n.supportedLocales,
             theme: paperfoldLibraryTheme(ThemeData(
               useMaterial3: true,
@@ -145,7 +145,7 @@ void main() {
       expect(navigatorKey.currentState!.canPop(), isTrue);
       expect(
           Theme.of(tester.element(find.byType(NotesPage))).colorScheme.surface,
-          PaperfoldTokens.cover.ground);
+          PaperfoldTokens.burgundy.ground);
       await tester.binding.handlePopRoute();
       await tester.pumpAndSettle();
       expect(find.byType(NotesPage), findsNothing);
