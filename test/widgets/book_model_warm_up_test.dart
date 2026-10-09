@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:paperfold/enums/book_binding.dart';
 import 'package:paperfold/widgets/book_model/book_model_builder.dart';

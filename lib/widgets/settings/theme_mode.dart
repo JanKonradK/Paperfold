@@ -1,15 +1,8 @@
 import 'package:paperfold/l10n/generated/L10n.dart';
-import 'package:paperfold/utils/theme_mode_to_string.dart';
 import 'package:paperfold/config/shared_preference_provider.dart';
-import 'package:paperfold/widgets/common/anx_segmented_button.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
-/// The light / dark / system control.
-///
-/// It reads the preference on every build and rebuilds when the preference
-/// changes. The mode it used to cache in `initState` went stale the moment
-/// anything else wrote it — E-ink mode, the onboarding screen, or a restored
-/// backup — and the control then showed a mode the application was not in.
+/// Three explicit surfaces, plus the device's automatic light/dark choice.
 class ChangeThemeMode extends StatelessWidget {
   const ChangeThemeMode({super.key});
 
@@ -18,33 +11,78 @@ class ChangeThemeMode extends StatelessWidget {
     return AnimatedBuilder(
       animation: Prefs(),
       builder: (BuildContext context, _) {
-        // E-ink mode pins the application to light. The control says so
-        // instead of offering a choice that has no effect.
         final bool eInk = Prefs().eInkMode;
-        return AnxSegmentedButton<String>(
-          segments: <SegmentButtonItem<String>>[
-            SegmentButtonItem(
-              value: 'auto',
-              label: L10n.of(context).settingsSystemMode,
-              icon: const Icon(Icons.brightness_auto),
-            ),
-            SegmentButtonItem(
-              value: 'dark',
-              label: L10n.of(context).settingsDarkMode,
-              icon: const Icon(Icons.brightness_2),
-            ),
-            SegmentButtonItem(
-              value: 'light',
-              label: L10n.of(context).settingsLightMode,
-              icon: const Icon(Icons.brightness_5),
-            ),
-          ],
-          selected: {eInk ? 'light' : themeModeToString(Prefs().themeMode)},
-          onSelectionChanged: eInk
-              ? null
-              : (Set<String> newSelection) {
-                  Prefs().saveThemeModeToPrefs(newSelection.first);
-                },
+        final mode = eInk ? 'light' : Prefs().appThemeMode;
+        final l10n = L10n.of(context);
+        return LayoutBuilder(
+          builder: (context, constraints) {
+            final vertical =
+                constraints.maxWidth < 300 ||
+                MediaQuery.textScalerOf(context).scale(16) > 21;
+            final showIcons = vertical || constraints.maxWidth >= 420;
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SegmentedButton<String>(
+                  direction: vertical ? Axis.vertical : Axis.horizontal,
+                  emptySelectionAllowed: true,
+                  segments: [
+                    ButtonSegment(
+                      value: 'light',
+                      label: Text(
+                        eInk || !Prefs().useBrandTheme
+                            ? l10n.settingsLightMode
+                            : l10n.settingsCreamMode,
+                      ),
+                      icon: showIcons
+                          ? const Icon(Icons.light_mode_outlined)
+                          : null,
+                    ),
+                    ButtonSegment(
+                      value: 'burgundy',
+                      label: Text(l10n.settingsBurgundyMode),
+                      icon: showIcons
+                          ? const Icon(Icons.auto_stories_outlined)
+                          : null,
+                    ),
+                    ButtonSegment(
+                      value: 'dark',
+                      label: Text(l10n.settingsDarkMode),
+                      icon: showIcons
+                          ? const Icon(Icons.dark_mode_outlined)
+                          : null,
+                    ),
+                  ],
+                  selected: mode == 'auto' ? const {} : {mode},
+                  onSelectionChanged: eInk
+                      ? null
+                      : (selection) {
+                          if (selection.isNotEmpty) {
+                            Prefs().saveThemeModeToPrefs(selection.first);
+                          }
+                        },
+                ),
+                const SizedBox(height: 8),
+                Align(
+                  alignment: AlignmentDirectional.centerStart,
+                  child: FilterChip(
+                    avatar: const Icon(
+                      Icons.brightness_auto_outlined,
+                      size: 18,
+                    ),
+                    label: Text(l10n.settingsSystemMode),
+                    selected: mode == 'auto',
+                    onSelected: eInk
+                        ? null
+                        : (selected) => Prefs().saveThemeModeToPrefs(
+                            selected ? 'auto' : 'burgundy',
+                          ),
+                  ),
+                ),
+              ],
+            );
+          },
         );
       },
     );

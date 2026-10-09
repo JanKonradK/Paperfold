@@ -11,6 +11,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:paperfold/dao/database.dart';
 import 'package:paperfold/dao/journal.dart';
 import 'package:paperfold/models/book_review.dart';
+import 'package:paperfold/models/book_note.dart';
 import 'package:paperfold/models/journal_page.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
@@ -190,5 +191,115 @@ void main() {
   test('JournalPage.toDb omits the generated id', () async {
     const page = JournalPage(bookId: 7, pageIndex: 0, body: 'x');
     expect(page.toDb().containsKey('id'), isFalse);
+  });
+
+  BookNote passage() => BookNote(
+        id: 12,
+        bookId: 7,
+        content: '  A passage with “quotes”.\nAnd a second line.  ',
+        cfi: 'epubcfi(/6/2[chapter]!/4/2,/1:4,/1:22)',
+        chapter: 'Chapter II — The road',
+        type: 'highlight',
+        color: 'ffff00',
+        readerNote: 'My first thought.',
+        updateTime: DateTime(2026),
+      );
+
+  test('a copied passage keeps its exact source when thoughts change or clear',
+      () async {
+    final note = passage();
+    await dao.addPage(7);
+    final id = await dao.addPageFromNote(note);
+    var page = (await dao.listPages(7)).last;
+    expect(page.pageIndex, 1);
+    expect(page.body, note.readerNote);
+    expect(page.sourceCfi, note.cfi);
+    expect(page.sourceExcerpt, note.content);
+    expect(page.sourceChapter, note.chapter);
+
+    await dao.savePage(page.copyWith(body: 'New thoughts.'));
+    page = (await dao.listPages(7)).last;
+    await dao.savePage(page.copyWith(body: ''));
+    page = (await dao.listPages(7)).last;
+    expect(page.id, id);
+    expect(page.body, isEmpty);
+    expect(page.isEmpty, isFalse);
+    expect(page.sourceCfi, note.cfi);
+    expect(page.sourceExcerpt, note.content);
+    expect(await dao.listBookIdsWithWriting(), contains(7));
+
+    final withoutSource = page.copyWith(clearSource: true);
+    expect(withoutSource.sourceCfi, isNull);
+    expect(withoutSource.sourceExcerpt, isNull);
+    expect(withoutSource.sourceChapter, isNull);
+    expect(await dao.savePage(withoutSource), isNull);
+    expect(await dao.listBookIdsWithWriting(), isEmpty);
+  });
+
+  test('adding a passage again opens its page without overwriting thoughts',
+      () async {
+    final note = passage();
+    final id = await dao.addPageFromNote(note);
+    final page = (await dao.listPages(7)).single;
+    await dao.savePage(page.copyWith(body: 'Thoughts written later.'));
+    note.content = 'Edited original highlight';
+    note.readerNote = 'Edited original note';
+    expect(await dao.addPageFromNote(note), id);
+    final stored = (await dao.listPages(7)).single;
+    expect(stored.sourceExcerpt, page.sourceExcerpt);
+    expect(stored.body, 'Thoughts written later.');
+  });
+
+  test('failed passage insert leaves the highlight intact and retry succeeds',
+      () async {
+    final note = passage();
+    await db.execute(createNoteSQL);
+    await db.execute('ALTER TABLE tb_notes ADD COLUMN reader_note TEXT');
+    await db.insert('tb_notes', note.toMap());
+    await db.execute('''
+      CREATE TRIGGER reject_journal BEFORE INSERT ON tb_journal
+      BEGIN SELECT RAISE(ABORT, 'Disk full'); END
+    ''');
+
+    await expectLater(
+        dao.addPageFromNote(note), throwsA(isA<DatabaseException>()));
+    expect(await dao.listPages(7), isEmpty);
+    final original = BookNote.fromDb((await db.query('tb_notes')).single);
+    expect(original.content, note.content);
+    expect(original.cfi, note.cfi);
+    expect(original.readerNote, note.readerNote);
+
+    await db.execute('DROP TRIGGER reject_journal');
+    await dao.addPageFromNote(note);
+    expect((await dao.listPages(7)).single.sourceCfi, note.cfi);
+  });
+
+  test('passages without a saved source location are rejected', () {
+    final note = passage()..cfi = '  ';
+    expect(() => dao.addPageFromNote(note), throwsArgumentError);
+  });
+
+  test('legacy plain pages load without source fields', () {
+    final page = JournalPage.fromDb({
+      'id': 1,
+      'book_id': 7,
+      'page_index': 0,
+      'body': 'My old journal.',
+    });
+    expect(page.sourceCfi, isNull);
+    expect(page.sourceExcerpt, isNull);
+    expect(page.hasSource, isFalse);
+    expect(page.copyWith(body: 'Edited.').body, 'Edited.');
+  });
+
+  test('explicit deletion removes only the selected journal page', () async {
+    final sourceId = await dao.addPageFromNote(passage());
+    final otherId = await dao.addPage(7);
+    final other = (await dao.listPages(7)).last;
+    await dao.savePage(other.copyWith(body: 'Keep the other page.'));
+    await dao.deletePage(sourceId);
+    final pages = await dao.listPages(7);
+    expect(pages.single.id, otherId);
+    expect(pages.single.body, 'Keep the other page.');
   });
 }

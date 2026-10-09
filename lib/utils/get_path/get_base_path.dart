@@ -34,10 +34,9 @@ Future<String> getAnxDocumentsPath() async {
       if (await _isPathAccessible(customPath)) {
         return customPath;
       } else {
-        // Permission lost, clear the custom path
-        AnxLog.warning(
-            'Custom storage path no longer accessible, resetting to default');
-        Prefs().customStoragePath = null;
+        // A disconnected drive must not silently become an empty library.
+        throw FileSystemException(
+            'The library folder is not accessible', customPath);
       }
     }
   }

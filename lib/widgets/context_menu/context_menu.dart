@@ -6,7 +6,7 @@ import 'package:paperfold/widgets/common/axis_flex.dart';
 import 'package:paperfold/widgets/context_menu/excerpt_menu.dart';
 import 'package:paperfold/widgets/context_menu/reader_note_menu.dart';
 import 'package:paperfold/widgets/context_menu/translation_menu.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:pointer_interceptor/pointer_interceptor.dart';
 
 import 'package:paperfold/dao/book_note.dart';

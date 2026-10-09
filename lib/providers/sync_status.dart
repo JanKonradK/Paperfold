@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:paperfold/dao/book.dart';
 import 'package:paperfold/enums/sync_direction.dart';
@@ -37,20 +38,20 @@ class SyncStatus extends _$SyncStatus {
     List<int> downloading = isSyncing &&
             webdavInfo.direction == SyncDirection.download &&
             !webdavInfo.fileName.endsWith('.db')
-        ? [
-            allBooksInBookShelf
-                .firstWhere((e) => e.filePath.contains(webdavInfo.fileName))
-                .id
-          ]
+        ? allBooksInBookShelf
+            .where(
+                (book) => book.filePath.split('/').last == webdavInfo.fileName)
+            .map((book) => book.id)
+            .toList()
         : [];
     List<int> uploading = isSyncing &&
             webdavInfo.direction == SyncDirection.upload &&
             !webdavInfo.fileName.endsWith('.db')
-        ? [
-            allBooksInBookShelf
-                .firstWhere((e) => e.filePath.contains(webdavInfo.fileName))
-                .id
-          ]
+        ? allBooksInBookShelf
+            .where(
+                (book) => book.filePath.split('/').last == webdavInfo.fileName)
+            .map((book) => book.id)
+            .toList()
         : [];
     return SyncStatusModel(
       localOnly: localOnly,
@@ -122,16 +123,14 @@ class SyncStatus extends _$SyncStatus {
     if (filePath.endsWith('.db')) {
       return null;
     }
-    try {
-      return allBooksInBookShelf
-          .firstWhere((e) => filePath.contains(e.filePath))
-          .id;
-    } catch (e) {
-      allBooksInBookShelf = await _listAllBooksInBookShelf();
-      return allBooksInBookShelf
-          .firstWhere((e) => filePath.contains(e.filePath))
-          .id;
+    for (final book in allBooksInBookShelf) {
+      if (filePath.endsWith('/${book.filePath}')) return book.id;
     }
+    allBooksInBookShelf = await _listAllBooksInBookShelf();
+    for (final book in allBooksInBookShelf) {
+      if (filePath.endsWith('/${book.filePath}')) return book.id;
+    }
+    return null;
   }
 
   bool isCover(String filePath) {
@@ -190,7 +189,7 @@ class SyncStatus extends _$SyncStatus {
       SyncStatusModel(
         localOnly: state.value!.localOnly,
         remoteOnly: state.value!.remoteOnly,
-        both: [...state.value!.both, bookId],
+        both: state.value!.both,
         nonExistent: state.value!.nonExistent,
         downloading:
             state.value!.downloading.where((e) => e != bookId).toList(),
@@ -212,7 +211,7 @@ class SyncStatus extends _$SyncStatus {
       SyncStatusModel(
         localOnly: state.value!.localOnly,
         remoteOnly: state.value!.remoteOnly,
-        both: [...state.value!.both, bookId],
+        both: state.value!.both,
         nonExistent: state.value!.nonExistent,
         downloading: state.value!.downloading,
         uploading: state.value!.uploading.where((e) => e != bookId).toList(),

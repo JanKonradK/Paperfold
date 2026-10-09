@@ -11,7 +11,7 @@
 // step behind the front holds a fixed camera, so its painter is not asked to
 // build forty faces again for a move a Transform can do.
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:paperfold/page/dev/shelf_stage_demo.dart';
 
 void main() {

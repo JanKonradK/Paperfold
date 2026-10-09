@@ -10,7 +10,7 @@ import 'package:paperfold/page/reading_page.dart';
 import 'package:paperfold/providers/bgimg.dart';
 import 'package:paperfold/utils/get_path/get_base_path.dart';
 import 'package:paperfold/widgets/common/anx_segmented_button.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 

@@ -4,7 +4,7 @@ import 'package:paperfold/config/shared_preference_provider.dart';
 import 'package:paperfold/utils/log/string_to_level.dart';
 import 'package:paperfold/utils/get_path/log_file.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:logging/logging.dart';
 
 class AnxLog {

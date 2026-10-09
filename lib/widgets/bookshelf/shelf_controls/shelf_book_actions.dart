@@ -1,7 +1,7 @@
 import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:paperfold/config/shared_preference_provider.dart';
 import 'package:paperfold/dao/book.dart';
 import 'package:paperfold/dao/database.dart';
@@ -10,7 +10,6 @@ import 'package:paperfold/enums/book_binding.dart';
 import 'package:paperfold/l10n/generated/L10n.dart';
 import 'package:paperfold/models/book.dart';
 import 'package:paperfold/utils/get_path/get_base_path.dart';
-import 'package:paperfold/widgets/paperfold_glass_surface.dart';
 import 'package:path/path.dart' as path;
 
 class ShelfBookOptionBar extends StatelessWidget {
@@ -27,80 +26,64 @@ class ShelfBookOptionBar extends StatelessWidget {
   final VoidCallback onCustomise;
   final VoidCallback onNotes;
 
-  /// The clear air kept at each end of the row, so the plates do not run to
-  /// the edge of the screen.
-  static const double margin = 12;
-
   @override
   Widget build(BuildContext context) {
     final l10n = L10n.of(context);
+    final actions = [
+      ('notes', Icons.edit_note_rounded, l10n.navJournal, onNotes),
+      (
+        'details',
+        Icons.info_outline_rounded,
+        l10n.shelfBookOptionDetails,
+        onDetails,
+      ),
+      (
+        'shelves',
+        Icons.library_books_outlined,
+        l10n.shelfBookOptionShelves,
+        onShelves,
+      ),
+      (
+        'customise',
+        Icons.palette_outlined,
+        l10n.shelfBookOptionCustomise,
+        onCustomise,
+      ),
+    ];
     return Semantics(
       container: true,
       label: l10n.shelfBookOptions,
-      // Four plates, set apart from each other. They used to sit eight pixels
-      // apart under a halo that breathed all the while the book was in the
-      // air: four glowing discs in a huddle, which read as one decorated blob
-      // rather than as four separate things a reader can choose between.
-      //
-      // Measured against the width they are actually given rather than set to
-      // a constant. Four plates at their full width and their full gap come to
-      // 330, which is ten pixels more than a 320-wide phone has, and a `Row`
-      // that does not fit does not shrink — it paints a striped bar and tells
-      // the reader their book has a rendering fault.
       child: LayoutBuilder(
         builder: (context, constraints) {
-          final available = (constraints.maxWidth.isFinite
-                  ? constraints.maxWidth
-                  : _OptionButton.preferredWidth * 4 + _gap * 3 + margin * 2) -
-              margin * 2;
-          var gap = _gap;
-          var width = (available - gap * 3) / 4;
-          if (width < _OptionButton.minimumWidth) {
-            // The air between the plates goes before the plates themselves do.
-            // A narrower target is harder to hit than a tighter row is to read.
-            gap = _tightGap;
-            width = (available - gap * 3) / 4;
-          }
-          width = width.clamp(
-            _OptionButton.minimumWidth,
-            _OptionButton.preferredWidth,
-          );
-
-          return Row(
-            mainAxisSize: MainAxisSize.min,
-            mainAxisAlignment: MainAxisAlignment.center,
+          final available = constraints.maxWidth;
+          final largeText = MediaQuery.textScalerOf(context).scale(16) >= 24;
+          final columns = available < 280 || largeText ? 1 : 2;
+          final width = (available - 12 * (columns - 1)) / columns;
+          return Wrap(
+            spacing: 12,
+            runSpacing: 12,
             children: [
-              _OptionButton(
-                key: const ValueKey('shelf-book-details'),
-                icon: Icons.info_outline_rounded,
-                label: l10n.shelfBookOptionDetails,
-                width: width,
-                onPressed: onDetails,
-              ),
-              SizedBox(width: gap),
-              _OptionButton(
-                key: const ValueKey('shelf-book-shelves'),
-                icon: Icons.library_books_outlined,
-                label: l10n.shelfBookOptionShelves,
-                width: width,
-                onPressed: onShelves,
-              ),
-              SizedBox(width: gap),
-              _OptionButton(
-                key: const ValueKey('shelf-book-customise'),
-                icon: Icons.palette_outlined,
-                label: l10n.shelfBookOptionCustomise,
-                width: width,
-                onPressed: onCustomise,
-              ),
-              SizedBox(width: gap),
-              _OptionButton(
-                key: const ValueKey('shelf-book-notes'),
-                icon: Icons.menu_book_outlined,
-                label: l10n.shelfBookOptionNotes,
-                width: width,
-                onPressed: onNotes,
-              ),
+              for (final (name, icon, label, onPressed) in actions)
+                SizedBox(
+                  width: width,
+                  child: OutlinedButton.icon(
+                    key: ValueKey('shelf-book-$name'),
+                    onPressed: onPressed,
+                    icon: Icon(icon, size: 22),
+                    label: Text(label),
+                    style: OutlinedButton.styleFrom(
+                      minimumSize: const Size(48, 56),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 12,
+                      ),
+                      alignment: AlignmentDirectional.centerStart,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
+                ),
             ],
           );
         },
@@ -108,71 +91,6 @@ class ShelfBookOptionBar extends StatelessWidget {
     );
   }
 }
-
-/// One of the four things a reader can do with the book they are holding.
-///
-/// The same plate the shelf signposts are on, at the same height and the same
-/// radius: a long, quiet piece of glass rather than a filled disc. There is one
-/// kind of button laid over the shelf, and this is it. Nothing on this screen
-/// has to attract attention — the reader has already picked the book up.
-class _OptionButton extends StatelessWidget {
-  const _OptionButton({
-    super.key,
-    required this.icon,
-    required this.label,
-    required this.width,
-    required this.onPressed,
-  });
-
-  /// The signpost's own corner, so a plate at the head of the stage and a plate
-  /// at its foot are the same object.
-  static const double radius = 24;
-
-  /// A full tap target, and short enough to leave air inside the reserved strip
-  /// at the head of the stage.
-  static const double height = 48;
-
-  /// What a plate is drawn at when there is room for it: half as wide again as
-  /// it is tall, which is what makes it read as a bar rather than as a disc.
-  static const double preferredWidth = 72;
-
-  /// And what it will never go below, because a plate narrower than this is no
-  /// longer a target a thumb can find.
-  static const double minimumWidth = 48;
-
-  final IconData icon;
-  final String label;
-  final double width;
-  final VoidCallback onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: width,
-      height: height,
-      child: PaperfoldGlassSurface(
-        borderRadius: const BorderRadius.all(Radius.circular(radius)),
-        // No backdrop filter, for the reason the signposts carry none: this
-        // plate sits over the row, and a blur is the one effect the compositor
-        // cannot cache.
-        allowBlur: false,
-        child: Tooltip(
-          message: label,
-          child: InkWell(
-            onTap: onPressed,
-            borderRadius: BorderRadius.circular(radius),
-            child: Center(child: Icon(icon, size: 22)),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// The clear air between two plates, and what it falls back to when the screen
-/// is too narrow to pay for it.
-const double _gap = 14;
-const double _tightGap = 8;
 
 Future<void> showShelfBookShelvesSheet(
   BuildContext context,
@@ -328,15 +246,9 @@ Future<void> showShelfBookCustomiseSheet(
   );
 }
 
-Future<void> _chooseCover(
-  Book book,
-  Future<void> Function() onChanged,
-) async {
-  final result = await FilePicker.platform.pickFiles(
-    type: FileType.image,
-    allowMultiple: false,
-  );
-  final sourcePath = result?.files.single.path;
+Future<void> _chooseCover(Book book, Future<void> Function() onChanged) async {
+  final result = await FilePicker.pickFile(type: FileType.image);
+  final sourcePath = result?.path;
   if (sourcePath == null) return;
 
   final extension = path.extension(sourcePath).toLowerCase();
@@ -351,13 +263,13 @@ Future<void> _chooseCover(
 }
 
 IconData _statusIcon(BookStatus status) => switch (status) {
-      BookStatus.reading => Icons.auto_stories_outlined,
-      BookStatus.finished => Icons.check_circle_outline_rounded,
-      BookStatus.notStarted => Icons.bookmark_border_rounded,
-    };
+  BookStatus.reading => Icons.auto_stories_outlined,
+  BookStatus.finished => Icons.check_circle_outline_rounded,
+  BookStatus.notStarted => Icons.bookmark_border_rounded,
+};
 
 String _statusLabel(BookStatus status, L10n l10n) => switch (status) {
-      BookStatus.reading => l10n.shelfReadingNow,
-      BookStatus.finished => l10n.shelfFinished,
-      BookStatus.notStarted => l10n.shelfToBeRead,
-    };
+  BookStatus.reading => l10n.shelfReadingNow,
+  BookStatus.finished => l10n.shelfFinished,
+  BookStatus.notStarted => l10n.shelfToBeRead,
+};

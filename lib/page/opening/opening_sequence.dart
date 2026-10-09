@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:math' as math;
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:paperfold/config/paperfold_motion.dart';
@@ -421,7 +421,7 @@ class _OpeningScene extends StatelessWidget {
   final OpeningCoverArtBuilder? coverArtBuilder;
 
   static final Color _coverGround = PaperfoldTokens.cover.ground;
-  static const Color _coverEdge = Color(0xFF160F0C);
+  static const Color _coverEdge = PaperfoldTokens.blackRaspberry;
 
   /// The stiffness of the sheet the curl is turning.
   ///
@@ -614,7 +614,6 @@ class _OpeningScene extends StatelessWidget {
                   child: RepaintBoundary(
                     child: _TapMark(
                       breath: hint,
-                      turn: turn,
                       showing: waiting,
                       textDirection: textDirection,
                     ),
@@ -641,22 +640,14 @@ class _OpeningScene extends StatelessWidget {
 class _TapMark extends StatelessWidget {
   const _TapMark({
     required this.breath,
-    required this.turn,
     required this.showing,
     required this.textDirection,
   });
 
   final Animation<double> breath;
 
-  /// The cover, only so the mark can change from foil to ink as the ground
-  /// under it changes from board to paper.
-  final Animation<double> turn;
-
   final bool showing;
   final TextDirection textDirection;
-
-  static const Color _foil = Color(0xFFC4A071);
-  static const Color _ink = Color(0xFF3A2E28);
 
   @override
   Widget build(BuildContext context) {
@@ -676,7 +667,6 @@ class _TapMark extends StatelessWidget {
         child: CustomPaint(
           painter: _TapMarkPainter(
             breath: breath,
-            turn: turn,
             still: still,
             mirror: textDirection == TextDirection.rtl,
           ),
@@ -689,13 +679,11 @@ class _TapMark extends StatelessWidget {
 class _TapMarkPainter extends CustomPainter {
   _TapMarkPainter({
     required this.breath,
-    required this.turn,
     required this.still,
     required this.mirror,
-  }) : super(repaint: Listenable.merge([breath, turn]));
+  }) : super(repaint: breath);
 
   final Animation<double> breath;
-  final Animation<double> turn;
   final bool still;
   final bool mirror;
 
@@ -707,11 +695,8 @@ class _TapMarkPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final centre = Offset(size.width / 2, size.height / 2);
     const reach = 7.0;
-    final ink = Color.lerp(
-      _TapMark._foil,
-      _TapMark._ink,
-      Curves.easeInOutCubic.transform(turn.value),
-    )!;
+    // The ground stays burgundy after opening. Keep the next-tap hint legible.
+    final ink = PaperfoldTokens.cover.foil;
     final direction = mirror ? -1.0 : 1.0;
     final paint = Paint()
       ..style = PaintingStyle.stroke
@@ -740,7 +725,6 @@ class _TapMarkPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant _TapMarkPainter oldDelegate) =>
       oldDelegate.breath != breath ||
-      oldDelegate.turn != turn ||
       oldDelegate.still != still ||
       oldDelegate.mirror != mirror;
 }
@@ -778,7 +762,7 @@ class _WelcomePage extends StatelessWidget {
     final rightToLeft = Directionality.of(context) == TextDirection.rtl;
     final align = rightToLeft ? TextAlign.right : TextAlign.left;
     return ColoredBox(
-      color: const Color(0xFFFAF6EE),
+      color: PaperfoldTokens.light.ground,
       child: DecoratedBox(
         decoration: const BoxDecoration(
           image: DecorationImage(
@@ -812,19 +796,19 @@ class _WelcomePage extends StatelessWidget {
                     '“${quote.words}”',
                     textAlign: align,
                     style: const TextStyle(
-                      color: Color(0xFF3A2E28),
+                      color: PaperfoldTokens.blackRaspberry,
                       fontFamily: PaperfoldTypeTokens.journalFamily,
                       fontSize: 21.0,
                       height: 1.45,
                     ),
                   ),
                   const SizedBox(height: 18.0),
-                  const SizedBox(
+                  SizedBox(
                     width: 48.0,
                     child: Divider(
                       height: 1.0,
                       thickness: 1.0,
-                      color: Color(0xFF846044),
+                      color: PaperfoldTokens.cover.foil,
                     ),
                   ),
                   const SizedBox(height: 12.0),
@@ -832,7 +816,7 @@ class _WelcomePage extends StatelessWidget {
                     quote.source,
                     textAlign: align,
                     style: const TextStyle(
-                      color: Color(0xFF5C4A3F),
+                      color: PaperfoldTokens.spicedHotChocolate,
                       fontFamily: PaperfoldTypeTokens.chromeFamily,
                       fontSize: 12.0,
                       letterSpacing: 1.4,

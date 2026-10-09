@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/legacy.dart';
 import 'package:paperfold/dao/daily_read.dart';
 
 /// One month of pages read, as the circular tracker paints it.

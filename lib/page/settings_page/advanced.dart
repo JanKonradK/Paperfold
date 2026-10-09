@@ -10,16 +10,24 @@ import 'package:paperfold/service/md5_service.dart';
 import 'package:paperfold/service/network/http_proxy_overrides.dart';
 import 'package:paperfold/utils/app_version.dart';
 import 'package:paperfold/utils/toast/common.dart';
+import 'package:paperfold/utils/log/common.dart';
+import 'package:paperfold/widgets/common/load_failure.dart';
 import 'package:paperfold/widgets/settings/settings_section.dart';
 import 'package:paperfold/widgets/settings/settings_tile.dart';
 import 'package:paperfold/widgets/settings/settings_title.dart';
-import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
+import 'package:cupertino_ui/cupertino_ui.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:paperfold/main.dart';
 
 class AdvancedSetting extends StatefulWidget {
-  const AdvancedSetting({super.key});
+  const AdvancedSetting({
+    super.key,
+    this.loadMd5Statistics = MD5Service.getMd5Statistics,
+  });
+
+  @visibleForTesting
+  final Future<MD5Statistics> Function() loadMd5Statistics;
 
   @override
   State<AdvancedSetting> createState() => _AdvancedSettingState();
@@ -27,6 +35,7 @@ class AdvancedSetting extends StatefulWidget {
 
 class _AdvancedSettingState extends State<AdvancedSetting> {
   MD5Statistics? _md5Stats;
+  Object? _md5LoadError;
   bool _isCalculating = false;
   double _progress = 0.0;
   String _currentFile = '';
@@ -38,10 +47,18 @@ class _AdvancedSettingState extends State<AdvancedSetting> {
   }
 
   Future<void> _loadMd5Statistics() async {
-    final stats = await MD5Service.getMd5Statistics();
-    setState(() {
-      _md5Stats = stats;
-    });
+    try {
+      final stats = await widget.loadMd5Statistics();
+      if (!mounted) return;
+      setState(() {
+        _md5Stats = stats;
+        _md5LoadError = null;
+      });
+    } catch (error, stackTrace) {
+      AnxLog.warning(
+          'Could not load file checksum statistics', error, stackTrace);
+      if (mounted) setState(() => _md5LoadError = error);
+    }
   }
 
   @override
@@ -85,6 +102,13 @@ class _AdvancedSettingState extends State<AdvancedSetting> {
         SettingsSection(
           title: Text(L10n.of(context).md5Management),
           tiles: [
+            if (_md5LoadError != null)
+              CustomSettingsTile(
+                child: LoadFailure.inline(
+                  error: _md5LoadError,
+                  onRetry: _loadMd5Statistics,
+                ),
+              ),
             if (_md5Stats != null)
               SettingsTile(
                 title: Row(
@@ -92,7 +116,8 @@ class _AdvancedSettingState extends State<AdvancedSetting> {
                   children: [
                     const Icon(Icons.fingerprint),
                     SizedBox(width: 8),
-                    Column(
+                    Expanded(
+                        child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(L10n.of(context).md5Statistics),
@@ -122,7 +147,7 @@ class _AdvancedSettingState extends State<AdvancedSetting> {
                           style: Theme.of(context).textTheme.bodySmall,
                         ),
                       ],
-                    ),
+                    )),
                   ],
                 ),
               ),
@@ -148,7 +173,7 @@ class _AdvancedSettingState extends State<AdvancedSetting> {
                 title: Text(L10n.of(context).md5CalculateMissing),
                 leading: const Icon(Icons.calculate),
                 onPressed: _calculateMd5,
-                // enabled: _md5Stats?.booksWithoutMd5 != 0,
+                enabled: _md5Stats != null,
               ),
           ],
         ),
@@ -219,7 +244,7 @@ class _AdvancedSettingState extends State<AdvancedSetting> {
   }
 
   Future<void> _calculateMd5(BuildContext context) async {
-    if (_isCalculating) return;
+    if (_isCalculating || _md5Stats == null) return;
 
     if (_md5Stats?.localFilesWithoutMd5 == 0) {
       AnxToast.show(L10n.of(context).md5NoCalculationNeeded);
@@ -229,6 +254,7 @@ class _AdvancedSettingState extends State<AdvancedSetting> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
+        scrollable: true,
         title: Text(L10n.of(context).md5CalculateConfirmTitle),
         content: Column(
           mainAxisSize: MainAxisSize.min,
@@ -272,7 +298,7 @@ class _AdvancedSettingState extends State<AdvancedSetting> {
       ),
     );
 
-    if (confirmed != true) return;
+    if (confirmed != true || !mounted) return;
 
     setState(() {
       _isCalculating = true;
@@ -286,6 +312,7 @@ class _AdvancedSettingState extends State<AdvancedSetting> {
       final result = await MD5Service.batchCalculateMd5(
         booksToCalculate,
         onProgress: (current, total, currentFile) {
+          if (!mounted) return;
           setState(() {
             _progress = current / total;
             _currentFile = currentFile;
@@ -294,6 +321,7 @@ class _AdvancedSettingState extends State<AdvancedSetting> {
       );
 
       await _loadMd5Statistics();
+      if (!mounted) return;
 
       setState(() {
         _isCalculating = false;
@@ -305,6 +333,7 @@ class _AdvancedSettingState extends State<AdvancedSetting> {
         showDialog(
           context: context,
           builder: (context) => AlertDialog(
+            scrollable: true,
             title: Text(L10n.of(context).md5CalculationComplete),
             content: Column(
               mainAxisSize: MainAxisSize.min,
@@ -339,6 +368,7 @@ class _AdvancedSettingState extends State<AdvancedSetting> {
         );
       }
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         _isCalculating = false;
         _progress = 0.0;
@@ -357,7 +387,7 @@ class _AdvancedSettingState extends State<AdvancedSetting> {
       builder: (dialogContext) {
         return _HttpProxyDialog(
           onSaved: () {
-            setState(() {});
+            if (mounted) setState(() {});
           },
         );
       },
@@ -440,6 +470,7 @@ class _HttpProxyDialogState extends State<_HttpProxyDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
+      scrollable: true,
       title: Text(L10n.of(context).settingsAdvancedHttpProxyConfig),
       content: Column(
         mainAxisSize: MainAxisSize.min,
@@ -523,6 +554,7 @@ class _HttpProxyDialogState extends State<_HttpProxyDialog> {
 
 Future<void> _showChangelog(BuildContext context) async {
   final currentVersion = await getAppVersion();
+  if (!context.mounted) return;
   final lastVersion = Prefs().lastAppVersion ?? currentVersion;
 
   showCupertinoSheet(
@@ -540,6 +572,7 @@ Future<void> _showChangelog(BuildContext context) async {
 
 Future<void> _showOnboarding(BuildContext context) async {
   final currentVersion = await getAppVersion();
+  if (!context.mounted) return;
 
   showCupertinoSheet(
     context: navigatorKey.currentContext ?? context,

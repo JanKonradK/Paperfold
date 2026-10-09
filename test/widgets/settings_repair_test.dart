@@ -12,7 +12,7 @@
 //
 //   flutter test test/widgets/settings_repair_test.dart
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:paperfold/config/paperfold_tokens.dart';
 import 'package:paperfold/config/shared_preference_provider.dart';
@@ -27,14 +27,15 @@ const String _face = 'Philosopher';
 Widget _host(Widget child) {
   return MaterialApp(
     locale: const Locale('en'),
-    localizationsDelegates: L10n.localizationsDelegates,
+    localizationsDelegates: [
+      L10n.delegate,
+      ...GlobalMaterialLocalizations.delegates,
+    ],
     supportedLocales: L10n.supportedLocales,
     theme: ThemeData(
       useMaterial3: true,
       colorScheme: PaperfoldTokens.colorScheme(Brightness.light),
-    ).copyWith(
-      textTheme: ThemeData.light().textTheme.apply(fontFamily: _face),
-    ),
+    ).copyWith(textTheme: ThemeData.light().textTheme.apply(fontFamily: _face)),
     home: Scaffold(body: child),
   );
 }
@@ -45,8 +46,9 @@ void main() {
     await Prefs().initPrefs();
   });
 
-  testWidgets('a settings row takes the theme face, not the platform default',
-      (WidgetTester tester) async {
+  testWidgets('a settings row takes the theme face, not the platform default', (
+    WidgetTester tester,
+  ) async {
     await tester.pumpWidget(
       _host(
         SettingsTile.navigation(
@@ -62,8 +64,11 @@ void main() {
     final TextStyle title = DefaultTextStyle.of(
       tester.element(find.text('Theme colour')),
     ).style;
-    expect(title.fontFamily, _face,
-        reason: 'a bare TextStyle here drops the theme family entirely');
+    expect(
+      title.fontFamily,
+      _face,
+      reason: 'a bare TextStyle here drops the theme family entirely',
+    );
 
     final TextStyle value = DefaultTextStyle.of(
       tester.element(find.text('Paperfold')),
@@ -71,8 +76,9 @@ void main() {
     expect(value.fontFamily, _face);
   });
 
-  testWidgets('a row carrying both a value and a description shows both',
-      (WidgetTester tester) async {
+  testWidgets('a row carrying both a value and a description shows both', (
+    WidgetTester tester,
+  ) async {
     await tester.pumpWidget(
       _host(
         SettingsTile.navigation(
@@ -89,8 +95,9 @@ void main() {
     expect(find.text('Used for every network request.'), findsOneWidget);
   });
 
-  testWidgets('a one-line row still meets the 48 dp minimum',
-      (WidgetTester tester) async {
+  testWidgets('a one-line row still meets the 48 dp minimum', (
+    WidgetTester tester,
+  ) async {
     await tester.pumpWidget(
       _host(
         SettingsTile.switchTile(
@@ -108,8 +115,9 @@ void main() {
     );
   });
 
-  testWidgets('a disabled row is disabled rather than merely unresponsive',
-      (WidgetTester tester) async {
+  testWidgets('a disabled row is disabled rather than merely unresponsive', (
+    WidgetTester tester,
+  ) async {
     bool toggled = false;
 
     await tester.pumpWidget(
@@ -133,8 +141,9 @@ void main() {
     expect(toggled, isFalse);
   });
 
-  testWidgets('turning E-ink mode on and off leaves the theme mode alone',
-      (WidgetTester tester) async {
+  testWidgets('turning E-ink mode on and off leaves the theme mode alone', (
+    WidgetTester tester,
+  ) async {
     await Prefs().saveThemeModeToPrefs('dark');
 
     await tester.binding.setSurfaceSize(const Size(412, 915));
@@ -146,25 +155,33 @@ void main() {
     await tester.tap(find.text('E-ink Mode'));
     await tester.pumpAndSettle();
     expect(Prefs().eInkMode, isTrue);
-    expect(Prefs().themeMode, ThemeMode.dark,
-        reason: 'E-ink already forces a light brightness in the theme');
+    expect(
+      Prefs().themeMode,
+      ThemeMode.dark,
+      reason: 'E-ink already forces a light brightness in the theme',
+    );
 
     await tester.tap(find.text('E-ink Mode'));
     await tester.pumpAndSettle();
     expect(Prefs().eInkMode, isFalse);
-    expect(Prefs().themeMode, ThemeMode.dark,
-        reason: 'the reader gets their own choice back');
+    expect(
+      Prefs().themeMode,
+      ThemeMode.dark,
+      reason: 'the reader gets their own choice back',
+    );
   });
 
-  testWidgets('the theme-mode control follows a change made elsewhere',
-      (WidgetTester tester) async {
+  testWidgets('the theme-mode control follows a change made elsewhere', (
+    WidgetTester tester,
+  ) async {
     await Prefs().saveThemeModeToPrefs('dark');
 
     await tester.pumpWidget(_host(const ChangeThemeMode()));
     await tester.pumpAndSettle();
 
-    SegmentedButton<String> button() =>
-        tester.widget<SegmentedButton<String>>(find.byType(SegmentedButton<String>));
+    SegmentedButton<String> button() => tester.widget<SegmentedButton<String>>(
+      find.byType(SegmentedButton<String>),
+    );
 
     expect(button().selected, <String>{'dark'});
 
@@ -173,25 +190,29 @@ void main() {
     await Prefs().saveThemeModeToPrefs('light');
     await tester.pumpAndSettle();
 
-    expect(button().selected, <String>{'light'},
-        reason: 'the mode used to be cached in initState');
+    expect(button().selected, <String>{
+      'light',
+    }, reason: 'the mode used to be cached in initState');
   });
 
-  testWidgets('appearance no longer offers the dead bottom-navigator switches',
-      (WidgetTester tester) async {
-    await tester.binding.setSurfaceSize(const Size(412, 2400));
-    addTearDown(() => tester.binding.setSurfaceSize(null));
+  testWidgets(
+    'appearance no longer offers the dead bottom-navigator switches',
+    (WidgetTester tester) async {
+      await tester.binding.setSurfaceSize(const Size(412, 2400));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
 
-    await tester.pumpWidget(_host(const AppearanceSetting()));
-    await tester.pumpAndSettle();
+      await tester.pumpWidget(_host(const AppearanceSetting()));
+      await tester.pumpAndSettle();
 
-    // Nothing has read either preference since the navigation became a fixed
-    // Journal / Library / More set.
-    expect(find.text('Bottom Navigator'), findsNothing);
-  });
+      // Nothing has read either preference since the navigation became a fixed
+      // Journal / Library / More set.
+      expect(find.text('Bottom Navigator'), findsNothing);
+    },
+  );
 
-  testWidgets('the language picker marks the language in use',
-      (WidgetTester tester) async {
+  testWidgets('the language picker marks the language in use', (
+    WidgetTester tester,
+  ) async {
     await Prefs().saveLocaleToPrefs('de');
 
     await tester.pumpWidget(
@@ -214,7 +235,10 @@ void main() {
       matching: find.byType(Semantics),
     );
     expect(marked, findsWidgets);
-    expect(find.byIcon(Icons.check), findsOneWidget,
-        reason: 'exactly one language is the current one');
+    expect(
+      find.byIcon(Icons.check),
+      findsOneWidget,
+      reason: 'exactly one language is the current one',
+    );
   });
 }

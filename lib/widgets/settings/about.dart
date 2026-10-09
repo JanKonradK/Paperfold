@@ -9,11 +9,10 @@ import 'package:paperfold/utils/toast/common.dart';
 import 'package:paperfold/widgets/paperfold_logo_mark.dart';
 import 'package:paperfold/widgets/settings/link_icon.dart';
 import 'package:paperfold/utils/check_update.dart';
-import 'package:flutter/cupertino.dart';
+import 'package:cupertino_ui/cupertino_ui.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
-import 'package:icons_plus/icons_plus.dart';
 import 'package:pubspec_parse/pubspec_parse.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -173,7 +172,7 @@ Future<void> openAboutDialog() async {
                     children: [
                       linkIcon(
                           icon: Icon(
-                            IonIcons.logo_github,
+                            Icons.code,
                             color: Theme.of(context).colorScheme.secondary,
                           ),
                           url: 'https://github.com/JanKonradK/Paperfold',

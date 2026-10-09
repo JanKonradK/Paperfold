@@ -1,13 +1,11 @@
 import 'dart:async';
-import 'package:flutter/material.dart';
+
+import 'package:material_ui/material_ui.dart';
 import 'package:intl/intl.dart';
 
 /// A widget that displays the current time in 'HH:mm' format.
 class MinuteClock extends StatefulWidget {
-  const MinuteClock({
-    super.key,
-    this.textStyle,
-  });
+  const MinuteClock({super.key, this.textStyle});
 
   /// The optional style to apply to the time text.
   final TextStyle? textStyle;
@@ -32,7 +30,7 @@ class _MinuteClockState extends State<MinuteClock> {
     final secondsUntilNextMinute = 60 - DateTime.now().second;
 
     // Wait for that initial delay before starting the periodic timer.
-    Future.delayed(Duration(seconds: secondsUntilNextMinute), () {
+    _timer = Timer(Duration(seconds: secondsUntilNextMinute), () {
       if (mounted) {
         // The first synchronized update.
         setState(() {
@@ -62,9 +60,6 @@ class _MinuteClockState extends State<MinuteClock> {
 
   @override
   Widget build(BuildContext context) {
-    return Text(
-      _currentTime,
-      style: widget.textStyle,
-    );
+    return Text(_currentTime, style: widget.textStyle);
   }
 }

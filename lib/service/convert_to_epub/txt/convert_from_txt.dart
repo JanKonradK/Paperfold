@@ -10,6 +10,16 @@ import 'package:charset/charset.dart';
 import 'package:path/path.dart' as path;
 
 String readFileWithEncoding(File file) {
+  final bytes = file.readAsBytesSync();
+  if (hasUtf32Bom(bytes)) return utf32.decode(bytes);
+  if (hasUtf16Bom(bytes)) return utf16.decode(bytes);
+  try {
+    final content = utf8.decode(bytes);
+    if (!content.contains('\u0000')) return content;
+  } on FormatException {
+    // Older text files may use a legacy encoding.
+  }
+
   bool checkGarbled(String content) {
     final garbledPattern = RegExp(
         r'Õ|Ê|�|Ç|³|¾|Ð|Ó|Î|Á|É|�|Ã|Ä|Å|Æ|Ë|Ì|Í|Ï|Ò|Ó|Ô|Õ|Ö|Ù|Ú|Û|Ü|Ý|à|á|â|ã|ä|å|æ|è|é|ê|ë|ì|í|î|ï|ð|ñ|ò|ó|ô|õ|ö|ù|ú|û|ü|ý|ÿ|\x00-\x1F\x7F|｡｢｣､･ｦｧｨｩｪｫｬｭｮｯｰｱｲｳｴｵｶｷｸｹｺｻｼｽｾｿﾀﾁﾂﾃﾄﾅﾆﾇﾈﾉﾊﾋﾌﾍﾎﾏﾐﾑﾒﾓﾔﾕﾖﾗﾘﾙﾚﾛﾜﾝ|€|�');
@@ -24,17 +34,16 @@ String readFileWithEncoding(File file) {
   }
 
   final decoder = {
-    'utf8': utf8.decode,
     'gbk': gbk.decode,
-    'latin1': latin1.decode,
     'utf16': utf16.decode,
     'utf32': utf32.decode,
+    'latin1': latin1.decode,
   };
 
   for (final entry in decoder.entries) {
     try {
       AnxLog.info('Convert: Reading file with encoding: ${entry.key}');
-      final content = entry.value(file.readAsBytesSync());
+      final content = entry.value(bytes);
       if (!checkGarbled(content)) {
         return content;
       }

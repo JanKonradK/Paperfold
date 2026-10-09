@@ -1,6 +1,6 @@
 import 'package:paperfold/l10n/generated/L10n.dart';
 import 'package:paperfold/main.dart';
-import 'package:flutter/cupertino.dart';
+import 'package:cupertino_ui/cupertino_ui.dart';
 
 String weekOfYear(DateTime date) {
   BuildContext context = navigatorKey.currentContext!;

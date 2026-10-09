@@ -6,7 +6,7 @@ import 'package:paperfold/widgets/common/async_skeleton_wrapper.dart';
 import 'package:paperfold/widgets/highlight_digit.dart';
 import 'package:paperfold/widgets/statistic/dashboard_tiles/dashboard_tile_base.dart';
 import 'package:paperfold/widgets/statistic/dashboard_tiles/dashboard_tile_metadata.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class TotalTimeTile extends StatisticsDashboardTileBase {
@@ -34,6 +34,7 @@ class TotalTimeTile extends StatisticsDashboardTileBase {
 
     return AsyncSkeletonWrapper<int>(
       asyncValue: totalReadingTime,
+      onRetry: () async => ref.invalidate(totalReadingTimeProvider),
       builder: (seconds, _) => _TotalTimeContent(
         seconds: seconds,
         metadata: metadata,

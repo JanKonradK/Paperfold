@@ -1,6 +1,6 @@
 import 'dart:math' as math;
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:paperfold/widgets/bookshelf/shelf_stage.dart';
 import 'package:paperfold/widgets/paperfold_glass_surface.dart';
 
@@ -29,6 +29,7 @@ class Bookcase extends StatefulWidget {
     this.pickUpHint,
     this.openHint,
     this.showSignposts = true,
+    this.showCovers = false,
   });
 
   final List<ShelfRow> shelves;
@@ -52,6 +53,7 @@ class Bookcase extends StatefulWidget {
   final String? pickUpHint;
   final String? openHint;
   final bool showSignposts;
+  final bool showCovers;
 
   @override
   State<Bookcase> createState() => BookcaseState();
@@ -76,8 +78,10 @@ class BookcaseState extends State<Bookcase> {
   @override
   void initState() {
     super.initState();
-    _shelf =
-        widget.initialShelf.clamp(0, math.max(0, widget.shelves.length - 1));
+    _shelf = widget.initialShelf.clamp(
+      0,
+      math.max(0, widget.shelves.length - 1),
+    );
     _page = _shelf.toDouble();
     _climb = PageController(initialPage: _shelf)..addListener(_readClimb);
   }
@@ -108,9 +112,16 @@ class BookcaseState extends State<Bookcase> {
     if (!_climb.position.hasContentDimensions) return;
     final page = _climb.page;
     if (page == null || page == _page) return;
+    // ensureVisible can move a pager even when drag scrolling is disabled.
+    if (_holding) {
+      _climb.jumpToPage(_shelf);
+      return;
+    }
     setState(() => _page = page);
-    final settled =
-        page.round().clamp(0, math.max(0, widget.shelves.length - 1)).toInt();
+    final settled = page
+        .round()
+        .clamp(0, math.max(0, widget.shelves.length - 1))
+        .toInt();
     if (settled != _shelf && (page - settled).abs() < 0.5) {
       _shelf = settled;
       widget.onShelfChanged?.call(settled);
@@ -130,7 +141,9 @@ class BookcaseState extends State<Bookcase> {
         PageView.builder(
           controller: _climb,
           scrollDirection: Axis.vertical,
-          physics: _holding
+          // The cover grid owns vertical scrolling. Shelf chips still switch
+          // pages, without a grid gesture moving to a different collection.
+          physics: _holding || widget.showCovers
               ? const NeverScrollableScrollPhysics()
               : const PageScrollPhysics(),
           itemCount: widget.shelves.length,
@@ -143,6 +156,7 @@ class BookcaseState extends State<Bookcase> {
               key: _keyFor(index),
               books: shelf.books,
               shelfName: shelf.name,
+              showCovers: widget.showCovers,
               onOpen: widget.onOpen,
               optionsBuilder: widget.optionsBuilder,
               pickUpHint: widget.pickUpHint,
@@ -286,15 +300,17 @@ class _Signpost extends StatelessWidget {
             child: ConstrainedBox(
               constraints: const BoxConstraints(minHeight: 48),
               child: Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 18,
+                  vertical: 8,
+                ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: iconFirst
                       ? [
                           arrow,
                           const SizedBox(width: 8),
-                          Flexible(child: label)
+                          Flexible(child: label),
                         ]
                       : [
                           Flexible(child: label),

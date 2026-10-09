@@ -5,7 +5,7 @@ import 'package:paperfold/utils/save_file_to_download.dart';
 import 'package:paperfold/utils/get_path/log_file.dart';
 import 'package:paperfold/utils/toast/common.dart';
 import 'package:paperfold/utils/log/common.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 
 class LogPage extends StatefulWidget {

@@ -1,0 +1,113 @@
+<!doctype html>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PDF regression checks</title>
+<style>html,body {margin:0;height:100%} foliate-view {display:block;width:100%;height:100%}</style>
+<script type="module">
+import { makePDF } from '../src/pdf.js';
+import '../src/view.js';
+
+// From the project root: node assets/foliate-js/node_modules/http-server/bin/http-server assets -p 3000 -c-1
+// Open /foliate-js/tests/pdf.html. No library files or reader preferences are used.
+// Verified in Chromium 152. PDF.js 6 legacy lists Chrome 125+ and Safari 18+.
+// Older WebViews and iOS 15.2 are unverified; flat layer styles are not a claim
+// of full backwards compatibility. https://github.com/mozilla/pdf.js/wiki/Frequently-Asked-Questions#faq-support
+window.results = [];
+window.isFootNoteOpen = () => false;
+const assert = (condition, message) => {
+  if (!condition) throw new Error(message);
+  results.push(message);
+};
+const stream = text => `<< /Length ${text.length} >>\nstream\n${text}\nendstream`;
+// ASCII content keeps the xref byte offsets exact. This is a real, two-page PDF.
+const objects = [
+  '<< /Type /Catalog /Pages 2 0 R /Outlines 11 0 R /Names << /Dests 14 0 R >> >>',
+  '<< /Type /Pages /Kids [3 0 R 4 0 R] /Count 2 >>',
+  '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 300 400] /Resources << /Font << /F1 5 0 R >> >> /Contents 6 0 R /Annots [8 0 R 9 0 R 10 0 R 15 0 R] >>',
+  '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 300 400] /Rotate 90 /Resources << /Font << /F1 5 0 R >> >> /Contents 7 0 R >>',
+  '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>',
+  stream('BT /F1 18 Tf 24 350 Td (PDF first page) Tj 0 -40 Td (Internal link) Tj 0 -40 Td (External link) Tj 0 -40 Td (Next page action) Tj 0 -40 Td (Named destination) Tj ET'),
+  stream('BT /F1 18 Tf 24 350 Td (PDF second page) Tj ET'),
+  '<< /Type /Annot /Subtype /Link /Rect [24 305 150 330] /Border [0 0 0] /Dest [4 0 R /Fit] >>',
+  '<< /Type /Annot /Subtype /Link /Rect [24 265 150 290] /Border [0 0 0] /A << /S /URI /URI (https://example.com/pdf-smoke) >> >>',
+  '<< /Type /Annot /Subtype /Link /Rect [24 225 180 250] /Border [0 0 0] /A << /S /Named /N /NextPage >> >>',
+  '<< /Type /Outlines /First 12 0 R /Last 12 0 R /Count 1 >>',
+  '<< /Title (Second page) /Parent 11 0 R /Dest (second) >>',
+  '<< /Title (PDF smoke fixture) /Author (Paperfold tests) >>',
+  '<< /Names [(second) [4 0 R /Fit]] >>',
+  '<< /Type /Annot /Subtype /Link /Rect [24 185 210 210] /Border [0 0 0] /Dest (second) >>',
+];
+let source = '%PDF-1.7\n';
+const offsets = [0];
+objects.forEach((object, i) => {
+  offsets.push(source.length);
+  source += `${i + 1} 0 obj\n${object}\nendobj\n`;
+});
+const xref = source.length;
+source += `xref\n0 ${offsets.length}\n0000000000 65535 f \n`;
+source += offsets.slice(1).map(offset => `${String(offset).padStart(10, '0')} 00000 n \n`).join('');
+source += `trailer\n<< /Size ${offsets.length} /Root 1 0 R /Info 13 0 R >>\nstartxref\n${xref}\n%%EOF\n`;
+window.done = (async () => {
+  const book = await makePDF(new File([source], 'smoke.pdf', {type:'application/pdf'}));
+  assert(book.sections.length === 2 && book.metadata.title === 'PDF smoke fixture', 'PDF pages and metadata load');
+  assert((await book.resolveHref(book.toc[0].href)).index === 1, 'Named outline destination resolves');
+  assert((await book.splitTOCHref(book.toc[0].href))[0] === 1, 'Named destination maps to TOC progress');
+  const urls = await Promise.all([book.sections[0].load(), book.sections[0].load(), book.sections[0].load()]);
+  assert(urls.every(url => url === urls[0]), 'Concurrent page loads share one cached render');
+  const view = document.createElement('foliate-view');
+  document.body.append(view);
+  await view.open(book);
+  await view.goTo(0);
+  const doc = view.renderer.getContents().find(({doc}) => doc.querySelector('.textLayer'))?.doc;
+  await Promise.all([...doc.images].map(image => image.decode()));
+  assert(doc.querySelector('img').naturalWidth > 0, 'PDF canvas produces a visible bitmap');
+  const text = doc.querySelector('.textLayer span');
+  const rect = text.getBoundingClientRect();
+  assert(text.textContent === 'PDF first page' && rect.width > 0 && rect.height > 0, 'Text layer has selectable, positioned text');
+  assert(rect.top >= 0 && rect.bottom < doc.querySelector('img').naturalHeight, 'Text layer overlaps the page bitmap');
+  const selection = doc.getSelection();
+  const range = doc.createRange();
+  range.selectNodeContents(text);
+  selection.addRange(range);
+  assert(selection.toString() === 'PDF first page', 'Text can be selected in the page frame');
+  selection.removeAllRanges();
+  const links = [...doc.querySelectorAll('.annotationLayer a')];
+  assert(links.length === 4 && links.every(link => link.getBoundingClientRect().width > 0), 'Annotation links have visible hit regions');
+  const stylesheet = doc.querySelector('link');
+  stylesheet.disabled = true;
+  assert(doc.defaultView.getComputedStyle(text).position === 'absolute'
+    && links.every(link => link.getBoundingClientRect().width > 0), 'Flat fallback keeps text and links positioned without viewer CSS');
+  stylesheet.disabled = false;
+  const external = links.find(link => book.isExternal(link.getAttribute('href')));
+  assert(external?.href === 'https://example.com/pdf-smoke', 'External URL is preserved');
+  let externalEvents = 0;
+  view.addEventListener('external-link', event => {event.preventDefault();externalEvents++;});
+  external.click();
+  assert(externalEvents === 1, 'External link reaches the reader event');
+  for (const link of links.filter(link => link !== external)) {
+    const href = link.getAttribute('href');
+    assert((await book.resolveHref(href)).index === 1, `PDF link destination resolves: ${href}`);
+    await view.goTo(0);
+    const current = view.renderer.getContents().find(({doc}) => doc.querySelector('.textLayer')).doc;
+    const activeLink = [...current.querySelectorAll('a')].find(a => a.getAttribute('href') === href);
+    await new Promise((resolve, reject) => {
+      const timeout = setTimeout(() => reject(new Error('PDF link navigation timed out')), 5000);
+      view.addEventListener('relocate', () => {clearTimeout(timeout);resolve();}, {once:true});
+      activeLink.click();
+    });
+    assert(view.renderer.index === 1, `PDF link navigates in the reader: ${href}`);
+  }
+  assert(await book.sections[0].load() === urls[0], 'Page URL stays cached after navigation');
+  const rotated = view.renderer.getContents().find(({doc}) => doc.querySelector('.textLayer'))?.doc;
+  await Promise.all([...rotated.images].map(image => image.decode()));
+  const rotatedBounds = rotated.querySelector('.textLayer').getBoundingClientRect();
+  assert(Math.abs(rotatedBounds.width - rotated.querySelector('img').naturalWidth) < 1
+    && Math.abs(rotatedBounds.height - rotated.querySelector('img').naturalHeight) < 1,
+    'Rotated text layer fits the rotated bitmap');
+  const cover = await book.getCover();
+  assert(cover.type === 'image/png' && cover.size > 0, 'Cover uses the first rendered PDF page');
+  await view.goTo(0);
+  document.title = `PASS: ${results.length} PDF checks`;
+  return results;
+})();
+window.done.catch(error => {document.title = `FAIL: ${error.message}`;window.failure = error.stack;});
+</script>

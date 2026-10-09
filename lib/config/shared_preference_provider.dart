@@ -35,7 +35,7 @@ import 'package:paperfold/service/translate/index.dart';
 import 'package:paperfold/utils/get_current_language_code.dart';
 import 'package:paperfold/utils/log/common.dart';
 import 'package:paperfold/widgets/reading_page/style_widget.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 const String prefsBackupVersionKey = '__prefsBackupVersion';
@@ -94,13 +94,16 @@ class Prefs extends ChangeNotifier {
         };
       }
       if (value is List) {
-        final bool allStrings =
-            value.every((dynamic element) => element is String);
+        final bool allStrings = value.every(
+          (dynamic element) => element is String,
+        );
         if (allStrings) {
           return <String, Object?>{
             _prefsBackupEntryTypeKey: 'stringList',
-            _prefsBackupEntryValueKey:
-                List<String>.from(value, growable: false),
+            _prefsBackupEntryValueKey: List<String>.from(
+              value,
+              growable: false,
+            ),
           };
         }
       }
@@ -111,6 +114,7 @@ class Prefs extends ChangeNotifier {
       prefsBackupVersionKey: prefsBackupSchemaVersion,
     };
     for (final String key in prefs.getKeys()) {
+      if (key == 'customStoragePath' || key == 'pendingStoragePath') continue;
       final Object? value = prefs.get(key);
       final Map<String, Object?>? encoded = encodePrefsBackupEntry(value);
       if (encoded != null) {
@@ -123,7 +127,9 @@ class Prefs extends ChangeNotifier {
   Future<void> applyPrefsBackupMap(Map<String, dynamic> backup) async {
     for (final MapEntry<String, dynamic> entry in backup.entries) {
       final String key = entry.key;
-      if (key == prefsBackupVersionKey) {
+      if (key == prefsBackupVersionKey ||
+          key == 'customStoragePath' ||
+          key == 'pendingStoragePath') {
         continue;
       }
       final dynamic entryValue = entry.value;
@@ -145,9 +151,10 @@ class Prefs extends ChangeNotifier {
           if (value is String) await prefs.setString(key, value);
           break;
         case 'stringList':
-          if (value is List) {
-            final List<String> list =
-                value.map((dynamic v) => v as String).toList();
+          if (value is List && value.every((element) => element is String)) {
+            final List<String> list = value
+                .map((dynamic v) => v as String)
+                .toList();
             await prefs.setStringList(key, list);
           }
           break;
@@ -165,6 +172,9 @@ class Prefs extends ChangeNotifier {
 
   Future<void> saveThemeToPrefs(int colorValue) async {
     await prefs.setInt('themeColor', colorValue);
+    if (appThemeMode == 'burgundy') {
+      await prefs.setString('themeMode', 'light');
+    }
     await prefs.setBool('useBrandTheme', false);
     notifyListeners();
   }
@@ -193,12 +203,22 @@ class Prefs extends ChangeNotifier {
     notifyListeners();
   }
 
+  String get appThemeMode {
+    final stored = prefs.getString('themeMode');
+    return switch (stored) {
+      'light' || 'burgundy' || 'dark' => stored!,
+      null => useBrandTheme ? 'burgundy' : 'light',
+      _ => 'auto',
+    };
+  }
+
   ThemeMode get themeMode {
-    String themeMode = prefs.getString('themeMode') ?? 'light';
-    switch (themeMode) {
+    switch (appThemeMode) {
       case 'dark':
         return ThemeMode.dark;
       case 'light':
+      case 'burgundy':
+        // Burgundy changes app chrome, while the day reader theme stays intact.
         return ThemeMode.light;
       default:
         return ThemeMode.system;
@@ -207,6 +227,9 @@ class Prefs extends ChangeNotifier {
 
   Future<void> saveThemeModeToPrefs(String themeMode) async {
     await prefs.setString('themeMode', themeMode);
+    if (themeMode == 'burgundy') {
+      await prefs.setBool('useBrandTheme', true);
+    }
     notifyListeners();
   }
 
@@ -235,9 +258,10 @@ class Prefs extends ChangeNotifier {
     String? readThemeJson = prefs.getString('readTheme');
     if (readThemeJson == null) {
       return ReadTheme(
-          backgroundColor: 'FFF6F2EA',
-          textColor: 'FF160F0C',
-          backgroundImagePath: '');
+        backgroundColor: 'FFF6F2EA',
+        textColor: 'FF160F0C',
+        backgroundImagePath: '',
+      );
     }
     return ReadTheme.fromJson(readThemeJson);
   }
@@ -358,8 +382,9 @@ class Prefs extends ChangeNotifier {
 
   StatisticsDashboardTileType? _statisticsDashboardTileFromName(String name) {
     try {
-      return StatisticsDashboardTileType.values
-          .firstWhere((element) => element.name == name);
+      return StatisticsDashboardTileType.values.firstWhere(
+        (element) => element.name == name,
+      );
     } catch (_) {
       return null;
     }
@@ -456,10 +481,10 @@ class Prefs extends ChangeNotifier {
   /// DESIGN.md makes it the voice of Paperfold's content. The reader can still
   /// choose "follow book" in the style sheet.
   static FontModel get defaultFont => FontModel.bundled(
-        label: 'Philosopher',
-        name: 'Philosopher',
-        fileName: 'Philosopher-Regular.ttf',
-      );
+    label: 'Philosopher',
+    name: 'Philosopher',
+    fileName: 'Philosopher-Regular.ttf',
+  );
 
   FontModel get font {
     String? fontJson = prefs.getString('font');
@@ -496,7 +521,8 @@ class Prefs extends ChangeNotifier {
 
   TranslateService get translateService {
     return getTranslateService(
-        prefs.getString('translateService') ?? 'bingWeb');
+      prefs.getString('translateService') ?? 'bingWeb',
+    );
   }
 
   set translateFrom(LangListEnum from) {
@@ -566,7 +592,8 @@ class Prefs extends ChangeNotifier {
 
   LangListEnum get fullTextTranslateTo {
     return getLang(
-        prefs.getString('fullTextTranslateTo') ?? getCurrentLanguageCode());
+      prefs.getString('fullTextTranslateTo') ?? getCurrentLanguageCode(),
+    );
   }
 
   // set convertChineseMode(ConvertChineseMode mode) {
@@ -587,9 +614,7 @@ class Prefs extends ChangeNotifier {
   ReadingRules get readingRules {
     String? rulesJson = prefs.getString('readingRules');
     if (rulesJson == null) {
-      return ReadingRules(
-        convertChineseMode: ConvertChineseMode.none,
-      );
+      return ReadingRules(convertChineseMode: ConvertChineseMode.none);
     }
     return ReadingRules.fromJson(rulesJson);
   }
@@ -625,10 +650,7 @@ class Prefs extends ChangeNotifier {
   }
 
   List<ChapterSplitRule> get allChapterSplitRules {
-    return [
-      ...builtinChapterSplitRules,
-      ...chapterSplitCustomRules,
-    ];
+    return [...builtinChapterSplitRules, ...chapterSplitCustomRules];
   }
 
   String? get _storedChapterSplitRuleId {
@@ -728,6 +750,16 @@ class Prefs extends ChangeNotifier {
     } else {
       prefs.setString('customStoragePath', value);
     }
+    notifyListeners();
+  }
+
+  String? get pendingStoragePath => prefs.getString('pendingStoragePath');
+
+  Future<void> setPendingStoragePath(String? value) async {
+    final saved = value == null
+        ? await prefs.remove('pendingStoragePath')
+        : await prefs.setString('pendingStoragePath', value);
+    if (!saved) throw StateError('Could not save the storage location');
     notifyListeners();
   }
 
@@ -871,9 +903,7 @@ class Prefs extends ChangeNotifier {
     if (raw == null || raw.isEmpty) return {};
     try {
       final decoded = jsonDecode(raw) as Map<String, dynamic>;
-      return {
-        for (final entry in decoded.entries) entry.key: '${entry.value}',
-      };
+      return {for (final entry in decoded.entries) entry.key: '${entry.value}'};
     } catch (e) {
       AnxLog.warning('The stored book bindings could not be read: $e');
       return {};
@@ -888,6 +918,13 @@ class Prefs extends ChangeNotifier {
   bool get shelfUniformSpines {
     return prefs.getBool('shelfUniformSpines') ?? false;
   }
+
+  set shelfCoverView(bool value) {
+    prefs.setBool('shelfCoverView', value);
+    notifyListeners();
+  }
+
+  bool get shelfCoverView => prefs.get('shelfCoverView') == true;
 
   set bookshelfFolderStyle(BookshelfFolderStyle style) {
     prefs.setString('bookshelfFolderStyle', style.code);
@@ -974,8 +1011,9 @@ class Prefs extends ChangeNotifier {
     if (readingInfoJson == null) {
       return ReadingInfoModel();
     }
-    final Map<String, dynamic> json =
-        Map<String, dynamic>.from(jsonDecode(readingInfoJson));
+    final Map<String, dynamic> json = Map<String, dynamic>.from(
+      jsonDecode(readingInfoJson),
+    );
     if (json.containsKey('header') || json.containsKey('footer')) {
       return ReadingInfoModel.fromJson(json);
     }
@@ -994,7 +1032,8 @@ class Prefs extends ChangeNotifier {
           json['headerRight'],
           ReadingInfoEnum.none,
         ),
-        verticalMargin: prefs.getDouble('pageHeaderMargin') ??
+        verticalMargin:
+            prefs.getDouble('pageHeaderMargin') ??
             MediaQuery.of(navigatorKey.currentContext!).padding.bottom,
         leftMargin: prefs.getDouble('pageHeaderLeftMargin') ?? 20,
         rightMargin: prefs.getDouble('pageHeaderRightMargin') ?? 20,
@@ -1013,7 +1052,8 @@ class Prefs extends ChangeNotifier {
           json['footerRight'],
           ReadingInfoEnum.bookProgress,
         ),
-        verticalMargin: prefs.getDouble('pageFooterMargin') ??
+        verticalMargin:
+            prefs.getDouble('pageFooterMargin') ??
             MediaQuery.of(navigatorKey.currentContext!).padding.bottom,
         leftMargin: prefs.getDouble('pageFooterLeftMargin') ?? 20,
         rightMargin: prefs.getDouble('pageFooterRightMargin') ?? 20,
@@ -1147,9 +1187,10 @@ class Prefs extends ChangeNotifier {
     String? fontJson = prefs.getString('excerptShareFont');
     if (fontJson == null) {
       return FontModel(
-          label: L10n.of(navigatorKey.currentContext!).systemFont,
-          name: 'customFont0',
-          path: 'SourceHanSerifSC-Regular.otf');
+        label: L10n.of(navigatorKey.currentContext!).systemFont,
+        name: 'customFont0',
+        path: 'SourceHanSerifSC-Regular.otf',
+      );
     }
     return FontModel.fromJson(fontJson);
   }
@@ -1178,15 +1219,20 @@ class Prefs extends ChangeNotifier {
   }
 
   void saveTranslateServiceConfig(
-      TranslateService service, Map<String, dynamic> config) {
+    TranslateService service,
+    Map<String, dynamic> config,
+  ) {
     prefs.setString(
-        'translateServiceConfig_${service.name}', jsonEncode(config));
+      'translateServiceConfig_${service.name}',
+      jsonEncode(config),
+    );
     notifyListeners();
   }
 
   Map<String, dynamic>? getTranslateServiceConfig(TranslateService service) {
-    String? configJson =
-        prefs.getString('translateServiceConfig_${service.name}');
+    String? configJson = prefs.getString(
+      'translateServiceConfig_${service.name}',
+    );
     if (configJson == null) {
       return null;
     }
@@ -1204,7 +1250,8 @@ class Prefs extends ChangeNotifier {
 
   TranslationModeEnum get translationMode {
     return TranslationModeEnum.fromCode(
-        prefs.getString('translationMode') ?? 'off');
+      prefs.getString('translationMode') ?? 'off',
+    );
   }
 
   set translationMode(TranslationModeEnum mode) {
@@ -1216,7 +1263,10 @@ class Prefs extends ChangeNotifier {
     String? bgimgJson = prefs.getString('bgimg');
     if (bgimgJson == null) {
       return BgimgModel(
-          type: BgimgType.none, path: 'none', alignment: BgimgAlignment.center);
+        type: BgimgType.none,
+        path: 'none',
+        alignment: BgimgAlignment.center,
+      );
     }
     return BgimgModel.fromJson(jsonDecode(bgimgJson));
   }
@@ -1307,13 +1357,16 @@ class Prefs extends ChangeNotifier {
     if (modesJson == null) return {};
 
     Map<String, dynamic> decoded = jsonDecode(modesJson);
-    return decoded.map((key, value) =>
-        MapEntry(key, TranslationModeEnum.fromCode(value as String)));
+    return decoded.map(
+      (key, value) =>
+          MapEntry(key, TranslationModeEnum.fromCode(value as String)),
+    );
   }
 
   set bookTranslationModes(Map<String, TranslationModeEnum> modes) {
-    Map<String, String> encoded =
-        modes.map((key, value) => MapEntry(key, value.code));
+    Map<String, String> encoded = modes.map(
+      (key, value) => MapEntry(key, value.code),
+    );
     prefs.setString('bookTranslationModes', jsonEncode(encoded));
     notifyListeners();
   }
@@ -1336,7 +1389,8 @@ class Prefs extends ChangeNotifier {
 
   TextAlignmentEnum get textAlignment {
     return TextAlignmentEnum.fromCode(
-        prefs.getString('textAlignment') ?? 'auto');
+      prefs.getString('textAlignment') ?? 'auto',
+    );
   }
 
   set textAlignment(TextAlignmentEnum alignment) {
@@ -1355,7 +1409,8 @@ class Prefs extends ChangeNotifier {
 
   CodeHighlightThemeEnum get codeHighlightTheme {
     return CodeHighlightThemeEnum.fromCode(
-        prefs.getString('codeHighlightTheme') ?? 'default');
+      prefs.getString('codeHighlightTheme') ?? 'default',
+    );
   }
 
   set codeHighlightTheme(CodeHighlightThemeEnum theme) {

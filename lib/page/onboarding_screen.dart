@@ -1,5 +1,5 @@
 import 'package:paperfold/page/settings_page/appearance.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:introduction_screen/introduction_screen.dart';
 import 'package:paperfold/config/paperfold_tokens.dart';
 import 'package:paperfold/l10n/generated/L10n.dart';
@@ -11,10 +11,7 @@ import 'package:provider/provider.dart';
 class OnboardingScreen extends StatefulWidget {
   final VoidCallback onComplete;
 
-  const OnboardingScreen({
-    super.key,
-    required this.onComplete,
-  });
+  const OnboardingScreen({super.key, required this.onComplete});
 
   @override
   State<OnboardingScreen> createState() => _OnboardingScreenState();
@@ -172,7 +169,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       final currentLocale = Prefs().locale;
       final currentLanguageCode = currentLocale?.languageCode ?? 'System';
       final currentCountryCode = currentLocale?.countryCode ?? '';
-      final currentLanguageTag = currentLanguageCode +
+      final currentLanguageTag =
+          currentLanguageCode +
           (currentCountryCode.isNotEmpty ? '-$currentCountryCode' : '');
 
       return Column(
@@ -208,8 +206,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             child: DropdownButton<String>(
               isExpanded: true,
               underline: const SizedBox(),
-              value: languageOptions.any(
-                      (option) => option.values.first == currentLanguageTag)
+              value:
+                  languageOptions.any(
+                    (option) => option.values.first == currentLanguageTag,
+                  )
                   ? currentLanguageTag
                   : 'system',
               onChanged: (String? newValue) {
@@ -219,8 +219,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   });
                 }
               },
-              items: languageOptions
-                  .map<DropdownMenuItem<String>>((Map<String, String> option) {
+              items: languageOptions.map<DropdownMenuItem<String>>((
+                Map<String, String> option,
+              ) {
                 final displayName = option.keys.first;
                 final languageCode = option.values.first;
                 return DropdownMenuItem<String>(
@@ -295,66 +296,67 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               final isSelected = option.isPaperfold
                   ? prefs.useBrandTheme
                   : !prefs.useBrandTheme &&
-                      color.toARGB32() == currentThemeColor.toARGB32();
+                        color.toARGB32() == currentThemeColor.toARGB32();
 
               final swatch = GestureDetector(
-                  onTap: () async {
-                    if (option.isPaperfold) {
-                      prefs.useBrandTheme = true;
-                    } else {
-                      await prefs.saveThemeToPrefs(color.toARGB32());
-                    }
-                    if (mounted) {
-                      setState(() {});
-                    }
-                  },
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: color,
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: isSelected
-                            ? Theme.of(context).colorScheme.onSurface
-                            : Colors.transparent,
-                        width: 2,
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withAlpha(30),
-                          blurRadius: 2,
-                          offset: const Offset(0, 1),
-                        ),
-                        if (isSelected)
-                          BoxShadow(
-                            color: color.withAlpha(100),
-                            blurRadius: 8,
-                            spreadRadius: 1,
-                          ),
-                      ],
+                onTap: () async {
+                  if (option.isPaperfold) {
+                    prefs.useBrandTheme = true;
+                  } else {
+                    await prefs.saveThemeToPrefs(color.toARGB32());
+                  }
+                  if (mounted) {
+                    setState(() {});
+                  }
+                },
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: color,
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: isSelected
+                          ? Theme.of(context).colorScheme.onSurface
+                          : Colors.transparent,
+                      width: 2,
                     ),
-                    child: isSelected
-                        ? Icon(
-                            Icons.check,
-                            color: color.computeLuminance() > 0.5
-                                ? Colors.black
-                                : Colors.white,
-                            size: 20,
-                          )
-                        : option.isPaperfold
-                            ? Icon(
-                                Icons.auto_stories_outlined,
-                                color: color.computeLuminance() > 0.5
-                                    ? Colors.black
-                                    : Colors.white,
-                                size: 20,
-                              )
-                            : null,
-                  ));
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withAlpha(30),
+                        blurRadius: 2,
+                        offset: const Offset(0, 1),
+                      ),
+                      if (isSelected)
+                        BoxShadow(
+                          color: color.withAlpha(100),
+                          blurRadius: 8,
+                          spreadRadius: 1,
+                        ),
+                    ],
+                  ),
+                  child: isSelected
+                      ? Icon(
+                          Icons.check,
+                          color: color.computeLuminance() > 0.5
+                              ? Colors.black
+                              : Colors.white,
+                          size: 20,
+                        )
+                      : option.isPaperfold
+                      ? Icon(
+                          Icons.auto_stories_outlined,
+                          color: color.computeLuminance() > 0.5
+                              ? Colors.black
+                              : Colors.white,
+                          size: 20,
+                        )
+                      : null,
+                ),
+              );
 
               return option.isPaperfold
                   ? Tooltip(
-                      message:
-                          L10n.of(context).settingsAppearanceUsePaperfoldTheme,
+                      message: L10n.of(context)
+                          .settingsAppearanceUsePaperfoldTheme,
                       child: swatch,
                     )
                   : swatch;
@@ -374,9 +376,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: Theme.of(context)
-                          .colorScheme
-                          .primaryContainer
+                      color: Theme.of(context).colorScheme.primaryContainer
                           .withAlpha(50),
                       shape: BoxShape.circle,
                     ),
@@ -401,9 +401,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     L10n.of(context).customizeYourExperience,
                     style: TextStyle(
                       fontSize: 16,
-                      color: Theme.of(context)
-                          .colorScheme
-                          .onSurface
+                      color: Theme.of(context).colorScheme.onSurface
                           .withAlpha(150),
                     ),
                     textAlign: TextAlign.center,
@@ -437,9 +435,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           L10n.of(context).optimizedForEInkDisplays,
                           style: TextStyle(
                             fontSize: 12,
-                            color: Theme.of(context)
-                                .colorScheme
-                                .onSurface
+                            color: Theme.of(context).colorScheme.onSurface
                                 .withAlpha(150),
                           ),
                         ),
@@ -450,9 +446,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     value: prefs.eInkMode,
                     onChanged: (value) {
                       setState(() {
-                        if (value) {
-                          prefs.saveThemeModeToPrefs('light');
-                        }
                         prefs.eInkMode = value;
                       });
                     },
@@ -465,9 +458,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Theme.of(context)
-                      .colorScheme
-                      .surfaceContainerHighest
+                  color: Theme.of(context).colorScheme.surfaceContainerHighest
                       .withAlpha(50),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
@@ -487,9 +478,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         L10n.of(context).moreDisplayOptionsTip,
                         style: TextStyle(
                           fontSize: 13,
-                          color: Theme.of(context)
-                              .colorScheme
-                              .onSurface
+                          color: Theme.of(context).colorScheme.onSurface
                               .withAlpha(150),
                         ),
                       ),
@@ -521,9 +510,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: Theme.of(context)
-                .colorScheme
-                .surfaceContainerHighest
+            color: Theme.of(context).colorScheme.surfaceContainerHighest
                 .withAlpha(50),
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
@@ -543,8 +530,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   tipText,
                   style: TextStyle(
                     fontSize: 13,
-                    color:
-                        Theme.of(context).colorScheme.onSurface.withAlpha(150),
+                    color: Theme.of(context).colorScheme.onSurface
+                        .withAlpha(150),
                   ),
                 ),
               ),
