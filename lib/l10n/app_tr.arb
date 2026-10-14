@@ -106,8 +106,8 @@
   "notesTips_2": "Okurken bir not ekleyin!",
   "readingPageChapterPages": "Bölüm Sayfaları",
   "readingPageCurrentPage": "Geçerli Sayfa",
-  "readingPageAutoMarkSelection": "Auto-mark selection",
-  "readingPageAutoMarkSelectionTips": "Automatically highlight selected text with the last used style",
+  "readingPageAutoMarkSelection": "Seçimi otomatik işaretle",
+  "readingPageAutoMarkSelectionTips": "Seçilen metni son kullanılan stille otomatik olarak vurgula",
   "readingPageAutoTranslateSelection": "Otomatik Çeviri Seçimi",
   "translateError": "Çeviri Hatası",
   "readingPageAtLeastTwoThemes": "En az 2 tema gereklidir",
@@ -574,5 +574,499 @@
   "historyClose": "Kapat",
   "useBookStyles": "Kitap stillerini kullan",
   "useBookStylesDescription": "Etkinleştirildiğinde, uygulama satır yüksekliği, yazı tipi kalınlığı, metin girintisi, harf aralığı ve paragraf aralığı için özel ayarlarınız yerine kitapta tanımlanan stilleri kullanacaktır",
-  "commonInputCannotBeEmpty": "Giriş boş olamaz"
+  "commonInputCannotBeEmpty": "Giriş boş olamaz",
+  "commonShowPassword": "Parolayı göster",
+  "commonHidePassword": "Parolayı gizle",
+  "settingsCreamMode": "Krem",
+  "settingsBurgundyMode": "Bordo",
+  "settingsAppearanceUsePaperfoldTheme": "Paperfold temasını kullan",
+  "pageTurnFold": "Katlama",
+  "pageTurnCurl": "Kıvrılma",
+  "pageTurnNoneDescription": "Sonraki sayfa hemen görünür.",
+  "pageTurnSlideDescription": "Sayfa yana kayar. En akıcı seçenek.",
+  "pageTurnFoldDescription": "Sayfa kayarken üzerinde bir kat izi ilerler.",
+  "pageTurnCurlDescription": "Sayfa kâğıt gibi kalkar ve kıvrılır. Her sayfa çevirmede bir ekran görüntüsü alınır.",
+  "pageTurnScrollDescription": "Sayfa çevirmeden, kesintisiz bir sayfa.",
+  "settingsAdvancedNetwork": "Ağ",
+  "settingsAdvancedHttpProxyEnabled": "HTTP vekil sunucusunu etkinleştir",
+  "settingsAdvancedHttpProxyConfig": "HTTP vekil sunucusu ayarları",
+  "settingsAdvancedHttpProxyHost": "Vekil sunucu adresi",
+  "settingsAdvancedHttpProxyHostHint": "ör. 127.0.0.1",
+  "settingsAdvancedHttpProxyPort": "Vekil sunucu bağlantı noktası",
+  "settingsAdvancedHttpProxyPortHint": "ör. 7890",
+  "settingsAdvancedHttpProxyNotConfigured": "Ayarlanmadı",
+  "settingsAdvancedHttpProxyInvalidInput": "Geçersiz vekil sunucu adresi veya bağlantı noktası",
+  "settingsAdvancedHttpProxyTestUrl": "Test adresi",
+  "settingsAdvancedHttpProxyTest": "Bağlantıyı test et",
+  "settingsAdvancedHttpProxyTesting": "Test ediliyor…",
+  "settingsAdvancedHttpProxyTestSuccess": "Bağlantı başarılı",
+  "settingsAdvancedHttpProxyTestFailed": "Bağlantı başarısız",
+  "navLibrary": "Kütüphane",
+  "navJournal": "Günlük",
+  "navMore": "Diğer",
+  "shelfHomeTitle": "Raflarım",
+  "shelfReadingNow": "Şimdi okuyorum",
+  "shelfAllTimeFavourites": "En sevdiğim kitaplar",
+  "shelfToBeRead": "Okunacaklar",
+  "shelfFinished": "Bitirilenler",
+  "shelfBooksToBuy": "Alınacak kitaplar",
+  "emptyShelf": "Burada henüz kitap yok.",
+  "shelfViewCovers": "Kapakları göster",
+  "shelfViewLog": "Listeyi göster",
+  "shelfLogColumns": "Sütunlar",
+  "shelfLogAuthor": "Yazar",
+  "shelfLogRating": "Puan",
+  "shelfLogStatus": "Durum",
+  "shelfLogDates": "Tarihler",
+  "shelvesLoading": "Raflarınız açılıyor",
+  "shelfLoadErrorTitle": "Raflar açılamadı.",
+  "shelfLoadErrorBody": "Rafları açmayı yeniden deneyin.",
+  "shelfAddBooksTooltip": "Kitap ekle",
+  "shelfAddBooksFromDevice": "Bu cihazdan",
+  "wishlistSpineSemanticLabel": "{title}, yazar: {author}. Alınacak kitapları aç.",
+  "wishlistSpineSemanticLabelNoAuthor": "{title}. Alınacak kitapları aç.",
+  "bookCoverSemanticLabel": "{title} kitabını aç",
+  "bookOptionsSemanticHint": "Kitap seçenekleri için basılı tutun",
+  "journalPlaceholderTitle": "Düşüncelerinizi burada saklayın",
+  "journalPlaceholderBody": "Bir değerlendirme veya düşüncelerinizi eklemek için kütüphanenizden kitabın günlüğünü açın.",
+  "journalPagesCount": "{count, plural, other{{count} sayfa}}",
+  "@journalPagesCount": {
+    "placeholders": {
+      "count": {
+        "type": "num",
+        "format": "compact"
+      }
+    }
+  },
+  "journalReviewed": "Değerlendirildi",
+  "reviewRatingOverall": "Genel",
+  "reviewRatingPlot": "Konu",
+  "reviewRatingEnding": "Son",
+  "reviewRatingWorld": "Evren",
+  "reviewRatingCharacters": "Karakterler",
+  "reviewRatingSpice": "Erotik içerik",
+  "reviewGenre": "Tür",
+  "reviewFormat": "Biçim",
+  "reviewFavoriteCharacter": "En sevilen karakter",
+  "reviewFavoriteQuote": "En sevilen alıntı",
+  "reviewThoughts": "Düşünceler",
+  "reviewOpenPages": "Günlük sayfaları",
+  "journalDotPages": "Günlük sayfaları",
+  "journalAddPage": "Sayfa ekle",
+  "journalPageHint": "İstediğinizi yazın.",
+  "journalNoPages": "Henüz sayfa yok.",
+  "addToAllTimeFavourites": "En sevdiğim kitaplara ekle",
+  "removeFromAllTimeFavourites": "En sevdiğim kitaplardan çıkar",
+  "addBookToBuyTitle": "Alınacak bir kitap ekle",
+  "addBookToBuyAction": "Kitap ekle",
+  "challengeTitle": "Okuma hedefi",
+  "challengeYearTitle": "{year} okuma hedefi",
+  "@challengeYearTitle": {
+    "placeholders": {
+      "year": {
+        "type": "String"
+      }
+    }
+  },
+  "challengeProgress": "{target} kitaptan {finished} tanesi",
+  "@challengeProgress": {
+    "placeholders": {
+      "finished": {
+        "type": "int"
+      },
+      "target": {
+        "type": "int"
+      }
+    }
+  },
+  "challengeOverTarget": "{count, plural, other{Hedefin {count} kitap üzerinde}}",
+  "@challengeOverTarget": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "challengeLegendFinished": "Okundu",
+  "challengeLegendReading": "Okunuyor",
+  "challengeLegendEmpty": "Okumak istiyorum",
+  "challengeSetTarget": "Hedefi değiştir",
+  "challengeTargetLabel": "Bu yıl okunacak kitap sayısı",
+  "challengeShelfSemanticLabel": "Okuma hedefi rafı. {target} kitaptan {finished} tanesi okundu, {reading} tanesi şu anda okunuyor.",
+  "@challengeShelfSemanticLabel": {
+    "placeholders": {
+      "finished": {
+        "type": "int"
+      },
+      "target": {
+        "type": "int"
+      },
+      "reading": {
+        "type": "int"
+      }
+    }
+  },
+  "challengeSlotFilled": "Sırt {slot}: {title}",
+  "@challengeSlotFilled": {
+    "placeholders": {
+      "slot": {
+        "type": "int"
+      },
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "challengeSlotEmpty": "{slot}. kitap sırtı boş.",
+  "@challengeSlotEmpty": {
+    "placeholders": {
+      "slot": {
+        "type": "int"
+      }
+    }
+  },
+  "monthTrackerTitle": "Aylık takip",
+  "monthTrackerPagesTotal": "{count, plural, =0{Bu ay sayfa okunmadı} other{Bu ay {count} sayfa}}",
+  "@monthTrackerPagesTotal": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "monthTrackerDaysRead": "{count, plural, =0{Okuma yapılan gün yok} other{{count} gün okuma}}",
+  "@monthTrackerDaysRead": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "monthTrackerPreviousMonth": "Önceki ay",
+  "monthTrackerNextMonth": "Sonraki ay",
+  "monthTrackerRingSemanticLabel": "Günlük okunan sayfalar. {days} gün okuma, toplam {pages} sayfa.",
+  "@monthTrackerRingSemanticLabel": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      },
+      "pages": {
+        "type": "int"
+      }
+    }
+  },
+  "monthTrackerDaySemanticLabel": "{day}. gün: {count, plural, =0{sayfa yok} other{{count} sayfa}}",
+  "@monthTrackerDaySemanticLabel": {
+    "placeholders": {
+      "day": {
+        "type": "int"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "monthTrackerPagesLabel": "Sayfa",
+  "translateWorking": "Çevriliyor",
+  "translateFromLanguage": "{language} dilinden çevir",
+  "@translateFromLanguage": {
+    "placeholders": {
+      "language": {
+        "type": "String"
+      }
+    }
+  },
+  "translateToLanguage": "{language} diline çevir",
+  "@translateToLanguage": {
+    "placeholders": {
+      "language": {
+        "type": "String"
+      }
+    }
+  },
+  "opdsCatalogs": "Kataloglar",
+  "opdsFindBooksOnline": "İnternetten kitap bul",
+  "opdsCatalogsEmpty": "Henüz katalog yok.",
+  "opdsAddCatalog": "Katalog ekle",
+  "opdsCatalogName": "Ad",
+  "opdsCatalogUrl": "Adres",
+  "opdsCatalogUsername": "Kullanıcı adı",
+  "opdsCatalogPassword": "Parola",
+  "opdsCatalogNeedsSignIn": "Oturum açılması gerekiyor",
+  "opdsRemoveCatalog": "Kataloğu kaldır",
+  "opdsRemoveCatalogBody": "{name} ve parolası kaldırılsın mı?",
+  "@opdsRemoveCatalogBody": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "opdsFeedEmpty": "Bu raf boş.",
+  "opdsNextPage": "Daha fazla",
+  "opdsDownload": "İndir",
+  "opdsDownloaded": "{title} rafınızda.",
+  "@opdsDownloaded": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "opdsErrorNetwork": "Kataloğa ulaşılamadı.",
+  "opdsErrorUnauthorized": "Kullanıcı adı veya parola yanlış.",
+  "opdsErrorNotFound": "Kataloğun bu adreste bir akışı yok.",
+  "opdsErrorServer": "Katalog bir hata döndürdü.",
+  "opdsErrorNotAFeed": "Bu adres bir katalog akışı değil, web sayfası.",
+  "opdsInvalidUrl": "https://example.org/opds gibi tam bir adres girin. Adrese kullanıcı adı veya parola eklemeyin.",
+  "onlineCatalogsHeading": "Paperfold'da oku",
+  "onlineCatalogsBody": "Desteklenen kitap dosyalarını bu kataloglardan doğrudan indirin.",
+  "onlineSavedCatalogs": "Kataloglarınız",
+  "onlineWebsitesHeading": "Web'de keşfet",
+  "onlineWebsitesBody": "Bu siteler tarayıcınızda açılır. Ödünç alınan ve korumalı kitaplar kendi okuma hizmetlerinde kalır.",
+  "onlineGutenbergDescription": "Çeşitli dillerde klasik e-kitaplar.",
+  "onlineEbooksGratuitsDescription": "EPUB ve diğer biçimlerde Fransızca e-kitaplar.",
+  "onlineStandardDescription": "Özenle hazırlanmış klasikler. Dosyaları web sitesinden indirin.",
+  "onlineGlobalGreyDescription": "EPUB ve PDF biçiminde klasik metinler. Dosyayı indirip içe aktarın.",
+  "onlineOpenLibraryDescription": "Open Library üzerinden baskıları bulun, okuyun veya ödünç alın.",
+  "onlineLibbyDescription": "Katılan kütüphanelerden kitap ödünç alın ve Libby'de okuyun.",
+  "onlineStandardAccess": "Bu OPDS akışı, Standard Ebooks destekçisi veya katkıda bulunan hesabı gerektirir.",
+  "onlineOpenWebsite": "Web sitesini aç",
+  "onlineOpenWebsiteFailed": "Web sitesi açılamadı. Yeniden deneyin.",
+  "opdsChooseFormat": "Biçim seç",
+  "opdsImportFailed": "Bu kitap eklenemedi. Başka bir biçim deneyin veya yeniden deneyin.",
+  "opdsCatalogSaveFailed": "Katalog kaydedilemedi. Girdileriniz korundu; yeniden deneyin.",
+  "opdsCatalogRemoveFailed": "Katalog kaldırılamadı. Yeniden deneyin.",
+  "opdsUnsupportedDownload": "Desteklenen bir indirme seçeneği yok.",
+  "shelfBookView": "Kitap görünümü",
+  "shelfViewSpines": "Kitap sırtları",
+  "shelfViewCoverGrid": "Kapaklar",
+  "bookBindingSectionTitle": "Cilt türü",
+  "bookBindingAutomatic": "Otomatik",
+  "bookBindingHardback": "Sert kapak",
+  "bookBindingSoftback": "Yumuşak kapak",
+  "bookBindingWhyReader": "Bu kitap için bu cilt türünü siz seçtiniz.",
+  "bookBindingWhyStatedFormat": "Kitap, biçimini “{evidence}” olarak belirtiyor.",
+  "@bookBindingWhyStatedFormat": {
+    "placeholders": {
+      "evidence": {
+        "type": "String"
+      }
+    }
+  },
+  "bookBindingWhyComic": "Manga, çizgi roman ve hafif romanlar yumuşak kapaklıdır.",
+  "bookBindingWhyModern": "İlk kez {year} yılında, ilk baskılarda yumuşak kapağın yaygınlaşmasından sonra yayımlandı.",
+  "@bookBindingWhyModern": {
+    "placeholders": {
+      "year": {
+        "type": "String"
+      }
+    }
+  },
+  "bookBindingWhyEarly": "İlk kez {year} yılında, yeni kitapların sert kapakla ciltlendiği dönemde yayımlandı.",
+  "@bookBindingWhyEarly": {
+    "placeholders": {
+      "year": {
+        "type": "String"
+      }
+    }
+  },
+  "bookBindingWhyPublicDomain": "Eski bir kitabın kamu malı olan metin aktarımı.",
+  "bookBindingWhyDefault": "Kitap cilt türünü belirtmediğinden kütüphanenin varsayılanı kullanılır.",
+  "bookModelSemanticLabel": "{title}, yazar: {author}. Kitabı açmak için dokunun.",
+  "@bookModelSemanticLabel": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "author": {
+        "type": "String"
+      }
+    }
+  },
+  "bookModelSemanticLabelNoAuthor": "{title}. Kitabı açmak için dokunun.",
+  "@bookModelSemanticLabelNoAuthor": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsDefaultBinding": "Varsayılan cilt türü",
+  "settingsDefaultBindingDescription": "Biçim bilgisi olmayan kitapların cilt türü. Manga, hafif roman ve modern romanlar yumuşak; eski kitaplar sert kapaklı kalır.",
+  "settingsBookshelfUniformSpines": "Eşit kitap sırtları",
+  "settingsBookshelfUniformSpinesDescription": "Ana raflardaki tüm kitap sırtlarını aynı kalınlık ve yükseklikte göster.",
+  "challengePreviousYear": "Önceki yıl",
+  "challengeNextYear": "Sonraki yıl",
+  "challengePaceAhead": "{count, plural, other{Planın {count} kitap önünde}}",
+  "@challengePaceAhead": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "challengePaceBehind": "{count, plural, other{Planın {count} kitap gerisinde}}",
+  "@challengePaceBehind": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "challengePaceOnTrack": "Yıllık hedefe uygun hızda",
+  "challengePaceExpected": "Sabit bir hızla bu noktada {count, plural, other{{count} kitap}} okunmuş olurdu.",
+  "@challengePaceExpected": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "challengeEmptyTitle": "Bu hedefte henüz kitap yok",
+  "challengeEmptyBody": "Hedefi doldurmaya başlamak için bir kitabı Okunuyor olarak işaretleyin veya bir kitabı bitirin.",
+  "challengeTargetRange": "1 ile 999 arasında kitap sayısı girin.",
+  "monthTrackerPagesPerDay": "Günlük sayfa",
+  "monthTrackerLegendNoPages": "Sayfa yok",
+  "monthTrackerLegendFewerPages": "Daha az sayfa",
+  "monthTrackerLegendMorePages": "Daha fazla sayfa",
+  "monthTrackerLegendToday": "Bugün",
+  "monthTrackerEmptyTitle": "Bu ay kaydedilen sayfa yok",
+  "monthTrackerEmptyBody": "O günün toplam sayfa sayısını eklemek için gün numarasına dokunun.",
+  "monthTrackerDayCurrentPages": "{count, plural, other{Bu günde {count} sayfa var.}}",
+  "@monthTrackerDayCurrentPages": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "monthTrackerDayNotRecorded": "Bu gün için toplam sayfa sayısı kaydedilmedi.",
+  "monthTrackerNewPagesLabel": "Yeni toplam sayfa sayısı",
+  "monthTrackerCentreUnit": "sayfa",
+  "statisticTrackersTitle": "Okuma takibi",
+  "statisticReadingTimeUnit": "Okuma süresi grafikleri · günlük dakika",
+  "statisticMeasureNote": "Grafikler okuma süresini dakika olarak gösterir. Aylık halka sayfaları gösterir. Bunlar farklı ölçümlerdir.",
+  "statisticOpenChallenge": "Okuma hedefini aç",
+  "statisticOpenMonthTracker": "Aylık takibi aç",
+  "statisticTrackerLoadError": "Takip verileri kullanılamıyor.",
+  "shelfSortControl": "Bu rafı sırala",
+  "shelfFilterControl": "Bu rafı filtrele",
+  "shelfFilterChipSemantic": "Filtre: {label}. Bu filtreyi kaldır.",
+  "@shelfFilterChipSemantic": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "shelfSortTitle": "Kitapları sırala",
+  "shelfSortDateAdded": "Eklenme tarihi",
+  "shelfSortSeries": "Seri sırası",
+  "shelfSortFirstToLast": "İlkten sona",
+  "shelfSortLastToFirst": "Sondan ilke",
+  "shelfFilterTitle": "Kitapları filtrele",
+  "shelfFilterStatus": "Okuma durumu",
+  "shelfFilterRating": "Puan",
+  "shelfFilterTags": "Etiketler",
+  "shelfUnknownTag": "Silinmiş etiket",
+  "shelfRatingAtLeast": "En az {rating} yıldız",
+  "@shelfRatingAtLeast": {
+    "placeholders": {
+      "rating": {
+        "type": "int"
+      }
+    }
+  },
+  "shelfClearFilters": "Filtreleri temizle",
+  "shelfNoFilterResults": "Bu filtrelerle eşleşen kitap yok.",
+  "appPressBackAgainToLeave": "Paperfold'dan çıkmak için tekrar Geri'ye basın",
+  "bookBindingAskTitle": "Bu kitabın cilt türü nedir?",
+  "bookBindingAskBody": "{title} kitabının rafta nasıl görüneceğini belirler. Bunu daha sonra değiştirebilirsiniz.",
+  "@bookBindingAskBody": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "bookBindingAskDecide": "Benim yerime karar ver",
+  "shelfPickUpHint": "Bu kitabı seç",
+  "shelfOpenHint": "Bu kitabı aç",
+  "shelfBookOptions": "Kitap seçenekleri",
+  "shelfBookOptionDetails": "Ayrıntılar",
+  "shelfBookOptionShelves": "Raflar",
+  "shelfBookOptionCustomise": "Özelleştir",
+  "shelfBookOptionNotes": "Notlar",
+  "shelfBookShelvesTitle": "Rafa taşı veya ekle",
+  "shelfBookCustomiseTitle": "Bu kitabı özelleştir",
+  "shelfBookCoverArt": "Kapak resmi",
+  "shelfBookChooseCoverArt": "Kapak resmi seç",
+  "settingsAppearanceTrueBlack": "Tam siyah",
+  "settingsAppearanceTrueBlackDescription": "Koyu arka planlarda tam siyah kullanır. OLED ekranda bu pikseller kapalı kalır. Daha yumuşak, siyaha yakın bir ton için kapatın.",
+  "settingsAppearanceEInkDescription": "Elektronik kâğıt ekranlar için yüksek karşıtlık. Uygulamayı açık modda tutar.",
+  "settingsAppearanceThemeColorBrand": "Paperfold",
+  "settingsAppearanceThemeColorCustom": "Özel",
+  "settingsDeveloperOptions": "Geliştirici seçenekleri",
+  "settingsDeveloperOptionsEnable": "Geliştirici seçeneklerini etkinleştir",
+  "settingsDeveloperOptionsEnableDescription": "Ayarlardaki geliştirici girişini gizlemek için kapatın.",
+  "settingsDeveloperOptionsEnabledToast": "Geliştirici seçenekleri etkin",
+  "settingsDeveloperVibrationTest": "Titreşim testi",
+  "settingsDeveloperVibrationTestDescription": "Cihazın neleri desteklediğini kontrol edin ve her titreşim düzenini deneyin.",
+  "settingsQuickSettings": "Hızlı ayarlar",
+  "commonLoadFailedTitle": "Bu öğe yüklenemedi.",
+  "commonLoadFailedBody": "Kitaplarınız okunurken bir hata oluştu. Yeniden deneyin.",
+  "notesLoadFailed": "Notlarınız yüklenemedi.",
+  "statisticsLoadFailed": "Okuma istatistikleriniz yüklenemedi.",
+  "notesExportCopy": "Kopyala",
+  "notesExportPlainText": "Düz metin",
+  "commonNoOptions": "Seçenek yok",
+  "commonClose": "Kapat",
+  "readingPageGoToCurrentLocation": "Okuduğunuz konuma git",
+  "readingPageBackgroundColour": "Arka plan rengi",
+  "readingPageTextColour": "Metin rengi",
+  "readingPageDeleteTheme": "Bu temayı sil",
+  "journalSaveFailed": "Değişiklikleriniz kaydedilemedi. Bu sayfada kalın ve yeniden deneyin.",
+  "journalLoadFailed": "Günlüğünüz yüklenemedi.",
+  "storageMigrationScheduled": "Kütüphanenizi seçilen klasöre taşımak için uygulamayı yeniden başlatın.",
+  "appStartupFailed": "Paperfold başlatılamadı.",
+  "appStartupFailedBody": "Uygulamayı kapatıp yeniden açın. Sorun sürerse kütüphane klasörüne erişilebildiğini kontrol edin.",
+  "searchLibraryHint": "Kitaplarda, notlarda ve günlükte ara",
+  "searchJournalReview": "Değerlendirme",
+  "searchJournalPage": "Günlük sayfası {number}",
+  "@searchJournalPage": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "journalBooks": "Kitap günlükleri",
+  "journalHighlightsOverview": "Kütüphanenizdeki bölümlere ve notlara yeniden bakın.",
+  "challengeSaveFailed": "Hedefiniz kaydedilemedi. Yeniden deneyin.",
+  "monthTrackerSaveFailed": "Toplam sayfa sayınız kaydedilemedi. Yeniden deneyin.",
+  "monthTrackerInvalidPages": "0 veya daha büyük bir tam sayı olarak sayfa sayısını girin.",
+  "monthTrackerRecordPages": "Sayfa kaydet",
+  "monthTrackerChooseDay": "Gün seç",
+  "monthTrackerManualEntryHint": "Her gün için toplam sayfa sayısını kaydedin. Okuma süresi ayrı olarak izlenir.",
+  "journalAddPassage": "Günlüğe ekle",
+  "journalOpenPassage": "Bölümü aç",
+  "journalPassageAdded": "Bölüm günlüğe eklendi.",
+  "journalPassageSaveFailed": "Bölüm eklenemedi. Yeniden deneyin.",
+  "journalThoughtsHint": "Bu bölüm hakkındaki düşüncelerinizi yazın…",
+  "journalBookOverview": "Okuma günlüğünüz",
+  "journalReviewEmpty": "Puanınızı, sevdiğiniz anları ve düşüncelerinizi kaydedin.",
+  "journalPagesEmpty": "Bölümleri saklayın ve kendi sözcüklerinizle yazın.",
+  "journalHighlightsHint": "Vurguladığınız yerlere dönün ve günlüğünüze bir bölüm ekleyin.",
+  "journalExport": "Günlüğü dışa aktar",
+  "journalExportEmpty": "Günlüğünüzü dışa aktarmadan önce bir değerlendirme veya sayfa ekleyin.",
+  "journalExportFailed": "Günlüğünüz dışa aktarılamadı. Yeniden deneyin.",
+  "journalExportSaved": "Günlüğünüz dışa aktarıldı.",
+  "journalNoReview": "Henüz değerlendirme yok",
+  "journalReadBook": "Kitabı oku",
+  "journalDeletePage": "Sayfayı sil",
+  "journalDeletePageConfirm": "Bu sayfa ve kaydedilen bölümü silinsin mi? Bu işlem geri alınamaz.",
+  "journalPassageOpenFailed": "Bölüm açılamadı. Yeniden deneyin.",
+  "notesExportFailed": "Notlarınız dışa aktarılamadı. Yeniden deneyin.",
+  "journalReturnToReading": "Okumaya dön"
 }

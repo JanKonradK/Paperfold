@@ -1,5 +1,6 @@
 import 'package:paperfold/utils/log/common.dart';
-import 'package:flutter/material.dart';
+import 'package:paperfold/widgets/common/load_failure.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
@@ -35,6 +36,7 @@ class AsyncSkeletonWrapper<T> extends StatelessWidget {
 
   /// Optional custom error widget builder
   final Widget Function(Object error, StackTrace? stackTrace)? errorBuilder;
+  final Future<void> Function()? onRetry;
 
   /// Whether to enable the skeleton effect
   final bool enabled;
@@ -46,6 +48,7 @@ class AsyncSkeletonWrapper<T> extends StatelessWidget {
     this.skeleton,
     this.mock,
     this.errorBuilder,
+    this.onRetry,
     this.enabled = true,
   });
 
@@ -53,52 +56,34 @@ class AsyncSkeletonWrapper<T> extends StatelessWidget {
   Widget build(BuildContext context) {
     return asyncValue.when(
       data: (data) => builder(data, true),
-      loading: () {
-        if (!enabled) {
-          return const Center(child: CircularProgressIndicator());
-        }
+      loading: () => LayoutBuilder(
+        builder: (context, constraints) {
+          if (!enabled ||
+              constraints.maxWidth < 120 ||
+              constraints.maxHeight < 96) {
+            return const Center(child: CircularProgressIndicator());
+          }
 
-        // Use custom skeleton if provided
-        if (skeleton != null) {
-          return Skeletonizer(
-            enabled: true,
-            child: skeleton!,
-          );
-        }
+          // Use custom skeleton if provided
+          if (skeleton != null) {
+            return Skeletonizer(enabled: true, child: skeleton!);
+          }
 
-        // Try to generate skeleton with mock data
-        try {
-          final mockData = mock ?? _createDefaultMock<T>();
-          return Skeletonizer(
-            enabled: true,
-            child: builder(mockData, false),
-          );
-        } catch (e) {
-          // Fallback to circular progress if mock generation fails
-          return const Center(child: CircularProgressIndicator());
-        }
-      },
+          // Try to generate skeleton with mock data
+          try {
+            final mockData = mock ?? _createDefaultMock<T>();
+            return Skeletonizer(enabled: true, child: builder(mockData, false));
+          } catch (e) {
+            // Fallback to circular progress if mock generation fails
+            return const Center(child: CircularProgressIndicator());
+          }
+        },
+      ),
       error: (error, stackTrace) {
         if (errorBuilder != null) {
           return errorBuilder!(error, stackTrace);
         }
-        return Center(
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(Icons.error_outline, size: 48, color: Colors.red),
-                const SizedBox(height: 8),
-                Text(
-                  'Error: $error',
-                  style: Theme.of(context).textTheme.bodySmall,
-                  textAlign: TextAlign.center,
-                ),
-              ],
-            ),
-          ),
-        );
+        return LoadFailure.inline(error: error, onRetry: onRetry);
       },
     );
   }

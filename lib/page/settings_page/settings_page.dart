@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:paperfold/widgets/settings/settings_title.dart';
 
 class SettingsPageBuilder extends StatelessWidget {

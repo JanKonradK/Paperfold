@@ -1,0 +1,272 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-09T15:02:16.059Z",
+  "title": "Paperfold design",
+  "extensions": {
+    "colorMeta": {
+      "cream": {
+        "role": "neutral",
+        "displayName": "Cream",
+        "tonalRamp": [
+          "#D6C9B6",
+          "#DED1BD",
+          "#E6DAC7",
+          "#EDE2D1",
+          "#F3EBDD",
+          "#FFF9EE"
+        ]
+      },
+      "burgundy": {
+        "role": "neutral",
+        "displayName": "Burgundy",
+        "tonalRamp": [
+          "#2C111A",
+          "#3D1723",
+          "#46202A",
+          "#4C2932",
+          "#503639",
+          "#52423D"
+        ]
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Black Raspberry",
+        "tonalRamp": [
+          "#100B09",
+          "#160F0C",
+          "#211714",
+          "#2B201C",
+          "#372924",
+          "#44332D"
+        ]
+      },
+      "true-black": {
+        "role": "neutral",
+        "displayName": "True Black",
+        "tonalRamp": [
+          "#000000",
+          "#0C0908",
+          "#17110F",
+          "#211916",
+          "#2D231F"
+        ]
+      },
+      "dark-sienna": {
+        "role": "primary",
+        "displayName": "Dark Sienna"
+      },
+      "burgundy-gold": {
+        "role": "primary",
+        "displayName": "Burgundy Gold"
+      },
+      "foil": {
+        "role": "primary",
+        "displayName": "Foil Gold"
+      },
+      "dove": {
+        "role": "neutral",
+        "displayName": "Soft Dove"
+      },
+      "secondary-ink": {
+        "role": "neutral",
+        "displayName": "Spiced Hot Chocolate"
+      },
+      "stone": {
+        "role": "neutral",
+        "displayName": "Moon Rock"
+      }
+    },
+    "typographyMeta": {
+      "headline": {
+        "displayName": "Philosopher headlines",
+        "purpose": "Display text, headlines, and large titles."
+      },
+      "body": {
+        "displayName": "Source Sans 3 body",
+        "purpose": "Body text and book authors."
+      },
+      "label": {
+        "displayName": "Source Sans 3 labels",
+        "purpose": "Controls and action labels."
+      },
+      "spine-title": {
+        "displayName": "Spine title",
+        "purpose": "Titles on standard spines."
+      },
+      "spine-title-wide": {
+        "displayName": "Wide spine title",
+        "purpose": "Titles on spines at least 68 logical pixels wide."
+      }
+    },
+    "shadows": [
+      {
+        "name": "shelf-board-burgundy",
+        "value": "0 6px 9px rgba(22,15,12,0.22)",
+        "purpose": "The Burgundy shelf board. Other modes use their theme shadow color."
+      },
+      {
+        "name": "cover-burgundy",
+        "value": "0 8px 16px rgba(22,15,12,0.22)",
+        "purpose": "The Burgundy cover. Other modes use their theme shadow color."
+      }
+    ],
+    "motion": [
+      {
+        "name": "shelf-run",
+        "value": "220ms",
+        "purpose": "Move the shelf selection."
+      },
+      {
+        "name": "book-lift",
+        "value": "220ms ease-out-cubic",
+        "purpose": "Show the selected book."
+      },
+      {
+        "name": "book-return",
+        "value": "180ms",
+        "purpose": "Return the book to the shelf."
+      },
+      {
+        "name": "book-open",
+        "value": "220ms",
+        "purpose": "Open the book."
+      },
+      {
+        "name": "navigation-selection",
+        "value": "240ms ease-out-cubic",
+        "purpose": "Move the destination indicator."
+      },
+      {
+        "name": "reduced-motion",
+        "value": "0ms",
+        "purpose": "Remove shelf and navigation transitions."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "navigation-rail-above",
+        "value": "600px"
+      },
+      {
+        "name": "wide-book-summary",
+        "value": "700px"
+      },
+      {
+        "name": "theme-vertical-below",
+        "value": "300px"
+      },
+      {
+        "name": "book-actions-single-column-below",
+        "value": "280px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Read: Cream",
+      "kind": "button",
+      "refersTo": "read-cream",
+      "description": "Color, type, and shape sample of the fixed Read control.",
+      "html": "<button class=\"ds-read-cream\" type=\"button\">Continue reading</button>",
+      "css": ".ds-read-cream{background:#391214;color:#F3EBDD;border:0;border-radius:12px;min-height:56px;padding:16px 24px;font-family:SourceSans3,sans-serif;font-weight:600;letter-spacing:.1px;cursor:pointer}.ds-read-cream:hover{background-image:linear-gradient(rgba(243,235,221,.08),rgba(243,235,221,.08))}.ds-read-cream:focus-visible,.ds-read-cream:active{outline:0;background-image:linear-gradient(rgba(243,235,221,.1),rgba(243,235,221,.1))}"
+    },
+    {
+      "name": "Read: Burgundy",
+      "kind": "button",
+      "refersTo": "read-burgundy",
+      "description": "Color, type, and shape sample of the fixed Read control.",
+      "html": "<button class=\"ds-read-burgundy\" type=\"button\">Continue reading</button>",
+      "css": ".ds-read-burgundy{background:#C8B28F;color:#3D1723;border:0;border-radius:12px;min-height:56px;padding:16px 24px;font-family:SourceSans3,sans-serif;font-weight:600;letter-spacing:.1px;cursor:pointer}.ds-read-burgundy:hover{background-image:linear-gradient(rgba(61,23,35,.08),rgba(61,23,35,.08))}.ds-read-burgundy:focus-visible,.ds-read-burgundy:active{outline:0;background-image:linear-gradient(rgba(61,23,35,.1),rgba(61,23,35,.1))}"
+    },
+    {
+      "name": "Read: Dark",
+      "kind": "button",
+      "refersTo": "read-dark",
+      "description": "Color, type, and shape sample of the fixed Read control.",
+      "html": "<button class=\"ds-read-dark\" type=\"button\">Continue reading</button>",
+      "css": ".ds-read-dark{background:#B7A179;color:#160F0C;border:0;border-radius:12px;min-height:56px;padding:16px 24px;font-family:SourceSans3,sans-serif;font-weight:600;letter-spacing:.1px;cursor:pointer}.ds-read-dark:hover{background-image:linear-gradient(rgba(22,15,12,.08),rgba(22,15,12,.08))}.ds-read-dark:focus-visible,.ds-read-dark:active{outline:0;background-image:linear-gradient(rgba(22,15,12,.1),rgba(22,15,12,.1))}"
+    },
+    {
+      "name": "Book action: Burgundy",
+      "kind": "button",
+      "refersTo": "book-action",
+      "description": "Color and shape sample of a labeled book action. The native app adds the icon.",
+      "html": "<button class=\"ds-book-action\" type=\"button\">Journal</button>",
+      "css": ".ds-book-action{background:transparent;color:#C8B28F;border:1px solid #887D77;border-radius:12px;min-width:48px;min-height:56px;padding:12px;text-align:start;font-family:SourceSans3,sans-serif;font-weight:600;letter-spacing:.1px;cursor:pointer}.ds-book-action:hover{background-image:linear-gradient(rgba(200,178,143,.08),rgba(200,178,143,.08))}.ds-book-action:focus-visible,.ds-book-action:active{outline:0;background-image:linear-gradient(rgba(200,178,143,.1),rgba(200,178,143,.1))}"
+    },
+    {
+      "name": "Outlined field: Burgundy",
+      "kind": "input",
+      "description": "Color and border sample of a native outlined service field.",
+      "html": "<label class=\"ds-service-field\">Server<input type=\"text\" aria-label=\"Server\" value=\"\"/></label>",
+      "css": ".ds-service-field{display:grid;gap:8px;color:#F3EBDD;font-family:SourceSans3,sans-serif}.ds-service-field input{background:transparent;color:#F3EBDD;border:1px solid #887D77;border-radius:4px;padding:20px 12px 12px;font-family:SourceSans3,sans-serif}.ds-service-field input:hover{border-color:#F3EBDD}.ds-service-field input:focus-visible{outline:0;border:2px solid #C8B28F}"
+    },
+    {
+      "name": "Shelf chip: Burgundy",
+      "kind": "chip",
+      "description": "Selected shelf color and shape from the native ChoiceChip.",
+      "html": "<button class=\"ds-shelf-chip\" type=\"button\" aria-pressed=\"true\">Reading now</button>",
+      "css": ".ds-shelf-chip{background:#C0BAB3;color:#160F0C;border:1px solid transparent;border-radius:8px;padding:8px 16px;font-family:SourceSans3,sans-serif;font-weight:600;letter-spacing:.1px;cursor:pointer}.ds-shelf-chip:hover{background-image:linear-gradient(rgba(22,15,12,.08),rgba(22,15,12,.08))}.ds-shelf-chip:focus-visible,.ds-shelf-chip:active{outline:0;background-image:linear-gradient(rgba(22,15,12,.1),rgba(22,15,12,.1))}"
+    },
+    {
+      "name": "Card: Burgundy",
+      "kind": "card",
+      "refersTo": "card-burgundy",
+      "description": "The shared card surface. Each native card supplies its own content and padding.",
+      "html": "<div class=\"ds-card\"><h3>Reading challenge</h3></div>",
+      "css": ".ds-card{background:#46202A;color:#F3EBDD;border-radius:16px;box-shadow:none;font-family:SourceSans3,sans-serif}.ds-card h3{font-family:Philosopher,serif;font-weight:400;line-height:1.2}"
+    },
+    {
+      "name": "Navigation: Burgundy",
+      "kind": "nav",
+      "description": "Surface and selection sample. Native navigation supplies icons, keyboard controls, and motion.",
+      "html": "<nav class=\"ds-navigation\" aria-label=\"Main navigation\"><button type=\"button\">Journal</button><button type=\"button\" aria-current=\"page\">Library</button><button type=\"button\">Statistics</button><button type=\"button\">Settings</button></nav>",
+      "css": ".ds-navigation{display:flex;gap:8px;height:64px;padding:4px;background:#46202A;color:#F3EBDD;border:1px solid rgba(243,235,221,.16);border-radius:28px}.ds-navigation button{flex:1;background:transparent;color:#F3EBDD;border:0;border-radius:24px;font-family:SourceSans3,sans-serif;font-weight:600;cursor:pointer}.ds-navigation button[aria-current]{background:#C8B28F;color:#3D1723;font-weight:700}.ds-navigation button:hover{background-image:linear-gradient(rgba(243,235,221,.08),rgba(243,235,221,.08))}.ds-navigation button:focus-visible,.ds-navigation button:active{outline:0;background-image:linear-gradient(rgba(243,235,221,.1),rgba(243,235,221,.1))}"
+    }
+  ],
+  "narrative": {
+    "northStar": "A personal library",
+    "overview": "Flat book spines stand on straight shelves.\nBookcloth colors, cream paper, and gold details connect the library to the supplied identity assets.\nThe app offers Cream, Burgundy, Dark, and System.\nThe selected app mode applies to Library, Journal, Statistics, Settings, and their controls.\nBurgundy is the initial mode when a new installation uses the brand theme.\nJournal uses plain surfaces with no paper texture or dot grid.\nThe reader keeps its separate page theme.\n\nUpright spines remain the initial library view.\nThe saved Covers view shows the same library as a cover grid.\nBook bands, small foil marks, and matching series bindings give each shelf its book form.",
+    "keyCharacteristics": [
+      "Flat books and straight shelves.",
+      "Three app palettes with the same control roles.",
+      "Full book details and visible action labels.",
+      "A separate reader theme."
+    ],
+    "rules": [
+      {
+        "name": "The Theme Choice Rule",
+        "body": "Each app route uses the selected app mode.",
+        "section": "colors"
+      },
+      {
+        "name": "The Binding Contrast Rule",
+        "body": "Binding text keeps at least 4.5:1 contrast against its cloth color.",
+        "section": "colors"
+      },
+      {
+        "name": "The Text Space Rule",
+        "body": "Large text changes the layout before it removes book information or action labels.",
+        "section": "typography"
+      }
+    ],
+    "dos": [
+      "Do use the selected app palette for each route and its controls.",
+      "Do keep the cover and wordmark identity colors separate from the app ground.",
+      "Do keep all five reference colors and the five additional binding colors.",
+      "Do keep upright spines as the initial view.",
+      "Do use the same book data and actions in each library view.",
+      "Do keep horizontal titles in the large-text list.",
+      "Do keep the full selected title and all four visible action labels.",
+      "Do keep the Read control below the details scroll area.",
+      "Do keep visible focus, screen reader labels, and the reduced-motion option.",
+      "Do keep direct catalogs separate from external services."
+    ],
+    "donts": [
+      "Do not apply Burgundy surfaces after the user selects another app mode.",
+      "Do not show reading progress for a wishlist book.",
+      "Do not use an image failure to remove a book's title.",
+      "Do not replace the reader's selected page theme with the app theme."
+    ]
+  }
+}

@@ -7,7 +7,7 @@ import 'package:paperfold/config/shared_preference_provider.dart';
 import 'package:paperfold/main.dart';
 import 'package:paperfold/service/sync/sync_connection_tester.dart';
 import 'package:paperfold/utils/toast/common.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 Future<bool> testEnableWebdav() async {

@@ -6,7 +6,7 @@
 //
 //   flutter build apk --profile -t lib/dev_curl_frame_main.dart
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:paperfold/page/dev/curl_frame_bench.dart';
 
 void main() {

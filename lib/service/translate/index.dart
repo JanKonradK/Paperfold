@@ -9,7 +9,7 @@ import 'package:paperfold/service/translate/google_api.dart';
 import 'package:paperfold/service/translate/microsoft_api.dart';
 import 'package:paperfold/service/translate/web_view.dart';
 import 'package:paperfold/utils/log/common.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 
 enum TranslateService {

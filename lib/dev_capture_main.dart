@@ -9,7 +9,7 @@
 //   flutter build apk --profile -t lib/dev_capture_main.dart
 //   adb logcat | grep CAPTURE_BENCH
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:paperfold/page/dev/capture_bench.dart';
 
 void main() {

@@ -24,7 +24,7 @@ import 'package:paperfold/utils/toast/common.dart';
 import 'package:paperfold/utils/get_path/get_base_path.dart';
 import 'package:paperfold/config/shared_preference_provider.dart';
 import 'package:paperfold/dao/book.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -42,6 +42,7 @@ class Sync extends _$Sync {
 
   // Flag to prevent multiple sync direction dialogs
   bool _isShowingDirectionDialog = false;
+  bool _syncInProgress = false;
 
   @override
   SyncStateModel build() {
@@ -56,6 +57,20 @@ class Sync extends _$Sync {
 
   void changeState(SyncStateModel s) {
     state = s;
+  }
+
+  /// Keep automatic sync and another restore out of the replacement window.
+  Future<void> runBackupOperation(Future<void> Function() operation) async {
+    if (_syncInProgress || state.isSyncing) {
+      throw StateError('Wait for the current sync or backup to finish');
+    }
+    _syncInProgress = true;
+    try {
+      await operation();
+    } finally {
+      _syncInProgress = false;
+      changeState(state.copyWith(isSyncing: false));
+    }
   }
 
   SyncClientBase? get _syncClient {
@@ -143,6 +158,7 @@ class Sync extends _$Sync {
 
     // Less than 5s difference, no sync needed
     if (remoteDb != null &&
+        remoteDb.mTime != null &&
         localDbTime.difference(remoteDb.mTime!).inSeconds.abs() < 5) {
       return null;
     }
@@ -152,7 +168,8 @@ class Sync extends _$Sync {
     }
 
     if (requestedDirection == SyncDirection.both) {
-      if (Prefs().lastUploadBookDate == null ||
+      if (remoteDb.mTime == null ||
+          Prefs().lastUploadBookDate == null ||
           Prefs()
                   .lastUploadBookDate!
                   .difference(remoteDb.mTime!)
@@ -251,63 +268,40 @@ class Sync extends _$Sync {
       return;
     }
 
-    if (!(await shouldSync())) {
-      return;
-    }
-
-    // Check if already syncing - MOVED BEFORE determineSyncDirection
-    if (state.isSyncing) {
+    if (_syncInProgress || state.isSyncing) {
       AnxLog.info('Sync already in progress, skipping');
       return;
     }
 
-    // Test ping and initialize
+    // Claim the run before the first await. Transfer progress must not release
+    // this guard while the remaining files are still being reconciled.
+    _syncInProgress = true;
+    var databaseSynced = false;
     try {
+      if (!(await shouldSync())) return;
       await client.ping();
       await _createAnxDir();
-    } catch (e) {
-      AnxLog.severe('Sync connection failed, ping failed2\n${e.toString()}');
-      return;
-    }
+      final finalDirection = await determineSyncDirection(direction);
+      if (finalDirection == null) return;
 
-    AnxLog.info('Sync ping success');
-
-    // Determine sync direction
-    SyncDirection? finalDirection = await determineSyncDirection(direction);
-    if (finalDirection == null) {
-      return; // User cancelled or no sync needed
-    }
-
-    changeState(state.copyWith(isSyncing: true));
-
-    if (Prefs().syncCompletedToast) {
-      AnxToast.show(L10n.of(navigatorKey.currentContext!).webdavSyncing);
-    }
-
-    try {
-      await syncDatabase(finalDirection);
-
-      if (await isCurrentEmpty()) {
-        await _showSyncAbortedDialog();
-        changeState(state.copyWith(isSyncing: false));
-        return;
-      }
-
+      changeState(state.copyWith(isSyncing: true));
       if (Prefs().syncCompletedToast) {
-        AnxToast.show(L10n.of(navigatorKey.currentContext!).webdavSyncingFiles);
+        AnxToast.show(L10n.of(navigatorKey.currentContext!).webdavSyncing);
       }
 
-      await syncFiles();
+      if (!await syncDatabase(finalDirection)) return;
+      databaseSynced = true;
+
+      if (!await isCurrentEmpty()) {
+        if (Prefs().syncCompletedToast) {
+          AnxToast.show(
+              L10n.of(navigatorKey.currentContext!).webdavSyncingFiles);
+        }
+        await syncFiles();
+      }
 
       imageCache.clear();
       imageCache.clearLiveImages();
-
-      try {
-        ref?.read(bookListProvider.notifier).refresh();
-        ref?.read(groupDaoProvider.notifier).refresh();
-      } catch (e) {
-        AnxLog.info('Failed to refresh book list: $e');
-      }
 
       // Backup cleanup is now handled by DatabaseSyncManager
 
@@ -323,7 +317,12 @@ class Sync extends _$Sync {
         AnxLog.severe('Sync failed\n$e, $s');
       }
     } finally {
+      _syncInProgress = false;
       changeState(state.copyWith(isSyncing: false));
+      if (databaseSynced) {
+        this.ref.invalidate(bookListProvider);
+        this.ref.invalidate(groupDaoProvider);
+      }
       // _deleteBackUpDb();
     }
   }
@@ -400,16 +399,16 @@ class Sync extends _$Sync {
     ref.read(syncStatusProvider.notifier).refresh();
   }
 
-  Future<void> syncDatabase(SyncDirection direction) async {
+  Future<bool> syncDatabase(SyncDirection direction) async {
     final client = _syncClient;
-    if (client == null) return;
+    if (client == null) return false;
 
     String remoteDbFileName = 'database$currentDbVersion.db';
     RemoteFile? remoteDb = await client.readProps('anx/$remoteDbFileName');
 
     final databasePath = await getAnxDataBasesPath();
     final localDbPath = join(databasePath, 'app_database.db');
-    io.File localDb = io.File(localDbPath);
+    final localDbTime = DBHelper.getLatestModTime(localDbPath);
 
     try {
       switch (direction) {
@@ -437,7 +436,7 @@ class Sync extends _$Sync {
                 changeState(state.copyWith(
                   direction: SyncDirection.download,
                   fileName: remoteDbFileName,
-                  isSyncing: received < total,
+                  isSyncing: true,
                   count: received,
                   total: total,
                 ));
@@ -447,18 +446,19 @@ class Sync extends _$Sync {
             if (!result.isSuccess) {
               await DatabaseSyncManager.showSyncErrorDialog(result);
               AnxLog.severe('Database sync failed: ${result.message}');
-              // Don't throw exception, let sync continue with file sync
-              return;
+              return false;
             }
           } else {
             await _showSyncAbortedDialog();
-            return;
+            return false;
           }
           break;
 
         case SyncDirection.both:
-          if (remoteDb == null ||
-              remoteDb.mTime!.isBefore(localDb.lastModifiedSync())) {
+          if (remoteDb != null && remoteDb.mTime == null) {
+            throw StateError('The remote database has no modification time');
+          }
+          if (remoteDb == null || remoteDb.mTime!.isBefore(localDbTime)) {
             // Use VACUUM INTO to create a snapshot, avoiding database locking/closing
             final snapshotPath = await DBHelper.prepareUploadSnapshot();
             try {
@@ -470,7 +470,7 @@ class Sync extends _$Sync {
                 await snapshotFile.delete();
               }
             }
-          } else if (remoteDb.mTime!.isAfter(localDb.lastModifiedSync())) {
+          } else if (remoteDb.mTime!.isAfter(localDbTime)) {
             // Use safe database download method
             final result = await DatabaseSyncManager.safeDownloadDatabase(
               client: client,
@@ -479,7 +479,7 @@ class Sync extends _$Sync {
                 changeState(state.copyWith(
                   direction: SyncDirection.download,
                   fileName: remoteDbFileName,
-                  isSyncing: received < total,
+                  isSyncing: true,
                   count: received,
                   total: total,
                 ));
@@ -489,8 +489,7 @@ class Sync extends _$Sync {
             if (!result.isSuccess) {
               await DatabaseSyncManager.showSyncErrorDialog(result);
               AnxLog.severe('Database sync failed: ${result.message}');
-              // Don't throw exception, let sync continue with file sync
-              return;
+              return false;
             }
           }
           break;
@@ -501,6 +500,7 @@ class Sync extends _$Sync {
       if (newRemoteDb != null) {
         Prefs().lastUploadBookDate = newRemoteDb.mTime;
       }
+      return true;
     } catch (e) {
       AnxLog.severe('Failed to sync database\n$e');
       rethrow;
@@ -514,12 +514,13 @@ class Sync extends _$Sync {
   ]) async {
     changeState(state.copyWith(
       direction: SyncDirection.upload,
-      fileName: localPath.split('/').last,
+      fileName: basename(localPath),
     ));
 
     final client = _syncClient;
-    if (client != null) {
-      ref.read(syncStatusProvider.notifier).addUploading(remotePath);
+    if (client == null) throw StateError('No sync client configured');
+    try {
+      await ref.read(syncStatusProvider.notifier).addUploading(remotePath);
       await client.uploadFile(
         localPath,
         remotePath,
@@ -532,10 +533,10 @@ class Sync extends _$Sync {
           ));
         },
       );
-      ref.read(syncStatusProvider.notifier).removeUploading(remotePath);
+    } finally {
+      changeState(state.copyWith(isSyncing: _syncInProgress));
+      await ref.read(syncStatusProvider.notifier).removeUploading(remotePath);
     }
-
-    changeState(state.copyWith(isSyncing: false));
   }
 
   Future<void> downloadFile(String remotePath, String localPath) async {
@@ -545,8 +546,9 @@ class Sync extends _$Sync {
     ));
 
     final client = _syncClient;
-    if (client != null) {
-      ref.read(syncStatusProvider.notifier).addDownloading(remotePath);
+    if (client == null) throw StateError('No sync client configured');
+    try {
+      await ref.read(syncStatusProvider.notifier).addDownloading(remotePath);
       await client.downloadFile(
         remotePath,
         localPath,
@@ -558,10 +560,10 @@ class Sync extends _$Sync {
           ));
         },
       );
-      ref.read(syncStatusProvider.notifier).removeDownloading(remotePath);
+    } finally {
+      changeState(state.copyWith(isSyncing: _syncInProgress));
+      await ref.read(syncStatusProvider.notifier).removeDownloading(remotePath);
     }
-
-    changeState(state.copyWith(isSyncing: false));
   }
 
   Future<List<String>> listRemoteBookFiles() async {
@@ -758,9 +760,6 @@ class Sync extends _$Sync {
   /// Restore database from specified backup
   Future<void> _restoreFromBackup(String backupPath) async {
     try {
-      final databasePath = await getAnxDataBasesPath();
-      final localDbPath = join(databasePath, 'app_database.db');
-
       // Confirmation dialog
       final confirmed = await SmartDialog.show<bool>(
         builder: (context) => AlertDialog(
@@ -781,10 +780,10 @@ class Sync extends _$Sync {
 
       if (confirmed != true) return;
 
-      // Execute restore
-      await DBHelper.close();
-      await io.File(backupPath).copy(localDbPath);
-      await DBHelper().initDB();
+      await runBackupOperation(() async {
+        final result = await DatabaseSyncManager.restoreDatabase(backupPath);
+        if (!result.isSuccess) throw StateError(result.message);
+      });
 
       // Refresh related providers
       try {

@@ -1,5 +1,5 @@
 import 'package:paperfold/widgets/reading_page/more_settings/more_settings.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// The heading of a reader panel, with the panel's own settings beside it.
 ///

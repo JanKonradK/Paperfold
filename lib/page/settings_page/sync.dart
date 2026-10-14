@@ -1,14 +1,13 @@
 import 'dart:convert';
 import 'dart:io';
 
-
 import 'package:paperfold/dao/database.dart';
 import 'package:paperfold/enums/sync_protocol.dart';
 import 'package:paperfold/l10n/generated/L10n.dart';
 import 'package:paperfold/main.dart';
 import 'package:paperfold/providers/sync.dart';
+import 'package:paperfold/service/database_sync_manager.dart';
 import 'package:paperfold/service/sync/sync_client_factory.dart';
-import 'package:paperfold/utils/platform_utils.dart';
 import 'package:paperfold/utils/save_file_to_download.dart';
 import 'package:paperfold/utils/get_path/get_temp_dir.dart';
 import 'package:paperfold/utils/get_path/databases_path.dart';
@@ -23,8 +22,7 @@ import 'package:paperfold/widgets/settings/webdav_switch.dart';
 import 'package:archive/archive_io.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:path/path.dart' as path;
@@ -126,6 +124,8 @@ class _SyncSettingState extends ConsumerState<SyncSetting> {
   void _showDataDialog(String title) {
     Future.microtask(() {
       SmartDialog.show(
+        clickMaskDismiss: false,
+        backType: SmartBackType.block,
         builder: (BuildContext context) => SimpleDialog(
           title: Center(child: Text(title)),
           children: const [
@@ -144,31 +144,27 @@ class _SyncSettingState extends ConsumerState<SyncSetting> {
 
     _showDataDialog(L10n.of(context).exporting);
 
-    final File prefsBackupFile = await _createPrefsBackupFile();
-
-    RootIsolateToken token = RootIsolateToken.instance!;
-    final zipPath = await compute(createZipFile, {
-      'token': token,
-      'prefsBackupFilePath': prefsBackupFile.path,
-    });
-
-    final file = File(zipPath);
-    SmartDialog.dismiss();
-    if (await file.exists()) {
-      // SaveFileDialogParams params = SaveFileDialogParams(
-      //   sourceFilePath: file.path,
-      //   mimeTypesFilter: ['application/zip'],
-      // );
-      // final filePath = await FlutterFileDialog.saveFile(params: params);
-      String fileName =
+    File? prefsBackupFile;
+    File? snapshot;
+    File? archive;
+    try {
+      prefsBackupFile = await _createPrefsBackupFile();
+      snapshot = File(await DBHelper.prepareUploadSnapshot());
+      final zipPath = await compute(createZipFile, {
+        'documentPath': await getAnxDocumentsPath(),
+        'temporaryPath': (await getAnxTempDir()).path,
+        'prefsBackupFilePath': prefsBackupFile.path,
+        'databaseSnapshotPath': snapshot.path,
+      });
+      archive = File(zipPath);
+      await SmartDialog.dismiss();
+      final fileName =
           'Paperfold-Backup-${DateTime.now().year}-${DateTime.now().month}-${DateTime.now().day}-v3.zip';
 
       String? filePath = await saveFileToDownload(
-          sourceFilePath: file.path,
+          sourceFilePath: archive.path,
           fileName: fileName,
           mimeType: 'application/zip');
-
-      await file.delete();
 
       if (filePath != null) {
         AnxLog.info('exportData: Saved to: $filePath');
@@ -177,6 +173,14 @@ class _SyncSettingState extends ConsumerState<SyncSetting> {
         AnxLog.info('exportData: Cancelled');
         AnxToast.show(L10n.of(navigatorKey.currentContext!).commonCanceled);
       }
+    } catch (e) {
+      AnxLog.severe('exportData: $e');
+      AnxToast.show('Export failed: $e');
+    } finally {
+      await SmartDialog.dismiss();
+      for (final file in [prefsBackupFile, snapshot, archive]) {
+        if (file != null && await file.exists()) await file.delete();
+      }
     }
   }
 
@@ -184,7 +188,7 @@ class _SyncSettingState extends ConsumerState<SyncSetting> {
     AnxLog.info('importData: start');
     if (!mounted) return;
 
-    FilePickerResult? result = await FilePicker.platform.pickFiles(
+    final result = await FilePicker.pickFile(
       type: FileType.custom,
       allowedExtensions: ['zip'],
     );
@@ -193,7 +197,7 @@ class _SyncSettingState extends ConsumerState<SyncSetting> {
       return;
     }
 
-    String? filePath = result.files.single.path;
+    String? filePath = result.path;
     if (filePath == null) {
       AnxLog.info('importData: cannot get file path');
       AnxToast.show(
@@ -210,36 +214,21 @@ class _SyncSettingState extends ConsumerState<SyncSetting> {
     }
     _showDataDialog(L10n.of(navigatorKey.currentContext!).importing);
 
-    String pathSeparator = Platform.pathSeparator;
-
-    Directory cacheDir = await getAnxTempDir();
-    String cachePath = cacheDir.path;
-    String extractPath = '$cachePath${pathSeparator}paperfold_import';
-
+    Directory? extractDir;
     try {
-      await Directory(extractPath).create(recursive: true);
+      extractDir =
+          await (await getAnxTempDir()).createTemp('paperfold_import_');
 
       await compute(extractZipFile, {
         'zipFilePath': zipFile.path,
-        'destinationPath': extractPath,
+        'destinationPath': extractDir.path,
       });
 
-      String docPath = await getAnxDocumentsPath();
-      _copyDirectorySync(Directory('$extractPath${pathSeparator}file'),
-          getFileDir(path: docPath));
-      _copyDirectorySync(Directory('$extractPath${pathSeparator}cover'),
-          getCoverDir(path: docPath));
-      _copyDirectorySync(Directory('$extractPath${pathSeparator}font'),
-          getFontDir(path: docPath));
-      _copyDirectorySync(Directory('$extractPath${pathSeparator}bgimg'),
-          getBgimgDir(path: docPath));
-
-      DBHelper.close();
-      _copyDirectorySync(Directory('$extractPath${pathSeparator}databases'),
-          await getAnxDataBasesDir());
-      DBHelper().initDB();
-
-      await _restorePrefsFromBackup(extractPath);
+      final extractedPath = extractDir.path;
+      await ref.read(syncProvider.notifier).runBackupOperation(() async {
+        await restoreBackupFiles(extractedPath);
+        await _restorePrefsFromBackup(extractedPath);
+      });
 
       AnxLog.info('importData: import success');
       AnxToast.show(
@@ -249,49 +238,114 @@ class _SyncSettingState extends ConsumerState<SyncSetting> {
       AnxToast.show(
           L10n.of(navigatorKey.currentContext!).importFailed(e.toString()));
     } finally {
-      SmartDialog.dismiss();
-      await Directory(extractPath).delete(recursive: true);
+      await SmartDialog.dismiss();
+      if (extractDir != null && await extractDir.exists()) {
+        await extractDir.delete(recursive: true);
+      }
     }
   }
+}
 
-  void _copyDirectorySync(Directory source, Directory destination) {
-    if (!source.existsSync()) {
-      return;
+Future<void> restoreBackupFiles(String extractPath) async {
+  final validation = await DatabaseSyncManager.validateDatabase(
+      path.join(extractPath, 'databases', 'app_database.db'));
+  if (!validation.isValid) {
+    throw FormatException(validation.error ?? 'Invalid database');
+  }
+
+  final documentsPath = await getAnxDocumentsPath();
+  final targets = {
+    for (final name in ['file', 'cover', 'font', 'bgimg'])
+      name: Directory(path.join(documentsPath, name)),
+    'databases': await getAnxDataBasesDir(),
+  };
+  final staged = <({Directory target, Directory work})>[];
+  final replaced = <Directory>{};
+  var keepRecoveryFiles = false;
+  try {
+    // Complete all copies before changing live files. Each staging directory
+    // shares a filesystem with its destination, including Android's database.
+    for (final entry in targets.entries) {
+      final source = Directory(path.join(extractPath, entry.key));
+      if (!await source.exists()) continue;
+      await entry.value.parent.create(recursive: true);
+      final work = await entry.value.parent.createTemp('.paperfold_restore_');
+      staged.add((target: entry.value, work: work));
+      final incoming = Directory(path.join(work.path, 'incoming'));
+      await incoming.create();
+      await for (final entity
+          in source.list(recursive: true, followLinks: false)) {
+        final destination = path.join(
+            incoming.path, path.relative(entity.path, from: source.path));
+        if (entity is File) {
+          await File(destination).parent.create(recursive: true);
+          await entity.copy(destination);
+        } else if (entity is Directory) {
+          await Directory(destination).create(recursive: true);
+        } else {
+          throw FormatException('Backup contains a link: ${entity.path}');
+        }
+      }
     }
-    if (destination.existsSync()) {
-      destination.deleteSync(recursive: true);
-    }
-    destination.createSync(recursive: true);
-    source.listSync(recursive: false).forEach((entity) {
-      final newPath = destination.path +
-          Platform.pathSeparator +
-          path.basename(entity.path);
-      if (entity is File) {
-        entity.copySync(newPath);
-      } else if (entity is Directory) {
-        _copyDirectorySync(entity, Directory(newPath));
+
+    await DBHelper.withDatabaseClosed((reopen) async {
+      try {
+        for (final item in staged) {
+          if (await item.target.exists()) {
+            await item.target.rename(path.join(item.work.path, 'previous'));
+          }
+          await Directory(path.join(item.work.path, 'incoming'))
+              .rename(item.target.path);
+          replaced.add(item.target);
+        }
+        await reopen();
+      } catch (error) {
+        try {
+          await DBHelper.close();
+          for (final item in staged.reversed) {
+            if (replaced.contains(item.target)) {
+              await item.target.delete(recursive: true);
+            }
+            final previous = Directory(path.join(item.work.path, 'previous'));
+            if (await previous.exists()) {
+              await previous.rename(item.target.path);
+            }
+          }
+          await reopen();
+        } catch (recoveryError) {
+          keepRecoveryFiles = true;
+          throw StateError(
+              'Restore failed: $error. Recovery failed: $recoveryError. '
+              'Original files remain in ${staged.map((item) => item.work.path).join(', ')}');
+        }
+        rethrow;
       }
     });
+  } finally {
+    if (!keepRecoveryFiles) {
+      for (final item in staged) {
+        try {
+          await item.work.delete(recursive: true);
+        } catch (e) {
+          AnxLog.warning('Cannot remove restore staging files: $e');
+        }
+      }
+    }
   }
 }
 
 Future<String> createZipFile(Map<String, dynamic> params) async {
-  RootIsolateToken token = params['token'];
   final String prefsBackupFilePath = params['prefsBackupFilePath'];
   final File prefsBackupFile = File(prefsBackupFilePath);
-  BackgroundIsolateBinaryMessenger.ensureInitialized(token);
   final date =
       '${DateTime.now().year}-${DateTime.now().month}-${DateTime.now().day}';
-  final zipPath = '${(await getAnxTempDir()).path}/Paperfold-Backup-$date.zip';
-  final docPath = await getAnxDocumentsPath();
+  final zipPath = '${params['temporaryPath']}/Paperfold-Backup-$date.zip';
+  final String docPath = params['documentPath'];
   final directoryList = [
     getFileDir(path: docPath),
     getCoverDir(path: docPath),
     getFontDir(path: docPath),
     getBgimgDir(path: docPath),
-    if (!AnxPlatform.isOhos) await getAnxDataBasesDir(),
-    // await getAnxSharedPrefsDir(),
-    // await getAnxShredPrefsFile(),
     prefsBackupFile,
   ];
 
@@ -300,27 +354,21 @@ Future<String> createZipFile(Map<String, dynamic> params) async {
   final encoder = ZipFileEncoder();
   encoder.create(zipPath);
 
-  if (AnxPlatform.isOhos) {
-    final dbDir = await getAnxDataBasesDir();
-    final dbFile = File('${dbDir.path}/app_database.db');
-    if (await dbFile.exists()) {
-      await encoder.addFile(dbFile, 'databases/app_database.db');
+  var complete = false;
+  try {
+    await encoder.addFile(
+        File(params['databaseSnapshotPath']), 'databases/app_database.db');
+    for (final dir in directoryList) {
+      if (dir is Directory && await dir.exists()) {
+        await encoder.addDirectory(dir);
+      } else if (dir is File) {
+        await encoder.addFile(dir);
+      }
     }
-  } else {
-    final dbDir = await getAnxDataBasesDir();
-    await encoder.addDirectory(dbDir);
-  }
-
-  for (final dir in directoryList) {
-    if (dir is Directory) {
-      await encoder.addDirectory(dir);
-    } else if (dir is File) {
-      await encoder.addFile(dir);
-    }
-  }
-  encoder.close();
-  if (await prefsBackupFile.exists()) {
-    await prefsBackupFile.delete();
+    complete = true;
+  } finally {
+    encoder.close();
+    if (!complete) await File(zipPath).delete();
   }
   return zipPath;
 }
@@ -331,9 +379,39 @@ Future<void> extractZipFile(Map<String, String> params) async {
 
   final input = InputFileStream(zipFilePath);
   try {
-    final archive = ZipDecoder().decodeBuffer(input);
-    extractArchiveToDiskSync(archive, destinationPath);
-    archive.clearSync();
+    final decoder = ZipDecoder();
+    final archive = decoder.decodeStream(input);
+    try {
+      // archive 4 no longer implements decodeStream(verify: true).
+      // Keep the checksum validation before restoring any backup content.
+      for (final header in decoder.directory.fileHeaders) {
+        if (header.file?.verifyCrc32() != true) {
+          throw const FormatException('Invalid checksum in backup archive.');
+        }
+      }
+      for (final entry in archive) {
+        final name = entry.name.replaceAll('\\', '/');
+        final outputPath = path.join(destinationPath, name);
+        if (entry.isSymbolicLink ||
+            path.posix.isAbsolute(name) ||
+            path.windows.isAbsolute(name) ||
+            !path.isWithin(destinationPath, outputPath)) {
+          throw FormatException('Unsafe backup path: ${entry.name}');
+        }
+        if (entry.isFile) {
+          final output = OutputFileStream(outputPath);
+          try {
+            entry.writeContent(output);
+          } finally {
+            output.closeSync();
+          }
+        } else {
+          await Directory(outputPath).create(recursive: true);
+        }
+      }
+    } finally {
+      archive.clearSync();
+    }
   } finally {
     await input.close();
   }

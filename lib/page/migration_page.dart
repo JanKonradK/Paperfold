@@ -1,11 +1,15 @@
 import 'package:paperfold/l10n/generated/L10n.dart';
 import 'package:paperfold/utils/get_path/macos_migration.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 class MigrationPage extends StatefulWidget {
-  final VoidCallback onMigrationComplete;
+  final Future<void> Function() onMigrationComplete;
+  final MigrationCheckResult checkResult;
 
-  const MigrationPage({super.key, required this.onMigrationComplete});
+  const MigrationPage(
+      {super.key,
+      required this.onMigrationComplete,
+      required this.checkResult});
 
   @override
   State<MigrationPage> createState() => _MigrationPageState();
@@ -14,10 +18,9 @@ class MigrationPage extends StatefulWidget {
 class _MigrationPageState extends State<MigrationPage> {
   String _currentItem = '';
   int _progress = 0;
-  int _total = 5;
+  int _total = 6;
   bool _isComplete = false;
   bool _hasFailed = false;
-  String? _errorMessage;
 
   @override
   void initState() {
@@ -26,55 +29,51 @@ class _MigrationPageState extends State<MigrationPage> {
   }
 
   Future<void> _startMigration() async {
+    setState(() {
+      _hasFailed = false;
+      _progress = 0;
+    });
     try {
-      final checkResult = await checkMigrationNeeded();
+      final checkResult = widget.checkResult;
 
       if (!checkResult.needsMigration) {
         // No migration needed, proceed immediately
-        widget.onMigrationComplete();
+        await widget.onMigrationComplete();
         return;
       }
 
-      final success = await performMigration(
-        oldPath: checkResult.oldPath!,
-        newPath: checkResult.newPath!,
-        onProgress: (currentItem, progress, total) {
-          if (mounted) {
-            setState(() {
-              _currentItem = currentItem;
-              _progress = progress;
-              _total = total;
-            });
-          }
-        },
-      );
+      final success = _isComplete ||
+          await performMigration(
+            oldPath: checkResult.oldPath!,
+            newPath: checkResult.newPath!,
+            onProgress: (currentItem, progress, total) {
+              if (mounted) {
+                setState(() {
+                  _currentItem = currentItem;
+                  _progress = progress;
+                  _total = total;
+                });
+              }
+            },
+          );
 
       if (mounted) {
         if (success) {
           setState(() {
             _isComplete = true;
           });
-          // Small delay to show completion status
-          await Future.delayed(const Duration(milliseconds: 500));
-          widget.onMigrationComplete();
+          await widget.onMigrationComplete();
         } else {
           setState(() {
             _hasFailed = true;
-            _errorMessage = 'Migration failed. Using original data location.';
           });
-          // Continue with old path on failure
-          await Future.delayed(const Duration(seconds: 2));
-          widget.onMigrationComplete();
         }
       }
-    } catch (e) {
+    } catch (_) {
       if (mounted) {
         setState(() {
           _hasFailed = true;
-          _errorMessage = e.toString();
         });
-        await Future.delayed(const Duration(seconds: 2));
-        widget.onMigrationComplete();
       }
     }
   }
@@ -85,19 +84,19 @@ class _MigrationPageState extends State<MigrationPage> {
 
     return Scaffold(
       body: Center(
-        child: Padding(
+        child: SingleChildScrollView(
           padding: const EdgeInsets.all(32.0),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(
-                _isComplete
+                _isComplete && !_hasFailed
                     ? Icons.check_circle_outline
                     : _hasFailed
                         ? Icons.error_outline
                         : Icons.folder_copy_outlined,
                 size: 64,
-                color: _isComplete
+                color: _isComplete && !_hasFailed
                     ? Colors.green
                     : _hasFailed
                         ? Colors.red
@@ -105,7 +104,7 @@ class _MigrationPageState extends State<MigrationPage> {
               ),
               const SizedBox(height: 24),
               Text(
-                _isComplete
+                _isComplete && !_hasFailed
                     ? l10n.migrationComplete
                     : _hasFailed
                         ? l10n.migrationFailed
@@ -141,14 +140,19 @@ class _MigrationPageState extends State<MigrationPage> {
                       ),
                 ),
               ],
-              if (_hasFailed && _errorMessage != null) ...[
+              if (_hasFailed) ...[
                 const SizedBox(height: 16),
                 Text(
-                  _errorMessage!,
+                  l10n.storageMigrationFailed,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: Colors.red,
                       ),
                   textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 16),
+                FilledButton(
+                  onPressed: _startMigration,
+                  child: Text(l10n.commonRetry),
                 ),
               ],
             ],

@@ -1,7 +1,6 @@
 import 'package:paperfold/enums/book_sync_status.dart';
 import 'package:paperfold/widgets/bookshelf/spining_sync_icon.dart';
-import 'package:flutter/material.dart';
-import 'package:icons_plus/icons_plus.dart';
+import 'package:material_ui/material_ui.dart';
 
 class BookSyncStatusIcon extends StatelessWidget {
   const BookSyncStatusIcon({
@@ -39,14 +38,14 @@ class BookSyncStatusIcon extends StatelessWidget {
           children: [
             Center(
               child: Icon(
-                Bootstrap.cloud,
+                Icons.cloud_outlined,
                 color: color,
                 size: iconSize,
               ),
             ),
             Center(
               child: Icon(
-                Bootstrap.x,
+                Icons.close,
                 color: color,
                 size: iconSize * 0.7,
               ),
@@ -57,7 +56,7 @@ class BookSyncStatusIcon extends StatelessWidget {
           children: [
             Center(
               child: Icon(
-                Bootstrap.cloud,
+                Icons.cloud_outlined,
                 color: color,
                 size: iconSize,
               ),
@@ -72,12 +71,12 @@ class BookSyncStatusIcon extends StatelessWidget {
           ],
         ),
       BookSyncStatusEnum.both => Icon(
-          Bootstrap.cloud_check,
+          Icons.cloud_done_outlined,
           color: color,
           size: iconSize,
         ),
       BookSyncStatusEnum.nonExistent => Icon(
-          OctIcons.x_circle,
+          Icons.cancel_outlined,
           color: color,
           size: iconSize * 0.8,
         ),
@@ -91,7 +90,7 @@ class BookSyncStatusIcon extends StatelessWidget {
             ),
             Center(
               child: Icon(
-                Bootstrap.arrow_down_short,
+                Icons.arrow_downward,
                 color: color,
                 size: iconSize * 0.7,
               ),
@@ -108,7 +107,7 @@ class BookSyncStatusIcon extends StatelessWidget {
             ),
             Center(
               child: Icon(
-                Bootstrap.arrow_up_short,
+                Icons.arrow_upward,
                 color: color,
                 size: iconSize * 0.7,
               ),

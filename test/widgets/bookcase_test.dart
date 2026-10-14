@@ -1,32 +1,47 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:paperfold/enums/book_binding.dart';
 import 'package:paperfold/widgets/bookshelf/bookcase.dart';
 import 'package:paperfold/widgets/bookshelf/shelf_stage.dart';
 
 const List<ShelfRow> _shelves = [
-  ShelfRow(name: 'Reading now', books: [ShelfBook(
-    id: 'r1',
-    title: 'The Moonstone',
-    author: 'Wilkie Collins',
-    binding: BookBinding.hardback,
-  )]),
-  ShelfRow(name: 'To be read', books: [ShelfBook(
-    id: 't1',
-    title: 'Dune',
-    author: 'Frank Herbert',
-    binding: BookBinding.softback,
-  )]),
-  ShelfRow(name: 'Finished', books: [ShelfBook(
-    id: 'f1',
-    title: 'The Great Gatsby',
-    author: 'F. Scott Fitzgerald',
-    binding: BookBinding.softback,
-    progress: 1,
-    finished: true,
-  )]),
+  ShelfRow(
+    name: 'Reading now',
+    books: [
+      ShelfBook(
+        id: 'r1',
+        title: 'The Moonstone',
+        author: 'Wilkie Collins',
+        binding: BookBinding.hardback,
+      ),
+    ],
+  ),
+  ShelfRow(
+    name: 'To be read',
+    books: [
+      ShelfBook(
+        id: 't1',
+        title: 'Dune',
+        author: 'Frank Herbert',
+        binding: BookBinding.softback,
+      ),
+    ],
+  ),
+  ShelfRow(
+    name: 'Finished',
+    books: [
+      ShelfBook(
+        id: 'f1',
+        title: 'The Great Gatsby',
+        author: 'F. Scott Fitzgerald',
+        binding: BookBinding.softback,
+        progress: 1,
+        finished: true,
+      ),
+    ],
+  ),
 ];
 
 void main() {
@@ -107,13 +122,15 @@ void main() {
     expect(key.currentState!.shelf, 2);
   });
 
-  testWidgets('the reader cannot climb while holding a book off the shelf',
-      (tester) async {
+  testWidgets('the reader cannot climb while holding a book off the shelf', (
+    tester,
+  ) async {
     await pumpCase(tester);
 
     key.currentState!.activeStage!.pickUp();
     await tester.pump();
     await tester.pumpAndSettle();
+    final stage = key.currentState!.activeStage;
 
     await tester.fling(find.byType(Bookcase), const Offset(0, -400), 1200);
     await tester.pumpAndSettle();
@@ -121,6 +138,13 @@ void main() {
     // Still on the first shelf: the book in their hands came off this one, and
     // moving the furniture under it would strand them.
     expect(key.currentState!.shelf, 0);
+    // Revealing a nested control must not scroll the outer shelf pager.
+    final open = find.byKey(const ValueKey('open-shelf-book'));
+    await tester.ensureVisible(open);
+    await tester.pumpAndSettle();
+    expect(key.currentState!.shelf, 0);
+    expect(key.currentState!.activeStage, same(stage));
+    expect(open.hitTestable(), findsOneWidget);
   });
 
   testWidgets('an empty shelf falls back to its builder', (tester) async {
@@ -131,10 +155,9 @@ void main() {
             width: 400,
             height: 780,
             child: Bookcase(
-              shelves: const [
-                ShelfRow(name: 'Books to buy', books: []),
-              ],
-              emptyBuilder: (context, shelf) => Text('nothing on ${shelf.name}'),
+              shelves: const [ShelfRow(name: 'Books to buy', books: [])],
+              emptyBuilder: (context, shelf) =>
+                  Text('nothing on ${shelf.name}'),
             ),
           ),
         ),
@@ -145,24 +168,30 @@ void main() {
     expect(find.text('nothing on Books to buy'), findsOneWidget);
   });
 
-  testWidgets('removing the last held book unlocks shelf navigation',
-      (tester) async {
+  testWidgets('removing the last held book unlocks shelf navigation', (
+    tester,
+  ) async {
     final holding = <bool>[];
     Widget emptyBuilder(BuildContext context, ShelfRow shelf) =>
         const Text('Empty shelf');
-    await pumpCase(tester,
-        onHoldingChanged: holding.add, emptyBuilder: emptyBuilder);
+    await pumpCase(
+      tester,
+      onHoldingChanged: holding.add,
+      emptyBuilder: emptyBuilder,
+    );
     await key.currentState!.activeStage!.pickUp();
     await tester.pumpAndSettle();
     expect(holding, [true]);
 
-    await pumpCase(tester,
-        shelves: [
-          const ShelfRow(name: 'Reading now', books: []),
-          ..._shelves.skip(1),
-        ],
-        onHoldingChanged: holding.add,
-        emptyBuilder: emptyBuilder);
+    await pumpCase(
+      tester,
+      shelves: [
+        const ShelfRow(name: 'Reading now', books: []),
+        ..._shelves.skip(1),
+      ],
+      onHoldingChanged: holding.add,
+      emptyBuilder: emptyBuilder,
+    );
     expect(holding, [true, false]);
     expect(find.text('Empty shelf'), findsOneWidget);
     unawaited(key.currentState!.climbTo(1));

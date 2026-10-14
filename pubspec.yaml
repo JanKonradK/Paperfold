@@ -2,102 +2,106 @@ name: paperfold
 description: "Paperfold is a reading journal, reader, and note application."
 publish_to: 'none'
 
-version: 1.0.0+1
+version: 2.1.0+210
 
 environment:
-  sdk: '>=3.5.2 <4.0.0'
+  sdk: '>=3.13.0 <4.0.0'
+  flutter: '>=3.47.0'
 
 dependencies:
   flutter:
     sdk: flutter
   flutter_localizations:
     sdk: flutter
+  material_ui: ^1.6.0
+  cupertino_ui: ^1.1.2
 
-  flutter_svg: ^2.0.17
-  file_picker: ^9.0.2
-  path_provider: ^2.1.2
-  sqflite: ^2.3.2
-  path: ^1.9.0
-  shared_preferences: ^2.2.2
-  provider: ^6.1.2
-  intl: 0.20.2
-  flutter_colorpicker: ^1.0.3
+  flutter_svg: ^2.3.0
+  file_picker: ^13.1.0
+  path_provider: ^2.1.6
+  sqflite: ^2.4.4+1
+  path: ^1.9.1
+  shared_preferences: ^2.5.6
+  provider: ^6.1.5+1
+  intl: ^0.20.3
+  flutter_colorpicker: ^1.1.0
   # OPDS 1.2 feeds are Atom XML. `html` parses HTML, not namespaced XML, and the
   # OPDS extensions live in their own namespaces, so the feed parser uses this
   # and `html` was dropped.
-  xml: ^6.5.0
+  xml: ^6.6.1
   # OPDS catalog passwords go to the platform keystore, never to SQLite. These
   # are the reader's own server passwords. plan.md Section 9.2.
-  flutter_secure_storage: ^9.2.4
-  archive: ^3.6.1
+  # v10 migrates the existing v9 Android keys. v11 drops those legacy ciphers,
+  # so this release must retain v10 for users upgrading directly from Paperfold 2.0.
+  flutter_secure_storage: ^10.3.4
+  archive: ^4.3.0
   flutter_inappwebview:
     git:
       url: https://github.com/Anxcye/flutter_inappwebview.git
-      ref: 4a275c3
+      ref: 4a275c353281ed79b1a5d5612d878925e7f6f5e2
       path: flutter_inappwebview
-  shelf: ^1.4.1
-  fl_chart: ^0.70.2
+  shelf: ^1.4.2
+  fl_chart: ^1.2.0
   flutter_rating_bar: ^4.0.1
-  permission_handler: ^11.3.1
+  # Newer releases require SDK 37 / AGP 9, incompatible with the pinned WebView fork.
+  permission_handler: 12.0.3
+  permission_handler_android: 13.0.1
   webdav_client:
     git:
       url: https://github.com/Anxcye/webdav_client.git
       # Pinned 2026-08-10. Without a ref this tracks the default branch of a
       # single-maintainer fork, so the build is not reproducible.
       ref: 3c6d0eb21baf593d8a0a10ba039b0b73ce891ad6
-  fluttertoast: ^8.2.6
-  dio: ^5.4.3+1
-  pubspec_parse: ^1.2.3
-  logging: ^1.2.0
-  flutter_file_dialog: ^3.0.2
+  fluttertoast: ^10.0.2
+  dio: ^5.11.1
+  pubspec_parse: ^1.6.0
+  logging: ^1.3.0
+  flutter_file_dialog: ^3.3.3
   contentsize_tabbarview:
     git:
       url: https://github.com/Anxcye/contentsize_tabbarview.git
-      ref: feat/animation
-  wakelock_plus: ^1.2.5
-  icons_plus: ^5.0.0
-  url_launcher: ^6.2.6
-  sqflite_common_ffi: ^2.3.3
-  # The sqlite3 native library, for the desktop `sqfliteFfiInit` path in
-  # lib/dao/database.dart. Nothing imports it and it is not transitive:
-  # drop it and Windows, Linux and macOS lose their database at runtime
-  # while every test still passes.
-  sqlite3_flutter_libs: ^0.5.26
-  battery_plus: ^6.2.1
+      # Latest commit on feat/animation; retain the reading settings animation.
+      ref: def3fab2fdf586d531c1fe6999fed126bf849243
+  wakelock_plus: ^1.8.0
+  url_launcher: ^6.3.3
+  sqflite_common_ffi: ^2.4.3
+  # sqflite_common_ffi now uses sqlite3 3.x, which bundles its native library.
+  battery_plus: ^7.1.2
   sticky_headers: ^0.3.0+2
   photo_view: ^0.15.0
-  flutter_smart_dialog: ^4.9.8+1
-  saver_gallery: ^4.0.1
-  share_plus: ^11.1.0
-  device_info_plus: ^11.3.2
-  flutter_riverpod: ^2.5.1
-  riverpod_annotation: ^2.3.5
-  chinese_font_library: ^1.2.0
-  flex_color_scheme: ^8.3.0
-  uuid: ^4.5.1
-  desktop_drop: ^0.5.0
-  freezed_annotation: ^3.0.0
+  flutter_smart_dialog: ^5.3.0
+  saver_gallery: ^5.1.0
+  share_plus: ^13.3.1
+  device_info_plus: ^13.3.0
+  flutter_riverpod: ^3.4.3
+  riverpod_annotation: ^4.0.7
+  chinese_font_library: ^1.3.0
+  flex_color_scheme: ^9.0.0
+  uuid: ^4.6.0
+  desktop_drop: ^0.8.4
+  freezed_annotation: ^3.1.0
+  json_annotation: ^4.12.0
   flutter_heatmap_calendar:
     git:
       url: https://github.com/Anxcye/flutter_heatmap_calendar
       # Pinned 2026-08-10. See the note on webdav_client above.
       ref: c14e6ebb29c209e318aea36cd715d5001bc26100
-  csv: ^6.0.0
+  csv: ^8.0.0
   fast_gbk: ^1.0.0
-  window_manager: ^0.4.3
-  screen_retriever: ^0.2.0
-  gpt_markdown: ^1.1.4
-  pointer_interceptor: ^0.10.1+2
-  connectivity_plus: ^6.1.3
-  http: ^1.3.0
-  crypto: ^3.0.6
+  window_manager: ^0.5.2
+  screen_retriever: ^0.2.2
+  gpt_markdown: ^1.3.4
+  pointer_interceptor: ^0.10.1+3
+  connectivity_plus: ^7.3.1
+  http: ^1.6.0
+  crypto: ^3.0.7
   charset: ^2.0.1
-  flutter_slidable: ^4.0.0
-  cached_network_image: ^3.4.1
+  flutter_slidable: ^4.0.3
+  cached_network_image: ^4.0.4
   lpinyin: ^2.0.3
-  mongol: ^9.0.0
-  introduction_screen: ^3.1.17
-  skeletonizer: ^2.1.0+1
+  mongol: ^11.1.0
+  introduction_screen: ^5.0.1
+  skeletonizer: ^3.0.0
   scrollable_positioned_list: ^0.3.8
   # share_handler: ^0.0.25
   share_handler:
@@ -105,26 +109,24 @@ dependencies:
       url: https://github.com/Anxcye/share_handler.git
       path: share_handler
       ref: eeaa04d22e7e70babb55b6825b9ca7016e89c89a
-  heroine: ^0.5.0+2
-  vibration: ^3.1.4
+  heroine: ^0.7.2
+  vibration: ^3.2.1
   staggered_reorderable:
     git:
       url: https://github.com/Anxcye/staggered_reorderable.git
       ref: 2ac799a6eeb5da74bf5080a2ba2057272fa52b78
-  haptic_feedback: ^0.6.4+2
+  haptic_feedback: ^0.8.0
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^5.0.0
-  build_runner: ^2.4.13
-  custom_lint: ^0.7.5
-  riverpod_generator: ^2.4.3
-  riverpod_lint: ^2.3.13
-  freezed: ^3.0.2
-  json_serializable: ^6.9.0
+  flutter_lints: ^6.0.0
+  build_runner: ^2.16.2
+  riverpod_generator: ^4.0.9
+  freezed: ^4.0.2
+  json_serializable: ^6.14.1
   # Cuts every platform icon from the master files that
   # `tool/generate_app_icons.dart` writes.
-  flutter_launcher_icons: ^0.14.3
+  flutter_launcher_icons: ^0.14.4
 
 
 flutter:
@@ -140,6 +142,11 @@ flutter:
     - assets/foliate-js/src/
     - assets/foliate-js/src/vendor/
     - assets/foliate-js/src/vendor/pdfjs/
+    - assets/foliate-js/src/vendor/pdfjs/cmaps/
+    - assets/foliate-js/src/vendor/pdfjs/standard_fonts/
+    - assets/foliate-js/src/vendor/pdfjs/wasm/
+    - assets/foliate-js/src/vendor/pdfjs/iccs/
+    - assets/foliate-js/src/vendor/pdfjs/images/
     - assets/foliate-js/src/vendor/prism/
     - assets/foliate-js/src/vendor/prism/components/
     - assets/foliate-js/src/vendor/prism/themes/

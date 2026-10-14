@@ -183,13 +183,12 @@ class WebdavClient extends SyncClientBase {
 
   @override
   Future<RemoteFile?> readProps(String path) async {
-    RemoteFile? file;
     try {
-      file = (await _client.readProps(path)).toRemoteFile();
-    } catch (e) {
-      return null;
+      return (await _client.readProps(path)).toRemoteFile();
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 404) return null;
+      rethrow;
     }
-    return file;
   }
 
   @override
@@ -205,14 +204,8 @@ class WebdavClient extends SyncClientBase {
     void Function(int sent, int total)? onProgress,
     CancelToken? cancelToken,
   }) async {
-    if (replace) {
-      try {
-        await remove(_safeEncodePath(remotePath));
-      } catch (e) {
-        AnxLog.severe('Failed to remove file\n$e');
-      }
-    }
-
+    // PUT replaces an existing file. Deleting first loses the remote copy if
+    // the upload fails before the server accepts the new file.
     await _client.writeFromFile(
       localPath,
       _safeEncodePath(remotePath),

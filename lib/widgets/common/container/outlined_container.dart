@@ -1,5 +1,5 @@
 import 'package:paperfold/widgets/common/container/base_rounded_container.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 class OutlinedContainer extends BaseRoundedContainer {
   const OutlinedContainer({

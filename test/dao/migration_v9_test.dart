@@ -327,7 +327,7 @@ void main() {
     );
   });
 
-  test('the complete version 0 to version 9 path succeeds', () async {
+  test('the complete version 0 to current version path succeeds', () async {
     final db = await databaseFactory.openDatabase(inMemoryDatabasePath);
     final originalDocumentPath = documentPath;
     final temporaryDocumentPath =
@@ -338,9 +338,9 @@ void main() {
       await Directory('${temporaryDocumentPath.path}/file').create();
       await Directory('${temporaryDocumentPath.path}/cover').create();
 
-      await DBHelper().onUpgradeDatabase(db, 0, 9);
+      await DBHelper().onUpgradeDatabase(db, 0, currentDbVersion);
 
-      expect(currentDbVersion, 9);
+      expect(currentDbVersion, greaterThanOrEqualTo(9));
       final tables = (await db.rawQuery(
         "SELECT name FROM sqlite_master WHERE type = 'table'",
       ))

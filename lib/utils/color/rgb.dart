@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// Ensure value is RGB (strips any alpha component).
 int sanitizeRgb(int value) => value & 0x00FFFFFF;

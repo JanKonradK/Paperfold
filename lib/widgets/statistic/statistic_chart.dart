@@ -2,7 +2,7 @@ import 'package:paperfold/main.dart';
 import 'package:paperfold/providers/statistic_data.dart';
 import 'package:paperfold/utils/date/convert_seconds.dart';
 import 'package:fl_chart/fl_chart.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class StatisticChart extends ConsumerStatefulWidget {

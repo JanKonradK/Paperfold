@@ -2,7 +2,7 @@ import 'package:paperfold/enums/sync_protocol.dart';
 import 'package:paperfold/main.dart';
 import 'package:paperfold/service/sync/sync_connection_tester.dart';
 import 'package:paperfold/l10n/generated/L10n.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 class SyncTestHelper {
   /// Handle simple connection test (ping only)

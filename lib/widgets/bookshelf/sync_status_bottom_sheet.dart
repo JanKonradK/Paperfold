@@ -13,7 +13,7 @@ import 'package:paperfold/utils/get_path/databases_path.dart';
 import 'package:paperfold/utils/toast/common.dart';
 import 'package:paperfold/widgets/bookshelf/book_sync_status_icon.dart';
 import 'package:paperfold/widgets/linear_proportion_bar.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:path/path.dart';
@@ -315,7 +315,7 @@ class SyncStatusBottomSheet extends ConsumerWidget {
                 final remoteOnlyIds = ref
                         .read(syncStatusProvider)
                         .whenData((data) => data.remoteOnly)
-                        .valueOrNull ??
+                        .value ??
                     [];
                 if (remoteOnlyIds.isNotEmpty) {
                   ref

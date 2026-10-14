@@ -14,7 +14,7 @@
 // Read the result off the screen: each pane must show its own coloured block
 // and its own label.
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 
 void main() {

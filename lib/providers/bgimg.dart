@@ -7,6 +7,7 @@ import 'package:paperfold/utils/get_path/get_base_path.dart';
 import 'package:paperfold/utils/log/common.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/legacy.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'bgimg.g.dart';
@@ -105,16 +106,15 @@ class Bgimg extends _$Bgimg {
 
   /// Import day image
   Future<void> importImg() async {
-    FilePickerResult? result = await FilePicker.platform.pickFiles(
+    final result = await FilePicker.pickFile(
       type: FileType.image,
-      allowMultiple: false,
     );
 
     if (result == null) {
       return;
     }
 
-    File image = File(result.files.single.path!);
+    File image = File(result.path!);
 
     AnxLog.info('BookDetail: Image path: ${image.path}');
 
@@ -128,16 +128,15 @@ class Bgimg extends _$Bgimg {
 
   /// Import night version for specified day image
   Future<void> importNightImg(String dayImagePath) async {
-    FilePickerResult? result = await FilePicker.platform.pickFiles(
+    final result = await FilePicker.pickFile(
       type: FileType.image,
-      allowMultiple: false,
     );
 
     if (result == null) {
       return;
     }
 
-    File image = File(result.files.single.path!);
+    File image = File(result.path!);
     AnxLog.info('Bgimg: Import night image for $dayImagePath');
 
     final nightName = _getNightImageName(dayImagePath);

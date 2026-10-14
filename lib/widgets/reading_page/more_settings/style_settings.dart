@@ -6,8 +6,7 @@ import 'package:paperfold/models/book_style.dart';
 import 'package:paperfold/page/reading_page.dart';
 import 'package:paperfold/widgets/icon_and_text.dart';
 import 'package:paperfold/widgets/reading_page/more_settings/custom_css_editor.dart';
-import 'package:flutter/material.dart';
-import 'package:icons_plus/icons_plus.dart';
+import 'package:material_ui/material_ui.dart';
 
 // Reusable style slider widget that can be disabled
 class StyleSlider extends StatelessWidget {
@@ -111,8 +110,8 @@ class _StyleSettingsState extends State<StyleSettings> {
     Widget sideMarginSlider(BookStyle bookStyle, StateSetter setState) {
       return StyleSlider(
         icon: Prefs().writingMode == WritingModeEnum.verticalRl
-            ? Bootstrap.arrows_vertical
-            : Bootstrap.arrows,
+            ? Icons.swap_vert
+            : Icons.swap_horiz,
         label: Prefs().writingMode == WritingModeEnum.verticalRl
             ? L10n.of(context).readingPageVerticleMargin
             : L10n.of(context).readingPageSideMargin,
@@ -157,11 +156,11 @@ class _StyleSettingsState extends State<StyleSettings> {
       return Row(children: [
         Prefs().writingMode == WritingModeEnum.verticalRl
             ? IconAndText(
-                icon: const Icon(Bootstrap.chevron_bar_right),
+                icon: const Icon(Icons.last_page),
                 text: L10n.of(context).readingPageRightMargin,
               )
             : IconAndText(
-                icon: const Icon(Bootstrap.chevron_bar_up),
+                icon: const Icon(Icons.vertical_align_top),
                 text: L10n.of(context).readingPageTopMargin,
               ),
         Expanded(
@@ -183,11 +182,11 @@ class _StyleSettingsState extends State<StyleSettings> {
         ),
         Prefs().writingMode == WritingModeEnum.verticalRl
             ? IconAndText(
-                icon: const Icon(Bootstrap.chevron_bar_left),
+                icon: const Icon(Icons.first_page),
                 text: L10n.of(context).readingPageLeftMargin,
               )
             : IconAndText(
-                icon: const Icon(Bootstrap.chevron_bar_down),
+                icon: const Icon(Icons.vertical_align_bottom),
                 text: L10n.of(context).readingPageBottomMargin,
               ),
         Expanded(

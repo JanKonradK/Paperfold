@@ -2,7 +2,7 @@ import 'dart:math';
 
 import 'package:paperfold/enums/excerpt_share_template.dart';
 import 'package:paperfold/models/font_model.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:mongol/mongol.dart';
 
 class ExcerptShareCard extends StatelessWidget {

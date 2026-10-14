@@ -94,6 +94,11 @@ bool isOpdsCatalog(String? value) {
       parsed.parameters['profile']?.toLowerCase() == 'opds-catalog';
 }
 
+bool isOpdsWebUri(Uri value) =>
+    (value.scheme == 'http' || value.scheme == 'https') &&
+    value.host.isNotEmpty &&
+    value.userInfo.isEmpty;
+
 class OpdsPrice {
   const OpdsPrice({required this.currency, required this.value});
 
@@ -126,15 +131,48 @@ class OpdsLink {
 
   bool get isCatalog => isOpdsCatalog(type);
 
-  /// A link that hands over a file. These are the download links.
+  /// An acquisition option, which can be a download, purchase, or loan.
   bool get isAcquisition =>
       rels.any((String rel) => rel.startsWith(OpdsRel.acquisition));
+
+  /// Purchase, borrowing, samples and DRM-license links are not book files.
+  bool get isDirectDownload =>
+      isOpdsWebUri(href) &&
+      !rels.any((rel) =>
+          rel.startsWith('${OpdsRel.acquisition}/') &&
+          rel != '${OpdsRel.acquisition}/open-access') &&
+      rels.any((rel) =>
+          rel == OpdsRel.acquisition ||
+          rel == '${OpdsRel.acquisition}/open-access') &&
+      downloadExtension != null;
+
+  String? get downloadExtension {
+    final mediaType = OpdsMediaType.parse(type ?? '').mediaType;
+    final extension = switch (mediaType) {
+      'application/epub+zip' => 'epub',
+      'application/pdf' => 'pdf',
+      'application/x-mobipocket-ebook' => 'mobi',
+      'application/vnd.amazon.ebook' => 'azw3',
+      'application/x-fictionbook+xml' => 'fb2',
+      'text/plain' => 'txt',
+      _ => null,
+    };
+    if (extension != null) return extension;
+    // Some catalogs omit the media type. An explicit HTML/DRM type must
+    // never be overridden by a filename that happens to end in .epub.
+    if (mediaType.isNotEmpty && mediaType != 'application/octet-stream') {
+      return null;
+    }
+    final suffix = href.path.split('.').last.toLowerCase();
+    return const {'epub', 'pdf', 'mobi', 'azw3', 'fb2', 'txt'}.contains(suffix)
+        ? suffix
+        : null;
+  }
 
   /// A facet the server says is the one currently applied.
   bool get isActiveFacet => rels.contains('self');
 
-  bool hasAnyRel(List<String> candidates) =>
-      rels.any(candidates.contains);
+  bool hasAnyRel(List<String> candidates) => rels.any(candidates.contains);
 }
 
 /// One publication, with its links kept whole.
@@ -161,8 +199,20 @@ class OpdsEntry {
   final String? published;
   final List<String> subjects;
 
-  List<OpdsLink> get acquisitionLinks =>
-      links.where((OpdsLink link) => link.isAcquisition).toList(growable: false);
+  List<OpdsLink> get acquisitionLinks => links
+      .where((OpdsLink link) => link.isAcquisition)
+      .toList(growable: false);
+
+  List<OpdsLink> get downloadLinks =>
+      links.where((link) => link.isDirectDownload).toList(growable: false);
+
+  Uri? get websiteHref => links
+      .where((link) =>
+          isOpdsWebUri(link.href) &&
+          OpdsMediaType.parse(link.type ?? '').mediaType == 'text/html' &&
+          (link.isAcquisition || link.rels.contains('alternate')))
+      .firstOrNull
+      ?.href;
 
   Uri? get coverHref => _first(OpdsRel.cover);
   Uri? get thumbnailHref => _first(OpdsRel.thumbnail);
@@ -227,12 +277,11 @@ OpdsFeed parseOpdsFeed(
   required Uri baseUri,
   String? contentType,
 }) {
-  final String mediaType = contentType == null
-      ? ''
-      : OpdsMediaType.parse(contentType).mediaType;
+  final String mediaType =
+      contentType == null ? '' : OpdsMediaType.parse(contentType).mediaType;
 
   if (mediaType == OpdsMime.opds2 ||
-      (mediaType.isEmpty && body.trimLeft().startsWith('{'))) {
+      (body.trimLeft().startsWith('{') && mediaType != OpdsMime.atom)) {
     return _parseOpds2(body, baseUri);
   }
   return _parseAtom(body, baseUri);
@@ -245,9 +294,11 @@ OpdsFeed parseOpdsFeed(
 OpdsFeed _parseAtom(String body, Uri baseUri) {
   final XmlDocument document = XmlDocument.parse(body);
   final XmlElement root = document.rootElement;
+  if (!_isAtom(root, 'feed')) {
+    throw const FormatException('Expected an Atom feed');
+  }
 
-  final List<OpdsLink> feedLinks = root
-      .childElements
+  final List<OpdsLink> feedLinks = root.childElements
       .where((XmlElement element) => _isAtom(element, 'link'))
       .map((XmlElement element) => _atomLink(element, baseUri))
       .whereType<OpdsLink>()
@@ -265,8 +316,7 @@ OpdsFeed _parseAtom(String body, Uri baseUri) {
         .toList(growable: false);
 
     final String title = _text(entry, 'title') ?? '';
-    final bool isPublication =
-        links.any((OpdsLink link) => link.isAcquisition);
+    final bool isPublication = links.any((OpdsLink link) => link.isAcquisition);
 
     if (isPublication) {
       publications.add(
@@ -299,10 +349,9 @@ OpdsFeed _parseAtom(String body, Uri baseUri) {
 
     // A navigation entry points at another feed. Prefer a link that says it is
     // a catalog, and fall back to the first link the entry offers.
-    final OpdsLink? target = links
-            .where((OpdsLink link) => link.isCatalog)
-            .firstOrNull ??
-        links.firstOrNull;
+    final OpdsLink? target =
+        links.where((OpdsLink link) => link.isCatalog).firstOrNull ??
+            links.firstOrNull;
     if (target != null) {
       navigation.add(
         OpdsLink(
@@ -326,8 +375,8 @@ OpdsFeed _parseAtom(String body, Uri baseUri) {
         .where((OpdsLink link) => link.rels.contains('search'))
         .firstOrNull,
     nextHref: _relHref(feedLinks, 'next'),
-    previousHref: _relHref(feedLinks, 'previous') ??
-        _relHref(feedLinks, 'prev'),
+    previousHref:
+        _relHref(feedLinks, 'previous') ?? _relHref(feedLinks, 'prev'),
   );
 }
 
@@ -357,8 +406,7 @@ OpdsLink? _atomLink(XmlElement element, Uri baseUri) {
 
   final XmlElement? price = element.childElements
       .where((XmlElement child) =>
-          child.name.local == 'price' &&
-          child.name.namespaceUri == _Ns.opds)
+          child.name.local == 'price' && child.name.namespaceUri == _Ns.opds)
       .firstOrNull;
 
   return OpdsLink(
@@ -405,6 +453,10 @@ OpdsFeed _parseOpds2(String body, Uri baseUri) {
   if (decoded is! Map<String, dynamic>) {
     throw const FormatException('an OPDS 2.0 feed must be a JSON object');
   }
+  if (decoded['metadata'] is! Map<String, dynamic> ||
+      !['publications', 'navigation', 'groups'].any(decoded.containsKey)) {
+    throw const FormatException('Expected an OPDS catalog');
+  }
 
   final List<OpdsLink> feedLinks = _jsonLinks(decoded['links'], baseUri);
 
@@ -413,8 +465,7 @@ OpdsFeed _parseOpds2(String body, Uri baseUri) {
           .whereType<Map<String, dynamic>>()
           .map((Map<String, dynamic> publication) {
     final Map<String, dynamic> metadata =
-        publication['metadata'] as Map<String, dynamic>? ??
-            <String, dynamic>{};
+        publication['metadata'] as Map<String, dynamic>? ?? <String, dynamic>{};
     final List<OpdsLink> links = <OpdsLink>[
       ..._jsonLinks(publication['links'], baseUri),
       // Images are a separate array in OPDS 2.0. Tagging them with the 1.2
@@ -437,8 +488,7 @@ OpdsFeed _parseOpds2(String body, Uri baseUri) {
     );
   }).toList(growable: false);
 
-  final List<OpdsLink> navigation =
-      _jsonLinks(decoded['navigation'], baseUri);
+  final List<OpdsLink> navigation = _jsonLinks(decoded['navigation'], baseUri);
 
   // OPDS 2.0 groups carry sub-feeds. Their links join the navigation, so a
   // browse screen shows one list rather than a special case per generation.
@@ -460,8 +510,8 @@ OpdsFeed _parseOpds2(String body, Uri baseUri) {
         .where((OpdsLink link) => link.rels.contains('search'))
         .firstOrNull,
     nextHref: _relHref(feedLinks, 'next'),
-    previousHref: _relHref(feedLinks, 'previous') ??
-        _relHref(feedLinks, 'prev'),
+    previousHref:
+        _relHref(feedLinks, 'previous') ?? _relHref(feedLinks, 'prev'),
   );
 }
 

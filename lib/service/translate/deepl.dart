@@ -6,7 +6,7 @@ import 'package:paperfold/service/config/config_item.dart';
 import 'package:paperfold/service/translate/index.dart';
 import 'package:paperfold/utils/log/common.dart';
 import 'package:dio/dio.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 const _deeplApiUrl = 'https://api-free.deepl.com/v2/translate';
 

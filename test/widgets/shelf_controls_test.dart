@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:paperfold/config/shared_preference_provider.dart';
 import 'package:paperfold/enums/book_status.dart';
@@ -7,7 +7,6 @@ import 'package:paperfold/models/book.dart';
 import 'package:paperfold/providers/shelf_home.dart';
 import 'package:paperfold/widgets/bookshelf/shelf_controls/shelf_book_actions.dart';
 import 'package:paperfold/widgets/bookshelf/shelf_controls/shelf_controls.dart';
-import 'package:paperfold/widgets/bookshelf/shelf_stage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Sorting, filtering and the held-book controls, tested away from the page.
@@ -45,10 +44,22 @@ Book _book(
 
 final _shelf = [
   _book(1, 'Tehanu', author: 'Le Guin', rating: 5, progress: 0.9, day: 3),
-  _book(2, 'A Wizard of Earthsea',
-      author: 'Anon', status: BookStatus.finished, rating: 2, day: 1),
-  _book(3, 'The Farthest Shore',
-      author: 'Zed', status: BookStatus.notStarted, rating: 4, day: 2),
+  _book(
+    2,
+    'A Wizard of Earthsea',
+    author: 'Anon',
+    status: BookStatus.finished,
+    rating: 2,
+    day: 1,
+  ),
+  _book(
+    3,
+    'The Farthest Shore',
+    author: 'Zed',
+    status: BookStatus.notStarted,
+    rating: 4,
+    day: 2,
+  ),
 ];
 
 List<String> _titles(List<Book> books) =>
@@ -81,20 +92,38 @@ void main() {
       ];
       controls.setSortField(ShelfSortField.series);
       expect(controls.sortDirection, ShelfSortDirection.ascending);
-      expect(controls.booksForShelf(books, {}).map((b) => b.id),
-          [1, 2, 3, 9, 10, 11, 20, 30]);
+      expect(controls.booksForShelf(books, {}).map((b) => b.id), [
+        1,
+        2,
+        3,
+        9,
+        10,
+        11,
+        20,
+        30,
+      ]);
       expect(books.first.id, 10, reason: 'Sorting must not mutate the source.');
       final restored = ShelfHomeControls();
       expect(restored.sortField, ShelfSortField.series);
       expect(restored.sortDirection, ShelfSortDirection.ascending);
       restored.setSortField(ShelfSortField.dateAdded);
-      expect(restored.sortDirection, ShelfSortDirection.descending,
-          reason:
-              'Series order must preserve the existing date sort direction.');
+      expect(
+        restored.sortDirection,
+        ShelfSortDirection.descending,
+        reason: 'Series order must preserve the existing date sort direction.',
+      );
       restored.setSortField(ShelfSortField.series);
       controls.setSortDirection(ShelfSortDirection.descending);
-      expect(controls.booksForShelf(books, {}).map((b) => b.id),
-          [10, 9, 3, 2, 1, 11, 20, 30]);
+      expect(controls.booksForShelf(books, {}).map((b) => b.id), [
+        10,
+        9,
+        3,
+        2,
+        1,
+        11,
+        20,
+        30,
+      ]);
       expect(ShelfHomeControls().sortDirection, ShelfSortDirection.descending);
       controls.setSortField(ShelfSortField.title);
       controls.setSortDirection(ShelfSortDirection.ascending);
@@ -108,16 +137,18 @@ void main() {
       controls
         ..setSortField(ShelfSortField.title)
         ..setSortDirection(ShelfSortDirection.ascending);
-      expect(
-        _titles(controls.booksForShelf(_shelf, const {})),
-        ['A Wizard of Earthsea', 'Tehanu', 'The Farthest Shore'],
-      );
+      expect(_titles(controls.booksForShelf(_shelf, const {})), [
+        'A Wizard of Earthsea',
+        'Tehanu',
+        'The Farthest Shore',
+      ]);
 
       controls.setSortDirection(ShelfSortDirection.descending);
-      expect(
-        _titles(controls.booksForShelf(_shelf, const {})),
-        ['The Farthest Shore', 'Tehanu', 'A Wizard of Earthsea'],
-      );
+      expect(_titles(controls.booksForShelf(_shelf, const {})), [
+        'The Farthest Shore',
+        'Tehanu',
+        'A Wizard of Earthsea',
+      ]);
     });
 
     test('by author', () {
@@ -147,49 +178,54 @@ void main() {
       controls
         ..setSortField(ShelfSortField.progress)
         ..setSortDirection(ShelfSortDirection.descending);
-      expect(
-        _titles(controls.booksForShelf(_shelf, const {})).first,
-        'Tehanu',
-      );
+      expect(_titles(controls.booksForShelf(_shelf, const {})).first, 'Tehanu');
     });
   });
 
-  testWidgets('the sort sheet offers series order and first-to-last by default',
-      (tester) async {
-    tester.view.physicalSize = const Size(320, 640);
-    tester.view.devicePixelRatio = 1;
-    addTearDown(tester.view.reset);
-    await tester.pumpWidget(MaterialApp(
-      locale: const Locale('en'),
-      localizationsDelegates: L10n.localizationsDelegates,
-      supportedLocales: L10n.supportedLocales,
-      home: Scaffold(
-          body: Builder(
+  testWidgets(
+    'the sort sheet offers series order and first-to-last by default',
+    (tester) async {
+      tester.view.physicalSize = const Size(320, 640);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(
+        MaterialApp(
+          locale: const Locale('en'),
+          localizationsDelegates: [
+            L10n.delegate,
+            ...GlobalMaterialLocalizations.delegates,
+          ],
+          supportedLocales: L10n.supportedLocales,
+          home: Scaffold(
+            body: Builder(
               builder: (context) => TextButton(
-                    onPressed: () => showShelfSortSheet(context, controls),
-                    child: const Text('Sort'),
-                  ))),
-    ));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Sort'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const ValueKey('shelf-sort-series')));
-    await tester.pumpAndSettle();
-    expect(controls.sortField, ShelfSortField.series);
-    expect(controls.sortDirection, ShelfSortDirection.ascending);
-    await tester.ensureVisible(find.text('First to last'));
-    await tester.pumpAndSettle();
-    expect(find.text('Last to first'), findsOneWidget);
-    expect(tester.takeException(), isNull);
-  });
+                onPressed: () => showShelfSortSheet(context, controls),
+                child: const Text('Sort'),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Sort'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('shelf-sort-series')));
+      await tester.pumpAndSettle();
+      expect(controls.sortField, ShelfSortField.series);
+      expect(controls.sortDirection, ShelfSortDirection.ascending);
+      await tester.ensureVisible(find.text('First to last'));
+      await tester.pumpAndSettle();
+      expect(find.text('Last to first'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    },
+  );
 
   group('filtering', () {
     test('a status filter hides the books that do not match', () {
       controls.toggleStatus(BookStatus.finished);
-      expect(
-        _titles(controls.booksForShelf(_shelf, const {})),
-        ['A Wizard of Earthsea'],
-      );
+      expect(_titles(controls.booksForShelf(_shelf, const {})), [
+        'A Wizard of Earthsea',
+      ]);
       expect(controls.hasFilters, isTrue);
       expect(controls.filterCount, 1);
     });
@@ -204,10 +240,10 @@ void main() {
 
     test('a minimum rating hides anything below it', () {
       controls.setMinimumRating(4);
-      expect(
-        _titles(controls.booksForShelf(_shelf, const {})).toSet(),
-        {'Tehanu', 'The Farthest Shore'},
-      );
+      expect(_titles(controls.booksForShelf(_shelf, const {})).toSet(), {
+        'Tehanu',
+        'The Farthest Shore',
+      });
     });
 
     test('a tag filter keeps only the books carrying that tag', () {
@@ -240,38 +276,42 @@ void main() {
       expect(controls.booksForShelf(_shelf, const {}), isEmpty);
     });
 
-    test('an empty filtered shelf can clear filters and restore every book',
-        () {
-      controls
-        ..setMinimumRating(5)
-        ..toggleStatus(BookStatus.notStarted);
-      expect(controls.hasFilters, isTrue);
-      expect(controls.booksForShelf(_shelf, const {}), isEmpty);
+    test(
+      'an empty filtered shelf can clear filters and restore every book',
+      () {
+        controls
+          ..setMinimumRating(5)
+          ..toggleStatus(BookStatus.notStarted);
+        expect(controls.hasFilters, isTrue);
+        expect(controls.booksForShelf(_shelf, const {}), isEmpty);
 
-      controls.clearFilters();
+        controls.clearFilters();
 
-      expect(controls.hasFilters, isFalse);
-      expect(controls.filterCount, 0);
-      expect(controls.booksForShelf(_shelf, const {}).length, 3);
-    });
+        expect(controls.hasFilters, isFalse);
+        expect(controls.filterCount, 0);
+        expect(controls.booksForShelf(_shelf, const {}).length, 3);
+      },
+    );
   });
 
-  testWidgets('active rating filter shows a chip and dismissal restores books',
-      (tester) async {
+  testWidgets('active rating filter shows a chip and dismissal restores books', (
+    tester,
+  ) async {
     controls.setMinimumRating(4);
 
     await tester.pumpWidget(
       MaterialApp(
         locale: const Locale('en'),
-        localizationsDelegates: L10n.localizationsDelegates,
+        localizationsDelegates: [
+          L10n.delegate,
+          ...GlobalMaterialLocalizations.delegates,
+        ],
         supportedLocales: L10n.supportedLocales,
         home: Scaffold(
           body: AnimatedBuilder(
             animation: controls,
-            builder: (context, child) => ShelfFilterChips(
-              controls: controls,
-              tags: const [],
-            ),
+            builder: (context, child) =>
+                ShelfFilterChips(controls: controls, tags: const []),
           ),
         ),
       ),
@@ -282,15 +322,17 @@ void main() {
 
     expect(find.text('4+ stars'), findsOneWidget);
     expect(find.byKey(const ValueKey('shelf-filter-rating')), findsOneWidget);
-    expect(
-      _titles(controls.booksForShelf(_shelf, const {})).toSet(),
-      {'Tehanu', 'The Farthest Shore'},
-    );
+    expect(_titles(controls.booksForShelf(_shelf, const {})).toSet(), {
+      'Tehanu',
+      'The Farthest Shore',
+    });
 
-    final chip = tester.widget<InputChip>(find.descendant(
-      of: find.byKey(const ValueKey('shelf-filter-rating')),
-      matching: find.byType(InputChip),
-    ));
+    final chip = tester.widget<InputChip>(
+      find.descendant(
+        of: find.byKey(const ValueKey('shelf-filter-rating')),
+        matching: find.byType(InputChip),
+      ),
+    );
     chip.onDeleted!();
     await tester.pump();
 
@@ -318,14 +360,18 @@ void main() {
     expect(restored.tagFilters, {4});
   });
 
-  testWidgets('each of the four held-book controls fires its own action',
-      (tester) async {
+  testWidgets('each of the four held-book controls fires its own action', (
+    tester,
+  ) async {
     final fired = <String>[];
 
     await tester.pumpWidget(
       MaterialApp(
         locale: const Locale('en'),
-        localizationsDelegates: L10n.localizationsDelegates,
+        localizationsDelegates: [
+          L10n.delegate,
+          ...GlobalMaterialLocalizations.delegates,
+        ],
         supportedLocales: L10n.supportedLocales,
         home: Scaffold(
           body: ShelfBookOptionBar(
@@ -351,60 +397,73 @@ void main() {
     expect(fired, ['details', 'shelves', 'customise', 'notes']);
   });
 
-  testWidgets('the four plates fit the head band on a narrow phone',
+  for (final textScale in [1.0, 2.0]) {
+    testWidgets(
+      'book actions keep visible labels at 320px and $textScale text',
       (tester) async {
-    // The defect this guards: the plates were set to a constant width and a
-    // constant gap, which came to 330 — ten pixels more than a 320-wide screen
-    // has. A Row that does not fit does not shrink; it paints the striped
-    // overflow bar over the one row of controls the reader came here for.
-    tester.view
-      ..physicalSize = const Size(320, 640)
-      ..devicePixelRatio = 1;
-    addTearDown(tester.view.reset);
+        tester.view
+          ..physicalSize = const Size(320, 640)
+          ..devicePixelRatio = 1;
+        addTearDown(tester.view.reset);
 
-    await tester.pumpWidget(
-      MaterialApp(
-        locale: const Locale('en'),
-        localizationsDelegates: L10n.localizationsDelegates,
-        supportedLocales: L10n.supportedLocales,
-        home: Scaffold(
-          body: SizedBox(
-            height: ShelfStage.headBand,
-            child: Center(
-              child: ShelfBookOptionBar(
-                onDetails: _noop,
-                onShelves: _noop,
-                onCustomise: _noop,
-                onNotes: _noop,
+        await tester.pumpWidget(
+          MaterialApp(
+            locale: const Locale('en'),
+            localizationsDelegates: [
+              L10n.delegate,
+              ...GlobalMaterialLocalizations.delegates,
+            ],
+            supportedLocales: L10n.supportedLocales,
+            home: MediaQuery(
+              data: MediaQueryData(textScaler: TextScaler.linear(textScale)),
+              child: Scaffold(
+                body: Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: ShelfBookOptionBar(
+                    onDetails: _noop,
+                    onShelves: _noop,
+                    onCustomise: _noop,
+                    onNotes: _noop,
+                  ),
+                ),
               ),
             ),
           ),
-        ),
-      ),
+        );
+        for (var frame = 0; frame < 5; frame++) {
+          await tester.pump(const Duration(milliseconds: 50));
+        }
+
+        expect(tester.takeException(), isNull);
+        final bar = tester.getRect(find.byType(ShelfBookOptionBar));
+        expect(bar.width, lessThanOrEqualTo(320));
+        for (final (name, label) in [
+          ('details', 'Details'),
+          ('shelves', 'Shelves'),
+          ('customise', 'Customise'),
+          ('notes', 'Journal'),
+        ]) {
+          final plate = tester.getRect(
+            find.byKey(ValueKey('shelf-book-$name')),
+          );
+          expect(plate.width, greaterThanOrEqualTo(48), reason: name);
+          expect(plate.height, greaterThanOrEqualTo(48), reason: name);
+          expect(find.text(label).hitTestable(), findsOneWidget, reason: name);
+        }
+      },
     );
-    for (var frame = 0; frame < 5; frame++) {
-      await tester.pump(const Duration(milliseconds: 50));
-    }
+  }
 
-    expect(tester.takeException(), isNull);
-    final bar = tester.getRect(find.byType(ShelfBookOptionBar));
-    expect(bar.width, lessThanOrEqualTo(320));
-    expect(bar.height, lessThanOrEqualTo(ShelfStage.headBand));
-
-    // And every plate is still a target a thumb can find.
-    for (final name in ['details', 'shelves', 'customise', 'notes']) {
-      final plate = tester.getRect(find.byKey(ValueKey('shelf-book-$name')));
-      expect(plate.width, greaterThanOrEqualTo(48), reason: name);
-      expect(plate.height, greaterThanOrEqualTo(48), reason: name);
-    }
-  });
-
-  testWidgets('the option bar settles, because nothing on it animates',
-      (tester) async {
+  testWidgets('the option bar settles, because nothing on it animates', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       MaterialApp(
         locale: const Locale('en'),
-        localizationsDelegates: L10n.localizationsDelegates,
+        localizationsDelegates: [
+          L10n.delegate,
+          ...GlobalMaterialLocalizations.delegates,
+        ],
         supportedLocales: L10n.supportedLocales,
         home: const MediaQuery(
           data: MediaQueryData(disableAnimations: true),

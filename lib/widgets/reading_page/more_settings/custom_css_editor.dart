@@ -2,7 +2,7 @@ import 'package:paperfold/config/shared_preference_provider.dart';
 import 'package:paperfold/l10n/generated/L10n.dart';
 import 'package:paperfold/page/reading_page.dart';
 import 'package:paperfold/utils/toast/common.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 class CustomCSSEditor extends StatefulWidget {
   const CustomCSSEditor({super.key});

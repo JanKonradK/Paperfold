@@ -7,9 +7,8 @@ import 'package:paperfold/widgets/common/anx_segmented_button.dart';
 import 'package:paperfold/widgets/statistic/heatmap_chart.dart';
 import 'package:paperfold/widgets/statistic/statistic_chart.dart';
 import 'package:paperfold/widgets/common/load_failure.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:icons_plus/icons_plus.dart';
 
 class StatisticCard extends ConsumerWidget {
   const StatisticCard({super.key});
@@ -95,7 +94,7 @@ class StatisticCard extends ConsumerWidget {
                   IconButton(
                     onPressed: () =>
                         _changeDate(ref, false, data.mode, data.date),
-                    icon: const Icon(EvaIcons.arrow_ios_back_outline),
+                    icon: const Icon(Icons.chevron_left),
                   ),
                   const Spacer(),
                   TextButton(
@@ -125,7 +124,7 @@ class StatisticCard extends ConsumerWidget {
                   IconButton(
                     onPressed: () =>
                         _changeDate(ref, true, data.mode, data.date),
-                    icon: const Icon(EvaIcons.arrow_ios_forward_outline),
+                    icon: const Icon(Icons.chevron_right),
                   ),
                 ],
               ),

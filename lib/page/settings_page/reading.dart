@@ -5,7 +5,7 @@ import 'package:paperfold/widgets/reading_page/more_settings/style_settings.dart
 import 'package:paperfold/widgets/settings/settings_section.dart';
 import 'package:paperfold/widgets/settings/settings_tile.dart';
 import 'package:paperfold/widgets/settings/settings_title.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class ReadingSettings extends ConsumerStatefulWidget {

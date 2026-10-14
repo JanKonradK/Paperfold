@@ -8,9 +8,8 @@ import 'package:paperfold/utils/toast/common.dart';
 import 'package:paperfold/widgets/book_share/excerpt_share_service.dart';
 import 'package:paperfold/widgets/common/axis_flex.dart';
 import 'package:paperfold/widgets/icon_and_text.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
-import 'package:icons_plus/icons_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class ExcerptMenu extends StatefulWidget {
@@ -152,7 +151,7 @@ class ExcerptMenuState extends State<ExcerptMenu> {
   Icon deleteIcon() {
     return deleteConfirm
         ? const Icon(
-            EvaIcons.close_circle,
+            Icons.cancel,
             color: Colors.red,
           )
         : const Icon(Icons.delete);
@@ -269,7 +268,7 @@ class ExcerptMenuState extends State<ExcerptMenu> {
               AnxToast.show(L10n.of(context).notesPageCopied);
               widget.onClose();
             },
-            icon: const Icon(EvaIcons.copy),
+            icon: const Icon(Icons.copy_outlined),
             text: L10n.of(context).contextMenuCopy,
           ),
           // Web search
@@ -283,7 +282,7 @@ class ExcerptMenuState extends State<ExcerptMenu> {
                 mode: LaunchMode.externalApplication,
               );
             },
-            icon: const Icon(EvaIcons.globe),
+            icon: const Icon(Icons.public),
             text: L10n.of(context).contextMenuSearch,
           ),
           // toggle translation menu
@@ -307,7 +306,7 @@ class ExcerptMenuState extends State<ExcerptMenu> {
                   widget.toggleReaderNoteMenu(show: true);
                 }
               },
-              icon: const Icon(EvaIcons.edit_2_outline),
+              icon: const Icon(Icons.edit_outlined),
               text: L10n.of(context).contextMenuWriteIdea,
             ),
           // share
@@ -323,7 +322,7 @@ class ExcerptMenuState extends State<ExcerptMenu> {
                 chapter: epubPlayerKey.currentState!.chapterTitle,
               );
             },
-            icon: const Icon(EvaIcons.share_outline),
+            icon: const Icon(Icons.share_outlined),
             text: L10n.of(context).contextMenuShare,
           ),
         ],

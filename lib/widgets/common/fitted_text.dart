@@ -1,6 +1,6 @@
 import 'dart:ui' as ui;
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// A widget that wraps [Text] with [FittedBox] to automatically scale text
 /// to fit within specified constraints.

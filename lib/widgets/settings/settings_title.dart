@@ -1,5 +1,5 @@
 import 'package:paperfold/widgets/settings/settings_section.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 Widget settingsTitle({
   required Icon icon,

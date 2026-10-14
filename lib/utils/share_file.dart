@@ -2,7 +2,7 @@ import 'dart:io';
 
 import 'package:paperfold/main.dart';
 import 'package:paperfold/widgets/show_loading.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:share_plus/share_plus.dart';
 

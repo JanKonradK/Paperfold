@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/legacy.dart';
 import 'package:paperfold/dao/book.dart';
 import 'package:paperfold/dao/challenge.dart';
 import 'package:paperfold/enums/book_status.dart';

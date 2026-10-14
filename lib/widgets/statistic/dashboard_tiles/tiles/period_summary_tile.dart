@@ -7,7 +7,7 @@ import 'package:paperfold/utils/date/convert_seconds.dart';
 import 'package:paperfold/widgets/common/async_skeleton_wrapper.dart';
 import 'package:paperfold/widgets/statistic/dashboard_tiles/dashboard_tile_base.dart';
 import 'package:paperfold/widgets/statistic/dashboard_tiles/dashboard_tile_metadata.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class PeriodSummaryTile extends StatisticsDashboardTileBase {
@@ -31,6 +31,10 @@ class PeriodSummaryTile extends StatisticsDashboardTileBase {
     final theme = Theme.of(context);
 
     return AsyncSkeletonWrapper(
+        onRetry: () async {
+          ref.invalidate(statisticDataProvider);
+          ref.invalidate(totalReadingTimeProvider);
+        },
         asyncValue: combineAsyncValues([
           ref.watch(statisticDataProvider),
           ref.watch(totalReadingTimeProvider),

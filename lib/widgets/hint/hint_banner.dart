@@ -3,7 +3,7 @@ import 'package:paperfold/enums/hint_key.dart';
 import 'package:paperfold/l10n/generated/L10n.dart';
 import 'package:paperfold/utils/toast/common.dart';
 import 'package:paperfold/widgets/common/container/filled_container.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 class HintBanner extends StatefulWidget {
   const HintBanner({

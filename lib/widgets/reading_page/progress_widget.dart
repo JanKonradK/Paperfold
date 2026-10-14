@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:paperfold/l10n/generated/L10n.dart';
 import 'package:paperfold/page/book_player/epub_player.dart';
 import 'package:paperfold/page/reading_page.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 class ProgressWidget extends StatefulWidget {
   final GlobalKey<EpubPlayerState> epubPlayerKey;

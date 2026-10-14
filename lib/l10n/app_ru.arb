@@ -1,7 +1,7 @@
 {
   "@@locale": "ru",
   "appName": "Paperfold",
-  "appAbout": "Об Paperfold",
+  "appAbout": "О Paperfold",
   "appVersion": "Версия",
   "appLicense": "Лицензия",
   "appAuthor": "Разработчик",
@@ -343,7 +343,7 @@
   "replacementFailed": "Ошибка замены",
   "replacementFailedContent": "Ошибка проверки базы данных после замены, автоматически восстановлена предыдущая версия. Ваши данные в безопасности.",
   "syncUnknownError": "Ошибка синхронизации",
-  "onboardingWelcomeTitle": "Вас приветствует \nPaperfold",
+  "onboardingWelcomeTitle": "Добро пожаловать в Paperfold",
   "onboardingWelcomeBody": "Мощная читалка электронных книг с межплатформенной синхронизацией.",
   "onboardingSyncTitle": "Синхронизация между устройствами",
   "onboardingSyncBody": "Синхронизируйте книги, прогресс и заметки на всех устройствах через WebDAV.",
@@ -574,5 +574,499 @@
   "historyClose": "Закрыть",
   "useBookStyles": "Использовать стили книги",
   "useBookStylesDescription": "При включении приложение будет использовать стили, определенные в книге, вместо ваших пользовательских настроек высоты строки, толщины шрифта, отступа текста, межбуквенного интервала и интервала между абзацами",
-  "commonInputCannotBeEmpty": "Ввод не может быть пустым"
+  "commonInputCannotBeEmpty": "Ввод не может быть пустым",
+  "commonShowPassword": "Показать пароль",
+  "commonHidePassword": "Скрыть пароль",
+  "settingsCreamMode": "Кремовый",
+  "settingsBurgundyMode": "Бордовый",
+  "settingsAppearanceUsePaperfoldTheme": "Использовать тему Paperfold",
+  "pageTurnFold": "Сгиб",
+  "pageTurnCurl": "Заворот",
+  "pageTurnNoneDescription": "Следующая страница появляется сразу.",
+  "pageTurnSlideDescription": "Страница сдвигается в сторону. Самый плавный вариант.",
+  "pageTurnFoldDescription": "Страница сдвигается, и по ней проходит сгиб.",
+  "pageTurnCurlDescription": "Страница приподнимается и загибается, как бумага. При каждом перелистывании создаётся снимок экрана.",
+  "pageTurnScrollDescription": "Одна непрерывная страница без перелистывания.",
+  "settingsAdvancedNetwork": "Сеть",
+  "settingsAdvancedHttpProxyEnabled": "Включить HTTP-прокси",
+  "settingsAdvancedHttpProxyConfig": "Настройка HTTP-прокси",
+  "settingsAdvancedHttpProxyHost": "Адрес прокси",
+  "settingsAdvancedHttpProxyHostHint": "например, 127.0.0.1",
+  "settingsAdvancedHttpProxyPort": "Порт прокси",
+  "settingsAdvancedHttpProxyPortHint": "например, 7890",
+  "settingsAdvancedHttpProxyNotConfigured": "Не настроено",
+  "settingsAdvancedHttpProxyInvalidInput": "Неверный адрес или порт прокси",
+  "settingsAdvancedHttpProxyTestUrl": "Адрес для проверки",
+  "settingsAdvancedHttpProxyTest": "Проверить соединение",
+  "settingsAdvancedHttpProxyTesting": "Проверка…",
+  "settingsAdvancedHttpProxyTestSuccess": "Соединение установлено",
+  "settingsAdvancedHttpProxyTestFailed": "Ошибка соединения",
+  "navLibrary": "Библиотека",
+  "navJournal": "Дневник",
+  "navMore": "Ещё",
+  "shelfHomeTitle": "Мои полки",
+  "shelfReadingNow": "Читаю сейчас",
+  "shelfAllTimeFavourites": "Любимые книги",
+  "shelfToBeRead": "Хочу прочитать",
+  "shelfFinished": "Прочитано",
+  "shelfBooksToBuy": "Книги для покупки",
+  "emptyShelf": "Здесь пока нет книг.",
+  "shelfViewCovers": "Показать обложки",
+  "shelfViewLog": "Показать список",
+  "shelfLogColumns": "Столбцы",
+  "shelfLogAuthor": "Автор",
+  "shelfLogRating": "Оценка",
+  "shelfLogStatus": "Статус",
+  "shelfLogDates": "Даты",
+  "shelvesLoading": "Открываем полки",
+  "shelfLoadErrorTitle": "Не удалось открыть полки.",
+  "shelfLoadErrorBody": "Попробуйте открыть полки ещё раз.",
+  "shelfAddBooksTooltip": "Добавить книги",
+  "shelfAddBooksFromDevice": "С этого устройства",
+  "wishlistSpineSemanticLabel": "{title}, автор: {author}. Открыть книги для покупки.",
+  "wishlistSpineSemanticLabelNoAuthor": "{title}. Открыть книги для покупки.",
+  "bookCoverSemanticLabel": "Открыть «{title}»",
+  "bookOptionsSemanticHint": "Нажмите и удерживайте, чтобы открыть действия с книгой",
+  "journalPlaceholderTitle": "Сохраняйте свои мысли здесь",
+  "journalPlaceholderBody": "Откройте дневник книги из библиотеки, чтобы добавить отзыв или свои мысли.",
+  "journalPagesCount": "{count, plural, one{{count} страница} few{{count} страницы} many{{count} страниц} other{{count} страницы}}",
+  "@journalPagesCount": {
+    "placeholders": {
+      "count": {
+        "type": "num",
+        "format": "compact"
+      }
+    }
+  },
+  "journalReviewed": "Отзыв добавлен",
+  "reviewRatingOverall": "Общая оценка",
+  "reviewRatingPlot": "Сюжет",
+  "reviewRatingEnding": "Концовка",
+  "reviewRatingWorld": "Мир",
+  "reviewRatingCharacters": "Персонажи",
+  "reviewRatingSpice": "Эротика",
+  "reviewGenre": "Жанр",
+  "reviewFormat": "Формат",
+  "reviewFavoriteCharacter": "Любимый персонаж",
+  "reviewFavoriteQuote": "Любимая цитата",
+  "reviewThoughts": "Мысли",
+  "reviewOpenPages": "Страницы дневника",
+  "journalDotPages": "Страницы дневника",
+  "journalAddPage": "Добавить страницу",
+  "journalPageHint": "Пишите о чём угодно.",
+  "journalNoPages": "Пока нет страниц.",
+  "addToAllTimeFavourites": "Добавить в любимые книги",
+  "removeFromAllTimeFavourites": "Удалить из любимых книг",
+  "addBookToBuyTitle": "Добавить книгу для покупки",
+  "addBookToBuyAction": "Добавить книгу",
+  "challengeTitle": "Читательский вызов",
+  "challengeYearTitle": "Читательский вызов на {year} год",
+  "@challengeYearTitle": {
+    "placeholders": {
+      "year": {
+        "type": "String"
+      }
+    }
+  },
+  "challengeProgress": "{finished} из {target} книг",
+  "@challengeProgress": {
+    "placeholders": {
+      "finished": {
+        "type": "int"
+      },
+      "target": {
+        "type": "int"
+      }
+    }
+  },
+  "challengeOverTarget": "{count, plural, one{На {count} книгу больше цели} few{На {count} книги больше цели} many{На {count} книг больше цели} other{На {count} книги больше цели}}",
+  "@challengeOverTarget": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "challengeLegendFinished": "Прочитано",
+  "challengeLegendReading": "Читаю",
+  "challengeLegendEmpty": "Хочу прочитать",
+  "challengeSetTarget": "Изменить цель",
+  "challengeTargetLabel": "Книг за этот год",
+  "challengeShelfSemanticLabel": "Полка читательского вызова. Прочитано {finished} из {target} книг, сейчас читаются {reading}.",
+  "@challengeShelfSemanticLabel": {
+    "placeholders": {
+      "finished": {
+        "type": "int"
+      },
+      "target": {
+        "type": "int"
+      },
+      "reading": {
+        "type": "int"
+      }
+    }
+  },
+  "challengeSlotFilled": "Корешок {slot}: {title}",
+  "@challengeSlotFilled": {
+    "placeholders": {
+      "slot": {
+        "type": "int"
+      },
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "challengeSlotEmpty": "Корешок {slot} пуст.",
+  "@challengeSlotEmpty": {
+    "placeholders": {
+      "slot": {
+        "type": "int"
+      }
+    }
+  },
+  "monthTrackerTitle": "Календарь чтения",
+  "monthTrackerPagesTotal": "{count, plural, =0{Нет страниц за этот месяц} one{{count} страница за этот месяц} few{{count} страницы за этот месяц} many{{count} страниц за этот месяц} other{{count} страницы за этот месяц}}",
+  "@monthTrackerPagesTotal": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "monthTrackerDaysRead": "{count, plural, =0{Нет дней чтения} one{{count} день чтения} few{{count} дня чтения} many{{count} дней чтения} other{{count} дня чтения}}",
+  "@monthTrackerDaysRead": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "monthTrackerPreviousMonth": "Предыдущий месяц",
+  "monthTrackerNextMonth": "Следующий месяц",
+  "monthTrackerRingSemanticLabel": "Прочитанные страницы по дням. Дней чтения: {days}, всего страниц: {pages}.",
+  "@monthTrackerRingSemanticLabel": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      },
+      "pages": {
+        "type": "int"
+      }
+    }
+  },
+  "monthTrackerDaySemanticLabel": "День {day}: {count, plural, =0{нет страниц} one{{count} страница} few{{count} страницы} many{{count} страниц} other{{count} страницы}}",
+  "@monthTrackerDaySemanticLabel": {
+    "placeholders": {
+      "day": {
+        "type": "int"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "monthTrackerPagesLabel": "Страницы",
+  "translateWorking": "Перевод…",
+  "translateFromLanguage": "Перевести с языка: {language}",
+  "@translateFromLanguage": {
+    "placeholders": {
+      "language": {
+        "type": "String"
+      }
+    }
+  },
+  "translateToLanguage": "Перевести на язык: {language}",
+  "@translateToLanguage": {
+    "placeholders": {
+      "language": {
+        "type": "String"
+      }
+    }
+  },
+  "opdsCatalogs": "Каталоги",
+  "opdsFindBooksOnline": "Найти книги в интернете",
+  "opdsCatalogsEmpty": "Пока нет каталогов.",
+  "opdsAddCatalog": "Добавить каталог",
+  "opdsCatalogName": "Название",
+  "opdsCatalogUrl": "Адрес",
+  "opdsCatalogUsername": "Имя пользователя",
+  "opdsCatalogPassword": "Пароль",
+  "opdsCatalogNeedsSignIn": "Требуется вход",
+  "opdsRemoveCatalog": "Удалить каталог",
+  "opdsRemoveCatalogBody": "Удалить «{name}» и его пароль?",
+  "@opdsRemoveCatalogBody": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "opdsFeedEmpty": "Эта полка пуста.",
+  "opdsNextPage": "Ещё",
+  "opdsDownload": "Скачать",
+  "opdsDownloaded": "«{title}» добавлена на полку.",
+  "@opdsDownloaded": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "opdsErrorNetwork": "Не удалось подключиться к каталогу.",
+  "opdsErrorUnauthorized": "Неверное имя пользователя или пароль.",
+  "opdsErrorNotFound": "По этому адресу нет ленты каталога.",
+  "opdsErrorServer": "Каталог вернул ошибку.",
+  "opdsErrorNotAFeed": "Этот адрес ведёт на веб-страницу, а не на ленту каталога.",
+  "opdsInvalidUrl": "Введите полный адрес, например https://example.org/opds. Не включайте в адрес имя пользователя или пароль.",
+  "onlineCatalogsHeading": "Читать в Paperfold",
+  "onlineCatalogsBody": "Скачивайте файлы книг поддерживаемых форматов прямо из этих каталогов.",
+  "onlineSavedCatalogs": "Ваши каталоги",
+  "onlineWebsitesHeading": "Искать в интернете",
+  "onlineWebsitesBody": "Эти сайты открываются в браузере. Заимствованные и защищённые книги остаются в своих сервисах чтения.",
+  "onlineGutenbergDescription": "Классические электронные книги на разных языках.",
+  "onlineEbooksGratuitsDescription": "Электронные книги на французском в EPUB и других форматах.",
+  "onlineStandardDescription": "Тщательно подготовленные классические издания. Скачивайте файлы с сайта.",
+  "onlineGlobalGreyDescription": "Классические тексты в EPUB и PDF. Скачайте файл, затем импортируйте его.",
+  "onlineOpenLibraryDescription": "Находите издания, читайте или берите книги через Open Library.",
+  "onlineLibbyDescription": "Берите книги в участвующих библиотеках и читайте в Libby.",
+  "onlineStandardAccess": "Для этой OPDS-ленты нужен доступ спонсора или участника Standard Ebooks.",
+  "onlineOpenWebsite": "Открыть сайт",
+  "onlineOpenWebsiteFailed": "Не удалось открыть сайт. Попробуйте ещё раз.",
+  "opdsChooseFormat": "Выбрать формат",
+  "opdsImportFailed": "Не удалось добавить эту книгу. Попробуйте другой формат или повторите попытку.",
+  "opdsCatalogSaveFailed": "Не удалось сохранить каталог. Введённые данные сохранены в форме; попробуйте ещё раз.",
+  "opdsCatalogRemoveFailed": "Не удалось удалить каталог. Попробуйте ещё раз.",
+  "opdsUnsupportedDownload": "Нет доступной загрузки в поддерживаемом формате.",
+  "shelfBookView": "Вид книг",
+  "shelfViewSpines": "Корешки",
+  "shelfViewCoverGrid": "Обложки",
+  "bookBindingSectionTitle": "Переплёт",
+  "bookBindingAutomatic": "Автоматически",
+  "bookBindingHardback": "Твёрдый",
+  "bookBindingSoftback": "Мягкий",
+  "bookBindingWhyReader": "Вы выбрали этот переплёт для книги.",
+  "bookBindingWhyStatedFormat": "В книге указан формат «{evidence}».",
+  "@bookBindingWhyStatedFormat": {
+    "placeholders": {
+      "evidence": {
+        "type": "String"
+      }
+    }
+  },
+  "bookBindingWhyComic": "Манга, комиксы и ранобэ получают мягкий переплёт.",
+  "bookBindingWhyModern": "Впервые опубликовано в {year} году, когда мягкий переплёт уже стал обычным для первых изданий.",
+  "@bookBindingWhyModern": {
+    "placeholders": {
+      "year": {
+        "type": "String"
+      }
+    }
+  },
+  "bookBindingWhyEarly": "Впервые опубликовано в {year} году, когда новые книги выпускали в твёрдом переплёте.",
+  "@bookBindingWhyEarly": {
+    "placeholders": {
+      "year": {
+        "type": "String"
+      }
+    }
+  },
+  "bookBindingWhyPublicDomain": "Текст старой книги, находящийся в общественном достоянии.",
+  "bookBindingWhyDefault": "В книге нет сведений о переплёте, поэтому используется настройка библиотеки по умолчанию.",
+  "bookModelSemanticLabel": "{title}, автор: {author}. Нажмите, чтобы открыть книгу.",
+  "@bookModelSemanticLabel": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "author": {
+        "type": "String"
+      }
+    }
+  },
+  "bookModelSemanticLabelNoAuthor": "{title}. Нажмите, чтобы открыть книгу.",
+  "@bookModelSemanticLabelNoAuthor": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsDefaultBinding": "Переплёт по умолчанию",
+  "settingsDefaultBindingDescription": "Переплёт для книг без сведений о формате. Манга, ранобэ и современные романы по-прежнему получают мягкий переплёт, а старые книги — твёрдый.",
+  "settingsBookshelfUniformSpines": "Одинаковые корешки",
+  "settingsBookshelfUniformSpinesDescription": "Сделать корешки всех книг на главных полках одинаковыми по толщине и высоте.",
+  "challengePreviousYear": "Предыдущий год",
+  "challengeNextYear": "Следующий год",
+  "challengePaceAhead": "{count, plural, one{Впереди графика на {count} книгу} few{Впереди графика на {count} книги} many{Впереди графика на {count} книг} other{Впереди графика на {count} книги}}",
+  "@challengePaceAhead": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "challengePaceBehind": "{count, plural, one{Позади графика на {count} книгу} few{Позади графика на {count} книги} many{Позади графика на {count} книг} other{Позади графика на {count} книги}}",
+  "@challengePaceBehind": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "challengePaceOnTrack": "По графику на этот год",
+  "challengePaceExpected": "При равномерном темпе к этому моменту: {count, plural, one{{count} книга} few{{count} книги} many{{count} книг} other{{count} книги}}.",
+  "@challengePaceExpected": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "challengeEmptyTitle": "В этом вызове пока нет книг",
+  "challengeEmptyBody": "Отметьте книгу как «Читаю» или закончите книгу, чтобы начать заполнять вызов.",
+  "challengeTargetRange": "Введите от 1 до 999 книг.",
+  "monthTrackerPagesPerDay": "Страниц в день",
+  "monthTrackerLegendNoPages": "Нет страниц",
+  "monthTrackerLegendFewerPages": "Меньше страниц",
+  "monthTrackerLegendMorePages": "Больше страниц",
+  "monthTrackerLegendToday": "Сегодня",
+  "monthTrackerEmptyTitle": "В этом месяце страницы ещё не записаны",
+  "monthTrackerEmptyBody": "Нажмите на число дня, чтобы добавить количество страниц за этот день.",
+  "monthTrackerDayCurrentPages": "{count, plural, =0{За этот день записано 0 страниц.} one{За этот день записана {count} страница.} few{За этот день записаны {count} страницы.} many{За этот день записано {count} страниц.} other{За этот день записано {count} страницы.}}",
+  "@monthTrackerDayCurrentPages": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "monthTrackerDayNotRecorded": "За этот день количество страниц не записано.",
+  "monthTrackerNewPagesLabel": "Новое количество страниц",
+  "monthTrackerCentreUnit": "страниц",
+  "statisticTrackersTitle": "Учёт чтения",
+  "statisticReadingTimeUnit": "Графики времени чтения · минут в день",
+  "statisticMeasureNote": "Графики показывают время чтения в минутах. Кольцо месяца показывает страницы. Это разные показатели.",
+  "statisticOpenChallenge": "Открыть вызов",
+  "statisticOpenMonthTracker": "Открыть календарь чтения",
+  "statisticTrackerLoadError": "Данные учёта чтения недоступны.",
+  "shelfSortControl": "Сортировать эту полку",
+  "shelfFilterControl": "Фильтровать эту полку",
+  "shelfFilterChipSemantic": "Фильтр: {label}. Удалить этот фильтр.",
+  "@shelfFilterChipSemantic": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "shelfSortTitle": "Сортировать книги",
+  "shelfSortDateAdded": "Дата добавления",
+  "shelfSortSeries": "Порядок в серии",
+  "shelfSortFirstToLast": "От первой к последней",
+  "shelfSortLastToFirst": "От последней к первой",
+  "shelfFilterTitle": "Фильтровать книги",
+  "shelfFilterStatus": "Статус чтения",
+  "shelfFilterRating": "Оценка",
+  "shelfFilterTags": "Метки",
+  "shelfUnknownTag": "Удалённая метка",
+  "shelfRatingAtLeast": "От {rating} звёзд",
+  "@shelfRatingAtLeast": {
+    "placeholders": {
+      "rating": {
+        "type": "int"
+      }
+    }
+  },
+  "shelfClearFilters": "Сбросить фильтры",
+  "shelfNoFilterResults": "Нет книг, соответствующих этим фильтрам.",
+  "appPressBackAgainToLeave": "Нажмите «Назад» ещё раз, чтобы выйти из Paperfold",
+  "bookBindingAskTitle": "В каком переплёте эта книга?",
+  "bookBindingAskBody": "От этого зависит вид книги «{title}» на полке. Позже это можно изменить.",
+  "@bookBindingAskBody": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "bookBindingAskDecide": "Решить за меня",
+  "shelfPickUpHint": "Выбрать эту книгу",
+  "shelfOpenHint": "Открыть эту книгу",
+  "shelfBookOptions": "Действия с книгой",
+  "shelfBookOptionDetails": "Сведения",
+  "shelfBookOptionShelves": "Полки",
+  "shelfBookOptionCustomise": "Оформление",
+  "shelfBookOptionNotes": "Заметки",
+  "shelfBookShelvesTitle": "Переместить или добавить на полку",
+  "shelfBookCustomiseTitle": "Оформить эту книгу",
+  "shelfBookCoverArt": "Изображение обложки",
+  "shelfBookChooseCoverArt": "Выбрать изображение обложки",
+  "settingsAppearanceTrueBlack": "Чистый чёрный",
+  "settingsAppearanceTrueBlackDescription": "Использовать чистый чёрный для тёмного фона. На OLED-экране эти пиксели выключены. Отключите, чтобы использовать более мягкий, почти чёрный цвет.",
+  "settingsAppearanceEInkDescription": "Высокая контрастность для экранов на электронных чернилах. Приложение остаётся в светлом режиме.",
+  "settingsAppearanceThemeColorBrand": "Paperfold",
+  "settingsAppearanceThemeColorCustom": "Своя тема",
+  "settingsDeveloperOptions": "Параметры разработчика",
+  "settingsDeveloperOptionsEnable": "Включить параметры разработчика",
+  "settingsDeveloperOptionsEnableDescription": "Отключите, чтобы скрыть раздел разработчика в настройках.",
+  "settingsDeveloperOptionsEnabledToast": "Параметры разработчика включены",
+  "settingsDeveloperVibrationTest": "Проверка вибрации",
+  "settingsDeveloperVibrationTestDescription": "Проверьте возможности устройства и воспроизведите каждый вариант вибрации.",
+  "settingsQuickSettings": "Быстрые настройки",
+  "commonLoadFailedTitle": "Не удалось загрузить.",
+  "commonLoadFailedBody": "При чтении данных книг произошла ошибка. Попробуйте ещё раз.",
+  "notesLoadFailed": "Не удалось загрузить заметки.",
+  "statisticsLoadFailed": "Не удалось загрузить статистику чтения.",
+  "notesExportCopy": "Копировать",
+  "notesExportPlainText": "Обычный текст",
+  "commonNoOptions": "Нет вариантов",
+  "commonClose": "Закрыть",
+  "readingPageGoToCurrentLocation": "Перейти к текущему месту чтения",
+  "readingPageBackgroundColour": "Цвет фона",
+  "readingPageTextColour": "Цвет текста",
+  "readingPageDeleteTheme": "Удалить эту тему",
+  "journalSaveFailed": "Не удалось сохранить изменения. Останьтесь на этой странице и попробуйте ещё раз.",
+  "journalLoadFailed": "Не удалось загрузить дневник.",
+  "storageMigrationScheduled": "Перезапустите приложение, чтобы переместить библиотеку в выбранную папку.",
+  "appStartupFailed": "Не удалось запустить Paperfold.",
+  "appStartupFailedBody": "Закройте приложение и откройте его снова. Если проблема остаётся, проверьте доступность папки библиотеки.",
+  "searchLibraryHint": "Поиск по книгам, заметкам и дневнику",
+  "searchJournalReview": "Отзыв",
+  "searchJournalPage": "Страница дневника {number}",
+  "@searchJournalPage": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "journalBooks": "Дневники книг",
+  "journalHighlightsOverview": "Вернитесь к отрывкам и заметкам из своей библиотеки.",
+  "challengeSaveFailed": "Не удалось сохранить цель. Попробуйте ещё раз.",
+  "monthTrackerSaveFailed": "Не удалось сохранить количество страниц. Попробуйте ещё раз.",
+  "monthTrackerInvalidPages": "Введите целое число страниц от 0 и выше.",
+  "monthTrackerRecordPages": "Записать страницы",
+  "monthTrackerChooseDay": "Выбрать день",
+  "monthTrackerManualEntryHint": "Записывайте количество страниц за каждый день. Время чтения учитывается отдельно.",
+  "journalAddPassage": "Добавить в дневник",
+  "journalOpenPassage": "Открыть отрывок",
+  "journalPassageAdded": "Отрывок добавлен в дневник.",
+  "journalPassageSaveFailed": "Не удалось добавить отрывок. Попробуйте ещё раз.",
+  "journalThoughtsHint": "Запишите свои мысли об этом отрывке…",
+  "journalBookOverview": "Ваш читательский дневник",
+  "journalReviewEmpty": "Записывайте оценки, любимые моменты и свои мысли.",
+  "journalPagesEmpty": "Сохраняйте отрывки и пишите своими словами.",
+  "journalHighlightsHint": "Вернитесь к выделениям и добавьте отрывок в дневник.",
+  "journalExport": "Экспортировать дневник",
+  "journalExportEmpty": "Перед экспортом дневника добавьте отзыв или страницу.",
+  "journalExportFailed": "Не удалось экспортировать дневник. Попробуйте ещё раз.",
+  "journalExportSaved": "Дневник экспортирован.",
+  "journalNoReview": "Пока нет отзыва",
+  "journalReadBook": "Читать книгу",
+  "journalDeletePage": "Удалить страницу",
+  "journalDeletePageConfirm": "Удалить эту страницу и сохранённый отрывок? Это действие нельзя отменить.",
+  "journalPassageOpenFailed": "Не удалось открыть отрывок. Попробуйте ещё раз.",
+  "notesExportFailed": "Не удалось экспортировать заметки. Попробуйте ещё раз.",
+  "journalReturnToReading": "Вернуться к чтению"
 }

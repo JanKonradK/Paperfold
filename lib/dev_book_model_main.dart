@@ -11,7 +11,7 @@
 // per-frame repaint of about forty painted faces, so it is worth measuring on
 // a real mid-range phone before believing it.
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:paperfold/page/dev/book_model_demo.dart';
 
 void main() {

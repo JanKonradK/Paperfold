@@ -13,7 +13,7 @@
 //
 //   flutter test test/widgets/unbounded_message_test.dart
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:paperfold/config/paperfold_tokens.dart';
 import 'package:paperfold/l10n/generated/L10n.dart';
@@ -25,7 +25,7 @@ import 'package:paperfold/widgets/tips/statistic_tips.dart';
 Widget _host(Widget child) {
   return MaterialApp(
     locale: const Locale('en'),
-    localizationsDelegates: L10n.localizationsDelegates,
+    localizationsDelegates: [L10n.delegate, ...GlobalMaterialLocalizations.delegates],
     supportedLocales: L10n.supportedLocales,
     theme: ThemeData(
       useMaterial3: true,

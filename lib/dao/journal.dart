@@ -1,5 +1,6 @@
 import 'package:paperfold/dao/base_dao.dart';
 import 'package:paperfold/models/book_review.dart';
+import 'package:paperfold/models/book_note.dart';
 import 'package:paperfold/models/journal_page.dart';
 
 /// The journal: one review sheet per book, and any number of dot pages.
@@ -80,6 +81,8 @@ class JournalDao extends BaseDao {
       SELECT book_id, MAX(update_time) AS last_touched FROM (
         SELECT book_id, update_time FROM $pageTable
           WHERE TRIM(COALESCE(body, '')) <> ''
+             OR TRIM(COALESCE(source_cfi, '')) <> ''
+             OR TRIM(COALESCE(source_excerpt, '')) <> ''
         UNION ALL
         SELECT book_id, update_time FROM $reviewTable
       )
@@ -104,6 +107,47 @@ class JournalDao extends BaseDao {
     });
   }
 
+  /// Copies a saved passage without depending on the highlight's lifetime.
+  Future<int> addPageFromNote(BookNote note) {
+    if (note.id == null ||
+        note.content.trim().isEmpty ||
+        note.cfi.trim().isEmpty) {
+      throw ArgumentError('A saved passage with a source location is required');
+    }
+    // Snapshot mutable note fields before the database yields.
+    final page = JournalPage(
+      bookId: note.bookId,
+      pageIndex: 0,
+      body: note.readerNote ?? '',
+      sourceCfi: note.cfi,
+      sourceExcerpt: note.content,
+      sourceChapter: note.chapter,
+    );
+    return transaction((txn) async {
+      final existing = await txn.query(
+        pageTable,
+        columns: ['id'],
+        where: 'book_id = ? AND source_cfi = ?',
+        whereArgs: [page.bookId, page.sourceCfi],
+        limit: 1,
+      );
+      if (existing.isNotEmpty) return existing.single['id'] as int;
+      final rows = await txn.rawQuery(
+        'SELECT COALESCE(MAX(page_index), -1) + 1 AS next_index '
+        'FROM $pageTable WHERE book_id = ?',
+        [page.bookId],
+      );
+      final values =
+          page.copyWith(pageIndex: rows.single['next_index'] as int).toDb();
+      final now = _now;
+      return txn.insert(pageTable, {
+        ...values,
+        'create_time': now,
+        'update_time': now,
+      });
+    });
+  }
+
   /// Writes [page] and returns its row id, or null when it was removed.
   ///
   /// A page emptied of text is deleted, for the same reason an empty review is.
@@ -121,6 +165,9 @@ class JournalDao extends BaseDao {
     await update(pageTable, values, where: 'id = ?', whereArgs: [page.id]);
     return page.id;
   }
+
+  Future<int> deletePage(int pageId) =>
+      delete(pageTable, where: 'id = ?', whereArgs: [pageId]);
 
   /// Removes everything a book's journal holds. Called when a book is deleted,
   /// because the schema declares foreign keys that SQLite does not enforce.

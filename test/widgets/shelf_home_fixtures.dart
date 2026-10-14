@@ -1,12 +1,19 @@
+import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:paperfold/enums/book_status.dart';
+import 'package:paperfold/enums/chart_mode.dart';
 import 'package:paperfold/models/book.dart';
+import 'package:paperfold/models/statistic_data_model.dart';
 import 'package:paperfold/models/wishlist_item.dart';
 import 'package:paperfold/providers/book_list.dart';
+import 'package:paperfold/providers/dashboard_tiles_provider.dart';
 import 'package:paperfold/providers/journal_home.dart';
 import 'package:paperfold/providers/month_tracker.dart';
+import 'package:paperfold/providers/notes_statistics.dart';
 import 'package:paperfold/providers/reading_challenge.dart';
 import 'package:paperfold/providers/shelf_home.dart';
+import 'package:paperfold/providers/statistic_data.dart';
+import 'package:paperfold/providers/total_reading_time.dart';
 
 /// Fakes and data shared by the shelf home tests and the navigation tests.
 ///
@@ -32,11 +39,29 @@ class FakeBookList extends BookList {
 /// The Journal destination reads the database. In a widget test it must be
 /// fed, or the screen sits on its loading spinner forever.
 class FakeJournalHome extends JournalHomeController {
+  FakeJournalHome([this.onBuild, this.onRefresh]);
+
+  final void Function()? onBuild;
+  final void Function()? onRefresh;
+
   @override
-  Future<List<JournalEntry>> build() async => const [];
+  Future<List<JournalEntry>> build() async {
+    onBuild?.call();
+    return const [];
+  }
+
+  @override
+  Future<void> refresh() async {
+    onRefresh?.call();
+    state = const AsyncData([]);
+  }
 }
 
 class FakeReadingChallenge extends ReadingChallengeController {
+  FakeReadingChallenge([this.onRefresh]);
+
+  final void Function()? onRefresh;
+
   @override
   Future<ReadingChallengeData> build() async => ReadingChallengeData(
         year: 2026,
@@ -47,9 +72,19 @@ class FakeReadingChallenge extends ReadingChallengeController {
         // calendar.
         today: DateTime(2026, 8, 13),
       );
+
+  @override
+  Future<void> refresh() async {
+    onRefresh?.call();
+    state = AsyncData(await build());
+  }
 }
 
 class FakeMonthTracker extends MonthTrackerController {
+  FakeMonthTracker([this.onRefresh]);
+
+  final void Function()? onRefresh;
+
   @override
   Future<MonthTrackerData> build() async => const MonthTrackerData(
         year: 2026,
@@ -57,6 +92,63 @@ class FakeMonthTracker extends MonthTrackerController {
         pagesByDay: {},
         today: null,
       );
+
+  @override
+  Future<void> refresh() async {
+    onRefresh?.call();
+    state = AsyncData(await build());
+  }
+}
+
+class FakeStatisticData extends StatisticData {
+  FakeStatisticData([this.onBuild, this.onRefresh]);
+
+  final void Function()? onBuild;
+  final void Function()? onRefresh;
+
+  @override
+  Future<StatisticDataModel> build() async {
+    onBuild?.call();
+    return StatisticDataModel(
+      mode: ChartMode.week,
+      isSelectingDay: false,
+      date: DateTime(2026, 8, 13),
+      readingTime: const [600, 1200, 0, 300, 900, 0, 1500],
+      xLabels: const ['M', 'T', 'W', 'T', 'F', 'S', 'S'],
+      bookReadingTime: const [],
+    );
+  }
+
+  @override
+  Future<void> refresh() async => onRefresh?.call();
+}
+
+class FakeTotalReadingTime extends TotalReadingTime {
+  @override
+  Future<int> build() async => 7200;
+}
+
+// Navigation tests do not need dashboard tiles to query the database.
+class FakeDashboardTiles extends DashboardTilesNotifier {
+  FakeDashboardTiles() {
+    state = const DashboardTilesState(
+      savedTiles: [],
+      workingTiles: [],
+      hasUnsavedChanges: false,
+      isEditing: false,
+    );
+  }
+}
+
+class FakeNotesStatistics extends NotesStatistics {
+  @override
+  Future<Map<String, int>> build() async =>
+      const {'numberOfNotes': 0, 'numberOfBooks': 0};
+}
+
+class FakeBookIdAndNotes extends BookIdAndNotes {
+  @override
+  Future<List<Map<String, dynamic>>> build() async => const [];
 }
 
 Book book(int id, String title, BookStatus status) {
@@ -105,10 +197,26 @@ const emptyData = ShelfHomeData(
 /// What [FakeShelfHomeController] serves. Set it before pumping.
 ShelfHomeData fakeData = emptyData;
 
-List<Override> newTestOverrides() => [
+List<Override> newTestOverrides({
+  void Function()? onJournalBuild,
+  void Function()? onJournalRefresh,
+  void Function()? onChallengeRefresh,
+  void Function()? onMonthRefresh,
+  void Function()? onStatisticsBuild,
+  void Function()? onStatisticsRefresh,
+}) =>
+    [
       shelfHomeProvider.overrideWith(FakeShelfHomeController.new),
       bookListProvider.overrideWith(FakeBookList.new),
-      journalHomeProvider.overrideWith(FakeJournalHome.new),
-      readingChallengeProvider.overrideWith(FakeReadingChallenge.new),
-      monthTrackerProvider.overrideWith(FakeMonthTracker.new),
+      journalHomeProvider.overrideWith(
+          () => FakeJournalHome(onJournalBuild, onJournalRefresh)),
+      readingChallengeProvider
+          .overrideWith(() => FakeReadingChallenge(onChallengeRefresh)),
+      monthTrackerProvider.overrideWith(() => FakeMonthTracker(onMonthRefresh)),
+      statisticDataProvider.overrideWith(
+          () => FakeStatisticData(onStatisticsBuild, onStatisticsRefresh)),
+      totalReadingTimeProvider.overrideWith(FakeTotalReadingTime.new),
+      dashboardTilesProvider.overrideWith((_) => FakeDashboardTiles()),
+      notesStatisticsProvider.overrideWith(FakeNotesStatistics.new),
+      bookIdAndNotesProvider.overrideWith(FakeBookIdAndNotes.new),
     ];

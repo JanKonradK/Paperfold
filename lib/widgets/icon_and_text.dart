@@ -1,5 +1,5 @@
 import 'package:paperfold/config/shared_preference_provider.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 class IconAndText extends StatelessWidget {
   final Widget icon;

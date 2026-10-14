@@ -5,7 +5,7 @@ import 'package:paperfold/providers/bookmark.dart';
 import 'package:paperfold/utils/error_handler.dart';
 import 'package:paperfold/widgets/common/container/filled_container.dart';
 import 'package:paperfold/widgets/delete_confirm.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class BookmarkWidget extends ConsumerStatefulWidget {
@@ -27,7 +27,7 @@ class _BookmarkWidgetState extends ConsumerState<BookmarkWidget> {
   Widget build(BuildContext context) {
     final bookId = widget.epubPlayerKey.currentState!.book.id;
 
-    final bookmarkList = ref.watch(BookmarkProvider(bookId));
+    final bookmarkList = ref.watch(bookmarkProvider(bookId));
     return bookmarkList.when(
       data: (bookmarks) {
         if (bookmarks.isEmpty) {
@@ -59,7 +59,7 @@ class _BookmarkWidgetState extends ConsumerState<BookmarkWidget> {
                   widget.onNavigate();
                 },
                 onDelete: (id) {
-                  ref.read(BookmarkProvider(bookId).notifier).removeBookmark(
+                  ref.read(bookmarkProvider(bookId).notifier).removeBookmark(
                         id: id,
                       );
                 },

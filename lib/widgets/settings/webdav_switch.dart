@@ -3,7 +3,7 @@ import 'package:paperfold/l10n/generated/L10n.dart';
 import 'package:paperfold/providers/sync.dart';
 import 'package:paperfold/utils/webdav/test_webdav.dart';
 import 'package:paperfold/widgets/settings/settings_tile.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 AbstractSettingsTile webdavSwitch(

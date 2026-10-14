@@ -1,31 +1,33 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:io';
-import 'dart:typed_data';
 import 'package:paperfold/utils/get_path/get_base_path.dart';
 import 'package:paperfold/utils/log/common.dart';
 
 Future<String> saveImageToLocal(String? imageFile, String name) async {
-  if (imageFile == null) {
-    return name;
+  if (imageFile == null || imageFile.isEmpty) {
+    return '';
   }
   try {
-    // image is base64 encoded
-    // data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD//gA8Q1JFQVRPUjogZ2...
-    final List<String> parts = imageFile.split(',');
-    final String base64String = parts[1];
-    final Uint8List pngBytes = base64.decode(base64String);
-    final extension = parts[0].split('/')[1].split(';')[0];
+    final data = UriData.parse(imageFile);
+    final extension = const {
+      'image/png': 'png',
+      'image/jpeg': 'jpg',
+      'image/gif': 'gif',
+      'image/webp': 'webp',
+      'image/bmp': 'bmp',
+      'image/svg+xml': 'svg',
+    }[data.mimeType.toLowerCase()];
+    if (extension == null) return '';
 
     name = '$name.$extension';
     final path = getBasePath(name);
 
     final file = File(path);
-    await file.writeAsBytes(pngBytes);
+    await file.writeAsBytes(data.contentAsBytes());
 
     return name;
   } catch (e) {
     AnxLog.severe('Error saving image\n$e');
-    return name;
+    return '';
   }
 }
