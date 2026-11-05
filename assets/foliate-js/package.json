@@ -23,7 +23,7 @@
     "babel-plugin-polyfill-corejs3": "^1.0.0",
     "core-js": "^3.50.0",
     "http-server": "^14.1.1",
-    "pdfjs-dist": "^6.4.299",
+    "pdfjs-dist": "^6.5.438",
     "prismjs": "^1.30.0",
     "webpack": "^5.111.1",
     "webpack-cli": "^7.2.3"
