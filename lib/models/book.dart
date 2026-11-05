@@ -20,6 +20,12 @@ class Book {
   DateTime createTime;
   DateTime updateTime;
 
+  /// The page count a reader enters for a paper book.
+  int? totalPages;
+
+  /// The last page a reader logged for a paper book.
+  int currentPage;
+
   // Derived from the book file for shelf presentation; never written to the DB.
   String? series;
   String? volume;
@@ -44,6 +50,8 @@ class Book {
       this.finishedOn,
       required this.createTime,
       required this.updateTime,
+      this.totalPages,
+      this.currentPage = 0,
       this.series,
       this.volume,
       this.pageCount,
@@ -63,6 +71,28 @@ class Book {
       status: BookStatus.notStarted,
       createTime: DateTime.now(),
       updateTime: DateTime.now(),
+    );
+  }
+
+  /// A paper book has no file: the reader logs pages instead of opening it.
+  bool get isPhysical => filePath.isEmpty;
+
+  /// A new paper book, not yet in the database.
+  factory Book.physical() {
+    final now = DateTime.now();
+    return Book(
+      id: -1,
+      title: '',
+      coverPath: '',
+      filePath: '',
+      lastReadPosition: '',
+      readingPercentage: 0,
+      author: '',
+      isDeleted: false,
+      rating: 0,
+      status: BookStatus.notStarted,
+      createTime: now,
+      updateTime: now,
     );
   }
 
@@ -92,6 +122,8 @@ class Book {
       'finished_on': finishedOn?.toIso8601String(),
       'create_time': createTime.toIso8601String(),
       'update_time': updateTime.toIso8601String(),
+      'total_pages': totalPages,
+      'current_page': currentPage,
     };
   }
 
@@ -132,6 +164,8 @@ class Book {
       finishedOn: finishedOn ?? this.finishedOn,
       createTime: createTime ?? this.createTime,
       updateTime: updateTime ?? this.updateTime,
+      totalPages: totalPages,
+      currentPage: currentPage,
       series: series,
       volume: volume,
       pageCount: pageCount,
@@ -162,6 +196,8 @@ class Book {
           : DateTime.parse(map['finished_on'] as String),
       createTime: DateTime.parse(map['create_time'] as String),
       updateTime: DateTime.parse(map['update_time'] as String),
+      totalPages: map['total_pages'] as int?,
+      currentPage: map['current_page'] as int? ?? 0,
     );
   }
 }

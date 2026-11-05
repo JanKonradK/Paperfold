@@ -1,0 +1,11 @@
+name: Feature request
+description: Suggest a feature for Paperfold.|为 Paperfold 建议新功能。
+labels: [enhancement]
+body:
+  - type: textarea
+    id: feature_description
+    attributes:
+      label: Feature and purpose|功能及用途
+      description: Describe the feature and the problem it solves.|描述功能及其解决的问题。
+    validations:
+      required: true

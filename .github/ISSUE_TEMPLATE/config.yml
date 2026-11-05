@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security report|安全报告
+    url: https://github.com/JanKonradK/Paperfold/security/policy
+    about: Report security problems privately.|请私下报告安全问题。

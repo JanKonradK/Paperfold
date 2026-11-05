@@ -9,9 +9,31 @@ body:
     attributes:
       label: Prerequisites|前提条件
       options:
-          required: true
         - label: I have searched for similar issues and did not find any|我已经搜索过没有相同的问题
           required: true
+  - type: input
+    id: bug_report_version
+    attributes:
+      label: Paperfold version/build|Paperfold 版本及构建号
+      placeholder: 2.1.0+210
+    validations:
+      required: true
+  - type: input
+    id: bug_report_device_os
+    attributes:
+      label: Device and OS version|设备及操作系统版本
+      placeholder: Samsung Galaxy S23 Ultra, Android 16
+  - type: dropdown
+    id: bug_report_book_source
+    attributes:
+      label: How the book was added|书籍添加方式
+      options:
+        - Imported file|导入文件
+        - Shared from another app|从其他应用分享
+        - OPDS/online source|OPDS 或在线来源
+        - Physical book with a photo cover|带照片封面的纸质书
+        - WebDAV sync|WebDAV 同步
+        - Other|其他
   - type: textarea
     id: bug_report_description
     attributes:
@@ -68,6 +90,12 @@ body:
           [e.g. Xiaomi 13]
     validations:
       required: true
+  - type: textarea
+    id: bug_report_logs
+    attributes:
+      label: Logs|日志
+      description: Remove personal data, passwords, and access tokens before you attach logs.|附加日志前，请删除个人数据、密码和访问令牌。
+      render: text
   - type: textarea
     id: bug_report_additional_context
     attributes:

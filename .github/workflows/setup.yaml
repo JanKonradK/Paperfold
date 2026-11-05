@@ -28,6 +28,9 @@ on:
         description: "Xcode version"
         value: ${{ jobs.setup.outputs.xcode_version }}
 
+permissions:
+  contents: read
+
 jobs:
   setup:
     runs-on: ubuntu-latest
@@ -49,7 +52,9 @@ jobs:
           curl -s "$BASE_NOTIFICATION_URL/Build%20Started?url=$RUN_URL&level=timeSensitive&icon=https://github.githubassets.com/assets/GitHub-Mark-ea2971cee799.png" || echo "Notification failed, continuing..."
 
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
 
       - name: Read Flutter version
         id: get_flutter_version

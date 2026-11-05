@@ -1,6 +1,5 @@
 import 'dart:io';
 
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:paperfold/dao/book.dart';
@@ -10,6 +9,7 @@ import 'package:paperfold/l10n/generated/L10n.dart';
 import 'package:paperfold/models/book.dart';
 import 'package:paperfold/providers/book_list.dart';
 import 'package:paperfold/providers/sync.dart';
+import 'package:paperfold/service/cover_image.dart';
 import 'package:paperfold/service/open_library.dart';
 import 'package:paperfold/utils/get_path/get_base_path.dart';
 import 'package:paperfold/utils/get_path/get_temp_dir.dart';
@@ -19,10 +19,16 @@ import 'package:path/path.dart' as path;
 
 /// Cover, title, author, and description in one form, with Open Library to
 /// fill them in. Nothing is written until Save, so Back can discard.
+///
+/// A [Book.physical] with id -1 is a new paper book: Save adds it to the
+/// library. A paper book also has a page count.
 class BookEditPage extends ConsumerStatefulWidget {
-  const BookEditPage({super.key, required this.book});
+  const BookEditPage({super.key, required this.book, this.initialCover});
 
   final Book book;
+
+  /// A cover image to start with, such as a photo shared from another app.
+  final File? initialCover;
 
   @override
   ConsumerState<BookEditPage> createState() => _BookEditPageState();
@@ -34,23 +40,31 @@ class _BookEditPageState extends ConsumerState<BookEditPage> {
   late final _description = TextEditingController(
     text: widget.book.description ?? '',
   );
+  late final _totalPages = TextEditingController(
+    text: widget.book.totalPages?.toString() ?? '',
+  );
 
   /// A new cover, copied into the library on Save.
-  File? _cover;
+  late File? _cover = widget.initialCover;
   bool _busy = false;
   bool _titleMissing = false;
+  bool _pagesInvalid = false;
+
+  bool get _isNew => widget.book.id == -1;
 
   bool get _dirty =>
       _cover != null ||
       _title.text != widget.book.title ||
       _author.text != widget.book.author ||
-      _description.text != (widget.book.description ?? '');
+      _description.text != (widget.book.description ?? '') ||
+      _totalPages.text != (widget.book.totalPages?.toString() ?? '');
 
   @override
   void dispose() {
     _title.dispose();
     _author.dispose();
     _description.dispose();
+    _totalPages.dispose();
     super.dispose();
   }
 
@@ -60,10 +74,14 @@ class _BookEditPageState extends ConsumerState<BookEditPage> {
         .showSnackBar(SnackBar(content: Text(message)));
   }
 
-  Future<void> _pickCover() async {
-    final result = await FilePicker.pickFile(type: FileType.image);
-    final picked = result?.path;
-    if (picked != null && mounted) setState(() => _cover = File(picked));
+  Future<void> _pickCover({bool camera = false}) async {
+    try {
+      final picked = camera ? await takeCoverPhoto() : await chooseCoverFile();
+      if (picked != null && mounted) setState(() => _cover = picked);
+    } catch (e) {
+      AnxLog.warning('Cover could not be picked: $e');
+      if (mounted) _showMessage(L10n.of(context).coverImageInvalid);
+    }
   }
 
   Future<void> _findOnline() async {
@@ -104,8 +122,15 @@ class _BookEditPageState extends ConsumerState<BookEditPage> {
   Future<void> _save() async {
     final l10n = L10n.of(context);
     final title = _title.text.trim();
-    if (title.isEmpty) {
-      setState(() => _titleMissing = true);
+    final pagesText = _totalPages.text.trim();
+    final totalPages = pagesText.isEmpty ? null : int.tryParse(pagesText);
+    final pagesInvalid =
+        pagesText.isNotEmpty && (totalPages == null || totalPages < 1);
+    if (title.isEmpty || pagesInvalid) {
+      setState(() {
+        _titleMissing = title.isEmpty;
+        _pagesInvalid = pagesInvalid;
+      });
       return;
     }
     setState(() => _busy = true);
@@ -115,23 +140,43 @@ class _BookEditPageState extends ConsumerState<BookEditPage> {
       author: book.author,
       description: book.description,
       coverPath: book.coverPath,
+      totalPages: book.totalPages,
+      currentPage: book.currentPage,
+      readingPercentage: book.readingPercentage,
     );
     try {
       final cover = _cover;
       if (cover != null) {
-        final relative =
-            'cover/paperfold-${book.id}-'
-            '${DateTime.now().millisecondsSinceEpoch}'
-            '${path.extension(cover.path).toLowerCase()}';
-        await cover.copy(getBasePath(relative));
-        book.coverPath = relative;
+        try {
+          book.coverPath = await saveCoverImage(
+            cover,
+            'paperfold-${_isNew ? 'paper' : book.id}-'
+            '${DateTime.now().millisecondsSinceEpoch}',
+          );
+        } on CoverImageException catch (e) {
+          AnxLog.warning('Cover refused: $e');
+          _showMessage(l10n.coverImageInvalid);
+          return;
+        }
       }
       final description = _description.text.trim();
       book
         ..title = title
         ..author = _author.text.trim()
         ..description = description.isEmpty ? null : description;
-      await bookDao.updateBook(book);
+      if (book.isPhysical) {
+        book.totalPages = totalPages;
+        if (totalPages != null && book.currentPage > totalPages) {
+          book.currentPage = totalPages;
+        }
+        book.readingPercentage =
+            totalPages == null ? 0 : book.currentPage / totalPages;
+      }
+      if (_isNew) {
+        book.id = await bookDao.insertBook(book);
+      } else {
+        await bookDao.updateBook(book);
+      }
       if (cover != null && previous.coverPath.isNotEmpty) {
         final old = File(getBasePath(previous.coverPath));
         if (await old.exists()) await old.delete();
@@ -145,7 +190,10 @@ class _BookEditPageState extends ConsumerState<BookEditPage> {
         ..title = previous.title
         ..author = previous.author
         ..description = previous.description
-        ..coverPath = previous.coverPath;
+        ..coverPath = previous.coverPath
+        ..totalPages = previous.totalPages
+        ..currentPage = previous.currentPage
+        ..readingPercentage = previous.readingPercentage;
       _showMessage(l10n.bookEditSaveFailed);
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -186,7 +234,9 @@ class _BookEditPageState extends ConsumerState<BookEditPage> {
       },
       child: Scaffold(
         appBar: AppBar(
-          title: Text(l10n.bookEditTitle),
+          title: Text(
+            _isNew ? l10n.physicalBookAddTitle : l10n.bookEditTitle,
+          ),
           actions: [
             TextButton(
               onPressed: _busy ? null : _save,
@@ -234,6 +284,20 @@ class _BookEditPageState extends ConsumerState<BookEditPage> {
                                 minimumSize: const Size(48, 48),
                               ),
                             ),
+                            if (canTakeCoverPhoto) ...[
+                              const SizedBox(height: 12),
+                              OutlinedButton.icon(
+                                key: const ValueKey('book-edit-take-photo'),
+                                onPressed: _busy
+                                    ? null
+                                    : () => _pickCover(camera: true),
+                                icon: const Icon(Icons.photo_camera_outlined),
+                                label: Text(l10n.coverTakePhoto),
+                                style: OutlinedButton.styleFrom(
+                                  minimumSize: const Size(48, 48),
+                                ),
+                              ),
+                            ],
                             const SizedBox(height: 12),
                             FilledButton.tonalIcon(
                               onPressed: _busy ? null : _findOnline,
@@ -271,6 +335,22 @@ class _BookEditPageState extends ConsumerState<BookEditPage> {
                     ),
                     onChanged: (_) => setState(() {}),
                   ),
+                  if (widget.book.isPhysical) ...[
+                    const SizedBox(height: 16),
+                    TextField(
+                      key: const ValueKey('book-edit-total-pages'),
+                      controller: _totalPages,
+                      keyboardType: TextInputType.number,
+                      textInputAction: TextInputAction.next,
+                      decoration: InputDecoration(
+                        labelText: l10n.physicalBookTotalPages,
+                        errorText: _pagesInvalid
+                            ? l10n.physicalBookPagesInvalid
+                            : null,
+                      ),
+                      onChanged: (_) => setState(() => _pagesInvalid = false),
+                    ),
+                  ],
                   const SizedBox(height: 16),
                   TextField(
                     controller: _description,

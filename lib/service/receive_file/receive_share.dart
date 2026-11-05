@@ -2,6 +2,8 @@ import 'dart:io';
 
 import 'package:material_ui/material_ui.dart';
 import 'package:paperfold/main.dart';
+import 'package:paperfold/models/book.dart';
+import 'package:paperfold/page/book_edit_page.dart';
 import 'package:paperfold/page/opds/book_web_page.dart';
 import 'package:paperfold/service/book.dart';
 import 'package:paperfold/utils/log/common.dart';
@@ -41,8 +43,21 @@ void receiveShareIntent(WidgetRef ref) {
         files.add(sourceFile);
       }
     }
-    importBookList(files, navigatorKey.currentContext!, ref);
     handler.resetInitialSharedMedia();
+    // A photo shared from the camera or gallery is the cover of a paper book.
+    final photo = files.length == 1 && isCoverPhoto(files.single.path)
+        ? files.single
+        : null;
+    if (photo != null) {
+      navigatorKey.currentState?.push(
+        MaterialPageRoute<void>(
+          builder: (_) =>
+              BookEditPage(book: Book.physical(), initialCover: photo),
+        ),
+      );
+      return;
+    }
+    importBookList(files, navigatorKey.currentContext!, ref);
   }
 
   handler.sharedMediaStream.listen((SharedMedia media) {
@@ -56,4 +71,12 @@ void receiveShareIntent(WidgetRef ref) {
   }, onError: (err) {
     AnxLog.severe('share: Receive share intent');
   });
+}
+
+/// True for a JPG or PNG file name, which Paperfold reads as a cover photo.
+bool isCoverPhoto(String filePath) {
+  final name = filePath.toLowerCase();
+  return name.endsWith('.jpg') ||
+      name.endsWith('.jpeg') ||
+      name.endsWith('.png');
 }

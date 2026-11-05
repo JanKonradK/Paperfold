@@ -29,9 +29,7 @@ class Server {
       await stop();
     }
 
-    var handler = const shelf.Pipeline()
-        .addMiddleware(shelf.logRequests())
-        .addHandler(handleRequest);
+    final handler = guardedHandler;
 
     int port = Prefs().lastServerPort;
 
@@ -53,6 +51,34 @@ class Server {
 
   int get port {
     return _server!.port;
+  }
+
+  /// The server as the network sees it: [handleRequest] behind [localOnly].
+  @visibleForTesting
+  shelf.Handler get guardedHandler => const shelf.Pipeline()
+      .addMiddleware(shelf.logRequests())
+      .addMiddleware(localOnly)
+      .addHandler(handleRequest);
+
+  /// Only the reader's own pages may use the server.
+  ///
+  /// The routes answered every origin with `Access-Control-Allow-Origin: *`,
+  /// so any web page open in a browser on the device could read the books
+  /// and fonts at 127.0.0.1. A Host header that is not the loopback address
+  /// is refused, which stops a DNS name that points to 127.0.0.1 from
+  /// becoming same-origin. Every answer then allows only the reader's origin.
+  static shelf.Handler localOnly(shelf.Handler inner) {
+    return (request) async {
+      final host = request.headers['host'] ?? '';
+      final name = host.split(':').first.toLowerCase();
+      if (name != '127.0.0.1' && name != 'localhost') {
+        return shelf.Response.forbidden('Forbidden');
+      }
+      final response = await inner(request);
+      return response.change(
+        headers: {'Access-Control-Allow-Origin': 'http://$host'},
+      );
+    };
   }
 
   Future stop() async {

@@ -15,6 +15,9 @@ on:
       NOTIFICATION_URL:
         required: true
 
+permissions:
+  contents: read
+
 jobs:
   build-windows:
     runs-on: windows-latest
@@ -25,10 +28,12 @@ jobs:
     
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
 
       - name: Set up Flutter
-        uses: subosito/flutter-action@v2
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
         with:
           channel: stable
           flutter-version: ${{ inputs.flutter_version }}
@@ -55,7 +60,7 @@ jobs:
         run: ./scripts/build_windows.ps1
 
       - name: Upload unsigned Windows zip
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         id: upload-unsigned-zip
         with:
           name: windows-unsigned-zip
@@ -70,7 +75,7 @@ jobs:
 
       - name: Sign Windows zip
         if: ${{ env.IS_ALPHA != 'true' }}
-        uses: signpath/github-action-submit-signing-request@v1.1
+        uses: signpath/github-action-submit-signing-request@ced31329c0317e779dad2eec2a7c3bb46ea1343e # v1.3.0 (tag: v1.3)
         with:
           api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
           organization-id: '254a26d6-6c3a-4a55-9ca6-890d0d34deb1'
@@ -91,7 +96,7 @@ jobs:
         run: ./scripts/build_windows_exe.ps1
 
       - name: Upload unsigned Windows exe
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         id: upload-unsigned-exe
         with:
           name: windows-unsigned-exe
@@ -106,7 +111,7 @@ jobs:
 
       - name: Sign Windows exe
         if: ${{ env.IS_ALPHA != 'true' }}
-        uses: signpath/github-action-submit-signing-request@v1.1
+        uses: signpath/github-action-submit-signing-request@ced31329c0317e779dad2eec2a7c3bb46ea1343e # v1.3.0 (tag: v1.3)
         with:
           api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
           organization-id: 254a26d6-6c3a-4a55-9ca6-890d0d34deb1
@@ -130,7 +135,7 @@ jobs:
         shell: bash
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: windows-artifacts
           path: |

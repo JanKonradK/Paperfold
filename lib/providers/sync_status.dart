@@ -115,8 +115,11 @@ class SyncStatus extends _$SyncStatus {
     return localFilesIds;
   }
 
+  /// Books with a file. A paper book has nothing to upload or download.
   Future<List<Book>> _listAllBooksInBookShelf() async {
-    return await bookDao.selectNotDeleteBooks();
+    return (await bookDao.selectNotDeleteBooks())
+        .where((book) => !book.isPhysical)
+        .toList();
   }
 
   Future<int?> pathToBookId(String filePath) async {

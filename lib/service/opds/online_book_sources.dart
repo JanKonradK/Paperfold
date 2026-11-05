@@ -1,12 +1,19 @@
 import 'package:paperfold/models/opds_catalog.dart';
 
-/// Verified against each publisher's own site on 2026-10-06.
+/// Verified against each publisher's own site on 2026-10-06. Wikisource and
+/// Internet Archive were added on 2026-11-05: they are the free libraries that
+/// finder apps such as PageDrop search.
 /// These suggestions are not saved rows, so they never replace user catalogs.
 enum OnlineBookSource {
   gutenberg('Project Gutenberg', 'https://www.gutenberg.org/ebooks.opds/', -1),
   ebooksGratuits('Ebooks libres et gratuits',
       'https://www.ebooksgratuits.com/opds/index.php', -2),
+  // WS Export publishes an OPDS feed of English Wikisource books that are
+  // ready for export, each with an EPUB acquisition link.
+  wikisource('Wikisource',
+      'https://ws-export.wmcloud.org/opds/en/Ready_for_export.xml', -3),
   standardEbooks('Standard Ebooks', 'https://standardebooks.org/ebooks'),
+  internetArchive('Internet Archive', 'https://archive.org/details/texts'),
   globalGrey('Global Grey', 'https://www.globalgreyebooks.com/'),
   openLibrary('Open Library', 'https://openlibrary.org/'),
   libby('Libby', 'https://www.overdrive.com/apps/libby');

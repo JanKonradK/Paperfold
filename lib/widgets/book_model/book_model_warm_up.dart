@@ -88,7 +88,7 @@ abstract final class BookModelWarmUp {
   static void warmArt(Iterable<String> coverPaths, {bool mirror = false}) {
     for (final path in coverPaths) {
       if (path.isEmpty) continue;
-      if (BookArtCache.peek(path) != null) continue;
+      if (BookArtCache.peek(path, mirror: mirror) != null) continue;
       BookArtCache.load(path, mirror: mirror);
     }
   }

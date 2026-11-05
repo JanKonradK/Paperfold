@@ -104,7 +104,7 @@ class BookItem extends ConsumerWidget {
                         ),
                       ),
                     ),
-                    if (Prefs().webdavStatus)
+                    if (Prefs().webdavStatus && !book.isPhysical)
                       SizedBox(
                         height: 20,
                         width: 20,

@@ -21,6 +21,7 @@ import 'package:paperfold/dao/wishlist.dart';
 import 'package:paperfold/models/book.dart';
 import 'package:paperfold/models/wishlist_item.dart';
 import 'package:paperfold/page/book_detail.dart';
+import 'package:paperfold/page/book_edit_page.dart';
 import 'package:paperfold/page/journal/book_journal_page.dart';
 import 'package:paperfold/page/opds/book_web_page.dart';
 import 'package:paperfold/page/opds/opds_catalogs_page.dart';
@@ -39,6 +40,7 @@ import 'package:paperfold/widgets/bookshelf/bookcase.dart';
 import 'package:paperfold/widgets/bookshelf/continue_reading_banner.dart';
 import 'package:paperfold/widgets/bookshelf/shelf_controls/shelf_book_actions.dart';
 import 'package:paperfold/widgets/bookshelf/shelf_controls/shelf_controls.dart';
+import 'package:paperfold/widgets/bookshelf/shelf_controls/shelf_view_switch.dart';
 import 'package:paperfold/widgets/bookshelf/shelf_stage.dart';
 import 'package:paperfold/widgets/bookshelf/sync_button.dart';
 import 'package:paperfold/widgets/ornament.dart';
@@ -48,7 +50,7 @@ import 'package:path/path.dart' as path;
 
 enum _ShelfHomeAction { search, addBooks, addBookToBuy }
 
-enum _AddBooksRoute { device, catalogs, link }
+enum _AddBooksRoute { device, physical, catalogs, link }
 
 class ShelfHomeBookActions {
   const ShelfHomeBookActions({
@@ -221,6 +223,14 @@ class _ShelfHomePageState extends ConsumerState<ShelfHomePage>
                 onTap: () => Navigator.pop(context, _AddBooksRoute.device),
               ),
               ListTile(
+                key: const ValueKey('add-physical-book'),
+                minTileHeight: 56,
+                leading: const Icon(Icons.menu_book_outlined),
+                title: Text(l10n.physicalBookAdd),
+                subtitle: Text(l10n.physicalBookAddHint),
+                onTap: () => Navigator.pop(context, _AddBooksRoute.physical),
+              ),
+              ListTile(
                 minTileHeight: 56,
                 leading: const Icon(Icons.cloud_download_outlined),
                 title: Text(l10n.opdsFindBooksOnline),
@@ -243,6 +253,15 @@ class _ShelfHomePageState extends ConsumerState<ShelfHomePage>
     switch (route) {
       case _AddBooksRoute.device:
         await _importBooks(context);
+      case _AddBooksRoute.physical:
+        final added = await Navigator.of(context).push<bool>(
+          MaterialPageRoute(
+            builder: (context) => BookEditPage(book: Book.physical()),
+          ),
+        );
+        if (added == true && mounted) {
+          await ref.read(shelfHomeProvider.notifier).refresh();
+        }
       case _AddBooksRoute.catalogs:
         // The catalogs page carries its own scaffold, app bar and action
         // button, so it is pushed whole rather than wrapped in another one.
@@ -598,30 +617,12 @@ class _ShelfHomePageState extends ConsumerState<ShelfHomePage>
                                                   .headlineSmall,
                                       ),
                                     ),
-                                    PopupMenuButton<bool>(
-                                      key: const ValueKey('shelf-view-control'),
-                                      tooltip: l10n.shelfBookView,
-                                      enabled: !_holding,
-                                      initialValue: Prefs().shelfCoverView,
-                                      icon: Icon(
-                                        Prefs().shelfCoverView
-                                            ? Icons.grid_view_rounded
-                                            : Icons.view_week_outlined,
-                                      ),
-                                      onSelected: (value) =>
-                                          Prefs().shelfCoverView = value,
-                                      itemBuilder: (context) => [
-                                        CheckedPopupMenuItem(
-                                          value: false,
-                                          checked: !Prefs().shelfCoverView,
-                                          child: Text(l10n.shelfViewSpines),
-                                        ),
-                                        CheckedPopupMenuItem(
-                                          value: true,
-                                          checked: Prefs().shelfCoverView,
-                                          child: Text(l10n.shelfViewCoverGrid),
-                                        ),
-                                      ],
+                                    ShelfViewSwitch(
+                                      showCovers: Prefs().shelfCoverView,
+                                      onChanged: _holding
+                                          ? null
+                                          : (value) =>
+                                                Prefs().shelfCoverView = value,
                                     ),
                                     IconButton(
                                       key: const ValueKey('shelf-sort-control'),
@@ -913,9 +914,10 @@ ShelfBook shelfBookFromBook(Book book) => ShelfBook(
   coverPath: book.coverPath.isEmpty ? null : book.coverFullPath,
   progress: normaliseShelfProgress(book.readingPercentage),
   finished: book.status == BookStatus.finished,
+  isPhysical: book.isPhysical,
   series: book.series,
   volume: book.volume,
-  pageCount: book.pageCount,
+  pageCount: book.totalPages ?? book.pageCount,
 );
 
 ShelfBook shelfBookFromWishlist(WishlistItem item) => ShelfBook(

@@ -389,13 +389,11 @@ void main() {
       expect(visibleIds, ['book-8', 'book-6']);
 
       Future<void> selectView(String label) async {
-        final control = find.byKey(const ValueKey('shelf-view-control'));
+        final control = find.byKey(
+          ValueKey(label == 'Covers' ? 'shelf-view-covers' : 'shelf-view-spines'),
+        );
         await tester.ensureVisible(control);
         await tester.tap(control);
-        await tester.pumpAndSettle();
-        await tester.tap(
-          find.widgetWithText(CheckedPopupMenuItem<bool>, label),
-        );
         await tester.pumpAndSettle();
       }
 

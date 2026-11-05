@@ -15,7 +15,7 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 export 'package:paperfold/enums/book_status.dart';
 
 // Current app database version
-const int currentDbVersion = 10;
+const int currentDbVersion = 11;
 
 const createBookSQL = '''
 CREATE TABLE tb_books (
@@ -719,6 +719,21 @@ class DBHelper {
         if (!names.contains(name)) {
           await db.execute('ALTER TABLE tb_journal ADD COLUMN $name TEXT');
         }
+      }
+    }
+
+    if (oldVersion < 11 && newVersion >= 11) {
+      // Paper books. A book with an empty file_path has no file; the reader
+      // logs its pages. Existing books keep NULL and 0, so nothing changes.
+      final columns = await db.rawQuery('PRAGMA table_info(tb_books)');
+      final names = columns.map((column) => column['name']).toSet();
+      if (!names.contains('total_pages')) {
+        await db.execute('ALTER TABLE tb_books ADD COLUMN total_pages INTEGER');
+      }
+      if (!names.contains('current_page')) {
+        await db.execute(
+          'ALTER TABLE tb_books ADD COLUMN current_page INTEGER DEFAULT 0',
+        );
       }
     }
 

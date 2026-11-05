@@ -9,7 +9,9 @@ import 'package:paperfold/utils/platform_utils.dart';
 import 'package:paperfold/utils/toast/common.dart';
 import 'package:paperfold/widgets/common/container/filled_container.dart';
 import 'package:paperfold/widgets/markdown/styled_markdown.dart';
+import 'package:crypto/crypto.dart';
 import 'package:dio/dio.dart';
+import 'dart:io';
 import 'package:flutter/services.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
@@ -21,9 +23,55 @@ final _releasePage = Uri.parse(
 );
 const _installChannel = MethodChannel('com.paperfold.app/install_info');
 
+/// The release package Paperfold may install: a universal APK attached to a
+/// Paperfold release on GitHub, with the SHA-256 digest GitHub publishes.
+@visibleForTesting
+({String url, String sha256})? releaseApk(List<dynamic> assets) {
+  for (final asset in assets) {
+    if (asset is! Map) continue;
+    final url = Uri.tryParse('${asset['browser_download_url']}');
+    final digest = '${asset['digest']}';
+    if (url == null ||
+        url.scheme != 'https' ||
+        url.host != 'github.com' ||
+        !url.path.startsWith('/JanKonradK/Paperfold/releases/download/') ||
+        !url.path.endsWith('-universal.apk') ||
+        !RegExp(r'^sha256:[0-9a-f]{64}$').hasMatch(digest)) {
+      continue;
+    }
+    return (url: url.toString(), sha256: digest.substring(7));
+  }
+  return null;
+}
+
+/// A version such as "2.1.0" or "0.1.0-beta.2" as four numbers to compare.
+///
+/// The fourth number is the pre-release number. A release has none, so it
+/// gets a large value and sorts after every beta of the same version.
+@visibleForTesting
+List<int> versionParts(String version) {
+  final core = version.split('+').first;
+  final dash = core.indexOf('-');
+  final numbers = (dash < 0 ? core : core.substring(0, dash))
+      .split('.')
+      .map((part) => int.tryParse(part) ?? 0)
+      .toList();
+  while (numbers.length < 3) {
+    numbers.add(0);
+  }
+  final pre = dash < 0
+      ? null
+      : RegExp(r'(\d+)$').firstMatch(core.substring(dash + 1))?.group(1);
+  return [...numbers.take(3), dash < 0 ? 1 << 30 : int.tryParse(pre ?? '') ?? 0];
+}
+
 /// Downloads the release package and gives it to the system installer, which
 /// asks the reader to confirm. An update replaces the app and keeps the books.
-Future<void> _installUpdate(String url) async {
+///
+/// The download must match the digest GitHub lists for the file. Android also
+/// refuses an update signed with a different key.
+Future<void> _installUpdate(({String url, String sha256}) release) async {
+  final url = release.url;
   final progress = ValueNotifier<double?>(null);
   SmartDialog.show(
     tag: 'update',
@@ -50,6 +98,11 @@ Future<void> _installUpdate(String url) async {
         if (total > 0) progress.value = received / total;
       },
     );
+    final actual = sha256.convert(await File(apk).readAsBytes()).toString();
+    if (actual != release.sha256) {
+      await File(apk).delete();
+      throw StateError('Update digest mismatch');
+    }
     await _installChannel.invokeMethod('installUpdate', apk);
   } catch (e) {
     AnxLog.severe('Update: could not download or install $e');
@@ -111,15 +164,15 @@ Future<void> checkUpdate(bool manualCheck) async {
   String currentVersion = (await getAppVersion()).split('+').first;
   AnxLog.info('Update: new version $newVersion');
 
-  List<String> newVersionList = newVersion.split('.');
-  List<String> currentVersionList = currentVersion.split('.');
+  final newVersionList = versionParts(newVersion);
+  final currentVersionList = versionParts(currentVersion);
   AnxLog.info(
     'Current version: $currentVersionList, New version: $newVersionList',
   );
   bool needUpdate = false;
   for (int i = 0; i < newVersionList.length; i++) {
-    int newVer = int.parse(newVersionList[i]);
-    int curVer = int.parse(currentVersionList[i]);
+    int newVer = newVersionList[i];
+    int curVer = i < currentVersionList.length ? currentVersionList[i] : 0;
     if (newVer > curVer) {
       needUpdate = true;
       break;
@@ -135,10 +188,7 @@ Future<void> checkUpdate(bool manualCheck) async {
     // package keeps the plain version code: a split package adds 1000 or
     // more, so after it a universal or local build is a downgrade.
     final apk = AnxPlatform.isAndroid
-        ? (response.data['assets'] as List? ?? [])
-              .map((asset) => asset['browser_download_url'].toString())
-              .where((url) => url.endsWith('-universal.apk'))
-              .firstOrNull
+        ? releaseApk(response.data['assets'] as List? ?? const [])
         : null;
     if (manualCheck) {
       Navigator.of(context).pop();

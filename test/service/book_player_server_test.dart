@@ -110,4 +110,28 @@ void main() {
       );
     },
   );
+
+  test('only the loopback host may read, and only from its own origin',
+      () async {
+    final book = await File('${getFileDir().path}/Guarded.epub')
+        .writeAsString('book');
+    final url = '/book/${Uri.encodeComponent(book.path)}';
+    Future<Response> from(String host) async => Server().guardedHandler(
+      Request(
+        'GET',
+        Uri.parse('http://127.0.0.1:4100$url'),
+        headers: {'host': host},
+      ),
+    );
+
+    final own = await from('127.0.0.1:4100');
+    expect(own.statusCode, 200);
+    expect(
+      own.headers['access-control-allow-origin'],
+      'http://127.0.0.1:4100',
+    );
+    // A rebinding name resolves to 127.0.0.1 but keeps its own Host header.
+    expect((await from('attacker.example:4100')).statusCode, 403);
+    expect((await from('')).statusCode, 403);
+  });
 }

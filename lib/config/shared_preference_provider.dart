@@ -67,6 +67,48 @@ class Prefs extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Settings that hold a password or an API key in a JSON object.
+  static bool _holdsSecrets(String key) =>
+      key == 'webdavInfo' || key.startsWith('translateServiceConfig_');
+
+  static final _secretField = RegExp(
+    r'pass|secret|token|key',
+    caseSensitive: false,
+  );
+
+  /// [json] without its secret fields. A backup file is easy to share, so a
+  /// password or an API key stays on this device.
+  @visibleForTesting
+  static String withoutSecrets(String json) {
+    try {
+      final decoded = jsonDecode(json);
+      if (decoded is! Map) return '{}';
+      decoded.removeWhere((field, _) => _secretField.hasMatch('$field'));
+      return jsonEncode(decoded);
+    } catch (_) {
+      return '{}';
+    }
+  }
+
+  /// [incoming] with the secret fields of [current] that it does not carry.
+  /// Restoring a backup does not sign the reader out.
+  @visibleForTesting
+  static String keepSecrets(String incoming, String? current) {
+    try {
+      final restored = jsonDecode(incoming);
+      final local = current == null ? null : jsonDecode(current);
+      if (restored is! Map || local is! Map) return incoming;
+      for (final entry in local.entries) {
+        if (_secretField.hasMatch('${entry.key}')) {
+          restored.putIfAbsent(entry.key, () => entry.value);
+        }
+      }
+      return jsonEncode(restored);
+    } catch (_) {
+      return incoming;
+    }
+  }
+
   Future<Map<String, dynamic>> buildPrefsBackupMap() async {
     Map<String, Object?>? encodePrefsBackupEntry(Object? value) {
       if (value is bool) {
@@ -115,7 +157,8 @@ class Prefs extends ChangeNotifier {
     };
     for (final String key in prefs.getKeys()) {
       if (key == 'customStoragePath' || key == 'pendingStoragePath') continue;
-      final Object? value = prefs.get(key);
+      Object? value = prefs.get(key);
+      if (value is String && _holdsSecrets(key)) value = withoutSecrets(value);
       final Map<String, Object?>? encoded = encodePrefsBackupEntry(value);
       if (encoded != null) {
         backup[key] = encoded;
@@ -148,7 +191,14 @@ class Prefs extends ChangeNotifier {
           if (value is num) await prefs.setDouble(key, value.toDouble());
           break;
         case 'string':
-          if (value is String) await prefs.setString(key, value);
+          if (value is String) {
+            await prefs.setString(
+              key,
+              _holdsSecrets(key)
+                  ? keepSecrets(value, prefs.getString(key))
+                  : value,
+            );
+          }
           break;
         case 'stringList':
           if (value is List && value.every((element) => element is String)) {
@@ -925,6 +975,23 @@ class Prefs extends ChangeNotifier {
   }
 
   bool get shelfCoverView => prefs.get('shelfCoverView') == true;
+
+  bool get readingReminderEnabled =>
+      prefs.getBool('readingReminderEnabled') ?? false;
+
+  set readingReminderEnabled(bool value) {
+    prefs.setBool('readingReminderEnabled', value);
+    notifyListeners();
+  }
+
+  /// Local time of the daily reminder, in minutes after midnight.
+  int get readingReminderMinutes =>
+      prefs.getInt('readingReminderMinutes') ?? 20 * 60;
+
+  set readingReminderMinutes(int value) {
+    prefs.setInt('readingReminderMinutes', value);
+    notifyListeners();
+  }
 
   set bookshelfFolderStyle(BookshelfFolderStyle style) {
     prefs.setString('bookshelfFolderStyle', style.code);

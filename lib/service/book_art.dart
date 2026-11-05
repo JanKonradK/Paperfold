@@ -66,14 +66,22 @@ class BookArt {
 ///
 /// It used to share the work with a `SpineArtCache` that decoded at 48x72 for
 /// a shelf of small flat spines. The shelf draws solid books now, so there is
-/// one cache and it decodes at up to 512 px: a book on the shelf and a book in
-/// the hand are the same object, and the one in the hand needs the pixels.
+/// one cache: a book on the shelf and a book in the hand are the same object,
+/// and the one in the hand needs the pixels.
+///
+/// The book in the hand is about 190 dp wide. At 3x to 3.5x that needs about
+/// 1000 px on the long edge, so 512 px looked soft. The cache keeps the most
+/// recent [maxEntries] covers; each one is about 6 MB at 1024 px.
 abstract final class BookArtCache {
+  // A LinkedHashMap keeps insertion order, which serves as recency here.
   static final Map<String, BookArt> _ready = {};
   static final Map<String, Future<BookArt?>> _inFlight = {};
 
   /// The long edge of the decode, in pixels.
-  static const int decodeLongEdge = 512;
+  static const int decodeLongEdge = 1024;
+
+  /// Covers kept decoded. An evicted cover decodes again when it is shown.
+  static const int maxEntries = 24;
 
   /// The share reserved for a front-only cover's spine source rectangle.
   static const double stripFraction = 0.22;
@@ -89,17 +97,35 @@ abstract final class BookArtCache {
   static const double assumedBoardTrim = 0.66;
 
   /// The art for [coverPath], if it has already been decoded.
-  static BookArt? peek(String coverPath) => _ready[coverPath];
+  static BookArt? peek(String coverPath, {bool mirror = false}) =>
+      _touch(_key(coverPath, mirror));
 
   static Future<BookArt?> load(String coverPath, {bool mirror = false}) {
     final key = _key(coverPath, mirror);
-    final ready = _ready[key];
+    final ready = _touch(key);
     if (ready != null) return Future.value(ready);
     return _inFlight.putIfAbsent(key, () => _decode(coverPath, mirror));
   }
 
   static String _key(String coverPath, bool mirror) =>
       mirror ? '$coverPath#rtl' : coverPath;
+
+  /// Marks [key] as the most recent entry and returns it.
+  static BookArt? _touch(String key) {
+    final art = _ready.remove(key);
+    if (art != null) _ready[key] = art;
+    return art;
+  }
+
+  // ponytail: images are released by dropping the reference, not disposed, so
+  // a model that still paints an evicted image keeps working.
+  static void _store(String key, BookArt art) {
+    _ready.remove(key);
+    _ready[key] = art;
+    while (_ready.length > maxEntries) {
+      _ready.remove(_ready.keys.first);
+    }
+  }
 
   @visibleForTesting
   static void clear() {
@@ -211,7 +237,7 @@ abstract final class BookArtCache {
       descriptor.dispose();
 
       final art = await describe(frame.image, mirror: mirror);
-      _ready[_key(coverPath, mirror)] = art;
+      _store(_key(coverPath, mirror), art);
       return art;
     } catch (error) {
       AnxLog.warning('The book model could not read its cover art: $error');

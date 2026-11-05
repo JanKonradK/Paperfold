@@ -1,0 +1,10 @@
+name: Other issues
+description: Report other Paperfold issues.|报告其他 Paperfold 问题。
+body:
+  - type: textarea
+    id: issue_description
+    attributes:
+      label: Describe the issue|描述问题
+      description: Give the details of the Paperfold issue.|提供 Paperfold 问题的详细信息。
+    validations:
+      required: true

@@ -1,0 +1,7 @@
+name: Paperfold source
+paths:
+  - assets/foliate-js/src
+  - .github/workflows
+paths-ignore:
+  - '**/vendor/**'
+  - '**/node_modules/**'

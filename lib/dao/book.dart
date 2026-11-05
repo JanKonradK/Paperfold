@@ -97,7 +97,11 @@ class BookDao extends BaseDao {
 
   Future<List<String>> getCurrentBooks() async {
     final books = await selectNotDeleteBooks();
-    return books.map((book) => book.filePath).toList(growable: false);
+    // A paper book has no file to sync.
+    return books
+        .where((book) => !book.isPhysical)
+        .map((book) => book.filePath)
+        .toList(growable: false);
   }
 
   Future<List<String>> getCurrentCover() async {
@@ -188,7 +192,9 @@ class BookDao extends BaseDao {
     return queryList(
       table,
       mapper: Book.fromDb,
-      where: "is_deleted = 0 AND (file_md5 IS NULL OR file_md5 = '')",
+      where:
+          "is_deleted = 0 AND file_path != '' "
+          "AND (file_md5 IS NULL OR file_md5 = '')",
       orderBy: 'update_time DESC',
     );
   }

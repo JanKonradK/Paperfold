@@ -1,0 +1,36 @@
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+  - package-ecosystem: pub
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      minor-and-patch:
+        update-types: [minor, patch]
+    # Keep the compatibility constraints in docs/paperfold-2.1.md.
+    ignore:
+      - dependency-name: permission_handler
+        update-types: [version-update:semver-major]
+      - dependency-name: permission_handler_android
+        update-types: [version-update:semver-major]
+      - dependency-name: flutter_secure_storage
+        update-types: [version-update:semver-major]
+      - dependency-name: xml
+        update-types: [version-update:semver-major]
+      - dependency-name: connectivity_plus
+        update-types: [version-update:semver-major]
+      - dependency-name: wakelock_plus
+        update-types: [version-update:semver-major]
+      - dependency-name: screen_retriever
+        update-types: [version-update:semver-major]
+  - package-ecosystem: npm
+    directory: /assets/foliate-js
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5

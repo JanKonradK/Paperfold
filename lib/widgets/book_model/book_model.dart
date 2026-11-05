@@ -588,7 +588,7 @@ class _BookModelState extends State<BookModel> with TickerProviderStateMixin {
     _artPath = path;
     _artMirror = mirror;
 
-    final ready = BookArtCache.peek(path);
+    final ready = BookArtCache.peek(path, mirror: mirror);
     if (ready != null) {
       _art = ready;
       return;

@@ -23,6 +23,7 @@ class ShelfBook {
     this.progress = 0,
     this.finished = false,
     this.isWishlist = false,
+    this.isPhysical = false,
     this.series,
     this.volume,
     this.pageCount,
@@ -37,6 +38,9 @@ class ShelfBook {
   final double progress;
   final bool finished;
   final bool isWishlist;
+
+  /// A paper book: opening it logs a page instead of starting the reader.
+  final bool isPhysical;
   final String? series;
   final String? volume;
   final int? pageCount;
@@ -647,6 +651,8 @@ class ShelfStageState extends State<ShelfStage> {
         ? l10n?.shelfBooksToBuy ?? widget.shelfName ?? 'Books to buy'
         : l10n == null
         ? widget.openHint ?? 'Open book'
+        : book.isPhysical
+        ? l10n.physicalBookLogProgress
         : book.openAt > 0 && !book.finished
         ? l10n.tileContinueReadingTitle
         : l10n.journalReadBook;

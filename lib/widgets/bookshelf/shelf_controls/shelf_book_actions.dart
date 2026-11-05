@@ -1,6 +1,4 @@
-import 'dart:io';
 
-import 'package:file_picker/file_picker.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:paperfold/config/shared_preference_provider.dart';
 import 'package:paperfold/dao/book.dart';
@@ -10,8 +8,8 @@ import 'package:paperfold/enums/book_binding.dart';
 import 'package:paperfold/l10n/generated/L10n.dart';
 import 'package:paperfold/models/book.dart';
 import 'package:paperfold/page/book_edit_page.dart';
-import 'package:paperfold/utils/get_path/get_base_path.dart';
-import 'package:path/path.dart' as path;
+import 'package:paperfold/service/cover_image.dart';
+import 'package:paperfold/utils/log/common.dart';
 
 class ShelfBookOptionBar extends StatelessWidget {
   const ShelfBookOptionBar({
@@ -134,8 +132,13 @@ Future<void> showShelfBookShelvesSheet(
                   selected: book.status == status,
                   onTap: () async {
                     if (book.status == status) return;
+                    final now = DateTime.now();
                     book.status = status;
-                    book.updateTime = DateTime.now();
+                    // The reading challenge counts a book by its finish date.
+                    if (status != BookStatus.notStarted) book.startedOn ??= now;
+                    if (status == BookStatus.finished) book.finishedOn ??= now;
+                    if (status != BookStatus.finished) book.finishedOn = null;
+                    book.updateTime = now;
                     await bookDao.updateBook(book);
                     if (!context.mounted) return;
                     setSheetState(() {});
@@ -248,7 +251,7 @@ Future<void> showShelfBookCustomiseSheet(
               ),
               const SizedBox(height: 8),
               OutlinedButton.icon(
-                onPressed: () => _chooseCover(book, onChanged),
+                onPressed: () => _chooseCover(context, book, onChanged),
                 icon: const Icon(Icons.image_outlined),
                 label: Text(l10n.shelfBookChooseCoverArt),
                 style: OutlinedButton.styleFrom(
@@ -263,15 +266,29 @@ Future<void> showShelfBookCustomiseSheet(
   );
 }
 
-Future<void> _chooseCover(Book book, Future<void> Function() onChanged) async {
-  final result = await FilePicker.pickFile(type: FileType.image);
-  final sourcePath = result?.path;
-  if (sourcePath == null) return;
+Future<void> _chooseCover(
+  BuildContext context,
+  Book book,
+  Future<void> Function() onChanged,
+) async {
+  final source = await chooseCoverFile();
+  if (source == null) return;
 
-  final extension = path.extension(sourcePath).toLowerCase();
-  final relativePath =
-      'cover/paperfold-${book.id}-${DateTime.now().millisecondsSinceEpoch}$extension';
-  await File(sourcePath).copy(getBasePath(relativePath));
+  final String relativePath;
+  try {
+    relativePath = await saveCoverImage(
+      source,
+      'paperfold-${book.id}-${DateTime.now().millisecondsSinceEpoch}',
+    );
+  } catch (error) {
+    AnxLog.warning('Cover not saved: $error');
+    if (context.mounted) {
+      ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+        SnackBar(content: Text(L10n.of(context).coverImageInvalid)),
+      );
+    }
+    return;
+  }
   book
     ..coverPath = relativePath
     ..updateTime = DateTime.now();

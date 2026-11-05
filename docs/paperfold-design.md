@@ -258,7 +258,8 @@ Navigation stays below the content or uses a rail above 600 logical pixels.
 On narrow screens with large text, the navigation uses two rows to keep each label readable.
 
 Shelf chips stay above the books and scroll horizontally.
-The current shelf name is beside the Book view, sort, and filter controls.
+The current shelf name is beside the Book view slider, sort, and filter controls.
+The Book view slider has two positions, Spines and Covers, with a sliding thumb.
 Upright spines scroll horizontally on a straight shelf board.
 Vertical gestures change shelves in the spine view.
 

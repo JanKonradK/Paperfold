@@ -33,6 +33,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path/path.dart' as path;
 
 import 'book_player/book_player_server.dart';
+import 'package:paperfold/widgets/bookshelf/physical_progress_sheet.dart';
 
 Future<void> _metadataQueue = Future<void>.value();
 final allowBookExtensions = ["epub", "mobi", "azw3", "fb2", "txt", "pdf"];
@@ -486,6 +487,16 @@ Future<void> pushToReadingPage(
       return;
     }
     if (ref.read(currentReadingProvider).isReading) return;
+
+    // Every "Read" and "Continue" action comes here. A paper book has no
+    // file to open, so the reader logs the page instead.
+    if (book.isPhysical) {
+      final saved = await showPhysicalProgressSheet(context, book);
+      if (saved && ref.context.mounted) {
+        ref.invalidate(bookListProvider);
+      }
+      return;
+    }
 
     if (!File(book.fileFullPath).existsSync()) {
       await ref.read(syncProvider.notifier).downloadBook(book);

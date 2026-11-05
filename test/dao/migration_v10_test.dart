@@ -61,6 +61,6 @@ void main() {
     });
     final row = (await db.query('tb_journal')).single;
     expect(row['source_excerpt'], 'A passage worth keeping.');
-    expect(currentDbVersion, 10);
+    expect(currentDbVersion, greaterThanOrEqualTo(10));
   });
 }

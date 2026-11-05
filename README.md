@@ -2,6 +2,18 @@
 
 Paperfold is an e-book reader, a note application, and a reading journal.
 
+## Version 0.2.0 beta
+
+- Track paper books. Add a cover from a JPG or PNG file or from the camera.
+- Log the page you reached. Paperfold sets the progress, the start date, and the finish date.
+- Get a daily reading reminder at a time you select. The reminder is off by default.
+- Change between spines and covers with the slider in the library.
+- See sharper covers.
+- Find free books in Wikisource and Internet Archive.
+- Share books to Paperfold from book finder apps, such as PageDrop.
+
+See [the changes and checks](docs/paperfold-next.md).
+
 ## Version 2.1
 
 - Select Cream, Burgundy, Dark, or System in Appearance settings.

@@ -240,9 +240,15 @@ class _BookDetailState extends ConsumerState<BookDetail> {
             width: double.infinity,
             child: FilledButton.icon(
               onPressed: () => pushToReadingPage(ref, context, widget.book),
-              icon: const Icon(Icons.play_arrow_rounded),
+              icon: Icon(
+                widget.book.isPhysical
+                    ? Icons.edit_note_rounded
+                    : Icons.play_arrow_rounded,
+              ),
               label: Text(
-                percent > 0
+                widget.book.isPhysical
+                    ? L10n.of(context).physicalBookLogProgress
+                    : percent > 0
                     ? L10n.of(context).tileContinueReadingTitle
                     : L10n.of(context).readingPageReading,
               ),

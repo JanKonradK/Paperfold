@@ -83,7 +83,10 @@ Future<int> _insertBook(
       status: status,
       createTime: now,
       updateTime: now,
-    ).toMap(),
+    ).toMap()
+      // A v8 table has no paper book columns. Those arrive in v11.
+      ..remove('total_pages')
+      ..remove('current_page'),
   );
 }
 

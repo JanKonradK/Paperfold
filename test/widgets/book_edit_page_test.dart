@@ -87,4 +87,28 @@ void main() {
     expect(find.text('Input cannot be empty'), findsOneWidget);
     expect(book.title, 'Mock Book');
   });
+
+  testWidgets('a new paper book asks for pages and refuses a bad count', (
+    tester,
+  ) async {
+    final book = Book.physical();
+    await _openEditor(tester, book);
+
+    expect(find.text('Add a paper book'), findsOneWidget);
+    final pages = find.byKey(const ValueKey('book-edit-total-pages'));
+    expect(pages, findsOneWidget);
+
+    await tester.enterText(find.widgetWithText(TextField, 'Title'), 'Dune');
+    await tester.enterText(pages, '0');
+    await tester.tap(find.text('Save'));
+    await tester.pumpAndSettle();
+    expect(find.text('Enter a page number in the book.'), findsOneWidget);
+    expect(book.id, -1);
+    expect(book.totalPages, isNull);
+  });
+
+  testWidgets('an e-book has no page count field', (tester) async {
+    await _openEditor(tester, Book.mock()..filePath = 'file/book.epub');
+    expect(find.byKey(const ValueKey('book-edit-total-pages')), findsNothing);
+  });
 }

@@ -11,6 +11,7 @@ import 'package:paperfold/page/home_page/shelf_home_page.dart';
 import 'package:paperfold/page/settings_page/settings_home_page.dart';
 import 'package:paperfold/page/home_page/statistics_page.dart';
 import 'package:paperfold/service/receive_file/receive_share.dart';
+import 'package:paperfold/service/reading_reminder.dart';
 import 'package:paperfold/service/vibration_service.dart';
 import 'package:paperfold/utils/check_update.dart';
 import 'package:paperfold/utils/get_path/get_temp_dir.dart';
@@ -196,6 +197,7 @@ class _HomePageState extends ConsumerState<HomePage> {
     if (AnxPlatform.isAndroid || AnxPlatform.isIOS || AnxPlatform.isOhos) {
       receiveShareIntent(ref);
     }
+    unawaited(ReadingReminder.restore(L10n.of(context)));
 
     if (DBHelper.updatedDB) {
       _showDbUpdatedDialog();

@@ -681,10 +681,8 @@ class Sync extends _$Sync {
   }
 
   Future<bool> isCurrentEmpty() async {
-    List<String> currentBooks = await bookDao.getCurrentBooks();
-    List<String> currentCover = await bookDao.getCurrentCover();
-    List<String> totalCurrentFiles = [...currentCover, ...currentBooks];
-    return totalCurrentFiles.isEmpty;
+    // A paper book without a cover has no file, but it is still a book.
+    return (await bookDao.selectNotDeleteBooks()).isEmpty;
   }
 
   /// Get available database backup list

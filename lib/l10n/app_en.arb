@@ -1077,5 +1077,33 @@
   "bookEditLookupFailed": "Open Library could not be reached. Try again.",
   "bookEditSaveFailed": "Your changes could not be saved. Try again.",
   "bookEditDiscardTitle": "Discard your changes?",
-  "bookEditDiscard": "Discard"
+  "bookEditDiscard": "Discard",
+  "coverImageInvalid": "Use a JPG or PNG image of 20 MB or less.",
+  "coverTakePhoto": "Take photo",
+  "physicalBookAdd": "Paper book",
+  "physicalBookAddHint": "Track a printed book with a photo of its cover",
+  "physicalBookAddTitle": "Add a paper book",
+  "physicalBookTotalPages": "Total pages",
+  "physicalBookTotalPagesHint": "Optional. Paperfold uses it to show your progress.",
+  "physicalBookPagesInvalid": "Enter a page number in the book.",
+  "physicalBookLogProgress": "Log progress",
+  "physicalBookCurrentPage": "Current page",
+  "physicalBookOfPages": "of {count}",
+  "@physicalBookOfPages": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "reminderSection": "Reminder",
+  "reminderTitle": "Daily reading reminder",
+  "reminderDescription": "The system can deliver it a few minutes late to save battery.",
+  "reminderTime": "Reminder time",
+  "reminderNotificationTitle": "Time to read",
+  "reminderNotificationBody": "Open your book and read a few pages.",
+  "reminderPermissionDenied": "Notifications are off for Paperfold. Turn them on in the system settings.",
+  "reminderChannelName": "Reading reminders",
+  "onlineWikisourceDescription": "Public domain books from English Wikisource. Download EPUB files here.",
+  "onlineInternetArchiveDescription": "A large library of public domain and lending books. Some books need an account."
 }

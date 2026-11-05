@@ -279,21 +279,24 @@ class BookBottomSheet extends ConsumerWidget {
         "text": L10n.of(context).navJournal,
         "onTap": () => handleJournal(context)
       },
-      {
-        "icon": Icons.share_outlined,
-        "text": L10n.of(context).shareFile,
-        "onTap": () => handleShare()
-      },
-      {
-        "icon": Icons.refresh,
-        "text": L10n.of(context).bookBottomSheetReplaceFile,
-        "onTap": () => handleReplace(context)
-      },
-      {
-        "icon": Icons.cloud_upload_outlined,
-        "text": L10n.of(context).bookSyncStatusReleaseSpace,
-        "onTap": () => handleUpload(context)
-      },
+      // A paper book has no file to share, replace, or release.
+      if (!book.isPhysical) ...[
+        {
+          "icon": Icons.share_outlined,
+          "text": L10n.of(context).shareFile,
+          "onTap": () => handleShare()
+        },
+        {
+          "icon": Icons.refresh,
+          "text": L10n.of(context).bookBottomSheetReplaceFile,
+          "onTap": () => handleReplace(context)
+        },
+        {
+          "icon": Icons.cloud_upload_outlined,
+          "text": L10n.of(context).bookSyncStatusReleaseSpace,
+          "onTap": () => handleUpload(context)
+        },
+      ],
       {
         "icon": Icons.more_vert,
         "text": L10n.of(context).notesPageDetail,

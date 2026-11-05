@@ -1,5 +1,22 @@
 # Changelog
 
+## 0.2.0
+
+- Add a paper book. Choose a JPG or PNG cover, or take a photo of the cover.
+- Share a cover photo to Paperfold to start a new paper book.
+- Log the current page of a paper book. The page sets the progress and the status.
+- Turn on a daily reading reminder in Reading settings. Select the time.
+- Move the slider in the library to change between spines and covers.
+- See sharper covers on the book model.
+- Find free books in Wikisource and Internet Archive.
+- Receive books from book finder apps, such as PageDrop, and from file managers.
+- A backup file no longer contains the WebDAV password or translation API keys.
+- An update installs only when its file matches the digest on GitHub.
+- A shared file cannot write outside the app cache.
+- Web pages cannot read books from the local reader server.
+
+The database changes to version 11. Update Paperfold on every device that syncs.
+
 ## 0.1.0
 
 First public Paperfold beta for Android.

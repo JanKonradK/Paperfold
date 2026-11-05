@@ -139,7 +139,10 @@ class OpdsCatalogsPage extends ConsumerWidget {
   String _description(L10n l10n, OnlineBookSource source) => switch (source) {
         OnlineBookSource.gutenberg => l10n.onlineGutenbergDescription,
         OnlineBookSource.ebooksGratuits => l10n.onlineEbooksGratuitsDescription,
+        OnlineBookSource.wikisource => l10n.onlineWikisourceDescription,
         OnlineBookSource.standardEbooks => l10n.onlineStandardDescription,
+        OnlineBookSource.internetArchive =>
+          l10n.onlineInternetArchiveDescription,
         OnlineBookSource.globalGrey => l10n.onlineGlobalGreyDescription,
         OnlineBookSource.openLibrary => l10n.onlineOpenLibraryDescription,
         OnlineBookSource.libby => l10n.onlineLibbyDescription,

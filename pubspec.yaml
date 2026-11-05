@@ -2,7 +2,7 @@ name: paperfold
 description: "Paperfold is a reading journal, reader, and note application."
 publish_to: 'none'
 
-version: 0.1.0-beta.1+211
+version: 0.2.0-beta.1+212
 
 environment:
   sdk: '>=3.13.0 <4.0.0'
@@ -116,6 +116,22 @@ dependencies:
       url: https://github.com/Anxcye/staggered_reorderable.git
       ref: 2ac799a6eeb5da74bf5080a2ba2057272fa52b78
   haptic_feedback: ^0.8.0
+  # Photo covers for paper books: validate, orient, resize, and re-encode
+  # without EXIF or GPS data. Already in the lock file through other packages.
+  image: ^4.10.1
+  image_picker: ^1.2.1
+  # The daily reading reminder. Version 21 needs Flutter 3.38 and compileSdk 36.
+  flutter_local_notifications: ^21.0.0
+  timezone: ^0.11.0
+  flutter_timezone: ^5.0.1
+
+# The pinned share fork names cached files after the sender's display name, so
+# a name like "../x" wrote outside the cache. This copy keeps only the last
+# path segment. See third_party/share_handler_android/PAPERFOLD.md.
+dependency_overrides:
+  share_handler_android:
+    path: third_party/share_handler_android
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
