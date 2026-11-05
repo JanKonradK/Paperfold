@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.1.0
+
+First public Paperfold beta for Android.
+
+- Read EPUB and PDF books with page curl and reading controls.
+- Organize books on shelves and track reading progress.
+- Keep notes, reviews, and a reading journal.
+- Browse OPDS catalogs and use WebDAV sync.
+- Choose Cream, Burgundy, Dark, or System themes.
+
+Beta software: back up your library before installing.
+
 ## 2.1.0
 
 - Select Cream, Burgundy, Dark, or System for the app theme.

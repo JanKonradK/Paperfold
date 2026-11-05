@@ -2,7 +2,7 @@ name: paperfold
 description: "Paperfold is a reading journal, reader, and note application."
 publish_to: 'none'
 
-version: 2.1.0+210
+version: 0.1.0-beta.1+211
 
 environment:
   sdk: '>=3.13.0 <4.0.0'
