@@ -2,11 +2,11 @@ import 'package:paperfold/config/shared_preference_provider.dart';
 import 'package:paperfold/enums/version_check_type.dart';
 import 'package:paperfold/main.dart';
 import 'package:paperfold/utils/app_version.dart';
-import 'package:flutter/cupertino.dart';
+import 'package:cupertino_ui/cupertino_ui.dart';
 import 'package:paperfold/page/onboarding_screen.dart';
 import 'package:paperfold/page/changelog_screen.dart';
 import 'package:paperfold/utils/log/common.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 class InitializationCheck {
   static String? _lastVersion;

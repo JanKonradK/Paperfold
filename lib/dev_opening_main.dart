@@ -5,7 +5,7 @@
 //   flutter run -t lib/dev_opening_main.dart
 //   flutter run -t lib/dev_opening_main.dart --profile
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:paperfold/config/paperfold_tokens.dart';
 import 'package:paperfold/page/opening/opening_sequence.dart';
 

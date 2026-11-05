@@ -209,8 +209,9 @@ export class View extends HTMLElement {
     this.#handleClick(doc)
     this.#handleImage(doc)
     
-    // Start translation observation for this document
-    this.#translator.observeDocument(doc)
+    // Start translation observation for this document. A PDF page's text
+    // layer is invisible, so observing its every span only cost each turn.
+    if (!this.book.isPDF) this.#translator.observeDocument(doc)
     
     this.#emit('load', { doc, index })
   }

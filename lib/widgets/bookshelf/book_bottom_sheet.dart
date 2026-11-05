@@ -15,20 +15,20 @@ import 'package:paperfold/enums/sync_direction.dart';
 import 'package:paperfold/providers/sync_status.dart';
 import 'package:paperfold/providers/shelf_home.dart';
 import 'package:paperfold/service/convert_to_epub/txt/convert_from_txt.dart';
-import 'package:paperfold/page/journal/book_review_page.dart';
+import 'package:paperfold/page/journal/book_journal_page.dart';
 import 'package:paperfold/service/md5_service.dart';
 import 'package:paperfold/service/book.dart';
 import 'package:paperfold/utils/get_path/get_base_path.dart';
 import 'package:paperfold/utils/share_file.dart';
 import 'package:paperfold/utils/toast/common.dart';
+import 'package:paperfold/utils/log/common.dart';
 import 'package:paperfold/widgets/bookshelf/book_cover.dart';
 import 'package:paperfold/widgets/delete_confirm.dart';
 import 'package:paperfold/widgets/icon_and_text.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
-import 'package:icons_plus/icons_plus.dart';
 import 'package:path/path.dart' as p;
 
 class BookBottomSheet extends ConsumerWidget {
@@ -42,11 +42,22 @@ class BookBottomSheet extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     Future<void> handleDelete(BuildContext context) async {
-      Navigator.pop(context);
-      await bookDao.deleteBook(book.id);
-      ref.read(bookListProvider.notifier).refresh();
-      File(book.fileFullPath).delete();
-      File(book.coverFullPath).delete();
+      try {
+        await bookDao.deleteBook(book.id);
+        if (context.mounted) {
+          ref.read(bookListProvider.notifier).refresh();
+          Navigator.pop(context);
+        }
+        for (final localPath in [book.fileFullPath, book.coverFullPath]) {
+          final file = File(localPath);
+          if (await file.exists()) await file.delete();
+        }
+      } catch (error, stackTrace) {
+        AnxLog.warning('Could not delete book', error, stackTrace);
+        if (context.mounted) {
+          AnxToast.show(L10n.of(context).commonFailed);
+        }
+      }
     }
 
     void handleDetail(BuildContext context) {
@@ -128,13 +139,12 @@ class BookBottomSheet extends ConsumerWidget {
     }
 
     Future<void> handleReplace(BuildContext context) async {
-      FilePickerResult? result = await FilePicker.platform.pickFiles(
+      final result = await FilePicker.pickFile(
         type: FileType.any,
-        allowMultiple: false,
       );
 
       if (result == null) return;
-      PlatformFile newFile = result.files.first;
+      PlatformFile newFile = result;
       String extension =
           p.extension(newFile.name).replaceAll('.', '').toLowerCase();
       if (!allowBookExtensions.contains(extension)) {
@@ -258,34 +268,34 @@ class BookBottomSheet extends ConsumerWidget {
       Navigator.of(context).pop();
       Navigator.of(context).push(
         MaterialPageRoute<void>(
-          builder: (context) => BookReviewPage(book: book),
+          builder: (context) => BookJournalPage(book: book),
         ),
       );
     }
 
     final actions = [
       {
-        "icon": EvaIcons.book_open,
+        "icon": Icons.menu_book_outlined,
         "text": L10n.of(context).navJournal,
         "onTap": () => handleJournal(context)
       },
       {
-        "icon": EvaIcons.share,
+        "icon": Icons.share_outlined,
         "text": L10n.of(context).shareFile,
         "onTap": () => handleShare()
       },
       {
-        "icon": EvaIcons.refresh,
+        "icon": Icons.refresh,
         "text": L10n.of(context).bookBottomSheetReplaceFile,
         "onTap": () => handleReplace(context)
       },
       {
-        "icon": EvaIcons.cloud_upload,
+        "icon": Icons.cloud_upload_outlined,
         "text": L10n.of(context).bookSyncStatusReleaseSpace,
         "onTap": () => handleUpload(context)
       },
       {
-        "icon": EvaIcons.more_vertical,
+        "icon": Icons.more_vert,
         "text": L10n.of(context).notesPageDetail,
         "onTap": () => handleDetail(context)
       },
@@ -311,12 +321,12 @@ class BookBottomSheet extends ConsumerWidget {
               handleDelete(context);
             },
             deleteIcon: IconAndText(
-              icon: const Icon(EvaIcons.trash),
+              icon: const Icon(Icons.delete_outline),
               text: L10n.of(context).commonDelete,
             ),
             confirmIcon: IconAndText(
               icon: const Icon(
-                EvaIcons.checkmark_circle_2,
+                Icons.check_circle,
                 color: Colors.red,
               ),
               text: L10n.of(context).commonConfirm,
@@ -340,7 +350,7 @@ class BookBottomSheet extends ConsumerWidget {
                 }).toList();
               },
               child: IconAndText(
-                icon: const Icon(EvaIcons.more_vertical),
+                icon: const Icon(Icons.more_vert),
                 text: L10n.of(context).more,
               ))
         ],

@@ -1,7 +1,7 @@
 import 'package:paperfold/dao/search_repository.dart';
-import 'package:paperfold/models/search_note_group.dart';
 import 'package:paperfold/models/search_result_data.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/legacy.dart';
 
 final searchRepositoryProvider = Provider<SearchRepository>((ref) {
   return const SearchRepository();
@@ -19,18 +19,5 @@ final searchResultProvider =
     return SearchResultData.empty;
   }
 
-  final result = await repository.search(trimmed);
-  final noteGroups = result.noteGroups
-      .map(
-        (entry) => SearchNoteGroup(
-          book: entry.book,
-          notes: entry.notes,
-        ),
-      )
-      .toList(growable: false);
-
-  return SearchResultData(
-    books: result.books,
-    noteGroups: noteGroups,
-  );
+  return repository.search(trimmed);
 });

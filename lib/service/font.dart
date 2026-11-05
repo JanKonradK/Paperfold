@@ -7,17 +7,11 @@ import 'package:paperfold/utils/toast/common.dart';
 import 'package:file_picker/file_picker.dart';
 
 Future<void> importFont() async {
-  FilePickerResult? result = await FilePicker.platform.pickFiles(
+  final files = await FilePicker.pickFiles(
     type: FileType.custom,
     allowedExtensions: ['ttf', 'otf'],
-    allowMultiple: true,
   );
 
-  if (result == null) {
-    return;
-  }
-
-  List<PlatformFile> files = result.files;
   for (var file in files) {
     final fontDir = getFontDir();
     File newFile = File(file.path!);

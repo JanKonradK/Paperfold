@@ -1,13 +1,16 @@
 import 'package:paperfold/constants/note_annotations.dart';
 import 'package:paperfold/models/book_note.dart';
+import 'package:paperfold/models/book.dart';
+import 'package:paperfold/widgets/book_notes/add_to_journal_button.dart';
 import 'package:paperfold/utils/time_to_human.dart';
 import 'package:paperfold/widgets/common/container/filled_container.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 class BookNoteTile extends StatelessWidget {
   const BookNoteTile({
     super.key,
     required this.note,
+    this.book,
     this.onTap,
     this.onLongPress,
     this.trailing,
@@ -16,6 +19,7 @@ class BookNoteTile extends StatelessWidget {
   });
 
   final BookNote note;
+  final Book? book;
   final VoidCallback? onTap;
   final VoidCallback? onLongPress;
   final Widget? trailing;
@@ -114,6 +118,11 @@ class BookNoteTile extends StatelessWidget {
                       ),
                     ],
                   ),
+                  if (trailing == null &&
+                      note.id != null &&
+                      note.content.trim().isNotEmpty &&
+                      note.cfi.trim().isNotEmpty)
+                    AddToJournalButton(note: note, book: book),
                 ],
               ),
             ),

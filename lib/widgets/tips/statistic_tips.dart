@@ -1,7 +1,7 @@
 import 'package:paperfold/l10n/generated/L10n.dart';
 import 'package:paperfold/widgets/common/message_block.dart';
 import 'package:paperfold/widgets/ornament.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// The statistics empty state.
 ///

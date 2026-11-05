@@ -87,6 +87,9 @@ jobs:
   release:
     # needs: [setup, build-android, build-ios, build-windows, build-macos, build-appstore, build-playstore]
     needs: [setup, build-android, build-ios, build-windows, build-macos, build-appstore]
+    # The app's update check reads this release. A platform without its
+    # signing secrets fails, so only the Android package must build.
+    if: ${{ !cancelled() && needs.build-android.result == 'success' }}
     uses: ./.github/workflows/release.yaml
     with:
       tag: ${{ needs.setup.outputs.tag }}

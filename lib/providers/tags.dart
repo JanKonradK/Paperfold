@@ -1,7 +1,7 @@
 import 'package:paperfold/dao/tag.dart';
 import 'package:paperfold/models/tag.dart';
 import 'package:paperfold/utils/color/rgb.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:lpinyin/lpinyin.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 

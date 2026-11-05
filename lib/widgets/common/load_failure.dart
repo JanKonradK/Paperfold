@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:paperfold/l10n/generated/L10n.dart';
 import 'package:paperfold/widgets/common/message_block.dart';
 import 'package:paperfold/widgets/ornament.dart';
@@ -33,13 +33,7 @@ class LoadFailure extends StatelessWidget {
     String? body,
     Object? error,
     Future<void> Function()? onRetry,
-  }) : this(
-          key: key,
-          title: title,
-          body: body,
-          error: error,
-          onRetry: onRetry,
-        );
+  }) : this(key: key, title: title, body: body, error: error, onRetry: onRetry);
 
   /// A failure inside a card or a list section, where a 104 dp ornament would
   /// be larger than the thing that failed.
@@ -49,12 +43,12 @@ class LoadFailure extends StatelessWidget {
     Object? error,
     Future<void> Function()? onRetry,
   }) : this(
-          key: key,
-          title: title,
-          error: error,
-          onRetry: onRetry,
-          compact: true,
-        );
+         key: key,
+         title: title,
+         error: error,
+         onRetry: onRetry,
+         compact: true,
+       );
 
   final String? title;
   final String? body;
@@ -76,30 +70,52 @@ class LoadFailure extends StatelessWidget {
     if (compact) {
       return Semantics(
         liveRegion: true,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.error_outline, color: scheme.onSurfaceVariant),
-              const SizedBox(height: 8),
-              Text(
-                heading,
-                textAlign: TextAlign.center,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: scheme.onSurfaceVariant,
-                ),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            if (constraints.maxWidth < 160 || constraints.maxHeight < 112) {
+              return Center(
+                child: onRetry == null
+                    ? Tooltip(
+                        message: heading,
+                        child: Icon(
+                          Icons.error_outline,
+                          semanticLabel: heading,
+                          color: scheme.onSurfaceVariant,
+                        ),
+                      )
+                    : IconButton(
+                        tooltip: '$heading ${l10n.commonRetry}',
+                        onPressed: onRetry,
+                        icon: const Icon(Icons.refresh),
+                      ),
+              );
+            }
+            return MessageBlock(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.error_outline, color: scheme.onSurfaceVariant),
+                  const SizedBox(height: 8),
+                  Text(
+                    heading,
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: scheme.onSurfaceVariant,
+                    ),
+                  ),
+                  if (onRetry != null) ...[
+                    const SizedBox(height: 8),
+                    TextButton.icon(
+                      onPressed: onRetry,
+                      icon: const Icon(Icons.refresh),
+                      label: Text(l10n.commonRetry),
+                    ),
+                  ],
+                ],
               ),
-              if (onRetry != null) ...[
-                const SizedBox(height: 8),
-                TextButton.icon(
-                  onPressed: onRetry,
-                  icon: const Icon(Icons.refresh),
-                  label: Text(l10n.commonRetry),
-                ),
-              ],
-            ],
-          ),
+            );
+          },
         ),
       );
     }

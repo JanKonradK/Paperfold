@@ -1,7 +1,7 @@
 import 'package:paperfold/l10n/generated/L10n.dart';
 import 'package:paperfold/widgets/book_notes/book_notes_list.dart';
 import 'package:paperfold/widgets/reading_page/widget_title.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import 'package:paperfold/models/book.dart';
 

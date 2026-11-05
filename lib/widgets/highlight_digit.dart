@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 Widget highlightDigit(BuildContext context, String str, TextStyle textStyle,
     TextStyle digitStyle) {

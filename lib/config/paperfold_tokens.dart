@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 class PaperfoldSurfacePalette {
   const PaperfoldSurfacePalette({
@@ -41,10 +41,7 @@ class PaperfoldPagePalette {
 }
 
 class PaperfoldCoverPalette {
-  const PaperfoldCoverPalette({
-    required this.ground,
-    required this.foil,
-  });
+  const PaperfoldCoverPalette({required this.ground, required this.foil});
 
   final Color ground;
   final Color foil;
@@ -79,32 +76,52 @@ abstract final class PaperfoldTypeTokens {
 }
 
 abstract final class PaperfoldTokens {
+  // The five colours from the supplied palette.
+  static const Color softDove = Color(0xFFC0BAB3);
+  static const Color spicedHotChocolate = Color(0xFF52423D);
+  static const Color moonRock = Color(0xFF887D77);
+  static const Color darkSienna = Color(0xFF391214);
+  static const Color blackRaspberry = Color(0xFF160F0C);
+
   // Keep the surface role names stable for book bindings and existing callers.
   static const PaperfoldSurfacePalette surfaces = PaperfoldSurfacePalette(
-    sageGreen: Color(0xFF887D77),
+    sageGreen: moonRock,
     dustyRose: Color(0xFF8B625F),
     goldenTan: Color(0xFFB7A179),
-    warmBeige: Color(0xFFC0BAB3),
-    terracottaBrown: Color(0xFF52423D),
+    warmBeige: softDove,
+    terracottaBrown: spicedHotChocolate,
   );
 
   static const PaperfoldPagePalette light = PaperfoldPagePalette(
-    ground: Color(0xFFF6F2EA),
-    ink: Color(0xFF160F0C),
-    inkSoft: Color(0xFF52423D),
-    accent: Color(0xFF391214),
-    surfaceLowest: Color(0xFFFCF9F3),
-    surfaceLow: Color(0xFFF0EAE1),
-    surface: Color(0xFFEAE3D9),
-    surfaceHigh: Color(0xFFE3DBD0),
-    surfaceHighest: Color(0xFFDBD1C5),
+    ground: Color(0xFFF3EBDD),
+    ink: blackRaspberry,
+    inkSoft: spicedHotChocolate,
+    accent: darkSienna,
+    surfaceLowest: Color(0xFFFFF9EE),
+    surfaceLow: Color(0xFFEDE2D1),
+    surface: Color(0xFFE6DAC7),
+    surfaceHigh: Color(0xFFDED1BD),
+    surfaceHighest: Color(0xFFD6C9B6),
+  );
+
+  /// The signature evening theme, between cream and raspberry-black.
+  static const PaperfoldPagePalette burgundy = PaperfoldPagePalette(
+    ground: Color(0xFF3D1723),
+    ink: Color(0xFFF3EBDD),
+    inkSoft: softDove,
+    accent: Color(0xFFC8B28F),
+    surfaceLowest: Color(0xFF2C111A),
+    surfaceLow: Color(0xFF46202A),
+    surface: Color(0xFF4C2932),
+    surfaceHigh: Color(0xFF503639),
+    surfaceHighest: spicedHotChocolate,
   );
 
   /// Preserve the explicit true-black option for OLED reading.
   static const PaperfoldPagePalette darkTrueBlack = PaperfoldPagePalette(
     ground: Color(0xFF000000),
     ink: Color(0xFFF6F2EA),
-    inkSoft: Color(0xFFC0BAB3),
+    inkSoft: softDove,
     accent: Color(0xFFB7A179),
     surfaceLowest: Color(0xFF000000),
     surfaceLow: Color(0xFF0C0908),
@@ -115,9 +132,9 @@ abstract final class PaperfoldTokens {
 
   /// Raspberry-black paper, with a warm tonal ramp for sheets and controls.
   static const PaperfoldPagePalette darkNearBlack = PaperfoldPagePalette(
-    ground: Color(0xFF160F0C),
+    ground: blackRaspberry,
     ink: Color(0xFFF6F2EA),
-    inkSoft: Color(0xFFC0BAB3),
+    inkSoft: softDove,
     accent: Color(0xFFB7A179),
     surfaceLowest: Color(0xFF100B09),
     surfaceLow: Color(0xFF211714),
@@ -133,21 +150,21 @@ abstract final class PaperfoldTokens {
   /// Smoked wood and stone tones keep the books distinct from the furniture.
   static const PaperfoldWoodPalette woodLight = PaperfoldWoodPalette(
     board: Color(0xFFA99B8C),
-    edge: Color(0xFF887D77),
-    back: Color(0xFF52423D),
-    onWood: Color(0xFF160F0C),
+    edge: moonRock,
+    back: spicedHotChocolate,
+    onWood: blackRaspberry,
   );
 
   static const PaperfoldWoodPalette woodDark = PaperfoldWoodPalette(
-    board: Color(0xFF52423D),
+    board: spicedHotChocolate,
     edge: Color(0xFF3F302C),
     back: Color(0xFF2A1D1A),
     onWood: Color(0xFFF6F2EA),
   );
 
-  // The saturated cover world stays separate from the quiet page palette.
+  // Match the supplied cover image; Dark Sienna is its raised surface.
   static const PaperfoldCoverPalette cover = PaperfoldCoverPalette(
-    ground: Color(0xFF391214),
+    ground: Color(0xFF350D18),
     foil: Color(0xFFB7A179),
   );
 
@@ -170,6 +187,25 @@ abstract final class PaperfoldTokens {
   static PaperfoldWoodPalette wood(Brightness brightness) =>
       brightness == Brightness.light ? woodLight : woodDark;
 
+  static ColorScheme burgundyColorScheme() =>
+      colorScheme(Brightness.dark, trueBlack: false).copyWith(
+        surface: burgundy.ground,
+        surfaceDim: burgundy.surfaceLowest,
+        surfaceBright: burgundy.surfaceHighest,
+        surfaceContainerLowest: burgundy.surfaceLowest,
+        surfaceContainerLow: burgundy.surfaceLow,
+        surfaceContainer: burgundy.surface,
+        surfaceContainerHigh: burgundy.surfaceHigh,
+        surfaceContainerHighest: burgundy.surfaceHighest,
+        onSurface: burgundy.ink,
+        onSurfaceVariant: burgundy.inkSoft,
+        shadow: blackRaspberry,
+        primary: burgundy.accent,
+        onPrimary: burgundy.ground,
+        primaryContainer: burgundy.accent,
+        onPrimaryContainer: burgundy.ground,
+      );
+
   /// Returns the fixed Paperfold scheme for [brightness].
   ///
   /// Primary is burgundy on paper and aged gold on dark surfaces.
@@ -178,15 +214,20 @@ abstract final class PaperfoldTokens {
     bool trueBlack = true,
   }) {
     final bool isLight = brightness == Brightness.light;
-    final PaperfoldPagePalette page =
-        pagePalette(brightness, trueBlack: trueBlack);
-    final ColorScheme base =
-        isLight ? const ColorScheme.light() : const ColorScheme.dark();
-    final Color primaryContainer =
-        isLight ? const Color(0xFFE8DCD5) : surfaces.goldenTan;
+    final PaperfoldPagePalette page = pagePalette(
+      brightness,
+      trueBlack: trueBlack,
+    );
+    final ColorScheme base = isLight
+        ? const ColorScheme.light()
+        : const ColorScheme.dark();
+    final Color primaryContainer = isLight
+        ? const Color(0xFFE8DCD5)
+        : surfaces.goldenTan;
     final Color secondary = isLight ? light.inkSoft : surfaces.warmBeige;
-    final Color tertiary =
-        isLight ? const Color(0xFF695937) : surfaces.goldenTan;
+    final Color tertiary = isLight
+        ? const Color(0xFF695937)
+        : surfaces.goldenTan;
     final Color onAccent = isLight ? light.ground : light.ink;
 
     return base.copyWith(

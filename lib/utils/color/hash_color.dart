@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// Deterministic RGB color from a string. Alpha is always 0xFF.
 Color hashColor(String input) {

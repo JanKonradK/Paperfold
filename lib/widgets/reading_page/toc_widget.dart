@@ -2,7 +2,7 @@ import 'package:paperfold/l10n/generated/L10n.dart';
 import 'package:paperfold/page/book_player/epub_player.dart';
 import 'package:paperfold/widgets/reading_page/widgets/book_toc.dart';
 import 'package:paperfold/widgets/reading_page/widgets/bookmark.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 class TocWidget extends StatefulWidget {
   const TocWidget({

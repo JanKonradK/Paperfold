@@ -115,6 +115,98 @@ const String _opds2 = '''
 ''';
 
 void main() {
+  group('download choices', () {
+    OpdsLink link({String? type, String? rel, String? address}) => OpdsLink(
+          rels: [rel ?? OpdsRel.acquisition],
+          href: Uri.parse(address ?? 'https://books.example/book.epub'),
+          type: type,
+        );
+
+    test('direct downloads recognize media type parameters and query URLs', () {
+      final epub = link(
+        type: 'Application/EPUB+ZIP; charset=utf-8',
+        address: 'https://books.example/download.php?id=1&format=epub',
+      );
+      expect(epub.isDirectDownload, isTrue);
+      expect(epub.downloadExtension, 'epub');
+      expect(link(type: 'application/pdf').downloadExtension, 'pdf');
+      expect(
+          link(type: 'application/x-fictionbook+xml').downloadExtension, 'fb2');
+    });
+
+    test('buy, borrow, and sample links never become direct downloads', () {
+      for (final relation in ['buy', 'borrow', 'sample', 'subscribe']) {
+        final option = link(
+          type: 'application/epub+zip',
+          rel: '${OpdsRel.acquisition}/$relation',
+        );
+        expect(option.isAcquisition, isTrue);
+        expect(option.isDirectDownload, isFalse);
+      }
+      expect(
+          link(
+            type: 'application/epub+zip',
+            rel: '${OpdsRel.acquisition}/open-access',
+          ).isDirectDownload,
+          isTrue);
+      expect(
+          OpdsLink(
+            rels: [OpdsRel.acquisition, '${OpdsRel.acquisition}/buy'],
+            href: Uri.parse('https://books.example/book.epub'),
+            type: 'application/epub+zip',
+          ).isDirectDownload,
+          isFalse);
+    });
+
+    test(
+        'HTML, licenses and unsupported formats cannot hide behind an EPUB name',
+        () {
+      for (final mediaType in [
+        'text/html',
+        'application/vnd.adobe.adept+xml',
+        'application/vnd.readium.lcp.license.v1.0+json',
+        'application/zip',
+      ]) {
+        expect(link(type: mediaType).isDirectDownload, isFalse);
+      }
+      expect(link().isDirectDownload, isTrue);
+      expect(link(type: 'application/octet-stream').isDirectDownload, isTrue);
+      expect(
+          link(address: 'https://books.example/download?id=1').isDirectDownload,
+          isFalse);
+    });
+
+    test('website choices remain separate from supported book files', () {
+      final buy = link(
+        type: 'text/html; charset=utf-8',
+        rel: '${OpdsRel.acquisition}/buy',
+        address: 'https://books.example/buy/1',
+      );
+      final epub = link(type: 'application/epub+zip');
+      final entry = OpdsEntry(title: 'Book', links: [buy, epub]);
+      expect(entry.websiteHref, buy.href);
+      expect(entry.downloadLinks, [epub]);
+      expect(entry.acquisitionLinks, [buy, epub]);
+    });
+
+    test('embedded credentials and non-web links are not actionable', () {
+      for (final address in [
+        'https://reader:secret@books.example/book.epub',
+        'file:///private/book.epub',
+        'javascript:alert(1)',
+      ]) {
+        final option = link(type: 'application/epub+zip', address: address);
+        expect(option.isDirectDownload, isFalse);
+        expect(isOpdsWebUri(option.href), isFalse);
+        expect(
+            OpdsEntry(title: 'Book', links: [
+              link(type: 'text/html', address: address),
+            ]).websiteHref,
+            isNull);
+      }
+    });
+  });
+
   group('media types', () {
     test('an OPDS catalog is recognised in both generations', () {
       expect(isOpdsCatalog('application/opds+json'), isTrue);
@@ -123,7 +215,8 @@ void main() {
         isTrue,
       );
       expect(
-        isOpdsCatalog('application/atom+xml; profile="opds-catalog"; kind=acquisition'),
+        isOpdsCatalog(
+            'application/atom+xml; profile="opds-catalog"; kind=acquisition'),
         isTrue,
         reason: 'servers quote and space their parameters differently',
       );
@@ -212,8 +305,7 @@ void main() {
     });
 
     test('a feed that declares no namespace still parses', () {
-      final OpdsFeed bare =
-          parseOpdsFeed(_atomBareNavigation, baseUri: _base);
+      final OpdsFeed bare = parseOpdsFeed(_atomBareNavigation, baseUri: _base);
 
       expect(bare.title, 'Library');
       expect(bare.navigation.single.title, 'By author');
@@ -271,6 +363,23 @@ void main() {
   });
 
   group('a server that says nothing useful', () {
+    test('a generic JSON media type still reads an OPDS 2.0 catalog', () {
+      final feed = parseOpdsFeed(_opds2,
+          baseUri: _base, contentType: 'application/json');
+      expect(feed.publications.single.title, 'The Farthest Shore');
+    });
+
+    test('well-formed login pages and unrelated JSON are not empty catalogs',
+        () {
+      for (final body in [
+        '<html><body>Sign in</body></html>',
+        '{"error":"Sign in"}'
+      ]) {
+        expect(
+            () => parseOpdsFeed(body, baseUri: _base), throwsFormatException);
+      }
+    });
+
     test('a JSON body is read as OPDS 2.0 with no content type', () {
       final OpdsFeed feed = parseOpdsFeed(_opds2, baseUri: _base);
       expect(feed.publications.single.title, 'The Farthest Shore');

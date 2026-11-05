@@ -6,13 +6,26 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_file_dialog/flutter_file_dialog.dart';
 
+String safeDownloadFileName(String name) {
+  name = name
+      .replaceAll(RegExp(r'[<>:"/\\|?*\x00-\x1f]'), '_')
+      .replaceAll(RegExp(r'[. ]+$'), '')
+      .trim();
+  if (name.isEmpty) return 'export';
+  if (RegExp(r'^(CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9])(?:\.|$)',
+          caseSensitive: false)
+      .hasMatch(name)) {
+    name = '_$name';
+  }
+  return name;
+}
+
 Future<String?> saveFileToDownload(
     {Uint8List? bytes,
     String? sourceFilePath,
     required String fileName,
     String? mimeType}) async {
-  String downloadPath = await getDownloadPath();
-  String fileSavePath = '$downloadPath/$fileName';
+  fileName = safeDownloadFileName(fileName);
 
   switch (AnxPlatform.type) {
     case AnxPlatformEnum.android:
@@ -27,17 +40,15 @@ Future<String?> saveFileToDownload(
       final filePath = await FlutterFileDialog.saveFile(params: params);
       return filePath;
     case AnxPlatformEnum.macos:
-      String? outputFile = await FilePicker.platform.saveFile(
-        fileName: fileName,
-      );
       bytes ??= await File(sourceFilePath!).readAsBytes();
-      if (outputFile != null) {
-        final file = File(outputFile);
-        await file.writeAsBytes(bytes);
-        return outputFile;
-      }
-      return outputFile;
+      final saved = await FilePicker.saveFile(
+        fileName: fileName,
+        bytes: bytes,
+      );
+      return saved?.toFilePath();
     case AnxPlatformEnum.windows:
+      final downloadPath = await getDownloadPath();
+      final fileSavePath = '$downloadPath/$fileName';
       final file = File(fileSavePath);
 
       if (!await file.exists()) {

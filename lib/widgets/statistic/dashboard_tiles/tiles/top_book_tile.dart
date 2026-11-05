@@ -9,7 +9,7 @@ import 'package:paperfold/widgets/statistic/dashboard_tiles/dashboard_tile_base.
 import 'package:paperfold/widgets/statistic/dashboard_tiles/dashboard_tile_metadata.dart';
 import 'package:paperfold/widgets/statistic/dashboard_tiles/dashboard_tile_registry.dart';
 import 'package:paperfold/widgets/tips/statistic_tips.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class TopBookTile extends StatisticsDashboardTileBase {
@@ -32,6 +32,7 @@ class TopBookTile extends StatisticsDashboardTileBase {
   ) {
     return AsyncSkeletonWrapper(
       asyncValue: ref.watch(statisticDataProvider),
+      onRetry: () async => ref.invalidate(statisticDataProvider),
       mock: StatisticDataModel.mock(),
       builder: (statisticData, _) {
         if (statisticData.bookReadingTime.isEmpty) {
@@ -86,6 +87,9 @@ class TopBookTile extends StatisticsDashboardTileBase {
                     ),
                     const SizedBox(height: 10),
                     AsyncSkeletonWrapper(
+                        onRetry: () async => ref.invalidate(
+                          bookDailyReadingProvider(bookId: book.id),
+                        ),
                         asyncValue: ref.watch(
                           bookDailyReadingProvider(bookId: book.id),
                         ),

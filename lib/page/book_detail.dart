@@ -1,7 +1,6 @@
 import 'dart:io';
 import 'dart:ui';
 
-import 'package:paperfold/dao/book.dart';
 import 'package:paperfold/dao/reading_time.dart';
 import 'package:paperfold/config/shared_preference_provider.dart';
 import 'package:paperfold/enums/book_binding.dart';
@@ -12,6 +11,7 @@ import 'package:paperfold/l10n/generated/L10n.dart';
 import 'package:paperfold/models/book.dart';
 import 'package:paperfold/models/reading_time.dart';
 import 'package:paperfold/models/tag.dart';
+import 'package:paperfold/page/book_edit_page.dart';
 import 'package:paperfold/providers/sync.dart';
 import 'package:paperfold/providers/book_list.dart';
 import 'package:paperfold/providers/tags.dart';
@@ -19,8 +19,6 @@ import 'package:paperfold/service/book.dart';
 import 'package:paperfold/service/book_binding.dart';
 import 'package:paperfold/service/book_binding_settings.dart';
 import 'package:paperfold/utils/date/convert_seconds.dart';
-import 'package:paperfold/utils/get_path/get_base_path.dart';
-import 'package:paperfold/utils/log/common.dart';
 import 'package:paperfold/utils/color/hash_color.dart';
 import 'package:paperfold/widgets/book_model/book_model.dart';
 import 'package:paperfold/widgets/bookshelf/book_cover.dart';
@@ -31,8 +29,7 @@ import 'package:paperfold/widgets/common/color_picker_sheet.dart';
 import 'package:paperfold/widgets/common/tag_chip.dart';
 import 'package:paperfold/widgets/highlight_digit.dart';
 import 'package:paperfold/widgets/hint/hint_banner.dart';
-import 'package:file_picker/file_picker.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -59,7 +56,7 @@ class _BookDetailState extends ConsumerState<BookDetail> {
   /// word in a description. A tag that has not arrived yet only means the
   /// first frame guesses from the description alone.
   List<String> get _tagNames {
-    final state = ref.watch(bookTagEditorProvider(widget.book.id)).valueOrNull;
+    final state = ref.watch(bookTagEditorProvider(widget.book.id)).value;
     if (state == null) return const [];
     return [
       for (final tag in state.tags)
@@ -135,106 +132,38 @@ class _BookDetailState extends ConsumerState<BookDetail> {
       final theme = Theme.of(context);
       final percent = widget.book.readingPercentage.clamp(0.0, 1.0).toDouble();
 
-      final Widget cover = GestureDetector(
-        onTap: () async {
-          if (!isEditing) {
-            return;
-          }
-
-          FilePickerResult? result = await FilePicker.platform.pickFiles(
-            type: FileType.image,
-            allowMultiple: false,
-          );
-
-          if (result == null) {
-            return;
-          }
-
-          File image = File(result.files.single.path!);
-
-          AnxLog.info('BookDetail: Image path: ${image.path}');
-          // Delete the existing cover image file
-          final File oldCoverImageFile = File(widget.book.coverFullPath);
-          if (await oldCoverImageFile.exists()) {
-            await oldCoverImageFile.delete();
-          }
-
-          String oldName = widget.book.coverPath
-              .split('-')
-              .sublist(0, widget.book.coverPath.split('-').length - 1)
-              .join('');
-          if (!oldName.startsWith('cover/')) {
-            oldName = 'cover/$oldName';
-          }
-
-          String newPath =
-              '$oldName-${DateTime.now().millisecondsSinceEpoch.toString()}.png'
-                  .trim();
-
-          AnxLog.info('BookDetail: New path: $newPath');
-          String newFullPath = getBasePath(newPath);
-
-          final File newCoverImageFile = File(newFullPath);
-          await newCoverImageFile.writeAsBytes(await image.readAsBytes());
-          widget.book.coverPath = newPath;
-
-          setState(() {
-            widget.book.coverPath = newPath;
-            bookDao.updateBook(widget.book);
-            Sync()
-                .syncData(SyncDirection.upload, ref, trigger: SyncTrigger.auto);
-            ref.read(bookListProvider.notifier).refresh();
-          });
-        },
-        child: isEditing
-            // While the details are being edited the cover is a
-            // target for a new picture, so it goes flat and stays
-            // still. A book that swings open under a tap meant to
-            // replace its jacket is a book fighting its reader.
-            ? ClipRRect(
-                borderRadius: BorderRadius.circular(10),
-                child: Hero(
-                  tag: widget.book.coverFullPath,
-                  child: BookCover(
-                    book: widget.book,
-                    height: 186,
-                    width: 128,
+      // Editing moved to its own page, so the cover is only the book.
+      final Widget cover = Hero(
+        tag: widget.book.coverFullPath,
+        // The library flies a flat cover to this page. A flat cover is what
+        // flies; it lands on the object. Letting the model itself be the
+        // shuttle would morph a painted book through a rectangle it never fits.
+        flightShuttleBuilder: (_, _, _, _, _) =>
+            BookCover(book: widget.book, radius: 10),
+        child: SizedBox(
+          width: 150,
+          height: 200,
+          child: BookModel(
+            key: ValueKey(
+              'book-model-${widget.book.id}-${_binding.code}',
+            ),
+            title: widget.book.title,
+            author: widget.book.author,
+            blurb: widget.book.description,
+            coverPath: File(widget.book.coverFullPath).existsSync()
+                ? widget.book.coverFullPath
+                : null,
+            stableId: 'book-${widget.book.id}',
+            binding: _binding,
+            semanticLabel: widget.book.author.trim().isEmpty
+                ? L10n.of(context)
+                    .bookModelSemanticLabelNoAuthor(widget.book.title)
+                : L10n.of(context).bookModelSemanticLabel(
+                    widget.book.title,
+                    widget.book.author,
                   ),
-                ),
-              )
-            : Hero(
-                tag: widget.book.coverFullPath,
-                // The library flies a flat cover to this page. A flat
-                // cover is what flies; it lands on the object. Letting
-                // the model itself be the shuttle would morph a
-                // painted book through a rectangle it never fits.
-                flightShuttleBuilder: (_, __, ___, ____, _____) =>
-                    BookCover(book: widget.book, radius: 10),
-                child: SizedBox(
-                  width: 150,
-                  height: 200,
-                  child: BookModel(
-                    key: ValueKey(
-                      'book-model-${widget.book.id}-${_binding.code}',
-                    ),
-                    title: widget.book.title,
-                    author: widget.book.author,
-                    blurb: widget.book.description,
-                    coverPath: File(widget.book.coverFullPath).existsSync()
-                        ? widget.book.coverFullPath
-                        : null,
-                    stableId: 'book-${widget.book.id}',
-                    binding: _binding,
-                    semanticLabel: widget.book.author.trim().isEmpty
-                        ? L10n.of(context)
-                            .bookModelSemanticLabelNoAuthor(widget.book.title)
-                        : L10n.of(context).bookModelSemanticLabel(
-                            widget.book.title,
-                            widget.book.author,
-                          ),
-                  ),
-                ),
-              ),
+          ),
+        ),
       );
 
       return Column(
@@ -251,36 +180,13 @@ class _BookDetailState extends ConsumerState<BookDetail> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    TextFormField(
-                      initialValue: widget.book.title,
-                      enabled: isEditing,
-                      style: theme.textTheme.titleLarge,
-                      maxLines: null,
-                      minLines: 1,
-                      decoration: const InputDecoration(
-                        border: InputBorder.none,
-                        isCollapsed: true,
-                      ),
-                      onChanged: (value) {
-                        widget.book.title = value.replaceAll('\n', ' ');
-                      },
-                    ),
+                    Text(widget.book.title, style: theme.textTheme.titleLarge),
                     const SizedBox(height: 4),
-                    TextFormField(
-                      initialValue: widget.book.author,
-                      enabled: isEditing,
+                    Text(
+                      widget.book.author,
                       style: theme.textTheme.bodyMedium?.copyWith(
                         color: theme.colorScheme.onSurfaceVariant,
                       ),
-                      maxLines: null,
-                      minLines: 1,
-                      decoration: const InputDecoration(
-                        border: InputBorder.none,
-                        isCollapsed: true,
-                      ),
-                      onChanged: (value) {
-                        widget.book.author = value;
-                      },
                     ),
                     const SizedBox(height: 10),
                     RatingBar.builder(
@@ -360,39 +266,16 @@ class _BookDetailState extends ConsumerState<BookDetail> {
               child: Text(L10n.of(context).bookDetailEditHint),
             ),
           ),
-          // const Spacer(),
-          isEditing
-              ? OutlinedButton(
-                  child: Row(
-                    children: [
-                      const Icon(Icons.save),
-                      const SizedBox(width: 5),
-                      Text(L10n.of(context).bookDetailSave),
-                    ],
-                  ),
-                  onPressed: () {
-                    setState(() {
-                      isEditing = false;
-                      bookDao.updateBook(widget.book);
-                      Sync().syncData(SyncDirection.upload, ref,
-                          trigger: SyncTrigger.manual);
-                      ref.read(bookListProvider.notifier).refresh();
-                    });
-                  },
-                )
-              : OutlinedButton(
-                  child: Row(
-                    children: [
-                      const Icon(Icons.edit),
-                      const SizedBox(width: 5),
-                      Text(L10n.of(context).bookDetailEdit),
-                    ],
-                  ),
-                  onPressed: () {
-                    setState(() {
-                      isEditing = true;
-                    });
-                  }),
+          OutlinedButton.icon(
+            icon: const Icon(Icons.edit),
+            label: Text(L10n.of(context).bookEditTitle),
+            onPressed: () async {
+              await Navigator.of(context).push<bool>(MaterialPageRoute(
+                builder: (_) => BookEditPage(book: widget.book),
+              ));
+              if (mounted) setState(() {});
+            },
+          ),
         ],
       );
     }
@@ -659,9 +542,20 @@ class _BookDetailState extends ConsumerState<BookDetail> {
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    L10n.of(context).tagsSectionTitle,
-                    style: Theme.of(context).textTheme.titleMedium,
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          L10n.of(context).tagsSectionTitle,
+                          style: Theme.of(context).textTheme.titleMedium,
+                        ),
+                      ),
+                      TextButton.icon(
+                        icon: const Icon(Icons.edit, size: 18),
+                        label: Text(L10n.of(context).bookDetailEdit),
+                        onPressed: () => setState(() => isEditing = true),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 8),
                   attachedTags.isEmpty
@@ -811,6 +705,18 @@ class _BookDetailState extends ConsumerState<BookDetail> {
                             dense: false,
                           ))
                       .toList(),
+                ),
+                Align(
+                  alignment: AlignmentDirectional.centerEnd,
+                  child: TextButton.icon(
+                    icon: const Icon(Icons.save),
+                    label: Text(L10n.of(context).bookDetailSave),
+                    onPressed: () {
+                      setState(() => isEditing = false);
+                      Sync().syncData(SyncDirection.upload, ref,
+                          trigger: SyncTrigger.manual);
+                    },
+                  ),
                 ),
               ],
             );

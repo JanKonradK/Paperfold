@@ -1,7 +1,7 @@
 import 'package:paperfold/l10n/generated/L10n.dart';
 import 'package:paperfold/widgets/common/anx_dropdown_button.dart';
 import 'package:paperfold/widgets/reading_page/more_settings/page_turning/diagram.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 class PageTurnDropdown extends StatelessWidget {
   const PageTurnDropdown({

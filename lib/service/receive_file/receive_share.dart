@@ -1,6 +1,8 @@
 import 'dart:io';
 
+import 'package:material_ui/material_ui.dart';
 import 'package:paperfold/main.dart';
+import 'package:paperfold/page/opds/book_web_page.dart';
 import 'package:paperfold/service/book.dart';
 import 'package:paperfold/utils/log/common.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -12,6 +14,17 @@ void receiveShareIntent(WidgetRef ref) {
   // receive sharing intent
   Future<void> handleShare(SharedMedia? media) async {
     AnxLog.info('share: Receive share intent called, ${media?.content}');
+    // A link shared from a browser opens in the book browser, where a link
+    // to a book file downloads and imports.
+    final shared = RegExp(r'https?://\S+').stringMatch(media?.content ?? '');
+    final link = shared == null ? null : parseBookLink(shared);
+    if (link != null && (media!.attachments?.isEmpty ?? true)) {
+      navigatorKey.currentState?.push(
+        MaterialPageRoute<void>(builder: (_) => BookWebPage(url: link)),
+      );
+      handler.resetInitialSharedMedia();
+      return;
+    }
     if (media == null ||
         media.attachments == null ||
         media.attachments!.isEmpty) {

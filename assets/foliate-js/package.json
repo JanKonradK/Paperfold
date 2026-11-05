@@ -5,29 +5,30 @@
   "main": "book.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "rm -rf dist && webpack",
+    "build": "webpack",
     "debug": "http-server . -p 3000 -c-1 --cors -o debug.html",
     "dev": "http-server . -p 3000 -c-1 --cors"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
+  "engines": {
+    "node": "^24.11.0 || >=26.0.0"
+  },
   "devDependencies": {
-    "@babel/core": "^7.23.0",
-    "@babel/plugin-transform-class-properties": "^7.27.1",
-    "@babel/plugin-transform-nullish-coalescing-operator": "^7.27.1",
-    "@babel/plugin-transform-optional-chaining": "^7.27.1",
-    "@babel/plugin-transform-private-methods": "^7.27.1",
-    "@babel/plugin-transform-runtime": "^7.23.0",
-    "@babel/preset-env": "^7.23.0",
-    "babel-loader": "^9.1.3",
-    "core-js": "^3.33.0",
+    "@babel/core": "^8.0.6",
+    "@babel/plugin-transform-runtime": "^8.0.6",
+    "@babel/preset-env": "^8.0.6",
+    "babel-loader": "^10.1.1",
+    "babel-plugin-polyfill-corejs3": "^1.0.0",
+    "core-js": "^3.50.0",
     "http-server": "^14.1.1",
-    "webpack": "^5.99.7",
-    "webpack-cli": "^6.0.1"
+    "pdfjs-dist": "^6.4.299",
+    "prismjs": "^1.30.0",
+    "webpack": "^5.111.1",
+    "webpack-cli": "^7.2.3"
   },
   "dependencies": {
-    "@babel/runtime": "^7.23.0",
-    "regenerator-runtime": "^0.14.0"
+    "@babel/runtime": "^8.0.5"
   }
 }

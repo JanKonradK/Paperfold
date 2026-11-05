@@ -10,7 +10,7 @@ import 'dart:ui' as ui;
 // the type on a row, the height of a row, and whether a section says anything
 // the application still acts on.
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -80,7 +80,7 @@ void main() {
           child: MaterialApp(
             debugShowCheckedModeBanner: false,
             locale: const Locale('en'),
-            localizationsDelegates: L10n.localizationsDelegates,
+            localizationsDelegates: [L10n.delegate, ...GlobalMaterialLocalizations.delegates],
             supportedLocales: L10n.supportedLocales,
             // The application's own scheme and faces, so the preview shows
             // what the reader sees rather than stock Material.

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 abstract class BaseRoundedContainer extends StatelessWidget {
   const BaseRoundedContainer({
@@ -43,9 +43,10 @@ abstract class BaseRoundedContainer extends StatelessWidget {
       decoration: decoration(context, borderRadius),
       child: ClipRSuperellipse(
         borderRadius: borderRadius,
-        child: Container(
-          padding: padding,
-          child: child,
+        // Paint row ink above the card fill, within its rounded clip.
+        child: Material(
+          type: MaterialType.transparency,
+          child: Padding(padding: padding ?? EdgeInsets.zero, child: child),
         ),
       ),
     );

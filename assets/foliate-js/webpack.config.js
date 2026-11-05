@@ -2,14 +2,13 @@ const path = require('path');
 
 module.exports = {
   entry: {
-    bundle: ['core-js/stable', './src/book.js'],
-    'pdf-legacy': './src/vendor/pdfjs/pdf.js',
-    'pdf-legacy.worker': './src/vendor/pdfjs/pdf.worker.js'
+    bundle: ['core-js/stable', './src/book.js']
   },
   output: {
+    clean: true,
     filename: '[name].js',
     path: path.resolve(__dirname, 'dist'),
-    // Use compatible module format for legacy browsers
+    // The Flutter WebView loads a single browser bundle.
     library: {
       name: 'FoliateJS',
       type: 'umd',
@@ -18,7 +17,7 @@ module.exports = {
     globalObject: '(typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : typeof global !== "undefined" ? global : this)'
   },
   mode: 'production',
-  target: ['web', 'es5'], // Target ES5 for legacy browser compatibility
+  target: ['web', 'es2017'], // Webpack's async-module runtime needs native async/await.
   optimization: {
     splitChunks: false,
     runtimeChunk: false,
@@ -31,10 +30,6 @@ module.exports = {
     outputModule: false
   },
   resolve: {
-    alias: {
-      // Use legacy PDF.js build
-      'pdfjs-dist': path.resolve(__dirname, 'src/vendor/pdfjs/pdf-legacy.js')
-    },
     fallback: {
       // Disable Node.js polyfills for browser build
       "fs": false,
@@ -60,42 +55,8 @@ module.exports = {
     rules: [
       {
         test: /\.js$/,
-        exclude: [
-          /node_modules/,
-          /src\/vendor\/pdfjs\/pdf\.js$/, // Exclude large PDF.js file from Babel processing
-          /src\/vendor\/pdfjs\/pdf\.worker\.js$/
-        ],
-        use: {
-          loader: 'babel-loader',
-          options: {
-            presets: [
-              ['@babel/preset-env', {
-                targets: {
-                  // Target much older browser versions including Chrome 40
-                  chrome: '40',
-                  safari: '9',
-                  ios: '9',
-                  android: '4.4',
-                },
-                useBuiltIns: 'entry',
-                corejs: 3,
-                modules: 'auto'
-              }]
-            ],
-            plugins: [
-              ['@babel/plugin-transform-runtime', {
-                regenerator: true,
-                corejs: false,
-                helpers: true,
-                useESModules: false
-              }],
-              '@babel/plugin-transform-class-properties',
-              '@babel/plugin-transform-private-methods',
-              '@babel/plugin-transform-nullish-coalescing-operator',
-              '@babel/plugin-transform-optional-chaining'
-            ]
-          }
-        }
+        exclude: /node_modules/,
+        use: 'babel-loader'
       }
     ]
   }

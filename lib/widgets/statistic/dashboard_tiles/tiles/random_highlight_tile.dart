@@ -6,7 +6,7 @@ import 'package:paperfold/widgets/common/async_skeleton_wrapper.dart';
 import 'package:paperfold/widgets/statistic/dashboard_tiles/dashboard_tile_base.dart';
 import 'package:paperfold/widgets/statistic/dashboard_tiles/dashboard_tile_metadata.dart';
 import 'package:paperfold/widgets/statistic/dashboard_tiles/dashboard_tile_registry.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class RandomHighlightTile extends StatisticsDashboardTileBase {
@@ -30,6 +30,7 @@ class RandomHighlightTile extends StatisticsDashboardTileBase {
     final asyncValue = ref.watch(randomHighlightProvider);
     return AsyncSkeletonWrapper<RandomHighlightData?>(
       asyncValue: asyncValue,
+      onRetry: () async => ref.invalidate(randomHighlightProvider),
       builder: (data, _) {
         if (data == null) {
           return _EmptyHighlight(

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:paperfold/config/paperfold_tokens.dart';
 import 'package:paperfold/enums/book_binding.dart';
 import 'package:paperfold/widgets/bookshelf/shelf_stage.dart';

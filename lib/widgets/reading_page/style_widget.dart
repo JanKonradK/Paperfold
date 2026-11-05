@@ -17,7 +17,7 @@ import 'package:paperfold/main.dart';
 import 'package:paperfold/models/read_theme.dart';
 import 'package:paperfold/page/book_player/epub_player.dart';
 import 'package:paperfold/widgets/reading_page/widgets/bgimg_selector.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 
 /// How a page leaves the screen.

@@ -4,7 +4,7 @@ import 'package:paperfold/widgets/statistic/dashboard_tiles/dashboard_tile_base.
 import 'package:paperfold/widgets/statistic/dashboard_tiles/dashboard_tile_metadata.dart';
 import 'package:paperfold/widgets/statistic/dashboard_tiles/dashboard_tile_registry.dart';
 import 'package:paperfold/widgets/statistic/dashboard_tiles/widgets/mini_metric.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class NotesTotalTile extends StatisticsDashboardTileBase {
@@ -26,10 +26,13 @@ class NotesTotalTile extends StatisticsDashboardTileBase {
   @override
   Widget buildContent(BuildContext context, WidgetRef ref) {
     final asyncValue =
-        ref.watch(StaticticsSummaryValueProvider(StatisticType.totalNotes));
+        ref.watch(staticticsSummaryValueProvider(StatisticType.totalNotes));
 
     return AsyncSkeletonWrapper<int>(
       asyncValue: asyncValue,
+      onRetry: () async => ref.invalidate(
+        staticticsSummaryValueProvider(StatisticType.totalNotes),
+      ),
       mock: 120,
       builder: (count, _) => DashboardMiniMetric(
         value: count,

@@ -7,8 +7,9 @@ import 'package:paperfold/widgets/common/async_skeleton_wrapper.dart';
 import 'package:paperfold/widgets/common/container/filled_container.dart';
 import 'package:paperfold/widgets/highlight_digit.dart';
 import 'package:paperfold/widgets/statistic/dashboard_tiles/dashboard_tile_registry.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/legacy.dart';
 import 'package:introduction_screen/introduction_screen.dart';
 
 // Provider to track current page index in IntroductionScreen

@@ -23,7 +23,7 @@
 
 import 'dart:async';
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:paperfold/config/paperfold_motion.dart';
 import 'package:paperfold/widgets/page_curl/page_curl.dart';

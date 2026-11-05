@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// Defines a single segment item used by [AnxSegmentedButton].
 class SegmentButtonItem<T> {

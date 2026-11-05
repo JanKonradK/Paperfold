@@ -1,8 +1,9 @@
 import 'package:paperfold/dao/base_dao.dart';
+import 'package:paperfold/dao/search_pattern.dart';
 import 'package:paperfold/models/book_note.dart';
 
 class BookNoteDao extends BaseDao {
-  BookNoteDao();
+  BookNoteDao({super.database});
 
   static const String table = 'tb_notes';
 
@@ -125,19 +126,25 @@ class BookNoteDao extends BaseDao {
     int? limit,
     List<String>? types,
   }) async {
-    final where = <String>[];
+    if (limit != null && limit <= 0) return const [];
+
+    final where = <String>[
+      'book_id IN (SELECT id FROM tb_books WHERE is_deleted = 0)',
+    ];
     final whereArgs = <Object?>[];
     final query = keyword?.trim();
 
     // Filter by types (defaults to annotation types if not specified)
     final filterTypes = types ?? annotationTypes;
     if (filterTypes.isNotEmpty) {
-      where.add("type IN ('${filterTypes.join("', '")}')");
+      where.add('type IN (${List.filled(filterTypes.length, '?').join(',')})');
+      whereArgs.addAll(filterTypes);
     }
 
     if (query != null && query.isNotEmpty) {
-      where.add('(content LIKE ? OR reader_note LIKE ? OR chapter LIKE ?)');
-      final pattern = '%$query%';
+      where.add(r"(content LIKE ? ESCAPE '\' OR reader_note LIKE ? ESCAPE '\' "
+          r"OR chapter LIKE ? ESCAPE '\')");
+      final pattern = searchPattern(query);
       whereArgs.addAll([pattern, pattern, pattern]);
     }
 
@@ -161,7 +168,7 @@ class BookNoteDao extends BaseDao {
       mapper: BookNote.fromDb,
       where: where.isEmpty ? null : where.join(' AND '),
       whereArgs: whereArgs.isEmpty ? null : whereArgs,
-      orderBy: 'update_time DESC',
+      orderBy: 'update_time DESC, id DESC',
       limit: limit,
     );
   }

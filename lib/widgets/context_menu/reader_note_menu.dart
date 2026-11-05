@@ -2,8 +2,7 @@ import 'package:paperfold/dao/book_note.dart';
 import 'package:paperfold/l10n/generated/L10n.dart';
 import 'package:paperfold/models/book_note.dart';
 import 'package:paperfold/widgets/common/axis_flex.dart';
-import 'package:flutter/material.dart';
-import 'package:icons_plus/icons_plus.dart';
+import 'package:material_ui/material_ui.dart';
 
 class ReaderNoteMenu extends StatefulWidget {
   const ReaderNoteMenu({
@@ -158,7 +157,7 @@ class ReaderNoteMenuState extends State<ReaderNoteMenu> {
                     ),
                     if (showSaveButton)
                       IconButton(
-                        icon: const Icon(EvaIcons.checkmark_circle_2_outline),
+                        icon: const Icon(Icons.check_circle_outline),
                         onPressed: () {
                           saveNote();
                           // remove focus

@@ -6,14 +6,13 @@ import 'package:paperfold/l10n/generated/L10n.dart';
 import 'package:paperfold/service/config/config_item.dart';
 import 'package:paperfold/service/translate/deepl.dart';
 import 'package:paperfold/service/translate/google_api.dart';
+import 'package:paperfold/service/translate/google_web.dart';
 import 'package:paperfold/service/translate/microsoft_api.dart';
-import 'package:paperfold/service/translate/web_view.dart';
 import 'package:paperfold/utils/log/common.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 
 enum TranslateService {
-  bingWeb,
   googleWeb,
   microsoftApi,
   googleApi,
@@ -21,8 +20,6 @@ enum TranslateService {
 
   TranslateServiceProvider get provider {
     switch (this) {
-      case TranslateService.bingWeb:
-        return BingWebTranslateProvider();
       case TranslateService.googleWeb:
         return GoogleWebTranslateProvider();
       case TranslateService.microsoftApi:
@@ -37,9 +34,6 @@ enum TranslateService {
   /// Get the display label from the provider.
   String getLabel(BuildContext context) => provider.getLabel(context);
 
-  /// Check if the service is a WebView provider.
-  bool get isWebView => provider is WebViewTranslateProvider;
-
   static List<TranslateService> get activeValues => values;
 }
 
@@ -51,7 +45,8 @@ TranslateService getTranslateService(String name) {
   try {
     return TranslateService.values.firstWhere((e) => e.name == name);
   } catch (e) {
-    return TranslateService.bingWeb;
+    // Includes the retired 'bingWeb', which embedded Bing's web page.
+    return TranslateService.googleWeb;
   }
 }
 
@@ -148,32 +143,44 @@ abstract class TranslateServiceProvider {
     return StreamBuilder<String>(
       stream: stream,
       builder: (context, snapshot) {
-        Widget content() {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Text('...');
-          } else if (snapshot.hasError) {
-            return Text('Error: ${snapshot.error}');
-          } else if (snapshot.hasData) {
-            return Text(snapshot.data!);
-          } else {
-            return const Text('');
-          }
+        final theme = Theme.of(context);
+        final l10n = L10n.of(context);
+        if (snapshot.hasError) {
+          return Text(
+            '${snapshot.error}'.replaceAll('Exception: ', ''),
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.error,
+            ),
+          );
         }
-
+        final text = snapshot.data;
+        if (text == null || text == '...') {
+          // Three literal dots read as nothing to a screen reader.
+          return Semantics(
+            label: l10n.translateWorking,
+            liveRegion: true,
+            child: const SizedBox.square(
+              dimension: 20,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            ),
+          );
+        }
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
-            content(),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                TextButton(
-                    onPressed: () =>
-                        Clipboard.setData(ClipboardData(text: snapshot.data!)),
-                    child: Text(L10n.of(context).commonCopy))
-              ],
-            )
+            Semantics(
+              liveRegion: true,
+              child: Text(text, style: theme.textTheme.bodyLarge),
+            ),
+            Align(
+              alignment: AlignmentDirectional.centerEnd,
+              child: TextButton.icon(
+                onPressed: () => Clipboard.setData(ClipboardData(text: text)),
+                icon: const Icon(Icons.copy, size: 18),
+                label: Text(l10n.commonCopy),
+              ),
+            ),
           ],
         );
       },

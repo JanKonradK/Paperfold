@@ -1083,9 +1083,9 @@ class Reader {
     this.view.addEventListener('doctouchend', this.#onTouchEnd.bind(this))
 
     setStyle()
-    if (!cfi)
-      this.view.renderer.next()
     this.setView(this.view)
+    // Without a position, init turns to the first page. A second turn here
+    // opened a new PDF on page 2.
     await this.view.init({ lastLocation: cfi })
 
     // set html bg color to grey 
@@ -1282,6 +1282,9 @@ class Reader {
     // console.log('Original content saved', this.#originalContent);
     // }
 
+    // A PDF's text layer is invisible, and walking its every text node on
+    // each page turn was wasted work.
+    if (isPdf) return
     this.#saveOriginalContent()
 
     this.readingFeatures(readingRules)
@@ -1370,6 +1373,7 @@ class Reader {
   }
 
   readingFeatures = () => {
+    if (isPdf) return
     this.#restoreOriginalContent()
     readingFeaturesDocHandler(this.#doc)
   }

@@ -5,6 +5,8 @@ import 'package:paperfold/widgets/reading_page/more_settings/other_settings.dart
 import 'package:paperfold/widgets/reading_page/more_settings/reading_settings.dart';
 import 'package:paperfold/widgets/reading_page/more_settings/style_settings.dart';
 import 'package:contentsize_tabbarview/contentsize_tabbarview.dart';
+// This animation fork takes the legacy TabController. The app-level
+// MaterialUiCompatibilityBridge supplies its theme and localizations.
 import 'package:flutter/material.dart';
 import 'package:pointer_interceptor/pointer_interceptor.dart';
 

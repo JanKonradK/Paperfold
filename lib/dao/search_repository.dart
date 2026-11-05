@@ -1,11 +1,15 @@
 import 'package:paperfold/dao/book.dart';
 import 'package:paperfold/dao/book_note.dart';
+import 'package:paperfold/dao/search_journal.dart';
 import 'package:paperfold/models/book_note.dart';
 import 'package:paperfold/models/search_note_group.dart';
 import 'package:paperfold/models/search_result_data.dart';
+import 'package:sqflite/sqflite.dart';
 
 class SearchRepository {
-  const SearchRepository();
+  const SearchRepository({Database? database}) : _database = database;
+
+  final Database? _database;
 
   Future<SearchResultData> search(
     String keyword, {
@@ -15,12 +19,20 @@ class SearchRepository {
     int? limit,
   }) async {
     final query = keyword.trim();
-    if (query.isEmpty) {
+    if (query.isEmpty || (limit != null && limit <= 0)) {
       return SearchResultData.empty;
     }
 
-    final books = await bookDao.searchBooks(query);
-    final notes = await bookNoteDao.searchBookNotesAdvanced(
+    final booksDao = BookDao(database: _database);
+    final books = await booksDao.searchBooks(
+      query,
+      bookId: bookId,
+      from: from,
+      to: to,
+      limit: limit,
+    );
+    final notes =
+        await BookNoteDao(database: _database).searchBookNotesAdvanced(
       keyword: query,
       bookId: bookId,
       from: from,
@@ -28,10 +40,13 @@ class SearchRepository {
       limit: limit,
     );
 
-    if (notes.isEmpty) {
-      return SearchResultData(
-          books: books, noteGroups: const <SearchNoteGroup>[]);
-    }
+    final journalResults = await SearchJournalDao(database: _database).search(
+      query,
+      bookId: bookId,
+      from: from,
+      to: to,
+      limit: limit,
+    );
 
     final notesByBookId = <int, List<BookNote>>{};
     for (final note in notes) {
@@ -39,7 +54,7 @@ class SearchRepository {
     }
 
     final relatedBookIds = notesByBookId.keys.toList(growable: false);
-    final relatedBooks = await bookDao.selectBooksByIds(relatedBookIds);
+    final relatedBooks = await booksDao.selectBooksByIds(relatedBookIds);
     final relatedBookMap = {
       for (final book in relatedBooks) book.id: book,
     };
@@ -66,6 +81,10 @@ class SearchRepository {
       );
     }
 
-    return SearchResultData(books: books, noteGroups: noteGroups);
+    return SearchResultData(
+      books: books,
+      noteGroups: noteGroups,
+      journalResults: journalResults,
+    );
   }
 }

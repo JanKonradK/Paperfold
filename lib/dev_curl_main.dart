@@ -11,7 +11,7 @@
 // mid-range Android phone. A debug build and an emulator both lie about
 // frame time.
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:paperfold/page/dev/page_curl_demo.dart';
 
 void main() {

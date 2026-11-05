@@ -1,6 +1,6 @@
 import 'package:paperfold/providers/heatmap_data.dart';
 import 'package:paperfold/providers/statistic_data.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_heatmap_calendar/flutter_heatmap_calendar.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 

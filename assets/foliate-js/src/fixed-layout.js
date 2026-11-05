@@ -41,6 +41,9 @@ export class FixedLayout extends HTMLElement {
     #right
     #center
     #side
+    #turn = 0
+    // The turn on screen. While it differs from #turn, a spread is loading.
+    #shown = 0
     constructor() {
         super()
 
@@ -77,10 +80,9 @@ export class FixedLayout extends HTMLElement {
                 iframe.removeEventListener('load', onload)
                 const doc = iframe.contentDocument
                 doc.position = position
-                this.dispatchEvent(new CustomEvent('load', { detail: { doc, index } }))
                 const { width, height } = getViewport(doc, this.defaultViewport)
                 resolve({
-                    element, iframe,
+                    element, iframe, doc, index,
                     width: parseFloat(width),
                     height: parseFloat(height),
                 })
@@ -138,40 +140,51 @@ export class FixedLayout extends HTMLElement {
             transform(right)
         }
     }
-    async #showSpread({ left, right, center, side }) {
-        this.#root.replaceChildren()
-        this.#left = null
-        this.#right = null
-        this.#center = null
+    async #showSpread({ left, right, center }, turn) {
+        // The old page stays on screen until the new one has loaded. Clearing
+        // it first showed an empty reader for every turn.
+        const old = [...this.#root.children]
+        const frames = center
+            ? [await this.#createFrame('center', center)]
+            : await Promise.all([
+                this.#createFrame('left', left),
+                this.#createFrame('right', right),
+            ])
+        if (turn !== this.#turn) {
+            for (const frame of frames) frame.element.remove()
+            return false
+        }
+        for (const element of old) element.remove()
+        // Announced only now, so a superseded page never becomes the reader's
+        // current document.
+        for (const { doc, index } of frames) if (doc)
+            this.dispatchEvent(new CustomEvent('load', { detail: { doc, index } }))
         if (center) {
-            this.#center = await this.#createFrame('center', center)
+            [this.#center] = frames
+            this.#left = this.#right = null
             this.#side = 'center'
-            this.#render()
         } else {
-            this.#left = await this.#createFrame('left', left)
-            this.#right = await this.#createFrame('right', right)
+            [this.#left, this.#right] = frames
+            this.#center = null
+            // #side, not the side asked for: a tap during the load can
+            // have moved to the other page of this spread.
             this.#side = this.#left.blank ? 'right'
-                : this.#right.blank ? 'left' : side
+                : this.#right.blank ? 'left' : this.#side
+        }
+        this.#shown = turn
+        this.#render()
+        return true
+    }
+    // In portrait, moves to the other page of the spread on screen or loading.
+    #goSide(side) {
+        const spread = this.#spreads[this.#index]
+        if (!this.#portrait || this.#side === side || !spread?.[side]) return false
+        this.#side = side
+        if (this.#shown === this.#turn) {
             this.#render()
+            this.#reportLocation('page')
         }
-    }
-    #goLeft() {
-        if (this.#center || this.#left?.blank) return
-        if (this.#portrait && this.#left?.element?.style?.display === 'none') {
-            this.#right.element.style.display = 'none'
-            this.#left.element.style.display = 'block'
-            this.#side = 'left'
-            return true
-        }
-    }
-    #goRight() {
-        if (this.#center || this.#right?.blank) return
-        if (this.#portrait && this.#right?.element?.style?.display === 'none') {
-            this.#left.element.style.display = 'none'
-            this.#right.element.style.display = 'block'
-            this.#side = 'right'
-            return true
-        }
+        return true
     }
     open(book) {
         this.book = book
@@ -221,7 +234,7 @@ export class FixedLayout extends HTMLElement {
     }
     get index() {
         const spread = this.#spreads[this.#index]
-        const section = spread?.center ?? (this.side === 'left'
+        const section = spread?.center ?? (this.#side === 'left'
             ? spread.left ?? spread.right : spread.right ?? spread.left)
         return this.book.sections.indexOf(section)
     }
@@ -241,24 +254,35 @@ export class FixedLayout extends HTMLElement {
     async goToSpread(index, side, reason) {
         if (index < 0 || index > this.#spreads.length - 1) return
         if (index === this.#index) {
-            this.#render(side)
+            // A target in the shown spread can be its hidden portrait page.
+            if (side) this.#side = side
+            if (this.#shown !== this.#turn) return
+            this.#render()
+            this.#reportLocation(reason)
             return
         }
         this.#index = index
+        // Set now, so a turn during the load continues from this page.
+        this.#side = side
+        // A newer turn supersedes this one, so fast taps do not stack loads.
+        const turn = ++this.#turn
         const spread = this.#spreads[index]
+        const { sections } = this.book
+        let shown
         if (spread.center) {
-            const index = this.book.sections.indexOf(spread.center)
-            const src = await spread.center?.load?.()
-            await this.#showSpread({ center: { index, src } })
+            const src = await spread.center.load?.()
+            if (turn !== this.#turn) return
+            shown = await this.#showSpread({ center:
+                { index: sections.indexOf(spread.center), src } }, turn)
         } else {
-            const indexL = this.book.sections.indexOf(spread.left)
-            const indexR = this.book.sections.indexOf(spread.right)
-            const srcL = await spread.left?.load?.()
-            const srcR = await spread.right?.load?.()
-            const left = { index: indexL, src: srcL }
-            const right = { index: indexR, src: srcR }
-            await this.#showSpread({ left, right, side })
+            const [srcL, srcR] = await Promise.all([
+                spread.left?.load?.(), spread.right?.load?.()])
+            if (turn !== this.#turn) return
+            const left = { index: sections.indexOf(spread.left), src: srcL }
+            const right = { index: sections.indexOf(spread.right), src: srcR }
+            shown = await this.#showSpread({ left, right }, turn)
         }
+        if (!shown) return
         this.#reportLocation(reason)
     }
     async select(target) {
@@ -274,14 +298,12 @@ export class FixedLayout extends HTMLElement {
         await this.goToSpread(index, side)
     }
     async next() {
-        const s = this.rtl ? this.#goLeft() : this.#goRight()
-        if (s) this.#reportLocation('page')
-        else return this.goToSpread(this.#index + 1, this.rtl ? 'right' : 'left', 'page')
+        if (!this.#goSide(this.rtl ? 'left' : 'right'))
+            return this.goToSpread(this.#index + 1, this.rtl ? 'right' : 'left', 'page')
     }
     async prev() {
-        const s = this.rtl ? this.#goRight() : this.#goLeft()
-        if (s) this.#reportLocation('page')
-        else return this.goToSpread(this.#index - 1, this.rtl ? 'left' : 'right', 'page')
+        if (!this.#goSide(this.rtl ? 'right' : 'left'))
+            return this.goToSpread(this.#index - 1, this.rtl ? 'left' : 'right', 'page')
     }
     getContents() {
         return Array.from(this.#root.querySelectorAll('iframe'), frame => ({

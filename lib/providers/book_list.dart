@@ -16,51 +16,48 @@ part 'book_list.g.dart';
 @riverpod
 class BookList extends _$BookList {
   List<List<Book>> groupBooks(List<Book> books) {
-    var groupedBooks = <List<Book>>[];
-    for (var book in books) {
-      if (book.groupId == 0) {
+    final groupedBooks = <List<Book>>[];
+    final groupsById = <int, List<Book>>{};
+    for (final book in books) {
+      final groupId = book.groupId;
+      if (groupId == 0) {
         groupedBooks.add([book]);
       } else {
-        var existingGroup = groupedBooks.firstWhere(
-          (group) => group.first.groupId == book.groupId,
-          orElse: () => [],
-        );
-        if (existingGroup.isEmpty) {
-          groupedBooks.add([book]);
-        } else {
-          existingGroup.add(book);
-        }
+        groupsById.putIfAbsent(groupId, () {
+          final group = <Book>[];
+          groupedBooks.add(group);
+          return group;
+        }).add(book);
       }
     }
     return groupedBooks;
   }
 
-  int getChineseCompareResult(String a, String b) {
-    String pinyina = '';
-    String pinyinb = '';
+  String _sortText(String value) {
     try {
-      pinyina = PinyinHelper.getPinyin(a, format: PinyinFormat.WITHOUT_TONE);
-    } catch (e) {
-      pinyina = a;
+      return PinyinHelper.getPinyin(value, format: PinyinFormat.WITHOUT_TONE);
+    } catch (_) {
+      return value;
     }
-    try {
-      pinyinb = PinyinHelper.getPinyin(b, format: PinyinFormat.WITHOUT_TONE);
-    } catch (e) {
-      pinyinb = b;
-    }
-
-    return pinyina.compareTo(pinyinb);
   }
 
   List<Book> sortBooks(List<Book> books) {
+    final sortField = Prefs().sortField;
+    final ascending = Prefs().sortOrder == SortOrderEnum.ascending;
+    // Keep keys only for this sort; editing a title or author cannot leave a
+    // stale key in the next refresh.
+    final textKeys = <String, String>{};
+    String textKey(String value) =>
+        textKeys.putIfAbsent(value, () => _sortText(value));
+
     books.sort((a, b) {
       int compareResult;
-      switch (Prefs().sortField) {
+      switch (sortField) {
         case SortFieldEnum.title:
-          compareResult = getChineseCompareResult(a.title, b.title);
+          compareResult = textKey(a.title).compareTo(textKey(b.title));
           break;
         case SortFieldEnum.author:
-          compareResult = getChineseCompareResult(a.author, b.author);
+          compareResult = textKey(a.author).compareTo(textKey(b.author));
           break;
         case SortFieldEnum.lastReadTime:
           compareResult = a.updateTime.compareTo(b.updateTime);
@@ -72,9 +69,7 @@ class BookList extends _$BookList {
           compareResult = a.createTime.compareTo(b.createTime);
           break;
       }
-      return Prefs().sortOrder == SortOrderEnum.ascending
-          ? compareResult
-          : -compareResult;
+      return ascending ? compareResult : -compareResult;
     });
     return books;
   }
@@ -96,7 +91,7 @@ class BookList extends _$BookList {
   }
 
   Future<List<List<Book>>> _buildWithFilters({String? query}) async {
-    final status = ref.watch(readingStatusFilterNotifierProvider);
+    final status = ref.watch(readingStatusFilterProvider);
     final selectedTags = ref.watch(tagSelectionProvider);
 
     final books = await bookDao.selectNotDeleteBooks();

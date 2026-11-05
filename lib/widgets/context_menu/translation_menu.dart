@@ -3,9 +3,11 @@ import 'package:paperfold/enums/lang_list.dart';
 import 'package:paperfold/l10n/generated/L10n.dart';
 import 'package:paperfold/service/translate/index.dart';
 import 'package:paperfold/widgets/common/axis_flex.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:pointer_interceptor/pointer_interceptor.dart';
+
 import 'dart:async';
+import 'dart:math' as math;
 
 class TranslationMenu extends StatefulWidget {
   const TranslationMenu({
@@ -44,19 +46,21 @@ class _TranslationMenuState extends State<TranslationMenu> {
       _debounceTimer?.cancel();
       _debounceTimer = Timer(const Duration(milliseconds: 300), () {
         if (!mounted || _translationInitialized) return;
-
-        setState(() {
-          final effectiveContextText =
-              (widget.contextText?.trim().isEmpty ?? true)
-                  ? null
-                  : widget.contextText;
-          _translationWidget = translateText(
-            widget.content,
-            contextText: effectiveContextText,
-          );
-          _translationInitialized = true;
-        });
+        _translationInitialized = true;
+        _translate();
       });
+    });
+  }
+
+  void _translate() {
+    final effectiveContextText = (widget.contextText?.trim().isEmpty ?? true)
+        ? null
+        : widget.contextText;
+    setState(() {
+      _translationWidget = translateText(
+        widget.content,
+        contextText: effectiveContextText,
+      );
     });
   }
 
@@ -84,18 +88,23 @@ class _TranslationMenuState extends State<TranslationMenu> {
         controller: menuController,
         menuChildren: [
           for (var lang in LangListEnum.values)
-            PointerInterceptor(
-              child: MenuItemButton(
-                onPressed: () {
-                  if (isFrom) {
-                    Prefs().translateFrom = lang;
-                  } else {
-                    Prefs().translateTo = lang;
-                  }
-                },
-                child: Text(lang.getNative(context)),
+            // Auto-detect is a source, never a target.
+            if (isFrom || lang != LangListEnum.auto)
+              PointerInterceptor(
+                child: MenuItemButton(
+                  onPressed: () {
+                    if (isFrom) {
+                      Prefs().translateFrom = lang;
+                    } else {
+                      Prefs().translateTo = lang;
+                    }
+                    // The choice was saved but the popup kept the old label
+                    // and the old translation, so it looked ignored.
+                    _translate();
+                  },
+                  child: Text(lang.getNative(context)),
+                ),
               ),
-            ),
         ],
         builder: (context, controller, child) {
           // A bare Text in a GestureDetector: no button semantics, no visible
@@ -134,67 +143,77 @@ class _TranslationMenuState extends State<TranslationMenu> {
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
     final L10n l10n = L10n.of(context);
-    // The panel grows with the system text setting. A fixed 150 dp box clipped
-    // the passage and the two pickers at the larger steps.
-    final double scale =
-        MediaQuery.textScalerOf(context).scale(1).clamp(1.0, 2.0);
+    // The panel grows with the system text setting, up to part of the screen.
+    final double scale = MediaQuery.textScalerOf(context)
+        .scale(1)
+        .clamp(1.0, 2.0);
+    final double height = math.min(
+      220 * scale,
+      MediaQuery.sizeOf(context).height * 0.45,
+    );
 
     return Expanded(
       child: AnimatedSize(
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeOut,
         child: Container(
-          height: widget.axis == Axis.vertical ? double.infinity : 150 * scale,
+          height: widget.axis == Axis.vertical ? double.infinity : height,
           width: widget.axis == Axis.vertical ? 100 * scale : double.infinity,
           decoration: widget.decoration,
           padding: const EdgeInsets.all(8),
-          child: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // The passage keeps the book's voice and the reader's chosen
-                // text size, instead of a hard 16 points in the platform font.
-                Text(
-                  widget.content,
-                  style: theme.textTheme.bodyLarge,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 8),
-                Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // A translation in flight was three literal dots, which a
-                    // screen reader reads as nothing at all.
-                    _translationWidget ??
-                        Semantics(
-                          label: l10n.translateWorking,
-                          liveRegion: true,
-                          child: const SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // The passage is already highlighted on the page; two
+                      // lines identify it without crowding out the result.
+                      Text(
+                        widget.content,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
                         ),
-                    const Divider(),
-                    AxisFlex(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      axis: widget.axis,
-                      children: [
-                        _langPicker(true),
-                        Transform.rotate(
-                            angle: widget.axis == Axis.horizontal ? 0 : 1.57,
-                            child: Icon(Icons.arrow_forward_ios, size: 16)),
-                        _langPicker(false),
-                        if (widget.axis == Axis.horizontal) const Spacer(),
-                      ],
-                    ),
-                  ],
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 8),
+                      // A translation in flight was three literal dots, which
+                      // a screen reader reads as nothing at all.
+                      _translationWidget ??
+                          Semantics(
+                            label: l10n.translateWorking,
+                            liveRegion: true,
+                            child: const SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            ),
+                          ),
+                    ],
+                  ),
                 ),
-              ],
-            ),
+              ),
+              // The languages stay in reach however long the translation is.
+              const Divider(height: 8),
+              AxisFlex(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                axis: widget.axis,
+                children: [
+                  _langPicker(true),
+                  Transform.rotate(
+                    angle: widget.axis == Axis.horizontal ? 0 : 1.57,
+                    child: Icon(Icons.arrow_forward_ios, size: 16),
+                  ),
+                  _langPicker(false),
+                  if (widget.axis == Axis.horizontal) const Spacer(),
+                ],
+              ),
+            ],
           ),
         ),
       ),

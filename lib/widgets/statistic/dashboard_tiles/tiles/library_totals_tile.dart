@@ -4,7 +4,7 @@ import 'package:paperfold/widgets/common/async_skeleton_wrapper.dart';
 import 'package:paperfold/widgets/statistic/dashboard_tiles/dashboard_tile_base.dart';
 import 'package:paperfold/widgets/statistic/dashboard_tiles/dashboard_tile_metadata.dart';
 import 'package:paperfold/widgets/statistic/dashboard_tiles/dashboard_tile_registry.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class LibraryTotalsTile extends StatisticsDashboardTileBase {
@@ -31,10 +31,15 @@ class LibraryTotalsTile extends StatisticsDashboardTileBase {
     final l10n = L10n.of(context);
 
     return AsyncSkeletonWrapper<List>(
+        onRetry: () async {
+          for (final type in StatisticType.values) {
+            ref.invalidate(staticticsSummaryValueProvider(type));
+          }
+        },
         asyncValue: combineAsyncValues([
-          ref.watch(StaticticsSummaryValueProvider(StatisticType.totalBooks)),
-          ref.watch(StaticticsSummaryValueProvider(StatisticType.totalDates)),
-          ref.watch(StaticticsSummaryValueProvider(StatisticType.totalNotes)),
+          ref.watch(staticticsSummaryValueProvider(StatisticType.totalBooks)),
+          ref.watch(staticticsSummaryValueProvider(StatisticType.totalDates)),
+          ref.watch(staticticsSummaryValueProvider(StatisticType.totalNotes)),
         ]),
         mock: [0, 0, 0],
         builder: (data, _) {

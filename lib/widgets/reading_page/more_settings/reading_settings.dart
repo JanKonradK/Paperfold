@@ -8,8 +8,7 @@ import 'package:paperfold/l10n/generated/L10n.dart';
 import 'package:paperfold/models/reading_info.dart';
 import 'package:paperfold/page/reading_page.dart';
 import 'package:paperfold/widgets/common/anx_segmented_button.dart';
-import 'package:flutter/material.dart';
-import 'package:icons_plus/icons_plus.dart';
+import 'package:material_ui/material_ui.dart';
 
 class ReadingMoreSettings extends StatefulWidget {
   const ReadingMoreSettings({super.key});
@@ -111,12 +110,12 @@ class _ReadingMoreSettingsState extends State<ReadingMoreSettings> {
                       SegmentButtonItem(
                         label: L10n.of(context).readingPageSingle,
                         value: 1,
-                        icon: const Icon(EvaIcons.book),
+                        icon: const Icon(Icons.book_outlined),
                       ),
                       SegmentButtonItem(
                         label: L10n.of(context).readingPageDouble,
                         value: 2,
-                        icon: const Icon(EvaIcons.book_open),
+                        icon: const Icon(Icons.menu_book_outlined),
                       ),
                     ],
                     selected: {Prefs().bookStyle.maxColumnCount},
@@ -200,19 +199,19 @@ class _ReadingMoreSettingsState extends State<ReadingMoreSettings> {
                       SegmentButtonItem(
                         label: L10n.of(context).readingPageWritingDirectionAuto,
                         value: WritingModeEnum.auto,
-                        icon: const Icon(EvaIcons.activity_outline),
+                        icon: const Icon(Icons.auto_awesome),
                       ),
                       SegmentButtonItem(
                         label: L10n.of(context)
                             .readingPageWritingDirectionVertical,
                         value: WritingModeEnum.verticalRl,
-                        icon: const Icon(Bootstrap.arrows_vertical),
+                        icon: const Icon(Icons.swap_vert),
                       ),
                       SegmentButtonItem(
                         label: L10n.of(context)
                             .readingPageWritingDirectionHorizontal,
                         value: WritingModeEnum.horizontalTb,
-                        icon: const Icon(Bootstrap.arrows),
+                        icon: const Icon(Icons.swap_horiz),
                       ),
                     ],
                     selected: {Prefs().writingMode},

@@ -1,9 +1,11 @@
 import 'dart:io';
 import 'dart:typed_data';
+
 import 'package:paperfold/config/shared_preference_provider.dart';
 import 'package:paperfold/utils/get_path/get_base_path.dart';
 import 'package:paperfold/utils/log/common.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as path;
 import 'package:shelf/shelf.dart' as shelf;
 import 'package:shelf/shelf_io.dart' as io;
@@ -29,7 +31,7 @@ class Server {
 
     var handler = const shelf.Pipeline()
         .addMiddleware(shelf.logRequests())
-        .addHandler(_handleRequests);
+        .addHandler(handleRequest);
 
     int port = Prefs().lastServerPort;
 
@@ -37,13 +39,16 @@ class Server {
       _server = await io.serve(handler, '127.0.0.1', port);
     } catch (e, s) {
       AnxLog.warning(
-          'Server: Failed to bind to port $port, trying random port $e', s);
+        'Server: Failed to bind to port $port, trying random port $e',
+        s,
+      );
       _server = await io.serve(handler, '127.0.0.1', 0);
     }
 
     Prefs().lastServerPort = _server!.port;
     AnxLog.info(
-        'Server: Serving at http://${_server?.address.host}:${_server?.port}');
+      'Server: Serving at http://${_server?.address.host}:${_server?.port}',
+    );
   }
 
   int get port {
@@ -74,11 +79,20 @@ class Server {
     return _tempFileName!;
   }
 
-  Future<shelf.Response> _handleRequests(shelf.Request request) async {
+  void clearTempFile() {
+    _tempFile = null;
+    _tempFileName = null;
+  }
+
+  @visibleForTesting
+  Future<shelf.Response> handleRequest(shelf.Request request) async {
     final uriPath = request.requestedUri.path;
     AnxLog.info('Server: Request for $uriPath');
 
     if (_tempFileName != null && uriPath == "/${_tempFileName!}") {
+      if (_tempFile == null || !await _tempFile!.exists()) {
+        return shelf.Response.notFound('Book not found');
+      }
       return shelf.Response.ok(
         _tempFile?.openRead(),
         headers: {
@@ -113,8 +127,7 @@ class Server {
             'assets/fonts/SourceHanSerifSC-Regular.otf',
         'SourceHanSerifSC-Bold.otf': 'assets/fonts/SourceHanSerifSC-Bold.otf',
       };
-      final assetPath =
-          bundled[path.basename(Uri.decodeComponent(uriPath))];
+      final assetPath = bundled[path.basename(Uri.decodeComponent(uriPath))];
       if (assetPath == null) {
         return shelf.Response.notFound('Font not found');
       }
@@ -122,8 +135,7 @@ class Server {
       return shelf.Response.ok(
         data.buffer.asUint8List(),
         headers: {
-          'Content-Type':
-              assetPath.endsWith('.otf') ? 'font/otf' : 'font/ttf',
+          'Content-Type': assetPath.endsWith('.otf') ? 'font/otf' : 'font/ttf',
           'Access-Control-Allow-Origin': '*',
           'cache-control': 'public, max-age=31536000',
         },
@@ -131,8 +143,9 @@ class Server {
     } else if (uriPath.startsWith('/fonts/')) {
       Directory fontDir = getFontDir();
       final file = File(
-          '${fontDir.path}/${path.basename(Uri.decodeComponent(uriPath))}');
-      if (!file.existsSync()) {
+        '${fontDir.path}/${path.basename(Uri.decodeComponent(uriPath))}',
+      );
+      if (!_isInside(fontDir, file)) {
         return shelf.Response.notFound('Font not found');
       }
       return shelf.Response.ok(
@@ -144,48 +157,45 @@ class Server {
         },
       );
     } else if (uriPath.startsWith('/foliate-js/')) {
-      if (uriPath.endsWith('.epub')) {
-        final file =
-            await rootBundle.load('assets/foliate-js/${uriPath.substring(12)}');
+      final relativePath = Uri.decodeComponent(uriPath.substring(12));
+      if (relativePath.startsWith('/') ||
+          relativePath.contains('\\') ||
+          relativePath.contains('\u0000') ||
+          relativePath.split('/').any((part) => part == '.' || part == '..')) {
+        return shelf.Response.notFound('Reader asset not found');
+      }
+      const contentTypes = {
+        '.html': 'text/html',
+        '.css': 'text/css',
+        '.js': 'application/javascript',
+        '.mjs': 'application/javascript',
+        '.json': 'application/json',
+        '.epub': 'application/epub+zip',
+        '.wasm': 'application/wasm',
+        '.svg': 'image/svg+xml',
+        '.ttf': 'font/ttf',
+        '.otf': 'font/otf',
+      };
+      try {
+        final data = await rootBundle.load('assets/foliate-js/$relativePath');
         return shelf.Response.ok(
-          file.buffer.asUint8List(),
+          data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes),
           headers: {
-            'Content-Type': 'application/epub+zip',
-            'Access-Control-Allow-Origin': '*', // Add this line
+            'Content-Type':
+                contentTypes[path.extension(relativePath)] ??
+                'application/octet-stream',
+            'Access-Control-Allow-Origin': '*',
           },
         );
+      } on FlutterError {
+        return shelf.Response.notFound('Reader asset not found');
       }
-      String content =
-          await _loadAsset('assets/foliate-js/${uriPath.substring(12)}');
-
-      // Determine content type based on file extension
-      String contentType;
-      if (uriPath.endsWith('.html')) {
-        contentType = 'text/html';
-      } else if (uriPath.endsWith('.css')) {
-        contentType = 'text/css';
-      } else if (uriPath.endsWith('.js')) {
-        contentType = 'application/javascript';
-      } else if (uriPath.endsWith('.json')) {
-        contentType = 'application/json';
-      } else {
-        contentType = 'application/octet-stream';
-      }
-
-      return shelf.Response.ok(
-        content,
-        headers: {
-          'Content-Type': contentType,
-        },
-      );
     } else if (uriPath.startsWith('/bgimg/')) {
       return await _handleBgimgRequest(request);
     } else {
       return shelf.Response.ok(
         'Request for "${request.url}"',
-        headers: {
-          'Access-Control-Allow-Origin': '*',
-        },
+        headers: {'Access-Control-Allow-Origin': '*'},
       );
     }
   }
@@ -194,7 +204,7 @@ class Server {
     final bookPath = Uri.decodeComponent(request.url.path.substring(5));
     final file = File(bookPath);
     AnxLog.info('Server: Request for book: $bookPath');
-    if (!file.existsSync()) {
+    if (!_isInside(getFileDir(), file)) {
       return shelf.Response.notFound('Book not found');
     }
     final headers = {
@@ -212,7 +222,11 @@ class Server {
     } else if (bgimgPath.startsWith('local/')) {
       final path =
           getBgimgDir().path + Platform.pathSeparator + bgimgPath.substring(6);
-      file = (await File(path).readAsBytes()).buffer;
+      final image = File(path);
+      if (!_isInside(getBgimgDir(), image)) {
+        return shelf.Response.notFound('Bgimg not found');
+      }
+      file = (await image.readAsBytes()).buffer;
     } else {
       return shelf.Response.notFound('Bgimg not found');
     }
@@ -221,5 +235,17 @@ class Server {
       'Access-Control-Allow-Origin': '*',
     };
     return shelf.Response.ok(file.asUint8List(), headers: headers);
+  }
+
+  bool _isInside(Directory directory, File file) {
+    try {
+      return file.existsSync() &&
+          path.isWithin(
+            directory.resolveSymbolicLinksSync(),
+            file.resolveSymbolicLinksSync(),
+          );
+    } on FileSystemException {
+      return false;
+    }
   }
 }
