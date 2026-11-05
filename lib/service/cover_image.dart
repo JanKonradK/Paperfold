@@ -5,7 +5,6 @@ import 'package:flutter/foundation.dart';
 import 'package:image/image.dart' as img;
 import 'package:image_picker/image_picker.dart';
 import 'package:paperfold/utils/get_path/get_base_path.dart';
-import 'package:paperfold/utils/platform_utils.dart';
 
 /// The largest cover file Paperfold reads. A phone photo is 2 to 8 MiB.
 const coverMaxBytes = 20 * 1024 * 1024;
@@ -28,7 +27,7 @@ class CoverImageException implements Exception {
 }
 
 /// True when the device can take a photo for a cover.
-bool get canTakeCoverPhoto => AnxPlatform.isAndroid || AnxPlatform.isIOS;
+bool get canTakeCoverPhoto => Platform.isAndroid || Platform.isIOS;
 
 /// Lets the reader choose a JPG or PNG file. Returns null on cancel.
 Future<File?> chooseCoverFile() async {
@@ -89,10 +88,16 @@ bool _isPng(Uint8List b) =>
   final longEdge = image.width >= image.height ? image.width : image.height;
   if (longEdge > coverLongEdge) {
     image = image.width >= image.height
-        ? img.copyResize(image,
-            width: coverLongEdge, interpolation: img.Interpolation.average)
-        : img.copyResize(image,
-            height: coverLongEdge, interpolation: img.Interpolation.average);
+        ? img.copyResize(
+            image,
+            width: coverLongEdge,
+            interpolation: img.Interpolation.average,
+          )
+        : img.copyResize(
+            image,
+            height: coverLongEdge,
+            interpolation: img.Interpolation.average,
+          );
   }
   image
     ..exif = img.ExifData()

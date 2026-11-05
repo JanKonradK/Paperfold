@@ -1,10 +1,11 @@
+import 'dart:io';
+
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:paperfold/config/shared_preference_provider.dart';
 import 'package:paperfold/l10n/generated/L10n.dart';
 import 'package:paperfold/utils/log/common.dart';
-import 'package:paperfold/utils/platform_utils.dart';
 import 'package:timezone/data/latest.dart' as tz_data;
 import 'package:timezone/timezone.dart' as tz;
 
@@ -21,7 +22,7 @@ abstract final class ReadingReminder {
   static bool _ready = false;
 
   /// Desktop systems have no background delivery for a closed app.
-  static bool get supported => AnxPlatform.isAndroid || AnxPlatform.isIOS;
+  static bool get supported => Platform.isAndroid || Platform.isIOS;
 
   static Future<void> _init() async {
     if (_ready) return;
@@ -35,7 +36,9 @@ abstract final class ReadingReminder {
     }
     await _plugin.initialize(
       settings: const InitializationSettings(
-        android: AndroidInitializationSettings('@drawable/ic_launcher_monochrome'),
+        android: AndroidInitializationSettings(
+          '@drawable/ic_launcher_monochrome',
+        ),
         iOS: DarwinInitializationSettings(
           requestAlertPermission: false,
           requestBadgePermission: false,
@@ -49,7 +52,7 @@ abstract final class ReadingReminder {
   /// Asks the system for permission to show notifications.
   static Future<bool> requestPermission() async {
     await _init();
-    if (AnxPlatform.isAndroid) {
+    if (Platform.isAndroid) {
       return await _plugin
               .resolvePlatformSpecificImplementation<
                 AndroidFlutterLocalNotificationsPlugin
