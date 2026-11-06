@@ -30,3 +30,10 @@
 - Book has no stored chapter display label; detail shows actual paper page and started date, but cannot show an e-book chapter without a model/service source.
 - Motion foundation conflates reduced motion and Remove animations. Local transitions use accessibleNavigation for a 120 ms dissolve, disableAnimations/eInk for zero.
 - Layout uses computed row/grid rectangles rather than measuring two separately mounted render trees.
+
+## Checkpoint: clearance and final verification
+
+- Real Hero flight and reverse now pass (test settles the app before tapping).
+- Short viewport: reserve navigation inset and shorten upright spines so their tap centre stays visible at 200% text.
+- Added HeroMode for inactive shelf pages to prevent duplicate book IDs during flights.
+- Full run 2 reached over 400 passing checks; only the already fixed Hero test failed. Final source run still pending.

@@ -95,7 +95,12 @@ class ShelfHomeController extends AsyncNotifier<ShelfHomeData> {
           .toList(growable: false),
       booksToBuy: booksToBuy,
       tags: tags,
-      customShelves: customShelves,
+      customShelves: {
+        for (final entry in customShelves.entries)
+          entry.key: [
+            for (final book in entry.value) booksById[book.id] ?? book,
+          ],
+      },
       bookTagIds: bookTagIds,
     );
     // Paint the library immediately. File parsing runs outside the UI isolate.

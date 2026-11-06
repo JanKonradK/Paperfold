@@ -1,3 +1,4 @@
+import 'package:paperfold/widgets/bookshelf/book_spine.dart';
 import 'package:paperfold/dao/reading_time.dart';
 import 'package:paperfold/config/shared_preference_provider.dart';
 import 'package:paperfold/enums/book_binding.dart';
@@ -113,13 +114,27 @@ class _BookDetailState extends ConsumerState<BookDetail> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Center(
-          child: PaperfoldPane(
-            tier: PaperfoldGlassTier.glassine,
-            padding: const EdgeInsets.all(PaperfoldSpace.lg),
-            child: BookDetailHero(
-              id: widget.heroId ?? 'book-${_book.id}',
-              cover: cover,
-              child: cover,
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              borderRadius: PaperfoldShape.paneRadius,
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  theme.colorScheme.onSurface.withValues(alpha: .08),
+                  Colors.transparent,
+                ],
+                stops: const [0, .4],
+              ),
+            ),
+            child: PaperfoldPane(
+              tier: PaperfoldGlassTier.glassine,
+              padding: const EdgeInsets.all(PaperfoldSpace.lg),
+              child: BookDetailHero(
+                id: widget.heroId ?? 'book-${_book.id}',
+                cover: cover,
+                child: cover,
+              ),
             ),
           ),
         ),
@@ -854,7 +869,10 @@ class _BookDetailState extends ConsumerState<BookDetail> {
       extendBodyBehindAppBar: true,
       body: BookLight(
         coverPath: _book.coverFullPath,
-        fallback: theme.colorScheme.primary,
+        fallback: BookSpine.resolveVisual(
+          'book-${_book.id}',
+          theme.colorScheme,
+        ).background,
         child: SafeArea(
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(PaperfoldSpace.gutter),

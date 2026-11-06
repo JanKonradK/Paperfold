@@ -23,7 +23,6 @@ import 'package:paperfold/l10n/generated/L10n.dart';
 import 'package:paperfold/dao/wishlist.dart';
 import 'package:paperfold/models/book.dart';
 import 'package:paperfold/models/wishlist_item.dart';
-import 'package:paperfold/page/book_detail.dart';
 import 'package:paperfold/page/book_edit_page.dart';
 import 'package:paperfold/page/journal/book_journal_page.dart';
 import 'package:paperfold/page/opds/book_web_page.dart';
@@ -229,21 +228,6 @@ class _ShelfHomePageState extends ConsumerState<ShelfHomePage>
       }
     } finally {
       if (mounted) setState(() => _openingBook = false);
-    }
-  }
-
-  Future<void> _openShelf(_ShelfSection section) async {
-    await Navigator.of(context).push<void>(
-      MaterialPageRoute(
-        builder: (context) => ShelfCollectionPage(
-          title: section.label,
-          books: section.books,
-          wishlistItems: section.wishlistItems,
-        ),
-      ),
-    );
-    if (mounted) {
-      await ref.read(shelfHomeProvider.notifier).refresh();
     }
   }
 
@@ -637,7 +621,9 @@ class _ShelfHomePageState extends ConsumerState<ShelfHomePage>
                       // Keep the PageView subtree in place when its header hides.
                       key: const ValueKey('shelf-bookcase-region'),
                       child: Padding(
-                        padding: EdgeInsets.only(bottom: 0),
+                        padding: EdgeInsets.only(
+                          bottom: MediaQuery.paddingOf(context).bottom,
+                        ),
                         child: Bookcase(
                           key: _bookcaseKey,
                           showCovers: Prefs().shelfCoverView,

@@ -213,6 +213,10 @@ class ShelfStageState extends State<ShelfStage>
           coverWidth / .68 +
           MediaQuery.textScalerOf(context).scale(14) * 3 +
           16;
+      final spineHeight = math.min(
+        192.0,
+        math.max(72.0, bounds.maxHeight - 52),
+      );
       final spineRects = <Rect>[];
       final coverRects = <Rect>[];
       final labels = <(double, String)>[];
@@ -223,7 +227,7 @@ class ShelfStageState extends State<ShelfStage>
         final book = widget.books[i];
         if (physical != book.isPhysical && !book.isWishlist) {
           if (physical != null) {
-            y += 224;
+            y += spineHeight + 32;
           }
           x = 0;
           groupStart = i;
@@ -238,9 +242,9 @@ class ShelfStageState extends State<ShelfStage>
         }
         if (x + book.spineWidth > width && x > 0) {
           x = 0;
-          y += 208;
+          y += spineHeight + 16;
         }
-        spineRects.add(Rect.fromLTWH(x + 16, y, book.spineWidth, 192));
+        spineRects.add(Rect.fromLTWH(x + 16, y, book.spineWidth, spineHeight));
         // Each group has its own grid origin, resolved below.
         coverRects.add(
           Rect.fromLTWH(

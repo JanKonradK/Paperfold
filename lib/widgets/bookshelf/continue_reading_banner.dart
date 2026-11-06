@@ -1,3 +1,4 @@
+import 'package:paperfold/widgets/bookshelf/book_spine.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:paperfold/config/paperfold_system.dart';
 import 'package:paperfold/widgets/book_light.dart';
@@ -52,7 +53,7 @@ class ContinueReadingBanner extends StatelessWidget {
 
     return BookLight(
       coverPath: book.coverFullPath,
-      fallback: scheme.primary,
+      fallback: BookSpine.resolveVisual('book-${book.id}', scheme).background,
       fade: false,
       borderRadius: PaperfoldShape.paneRadius,
       child: PaperfoldPressable(
