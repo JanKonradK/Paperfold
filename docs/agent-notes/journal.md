@@ -10,3 +10,5 @@
 - Hardware profile, TalkBack, eInk and visual screenshot QA have not been run.
 
 - Committed data layer: 1fb4fb53. Home/composer/photo are committed together because the home opens the composer and renders its attachments. Facing-page integration follows in the next commit.
+
+- Committed home/composer/photos. Reader integration: floating glass bars, opaque replacement panels, Facing page with immutable location snapshots, earlier/later query, draft recovery, pointer interception and IME padding. Remaining: full-suite integration and hardware verification.

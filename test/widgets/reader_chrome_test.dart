@@ -149,17 +149,15 @@ void main() {
     handle.dispose();
   });
 
-  testWidgets('an open panel sits above the tools', (tester) async {
+  testWidgets('an open panel replaces the tools', (tester) async {
     await tester.pumpWidget(host(chrome(
       activeTool: ReaderTool.notes,
       panel: const SizedBox(height: 120, child: Text('panel body')),
     )));
     await tester.pumpAndSettle();
 
-    expect(
-      tester.getRect(find.text('panel body')).bottom,
-      lessThanOrEqualTo(tester.getRect(find.byIcon(Icons.toc)).top),
-    );
+    expect(find.text('panel body'), findsOneWidget);
+    expect(find.byIcon(Icons.toc), findsNothing);
   });
 
   testWidgets('a right-to-left reader gets the same two bars', (tester) async {

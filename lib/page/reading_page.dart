@@ -1,3 +1,4 @@
+import 'package:paperfold/widgets/reading_page/facing_page.dart';
 import 'dart:async';
 import 'dart:math' as math;
 
@@ -428,6 +429,15 @@ class ReadingPageState extends ConsumerState<ReadingPage>
         ),
         onContents: tocHandler,
         onNotes: noteHandler,
+        onFacingPage: () {
+          final player = epubPlayerKey.currentState;
+          final locator = player?.cfi;
+          final progress = player?.percentage;
+          final label = player?.chapterTitle;
+          hideBottomBar();
+          showFacingPage(context, book: _book, locator: locator,
+            progress: progress, label: label);
+        },
         onProgress: progressHandler,
         onStyle: styleHandler,
       ),

@@ -1,3 +1,7 @@
+import 'package:paperfold/widgets/common/paperfold_transition.dart';
+import 'package:paperfold/config/paperfold_motion.dart';
+import 'package:paperfold/config/paperfold_system.dart';
+import 'package:paperfold/config/paperfold_visual_policy.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:paperfold/l10n/generated/L10n.dart';
 import 'package:paperfold/widgets/paperfold_glass_surface.dart';
@@ -6,13 +10,7 @@ import 'package:paperfold/widgets/paperfold_glass_surface.dart';
 ///
 /// Contents is in this list even though it opens the drawer rather than a
 /// panel, because the reader still needs to see which tool they asked for.
-enum ReaderTool {
-  none,
-  contents,
-  notes,
-  progress,
-  style,
-}
+enum ReaderTool { none, contents, notes, progress, style }
 
 /// The chrome that sits over the book: one glass bar at each end.
 ///
@@ -37,6 +35,7 @@ class ReaderChrome extends StatelessWidget {
     required this.onProgress,
     required this.onStyle,
     this.panel,
+    this.onFacingPage,
   });
 
   final bool visible;
@@ -53,14 +52,17 @@ class ReaderChrome extends StatelessWidget {
   final VoidCallback onProgress;
   final VoidCallback onStyle;
   final Widget? panel;
+  final VoidCallback? onFacingPage;
 
-  static const Duration _duration = Duration(milliseconds: 240);
-  static const Curve _curve = Curves.easeOutCubic;
+  static const Curve _curve = PaperfoldMotion.settle;
 
   @override
   Widget build(BuildContext context) {
     final media = MediaQuery.of(context);
-    final duration = media.disableAnimations ? Duration.zero : _duration;
+    final duration = paperfoldTransitionDuration(
+      context,
+      PaperfoldMotion.shift,
+    );
 
     return ExcludeFocus(
       excluding: !visible,
@@ -78,8 +80,9 @@ class ReaderChrome extends StatelessWidget {
                   child: GestureDetector(
                     onTap: onDismiss,
                     behavior: HitTestBehavior.opaque,
-                    child:
-                        ColoredBox(color: Colors.black.withValues(alpha: 0.32)),
+                    child: ColoredBox(
+                      color: Colors.black.withValues(alpha: 0.32),
+                    ),
                   ),
                 ),
               ),
@@ -118,21 +121,20 @@ class ReaderChrome extends StatelessWidget {
   // would expand to the whole stack and park both bars in the middle of the
   // screen.
   Widget _constrain(Widget child) => Align(
-        alignment: Alignment.center,
-        heightFactor: 1,
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 600),
-          child: child,
-        ),
-      );
+    alignment: Alignment.center,
+    heightFactor: 1,
+    child: ConstrainedBox(
+      constraints: const BoxConstraints(maxWidth: 600),
+      child: child,
+    ),
+  );
 
   Widget _topBar(BuildContext context) {
     final l10n = L10n.of(context);
     return Padding(
       padding: const EdgeInsetsDirectional.fromSTEB(12, 8, 12, 0),
       child: PaperfoldGlassSurface(
-        blurSigma: 10,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: PaperfoldShape.frameRadius,
         child: SizedBox(
           height: 56,
           child: Row(
@@ -186,8 +188,8 @@ class ReaderChrome extends StatelessWidget {
     return Padding(
       padding: const EdgeInsetsDirectional.fromSTEB(12, 0, 12, 12),
       child: PaperfoldGlassSurface(
-        blurSigma: 18,
-        borderRadius: BorderRadius.circular(28),
+        borderRadius: PaperfoldShape.frameRadius,
+        tier: open ? PaperfoldGlassTier.solid : PaperfoldGlassTier.floating,
         child: Padding(
           padding: const EdgeInsets.all(4),
           child: Column(
@@ -200,34 +202,42 @@ class ReaderChrome extends StatelessWidget {
                   ),
                   child: panel,
                 ),
-              Row(
-                children: [
-                  _Tab(
-                    icon: Icons.toc,
-                    label: l10n.readingContents,
-                    selected: activeTool == ReaderTool.contents,
-                    onPressed: onContents,
-                  ),
-                  _Tab(
-                    icon: Icons.edit_outlined,
-                    label: l10n.notes,
-                    selected: activeTool == ReaderTool.notes,
-                    onPressed: onNotes,
-                  ),
-                  _Tab(
-                    icon: Icons.data_usage,
-                    label: l10n.bookshelfProgress,
-                    selected: activeTool == ReaderTool.progress,
-                    onPressed: onProgress,
-                  ),
-                  _Tab(
-                    icon: Icons.palette_outlined,
-                    label: l10n.readingPageStyle,
-                    selected: activeTool == ReaderTool.style,
-                    onPressed: onStyle,
-                  ),
-                ],
-              ),
+              if (!open)
+                Row(
+                  children: [
+                    if (onFacingPage != null)
+                      _Tab(
+                        icon: Icons.auto_stories_outlined,
+                        label: l10n.facingPage,
+                        selected: false,
+                        onPressed: onFacingPage!,
+                      ),
+                    _Tab(
+                      icon: Icons.toc,
+                      label: l10n.readingContents,
+                      selected: activeTool == ReaderTool.contents,
+                      onPressed: onContents,
+                    ),
+                    _Tab(
+                      icon: Icons.edit_outlined,
+                      label: l10n.notes,
+                      selected: activeTool == ReaderTool.notes,
+                      onPressed: onNotes,
+                    ),
+                    _Tab(
+                      icon: Icons.data_usage,
+                      label: l10n.bookshelfProgress,
+                      selected: activeTool == ReaderTool.progress,
+                      onPressed: onProgress,
+                    ),
+                    _Tab(
+                      icon: Icons.palette_outlined,
+                      label: l10n.readingPageStyle,
+                      selected: activeTool == ReaderTool.style,
+                      onPressed: onStyle,
+                    ),
+                  ],
+                ),
             ],
           ),
         ),
@@ -254,7 +264,9 @@ class _Reveal extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AnimatedSlide(
-      offset: visible ? Offset.zero : from,
+      offset: visible || !PaperfoldVisualPolicy.motionAllowed(context)
+          ? Offset.zero
+          : from,
       duration: duration,
       curve: ReaderChrome._curve,
       child: AnimatedOpacity(
@@ -288,9 +300,10 @@ class _Tab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final duration = MediaQuery.of(context).disableAnimations
-        ? Duration.zero
-        : const Duration(milliseconds: 240);
+    final duration = paperfoldTransitionDuration(
+      context,
+      PaperfoldMotion.shift,
+    );
     return Expanded(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 4),
@@ -304,15 +317,16 @@ class _Tab extends StatelessWidget {
               color: Colors.transparent,
               child: InkWell(
                 onTap: onPressed,
-                borderRadius: BorderRadius.circular(24),
+                borderRadius: PaperfoldShape.controlRadius,
                 child: AnimatedContainer(
                   duration: duration,
                   curve: ReaderChrome._curve,
                   height: 48,
                   decoration: BoxDecoration(
-                    color:
-                        selected ? scheme.primaryContainer : Colors.transparent,
-                    borderRadius: BorderRadius.circular(24),
+                    color: selected
+                        ? scheme.primaryContainer
+                        : Colors.transparent,
+                    borderRadius: PaperfoldShape.controlRadius,
                   ),
                   child: Icon(
                     icon,
