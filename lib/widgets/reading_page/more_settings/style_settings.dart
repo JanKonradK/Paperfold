@@ -36,10 +36,12 @@ class StyleSlider extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         IconAndText(icon: Icon(icon), text: label),
-        Expanded(
+        SizedBox(
+          width: double.infinity,
           child: Slider(
             padding: const EdgeInsets.symmetric(horizontal: PaperfoldSpace.xs),
             value: value,

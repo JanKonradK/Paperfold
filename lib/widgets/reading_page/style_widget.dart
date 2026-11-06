@@ -7,12 +7,13 @@ import 'package:paperfold/config/shared_preference_provider.dart';
 import 'package:paperfold/l10n/generated/L10n.dart';
 import 'package:paperfold/models/book_style.dart';
 import 'package:paperfold/models/font_model.dart';
-import 'package:paperfold/page/reading_page.dart';
 import 'package:paperfold/service/book_player/book_player_server.dart';
 import 'package:paperfold/service/font.dart';
 import 'package:paperfold/utils/font_parser.dart';
 import 'package:paperfold/utils/get_path/get_base_path.dart';
 import 'package:paperfold/widgets/icon_and_text.dart';
+import 'package:paperfold/widgets/reading_page/more_settings/style_settings.dart';
+import 'package:paperfold/utils/paperfold_layout.dart';
 import 'package:paperfold/widgets/reading_page/more_settings/more_settings.dart';
 import 'package:paperfold/widgets/reading_page/widget_title.dart';
 import 'package:paperfold/dao/theme.dart';
@@ -72,12 +73,18 @@ enum PageTurn {
 class StyleWidget extends StatefulWidget {
   const StyleWidget({
     super.key,
+    this.advanced = false,
+    this.lastPagedTurn = PageTurn.slide,
+    this.onPagedTurnChanged,
     required this.themes,
     required this.epubPlayerKey,
     required this.setCurrentPage,
     required this.hideAppBarAndBottomBar,
   });
 
+  final bool advanced;
+  final PageTurn lastPagedTurn;
+  final ValueChanged<PageTurn>? onPagedTurnChanged;
   final List<ReadTheme> themes;
   final GlobalKey<EpubPlayerState> epubPlayerKey;
   final Function setCurrentPage;
@@ -93,46 +100,159 @@ class StyleWidgetState extends State<StyleWidget> {
 
   @override
   Widget build(BuildContext context) {
-    // The shell bounds this panel, so the content scrolls inside it rather
-    // than overflowing when the reader raises the system text size.
-    return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          widgetTitle(
-            context,
-            L10n.of(context).readingPageStyle,
-            ReadingSettings.theme,
-          ),
-          sliders(),
-          const SizedBox(height: 12),
-          fontAndPageTurn(),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(child: themeSelector()),
-              const SizedBox(width: 8),
-              OutlinedButton.icon(
-                style: OutlinedButton.styleFrom(
-                  minimumSize: const Size(0, 48),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: PaperfoldSpace.sm,
-                  ),
-                ),
-                onPressed: () {
-                  widget.setCurrentPage(const BgimgSelector());
-                },
-                icon: const Icon(Icons.chevron_right),
-                iconAlignment: IconAlignment.end,
-                label: Text(L10n.of(context).readingPageStyleBackground),
-              ),
-            ],
-          ),
-        ],
+    bookStyle = Prefs().bookStyle;
+    final l10n = L10n.of(context);
+    final rows = <Widget>[
+      fontSizeSlider(),
+      themeSelector(),
+      if (Prefs().useBookStyles)
+        TextButton(
+          onPressed: () {
+            setState(() {
+              Prefs().useBookStyles = false;
+            });
+            widget.epubPlayerKey.currentState?.changeStyle(Prefs().bookStyle);
+          },
+          child: Text(l10n.readerCustomStyles),
+        ),
+      _slider(
+        l10n.readingPageLineSpacing,
+        bookStyle.lineHeight,
+        0,
+        3,
+        10,
+        (value) => bookStyle.lineHeight = value,
+        enabled: !Prefs().useBookStyles,
       ),
+      _slider(
+        l10n.readingPageSideMargin,
+        bookStyle.sideMargin,
+        0,
+        20,
+        20,
+        (value) => bookStyle.sideMargin = value,
+      ),
+      fontAndPageTurn(quick: true),
+      SwitchListTile(
+        contentPadding: EdgeInsets.zero,
+        title: Text(l10n.scroll),
+        subtitle: Text(
+          Prefs().pageTurnStyle == PageTurn.scroll
+              ? l10n.scroll
+              : l10n.readerPaged,
+        ),
+        value: Prefs().pageTurnStyle == PageTurn.scroll,
+        onChanged: (scroll) {
+          final current = Prefs().pageTurnStyle;
+          if (scroll && current != PageTurn.scroll)
+            widget.onPagedTurnChanged?.call(current);
+          final next = scroll ? PageTurn.scroll : widget.lastPagedTurn;
+          setState(() => Prefs().pageTurnStyle = next);
+          widget.epubPlayerKey.currentState?.changePageTurnStyle(next);
+        },
+      ),
+      if (Prefs().pageTurnStyle != PageTurn.scroll)
+        DropdownButtonFormField<int>(
+          initialValue: bookStyle.maxColumnCount,
+          decoration: InputDecoration(labelText: l10n.readingPageColumnCount),
+          items: [
+            for (final item in [
+              (0, l10n.readingPageAuto),
+              (1, l10n.readingPageSingle),
+              (2, l10n.readingPageDouble),
+            ])
+              DropdownMenuItem(value: item.$1, child: Text(item.$2)),
+          ],
+          onChanged: (value) {
+            if (value != null)
+              _saveStyle(() => bookStyle.maxColumnCount = value);
+          },
+        ),
+      TextButton.icon(
+        onPressed: () => widget.setCurrentPage(
+          StyleWidget(
+            advanced: true,
+            themes: widget.themes,
+            epubPlayerKey: widget.epubPlayerKey,
+            setCurrentPage: widget.setCurrentPage,
+            hideAppBarAndBottomBar: widget.hideAppBarAndBottomBar,
+          ),
+        ),
+        icon: const Icon(Icons.tune),
+        label: Text(l10n.readerMoreAppearance),
+      ),
+    ];
+    return SingleChildScrollView(
+      padding: EdgeInsets.all(PaperfoldLayout.of(context).panePadding),
+      child: widget.advanced
+          ? Column(
+              children: [
+                widgetTitle(
+                  context,
+                  l10n.readerMoreAppearance,
+                  ReadingSettings.style,
+                ),
+                lineHeightAndParagraphSpacingSlider(),
+                fontAndPageTurn(),
+                const StyleSettings(),
+                OutlinedButton(
+                  onPressed: () => widget.setCurrentPage(const BgimgSelector()),
+                  child: Text(l10n.readingPageStyleBackground),
+                ),
+              ],
+            )
+          : LayoutBuilder(
+              builder: (context, constraints) {
+                final columns = constraints.maxWidth >= 720 ? 2 : 1;
+                final width =
+                    (constraints.maxWidth - (columns - 1) * 24) / columns;
+                return Wrap(
+                  spacing: 24,
+                  runSpacing: 8,
+                  children: [
+                    for (final row in rows) SizedBox(width: width, child: row),
+                  ],
+                );
+              },
+            ),
     );
   }
+
+  void _saveStyle(VoidCallback update) {
+    // A secondary panel may have changed the saved style since this one opened.
+    bookStyle = Prefs().bookStyle;
+    setState(update);
+    widget.epubPlayerKey.currentState?.changeStyle(bookStyle);
+    Prefs().saveBookStyleToPrefs(bookStyle);
+  }
+
+  Widget _slider(
+    String label,
+    double value,
+    double min,
+    double max,
+    int divisions,
+    ValueChanged<double> update, {
+    bool enabled = true,
+  }) => ConstrainedBox(
+    constraints: const BoxConstraints(minHeight: 56),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label),
+        Slider(
+          value: value,
+          min: min,
+          max: max,
+          divisions: divisions,
+          label: value.toStringAsFixed(1),
+          onChanged: enabled
+              ? (value) => _saveStyle(() => update(value))
+              : null,
+        ),
+      ],
+    ),
+  );
 
   /// The faces Paperfold ships. Philosopher carries the content voice and
   /// Source Sans 3 the plain one, both under the SIL Open Font License.
@@ -185,7 +305,7 @@ class StyleWidgetState extends State<StyleWidget> {
     return fontList;
   }
 
-  Widget fontAndPageTurn() {
+  Widget fontAndPageTurn({bool quick = false}) {
     FontModel? font = fonts().firstWhere(
       (element) => element.path == Prefs().font.path,
       orElse: () => Prefs.defaultFont,
@@ -201,36 +321,40 @@ class StyleWidgetState extends State<StyleWidget> {
     final turnStyle = Prefs().pageTurnStyle;
     return Row(
       children: [
-        Expanded(
-          child: DropdownMenu<PageTurn>(
-            label: Text(L10n.of(context).readingPagePageTurningMethod),
-            initialSelection: turnStyle,
-            expandedInsets: const EdgeInsetsDirectional.only(end: 5),
-            // Each style costs something different, and the curl costs the most,
-            // so the reader sees what they picked without opening the list again.
-            helperText: turnStyle.getDescription(context),
-            inputDecorationTheme: InputDecorationTheme(
-              helperMaxLines: 3,
-              border: OutlineInputBorder(
-                borderRadius: PaperfoldShape.paneRadius,
+        if (!quick)
+          Expanded(
+            child: DropdownMenu<PageTurn>(
+              label: Text(L10n.of(context).readingPagePageTurningMethod),
+              initialSelection: turnStyle,
+              expandedInsets: const EdgeInsetsDirectional.only(end: 5),
+              // Each style costs something different, and the curl costs the most,
+              // so the reader sees what they picked without opening the list again.
+              helperText: turnStyle.getDescription(context),
+              inputDecorationTheme: InputDecorationTheme(
+                helperMaxLines: 3,
+                border: OutlineInputBorder(
+                  borderRadius: PaperfoldShape.paneRadius,
+                ),
               ),
+              onSelected: (PageTurn? value) {
+                if (value != null) {
+                  setState(() {
+                    Prefs().pageTurnStyle = value;
+                  });
+                  widget.onPagedTurnChanged?.call(
+                    value == PageTurn.scroll ? widget.lastPagedTurn : value,
+                  );
+                  widget.epubPlayerKey.currentState?.changePageTurnStyle(value);
+                }
+              },
+              dropdownMenuEntries: PageTurn.values
+                  .map(
+                    (e) =>
+                        DropdownMenuEntry(value: e, label: e.getLabel(context)),
+                  )
+                  .toList(),
             ),
-            onSelected: (PageTurn? value) {
-              if (value != null) {
-                setState(() {
-                  Prefs().pageTurnStyle = value;
-                });
-                epubPlayerKey.currentState!.changePageTurnStyle(value);
-              }
-            },
-            dropdownMenuEntries: PageTurn.values
-                .map(
-                  (e) =>
-                      DropdownMenuEntry(value: e, label: e.getLabel(context)),
-                )
-                .toList(),
           ),
-        ),
         Expanded(
           child: DropdownMenu<FontModel>(
             label: Text(L10n.of(context).font),
@@ -248,7 +372,7 @@ class StyleWidgetState extends State<StyleWidget> {
                 await importFont();
                 return;
               } else {
-                epubPlayerKey.currentState!.changeFont(font);
+                widget.epubPlayerKey.currentState?.changeFont(font);
                 Prefs().font = font;
               }
             },
@@ -330,33 +454,47 @@ class StyleWidgetState extends State<StyleWidget> {
     );
   }
 
-  Row fontSizeSlider() {
-    bool enabled = !Prefs().useBookStyles;
-    return Row(
-      children: [
-        IconAndText(
-          icon: const Icon(Icons.format_size),
-          text: L10n.of(context).readingPageFontSize,
-        ),
-        Expanded(
-          child: Slider(
-            value: bookStyle.fontSize,
-            onChanged: enabled
-                ? (double value) {
-                    setState(() {
-                      bookStyle.fontSize = value;
-                      widget.epubPlayerKey.currentState!.changeStyle(bookStyle);
-                      Prefs().saveBookStyleToPrefs(bookStyle);
-                    });
-                  }
-                : null,
-            min: 0.5,
-            max: 3.0,
-            divisions: 25,
-            label: bookStyle.fontSize.toStringAsFixed(2),
+  Widget fontSizeSlider() {
+    final enabled = !Prefs().useBookStyles;
+    final label = L10n.of(context).readingPageFontSize;
+    return ConstrainedBox(
+      constraints: const BoxConstraints(minHeight: 56),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label),
+          Row(
+            children: [
+              IconButton(
+                tooltip: '$label −',
+                onPressed: enabled && bookStyle.fontSize > 0.5
+                    ? () => _saveStyle(
+                        () => bookStyle.fontSize = (bookStyle.fontSize - 0.1)
+                            .clamp(0.5, 3.0),
+                      )
+                    : null,
+                icon: const Icon(Icons.remove),
+              ),
+              Expanded(
+                child: Text(
+                  '${(bookStyle.fontSize * 100).round()}%',
+                  textAlign: TextAlign.center,
+                ),
+              ),
+              IconButton(
+                tooltip: '$label +',
+                onPressed: enabled && bookStyle.fontSize < 3
+                    ? () => _saveStyle(
+                        () => bookStyle.fontSize = (bookStyle.fontSize + 0.1)
+                            .clamp(0.5, 3.0),
+                      )
+                    : null,
+                icon: const Icon(Icons.add),
+              ),
+            ],
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
@@ -423,7 +561,7 @@ class StyleWidgetState extends State<StyleWidget> {
           }
 
           final theme = widget.themes[index];
-          final selected = index + 1 == currentThemeId;
+          final selected = theme.id == currentThemeId;
           void edit() => setState(() {
             widget.setCurrentPage(
               ThemeChangeWidget(

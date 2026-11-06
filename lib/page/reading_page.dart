@@ -1,4 +1,6 @@
+import 'package:paperfold/widgets/reading_page/more_settings/more_settings.dart';
 import 'package:paperfold/widgets/reading_page/facing_page.dart';
+
 import 'dart:async';
 import 'dart:math' as math;
 
@@ -65,6 +67,9 @@ class ReadingPageState extends ConsumerState<ReadingPage>
   ReaderTool _activeTool = ReaderTool.none;
   late String heroTag;
   bool bookmarkExists = false;
+  late PageTurn _lastPagedTurn = Prefs().pageTurnStyle == PageTurn.scroll
+      ? PageTurn.slide
+      : Prefs().pageTurnStyle;
 
   late final FocusNode _readerFocusNode;
   // late final VolumeKeyBoard _volumeKeyBoard;
@@ -263,10 +268,7 @@ class ReadingPageState extends ConsumerState<ReadingPage>
           if (elapsedSeconds > 5) {
             epubPlayerKey.currentState?.saveReadingProgress(immediate: true);
             readingTimeDao.insertReadingTime(
-              ReadingTime(
-                bookId: _book.id,
-                readingTime: elapsedSeconds,
-              ),
+              ReadingTime(bookId: _book.id, readingTime: elapsedSeconds),
               startedAt: _sessionStart,
             );
           }
@@ -298,6 +300,9 @@ class ReadingPageState extends ConsumerState<ReadingPage>
       bottomBarOffstage = false;
       _releaseReaderFocus();
     });
+    if (_activeTool == ReaderTool.none) {
+      _openQuickSettings(widget.initialThemes);
+    }
   }
 
   void hideBottomBar() {
@@ -338,8 +343,40 @@ class ReadingPageState extends ConsumerState<ReadingPage>
     });
   }
 
+  void _facingPage() {
+    final player = epubPlayerKey.currentState;
+    final locator = player?.cfi;
+    final progress = player?.percentage;
+    final label = player?.chapterTitle;
+    hideBottomBar();
+    showFacingPage(
+      context,
+      book: _book,
+      locator: locator,
+      progress: progress,
+      label: label,
+      onOpenEntry: (entry) async {
+        final target = entry.sourceLocator ?? entry.sourceCfi;
+        if (target == null || player == null) return;
+        try {
+          await player.previewPassage(target);
+        } catch (_) {
+          if (context.mounted)
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(L10n.of(context).journalPassageOpenFailed),
+              ),
+            );
+        }
+      },
+    );
+  }
+
   void noteHandler() {
-    _showTool(ReaderTool.notes, ReadingNotes(book: _book));
+    _showTool(
+      ReaderTool.notes,
+      ReadingNotes(book: _book, onFacingPage: _facingPage),
+    );
   }
 
   void progressHandler() {
@@ -357,21 +394,38 @@ class ReadingPageState extends ConsumerState<ReadingPage>
       _showTool(ReaderTool.style, empty);
       return;
     }
-    List<ReadTheme> themes = await themeDao.selectThemes();
-    if (!mounted) return;
-    _showTool(
-      ReaderTool.style,
-      StyleWidget(
+    _openQuickSettings(widget.initialThemes);
+    final themes = await themeDao.selectThemes();
+    if (!mounted || bottomBarOffstage || _activeTool != ReaderTool.style)
+      return;
+    _openQuickSettings(themes);
+  }
+
+  void _openQuickSettings(List<ReadTheme> themes) {
+    setState(() {
+      _activeTool = ReaderTool.style;
+      _currentPage = StyleWidget(
         themes: themes,
+        lastPagedTurn: _lastPagedTurn,
+        onPagedTurnChanged: (turn) => _lastPagedTurn = turn,
         epubPlayerKey: epubPlayerKey,
-        setCurrentPage: (Widget page) {
-          setState(() {
-            _currentPage = page;
-          });
-        },
+        setCurrentPage: (Widget page) => setState(() => _currentPage = page),
         hideAppBarAndBottomBar: showOrHideAppBarAndBottomBar,
-      ),
-    );
+      );
+    });
+  }
+
+  void _back() {
+    if (!identical(_currentPage, empty)) {
+      setState(() {
+        _currentPage = empty;
+        _activeTool = ReaderTool.none;
+      });
+    } else if (!bottomBarOffstage) {
+      hideBottomBar();
+    } else {
+      Navigator.pop(context);
+    }
   }
 
   void updateState() {
@@ -418,7 +472,10 @@ class ReadingPageState extends ConsumerState<ReadingPage>
         activeTool: _activeTool,
         panel: hasPanel ? _currentPage : null,
         onDismiss: () => showOrHideAppBarAndBottomBar(false),
-        onBack: () => Navigator.pop(context),
+        onBack: _back,
+        chapter: epubPlayerKey.currentState?.chapterTitle ?? '',
+        percentage: epubPlayerKey.currentState?.percentage ?? 0,
+        onAdvanced: () => showMoreSettings(ReadingSettings.theme),
         onBookmark: _toggleBookmark,
         onCopyChapter: _copyChapter,
         onBookDetails: () => Navigator.push(
@@ -429,96 +486,88 @@ class ReadingPageState extends ConsumerState<ReadingPage>
         ),
         onContents: tocHandler,
         onNotes: noteHandler,
-        onFacingPage: () {
-          final player = epubPlayerKey.currentState;
-          final locator = player?.cfi;
-          final progress = player?.percentage;
-          final label = player?.chapterTitle;
-          hideBottomBar();
-          showFacingPage(context, book: _book, locator: locator,
-            progress: progress, label: label,
-            onOpenEntry: (entry) async {
-              final target = entry.sourceLocator ?? entry.sourceCfi;
-              if (target == null || player == null) return;
-              try { await player.previewPassage(target); }
-              catch (_) { if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(L10n.of(context).journalPassageOpenFailed))); }
-            });
-        },
         onProgress: progressHandler,
         onStyle: styleHandler,
       ),
     );
 
-    return Scaffold(
-      resizeToAvoidBottomInset: false,
-      body: Hero(
-        tag: widget.heroTag ??
-            (Prefs().openBookAnimation ? _book.coverFullPath : heroTag),
-        child: FittedBox(
-          fit: BoxFit.scaleDown,
-          child: SizedBox(
-            height: MediaQuery.of(context).size.height,
-            width: MediaQuery.of(context).size.width,
-            child: Scaffold(
-              key: _scaffoldKey,
-              resizeToAvoidBottomInset: false,
-              drawer: PointerInterceptor(
-                child: Drawer(
-                  width: math.min(
-                    MediaQuery.of(context).size.width * 0.8,
-                    420,
-                  ),
-                  child: SafeArea(
-                    child: TocWidget(
-                      epubPlayerKey: epubPlayerKey,
-                      hideAppBarAndBottomBar: showOrHideAppBarAndBottomBar,
-                      closeDrawer: () {
-                        _scaffoldKey.currentState?.closeDrawer();
-                      },
+    return PopScope(
+      canPop: bottomBarOffstage,
+      onPopInvokedWithResult: (didPop, result) {
+        if (!didPop) _back();
+      },
+      child: Scaffold(
+        resizeToAvoidBottomInset: false,
+        body: Hero(
+          tag:
+              widget.heroTag ??
+              (Prefs().openBookAnimation ? _book.coverFullPath : heroTag),
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            child: SizedBox(
+              height: MediaQuery.of(context).size.height,
+              width: MediaQuery.of(context).size.width,
+              child: Scaffold(
+                key: _scaffoldKey,
+                resizeToAvoidBottomInset: false,
+                drawer: PointerInterceptor(
+                  child: Drawer(
+                    width: math.min(
+                      MediaQuery.of(context).size.width * 0.8,
+                      420,
                     ),
-                  ),
-                ),
-              ),
-              // A Scaffold gives its body loose constraints, so this Stack must
-              // be told to fill them. Every child here is either positioned or
-              // an Offstage that reports zero size while the toolbar is hidden,
-              // which is the state the reader opens in. Without expand the Stack
-              // collapses to nothing, Positioned.fill fills nothing, and the
-              // WebView is laid out at 0x0: the book loads and no pixel of it is
-              // ever on screen. Upstream got its size from the AI panel's
-              // AxisFlex, which was a non-positioned child; removing the AI
-              // subsystem removed the only thing sizing this Stack.
-              body: Stack(
-                fit: StackFit.expand,
-                children: [
-                  Positioned.fill(
-                    child: MouseRegion(
-                      onHover: (PointerHoverEvent detail) {
-                        if (!Prefs().showMenuOnHover) return;
-                        var y = detail.position.dy;
-                        if (y < 30 ||
-                            y > MediaQuery.of(context).size.height - 30) {
-                          showOrHideAppBarAndBottomBar(true);
-                        }
-                      },
-                      child: Focus(
-                        focusNode: _readerFocusNode,
-                        onKeyEvent: _handleReaderKeyEvent,
-                        child: EpubPlayer(
-                          key: epubPlayerKey,
-                          book: _book,
-                          cfi: widget.cfi,
-                          showOrHideAppBarAndBottomBar:
-                              showOrHideAppBarAndBottomBar,
-                          onLoadEnd: () {},
-                          initialThemes: widget.initialThemes,
-                          updateParent: updateState,
-                        ),
+                    child: SafeArea(
+                      child: TocWidget(
+                        epubPlayerKey: epubPlayerKey,
+                        hideAppBarAndBottomBar: showOrHideAppBarAndBottomBar,
+                        closeDrawer: () {
+                          _scaffoldKey.currentState?.closeDrawer();
+                        },
                       ),
                     ),
                   ),
-                  controller,
-                ],
+                ),
+                // A Scaffold gives its body loose constraints, so this Stack must
+                // be told to fill them. Every child here is either positioned or
+                // an Offstage that reports zero size while the toolbar is hidden,
+                // which is the state the reader opens in. Without expand the Stack
+                // collapses to nothing, Positioned.fill fills nothing, and the
+                // WebView is laid out at 0x0: the book loads and no pixel of it is
+                // ever on screen. Upstream got its size from the AI panel's
+                // AxisFlex, which was a non-positioned child; removing the AI
+                // subsystem removed the only thing sizing this Stack.
+                body: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    Positioned.fill(
+                      child: MouseRegion(
+                        onHover: (PointerHoverEvent detail) {
+                          if (!Prefs().showMenuOnHover) return;
+                          var y = detail.position.dy;
+                          if (y < 30 ||
+                              y > MediaQuery.of(context).size.height - 30) {
+                            showOrHideAppBarAndBottomBar(true);
+                          }
+                        },
+                        child: Focus(
+                          focusNode: _readerFocusNode,
+                          onKeyEvent: _handleReaderKeyEvent,
+                          child: EpubPlayer(
+                            key: epubPlayerKey,
+                            book: _book,
+                            cfi: widget.cfi,
+                            showOrHideAppBarAndBottomBar:
+                                showOrHideAppBarAndBottomBar,
+                            onLoadEnd: () {},
+                            initialThemes: widget.initialThemes,
+                            updateParent: updateState,
+                          ),
+                        ),
+                      ),
+                    ),
+                    controller,
+                  ],
+                ),
               ),
             ),
           ),

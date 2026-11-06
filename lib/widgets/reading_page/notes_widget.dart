@@ -7,9 +7,10 @@ import 'package:material_ui/material_ui.dart';
 import 'package:paperfold/models/book.dart';
 
 class ReadingNotes extends StatelessWidget {
-  const ReadingNotes({super.key, required this.book});
+  const ReadingNotes({super.key, required this.book, this.onFacingPage});
 
   final Book book;
+  final VoidCallback? onFacingPage;
 
   @override
   Widget build(BuildContext context) {
@@ -24,6 +25,12 @@ class ReadingNotes extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           widgetTitle(context, L10n.of(context).navBarNotes, null),
+          if (onFacingPage != null)
+            TextButton.icon(
+              onPressed: onFacingPage,
+              icon: const Icon(Icons.auto_stories_outlined),
+              label: Text(L10n.of(context).facingPage),
+            ),
           Flexible(
             child: ListView(
               children: [BookNotesList(book: book, reading: true)],
