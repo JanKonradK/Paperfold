@@ -1,3 +1,4 @@
+import 'package:paperfold/config/paperfold_system.dart';
 // Development entry point for the top-level navigation decision.
 //
 // THESIS: Compare three honest navigation structures around one paper journal.
@@ -30,24 +31,20 @@ Future<void> main() async {
   runApp(const NavigationPrototypeApp());
 }
 
-enum _NavigationModel {
-  materialShell,
-  ribbonBook,
-  shelfAndBook,
-}
+enum _NavigationModel { materialShell, ribbonBook, shelfAndBook }
 
 extension on _NavigationModel {
   String get number => switch (this) {
-        _NavigationModel.materialShell => '1',
-        _NavigationModel.ribbonBook => '2',
-        _NavigationModel.shelfAndBook => '3',
-      };
+    _NavigationModel.materialShell => '1',
+    _NavigationModel.ribbonBook => '2',
+    _NavigationModel.shelfAndBook => '3',
+  };
 
   String get title => switch (this) {
-        _NavigationModel.materialShell => 'Material shell, paper interior',
-        _NavigationModel.ribbonBook => 'One book, ribbon tabs',
-        _NavigationModel.shelfAndBook => 'Shelf outside, book inside',
-      };
+    _NavigationModel.materialShell => 'Material shell, paper interior',
+    _NavigationModel.ribbonBook => 'One book, ribbon tabs',
+    _NavigationModel.shelfAndBook => 'Shelf outside, book inside',
+  };
 }
 
 class NavigationPrototypeApp extends StatelessWidget {
@@ -126,8 +123,9 @@ class _NavigationLabState extends State<_NavigationLab> {
           statusBarColor: Colors.transparent,
           systemNavigationBarColor: Colors.transparent,
           statusBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
-          systemNavigationBarIconBrightness:
-              isDark ? Brightness.light : Brightness.dark,
+          systemNavigationBarIconBrightness: isDark
+              ? Brightness.light
+              : Brightness.dark,
         ),
         child: Material(
           color: theme.colorScheme.surface,
@@ -279,12 +277,7 @@ class _MaterialShellModelState extends State<_MaterialShellModel> {
   List<int> _destinationHistory = [0];
   GlobalKey<_CurlBookState> _curlKey = GlobalKey<_CurlBookState>();
 
-  static const List<String> _titles = [
-    'Library',
-    'Journal',
-    'Log',
-    'Settings',
-  ];
+  static const List<String> _titles = ['Library', 'Journal', 'Log', 'Settings'];
 
   void _selectDestination(int destination) {
     if (destination == _destination) return;
@@ -341,9 +334,8 @@ class _MaterialShellModelState extends State<_MaterialShellModel> {
                   onPrevious: () => _curlKey.currentState?.turnTo(
                     (_page - 1 + pages.length) % pages.length,
                   ),
-                  onNext: () => _curlKey.currentState?.turnTo(
-                    (_page + 1) % pages.length,
-                  ),
+                  onNext: () =>
+                      _curlKey.currentState?.turnTo((_page + 1) % pages.length),
                 ),
               ],
             ),
@@ -382,22 +374,10 @@ class _MaterialShellModelState extends State<_MaterialShellModel> {
 
 List<Widget> _materialShellPages(int destination) {
   return switch (destination) {
-    0 => const [
-        _LibraryPaperPage(),
-        _ReviewPaperPage(modelNumber: 1),
-      ],
-    1 => const [
-        _ReviewPaperPage(modelNumber: 1),
-        _WrittenEntryPage(),
-      ],
-    2 => const [
-        _ReadingLogPaperPage(),
-        _WrittenEntryPage(),
-      ],
-    _ => const [
-        _PaperSettingsPage(),
-        _ReviewPaperPage(modelNumber: 1),
-      ],
+    0 => const [_LibraryPaperPage(), _ReviewPaperPage(modelNumber: 1)],
+    1 => const [_ReviewPaperPage(modelNumber: 1), _WrittenEntryPage()],
+    2 => const [_ReadingLogPaperPage(), _WrittenEntryPage()],
+    _ => const [_PaperSettingsPage(), _ReviewPaperPage(modelNumber: 1)],
   };
 }
 
@@ -476,9 +456,11 @@ class _RibbonBookModelState extends State<_RibbonBookModel> {
                   right: 0,
                   child: Column(
                     children: [
-                      for (int index = 0;
-                          index < _sections.length;
-                          index++) ...[
+                      for (
+                        int index = 0;
+                        index < _sections.length;
+                        index++
+                      ) ...[
                         _RibbonTab(
                           label: _sections[index].label,
                           icon: _sections[index].icon,
@@ -497,7 +479,7 @@ class _RibbonBookModelState extends State<_RibbonBookModel> {
                   bottom: 16,
                   child: Material(
                     color: scheme.surfaceContainerHigh.withValues(alpha: 0.94),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: PaperfoldShape.controlRadius,
                     child: Padding(
                       padding: const EdgeInsets.all(12),
                       child: Text(
@@ -560,7 +542,7 @@ class _RibbonTab extends StatelessWidget {
       child: Material(
         color: selected ? scheme.primary : scheme.surfaceContainerHighest,
         borderRadius: const BorderRadius.horizontal(
-          right: Radius.circular(12),
+          right: Radius.circular(PaperfoldShape.control),
         ),
         clipBehavior: Clip.antiAlias,
         child: InkWell(
@@ -586,10 +568,8 @@ class _ShelfAndBookModel extends StatelessWidget {
     final ThemeData theme = Theme.of(context);
     Navigator.of(context).push(
       MaterialPageRoute<void>(
-        builder: (context) => Theme(
-          data: theme,
-          child: const _FullScreenBook(),
-        ),
+        builder: (context) =>
+            Theme(data: theme, child: const _FullScreenBook()),
       ),
     );
   }
@@ -669,18 +649,14 @@ class _ShelfBookRow extends StatelessWidget {
 
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: PaperfoldShape.controlRadius,
       child: ConstrainedBox(
         constraints: const BoxConstraints(minHeight: 112),
         child: Padding(
           padding: const EdgeInsets.all(12),
           child: Row(
             children: [
-              const SizedBox(
-                width: 68,
-                height: 96,
-                child: _MiniBookCover(),
-              ),
+              const SizedBox(width: 68, height: 96, child: _MiniBookCover()),
               const SizedBox(width: 16),
               Expanded(
                 child: Column(
@@ -755,9 +731,8 @@ class _FullScreenBookState extends State<_FullScreenBook> {
                 onPrevious: () => _curlKey.currentState?.turnTo(
                   (_page - 1 + pages.length) % pages.length,
                 ),
-                onNext: () => _curlKey.currentState?.turnTo(
-                  (_page + 1) % pages.length,
-                ),
+                onNext: () =>
+                    _curlKey.currentState?.turnTo((_page + 1) % pages.length),
               ),
             ],
           ),
@@ -833,7 +808,7 @@ class _CurlBookState extends State<_CurlBook> {
 
     return DecoratedBox(
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: PaperfoldShape.controlRadius,
         boxShadow: [
           BoxShadow(
             color: scheme.shadow.withValues(alpha: 0.18),
@@ -843,7 +818,7 @@ class _CurlBookState extends State<_CurlBook> {
         ],
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: PaperfoldShape.controlRadius,
         child: WidgetPageCurl(
           controller: _controller,
           front: widget.pages[_current],
@@ -948,9 +923,7 @@ class _ReviewPaperPage extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             'THE CARTOGRAPHER’S GARDEN',
-            style: theme.textTheme.labelLarge?.copyWith(
-              color: scheme.primary,
-            ),
+            style: theme.textTheme.labelLarge?.copyWith(color: scheme.primary),
           ),
           const SizedBox(height: 4),
           Text('Mara Venn', style: theme.textTheme.bodyLarge),
@@ -1040,9 +1013,7 @@ class _WrittenEntryPage extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             '11 AUGUST',
-            style: theme.textTheme.labelMedium?.copyWith(
-              color: scheme.primary,
-            ),
+            style: theme.textTheme.labelMedium?.copyWith(color: scheme.primary),
           ),
           const SizedBox(height: 24),
           Text(
@@ -1134,7 +1105,7 @@ class _PaperBookLine extends StatelessWidget {
           child: DecoratedBox(
             decoration: BoxDecoration(
               color: theme.colorScheme.secondaryContainer,
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: PaperfoldShape.controlRadius,
             ),
             child: Icon(icon),
           ),
@@ -1207,7 +1178,9 @@ class _LogLine extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         SizedBox(
-            width: 56, child: Text(date, style: theme.textTheme.labelLarge)),
+          width: 56,
+          child: Text(date, style: theme.textTheme.labelLarge),
+        ),
         const SizedBox(width: 12),
         Expanded(child: Text(title, style: theme.textTheme.bodyLarge)),
         const SizedBox(width: 12),
@@ -1334,7 +1307,7 @@ class _MiniBookCover extends StatelessWidget {
     return DecoratedBox(
       decoration: BoxDecoration(
         color: PaperfoldTokens.cover.ground,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: PaperfoldShape.controlRadius,
       ),
       child: Padding(
         padding: const EdgeInsets.all(8),

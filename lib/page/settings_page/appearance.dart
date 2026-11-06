@@ -1,3 +1,4 @@
+import 'package:paperfold/widgets/common/paperfold_modal_motion.dart';
 import 'package:paperfold/config/shared_preference_provider.dart';
 import 'package:paperfold/l10n/generated/L10n.dart';
 import 'package:paperfold/widgets/common/anx_segmented_button.dart';
@@ -384,6 +385,7 @@ Future<void> showLanguagePickerDialog(BuildContext context) {
 
   return showDialog<void>(
     context: context,
+    animationStyle: paperfoldModalMotion(context),
     builder: (BuildContext dialogContext) {
       return SimpleDialog(
         title: Text(L10n.of(dialogContext).settingsAppearanceLanguage),
@@ -451,6 +453,7 @@ Future<void> showColorPickerDialog(BuildContext context) async {
 
   await showDialog<void>(
     context: context,
+    animationStyle: paperfoldModalMotion(context),
     builder: (BuildContext context) {
       return AlertDialog(
         title: Text(L10n.of(context).settingsAppearanceThemeColor),

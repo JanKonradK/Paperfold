@@ -1,3 +1,4 @@
+import 'package:paperfold/config/paperfold_system.dart';
 import 'package:paperfold/config/shared_preference_provider.dart';
 import 'package:paperfold/enums/text_alignment.dart';
 import 'package:paperfold/enums/writing_mode.dart';
@@ -37,13 +38,10 @@ class StyleSlider extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        IconAndText(
-          icon: Icon(icon),
-          text: label,
-        ),
+        IconAndText(icon: Icon(icon), text: label),
         Expanded(
           child: Slider(
-            padding: const EdgeInsets.symmetric(horizontal: 8),
+            padding: const EdgeInsets.symmetric(horizontal: PaperfoldSpace.xs),
             value: value,
             onChanged: enabled ? onChanged : null,
             min: min,
@@ -153,60 +151,66 @@ class _StyleSettingsState extends State<StyleSettings> {
     }
 
     Row topBottomMarginSlider(BookStyle bookStyle, StateSetter setState) {
-      return Row(children: [
-        Prefs().writingMode == WritingModeEnum.verticalRl
-            ? IconAndText(
-                icon: const Icon(Icons.last_page),
-                text: L10n.of(context).readingPageRightMargin,
-              )
-            : IconAndText(
-                icon: const Icon(Icons.vertical_align_top),
-                text: L10n.of(context).readingPageTopMargin,
+      return Row(
+        children: [
+          Prefs().writingMode == WritingModeEnum.verticalRl
+              ? IconAndText(
+                  icon: const Icon(Icons.last_page),
+                  text: L10n.of(context).readingPageRightMargin,
+                )
+              : IconAndText(
+                  icon: const Icon(Icons.vertical_align_top),
+                  text: L10n.of(context).readingPageTopMargin,
+                ),
+          Expanded(
+            child: Slider(
+              padding: const EdgeInsets.symmetric(
+                horizontal: PaperfoldSpace.xs,
               ),
-        Expanded(
-          child: Slider(
-            padding: const EdgeInsets.symmetric(horizontal: 8),
-            value: bookStyle.topMargin,
-            onChanged: (double value) {
-              setState(() {
-                bookStyle.topMargin = value;
-                epubPlayerKey.currentState?.changeStyle(bookStyle);
-                Prefs().saveBookStyleToPrefs(bookStyle);
-              });
-            },
-            min: 0,
-            max: 200,
-            divisions: 10,
-            label: (bookStyle.topMargin / 20).toStringAsFixed(0),
+              value: bookStyle.topMargin,
+              onChanged: (double value) {
+                setState(() {
+                  bookStyle.topMargin = value;
+                  epubPlayerKey.currentState?.changeStyle(bookStyle);
+                  Prefs().saveBookStyleToPrefs(bookStyle);
+                });
+              },
+              min: 0,
+              max: 200,
+              divisions: 10,
+              label: (bookStyle.topMargin / 20).toStringAsFixed(0),
+            ),
           ),
-        ),
-        Prefs().writingMode == WritingModeEnum.verticalRl
-            ? IconAndText(
-                icon: const Icon(Icons.first_page),
-                text: L10n.of(context).readingPageLeftMargin,
-              )
-            : IconAndText(
-                icon: const Icon(Icons.vertical_align_bottom),
-                text: L10n.of(context).readingPageBottomMargin,
+          Prefs().writingMode == WritingModeEnum.verticalRl
+              ? IconAndText(
+                  icon: const Icon(Icons.first_page),
+                  text: L10n.of(context).readingPageLeftMargin,
+                )
+              : IconAndText(
+                  icon: const Icon(Icons.vertical_align_bottom),
+                  text: L10n.of(context).readingPageBottomMargin,
+                ),
+          Expanded(
+            child: Slider(
+              padding: const EdgeInsets.symmetric(
+                horizontal: PaperfoldSpace.xs,
               ),
-        Expanded(
-          child: Slider(
-            padding: const EdgeInsets.symmetric(horizontal: 8),
-            value: bookStyle.bottomMargin,
-            onChanged: (double value) {
-              setState(() {
-                bookStyle.bottomMargin = value;
-                epubPlayerKey.currentState?.changeStyle(bookStyle);
-                Prefs().saveBookStyleToPrefs(bookStyle);
-              });
-            },
-            min: 0,
-            max: 200,
-            divisions: 10,
-            label: (bookStyle.bottomMargin / 20).toStringAsFixed(0),
+              value: bookStyle.bottomMargin,
+              onChanged: (double value) {
+                setState(() {
+                  bookStyle.bottomMargin = value;
+                  epubPlayerKey.currentState?.changeStyle(bookStyle);
+                  Prefs().saveBookStyleToPrefs(bookStyle);
+                });
+              },
+              min: 0,
+              max: 200,
+              divisions: 10,
+              label: (bookStyle.bottomMargin / 20).toStringAsFixed(0),
+            ),
           ),
-        ),
-      ]);
+        ],
+      );
     }
 
     Widget fontWeightSlider(BookStyle bookStyle, StateSetter setState) {
@@ -256,35 +260,37 @@ class _StyleSettingsState extends State<StyleSettings> {
         {
           "icon": Icons.auto_awesome,
           "text": L10n.of(context).textAlignmentAuto,
-          "value": TextAlignmentEnum.auto
+          "value": TextAlignmentEnum.auto,
         },
         {
           "icon": Icons.format_align_left,
           "text": L10n.of(context).textAlignmentLeft,
-          "value": TextAlignmentEnum.left
+          "value": TextAlignmentEnum.left,
         },
         {
           "icon": Icons.format_align_center,
           "text": L10n.of(context).textAlignmentCenter,
-          "value": TextAlignmentEnum.center
+          "value": TextAlignmentEnum.center,
         },
         {
           "icon": Icons.format_align_right,
           "text": L10n.of(context).textAlignmentRight,
-          "value": TextAlignmentEnum.right
+          "value": TextAlignmentEnum.right,
         },
         {
           "icon": Icons.format_align_justify,
           "text": L10n.of(context).textAlignmentJustify,
-          "value": TextAlignmentEnum.justify
+          "value": TextAlignmentEnum.justify,
         },
       ];
 
       return StatefulBuilder(
         builder: (context, setState) => Row(
           children: [
-            Icon(Icons.format_align_left,
-                color: Theme.of(context).colorScheme.onSurfaceVariant),
+            Icon(
+              Icons.format_align_left,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
             const SizedBox(width: 12),
             Text(L10n.of(context).textAlignment),
             const Spacer(),
@@ -333,7 +339,7 @@ class _StyleSettingsState extends State<StyleSettings> {
     }
 
     return Container(
-      padding: const EdgeInsets.all(8.0),
+      padding: const EdgeInsets.all(PaperfoldSpace.xs),
       child: Column(
         children: [
           useBookStylesSwitch(),

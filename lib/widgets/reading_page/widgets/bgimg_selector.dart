@@ -1,3 +1,5 @@
+import 'package:paperfold/config/paperfold_system.dart';
+
 import 'dart:io';
 
 import 'package:paperfold/config/shared_preference_provider.dart';
@@ -63,10 +65,10 @@ class _BgimgSelectorState extends ConsumerState<BgimgSelector> {
         children: [
           Icon(Icons.add, color: Theme.of(context).colorScheme.onSurface),
           SizedBox(height: 10),
-          Text(L10n.of(context).readingPageStyleImportBackgroundImage,
-              style: TextStyle(
-                color: Theme.of(context).colorScheme.onSurface,
-              )),
+          Text(
+            L10n.of(context).readingPageStyleImportBackgroundImage,
+            style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
+          ),
         ],
       ),
       onTap: () {
@@ -80,13 +82,15 @@ class _BgimgSelectorState extends ConsumerState<BgimgSelector> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.not_interested,
-              color: Theme.of(context).colorScheme.onSurface),
+          Icon(
+            Icons.not_interested,
+            color: Theme.of(context).colorScheme.onSurface,
+          ),
           SizedBox(height: 10),
-          Text(L10n.of(context).readingPageStyleNoBackgroundImage,
-              style: TextStyle(
-                color: Theme.of(context).colorScheme.onSurface,
-              )),
+          Text(
+            L10n.of(context).readingPageStyleNoBackgroundImage,
+            style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
+          ),
         ],
       ),
       onTap: () {
@@ -103,7 +107,7 @@ class _BgimgSelectorState extends ConsumerState<BgimgSelector> {
     return Padding(
       padding: const EdgeInsets.fromLTRB(8.0, 0.0, 8.0, 8.0),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: PaperfoldShape.paneRadius,
         child: GestureDetector(
           onTap: onTap,
           child: Container(
@@ -133,7 +137,7 @@ class _BgimgSelectorState extends ConsumerState<BgimgSelector> {
     Widget itemContent = Padding(
       padding: const EdgeInsets.fromLTRB(8.0, 0.0, 8.0, 8.0),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: PaperfoldShape.paneRadius,
         child: Container(
           height: _itemHeight,
           color: Theme.of(context).colorScheme.surfaceContainer,
@@ -177,8 +181,8 @@ class _BgimgSelectorState extends ConsumerState<BgimgSelector> {
                 child: IgnorePointer(
                   child: CustomPaint(
                     painter: _DiagonalLinePainter(
-                      color:
-                          Theme.of(context).colorScheme.onSurface.withAlpha(80),
+                      color: Theme.of(context).colorScheme.onSurface
+                          .withAlpha(80),
                       offset: _diagonalOffset,
                     ),
                   ),
@@ -202,8 +206,10 @@ class _BgimgSelectorState extends ConsumerState<BgimgSelector> {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.add_photo_alternate_outlined,
-                              color: Theme.of(context).colorScheme.onSurface),
+                          Icon(
+                            Icons.add_photo_alternate_outlined,
+                            color: Theme.of(context).colorScheme.onSurface,
+                          ),
                           SizedBox(height: 4),
                           Text(
                             L10n.of(context).readingPageStyleImportNightImage,
@@ -229,12 +235,16 @@ class _BgimgSelectorState extends ConsumerState<BgimgSelector> {
                       // Day label
                       Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 4),
+                          horizontal: PaperfoldSpace.xs,
+                          vertical: PaperfoldSpace.xxs,
+                        ),
                         margin: const EdgeInsetsDirectional.only(
-                            start: 8, bottom: 8),
+                          start: 8,
+                          bottom: 8,
+                        ),
                         decoration: BoxDecoration(
                           color: Colors.white.withAlpha(180),
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: PaperfoldShape.controlRadius,
                         ),
                         child: Text(
                           L10n.of(context).readingPageStyleDayMode,
@@ -244,12 +254,16 @@ class _BgimgSelectorState extends ConsumerState<BgimgSelector> {
                       // Night label
                       Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 4),
+                          horizontal: PaperfoldSpace.xs,
+                          vertical: PaperfoldSpace.xxs,
+                        ),
                         margin: const EdgeInsetsDirectional.only(
-                            end: 8, bottom: 8),
+                          end: 8,
+                          bottom: 8,
+                        ),
                         decoration: BoxDecoration(
                           color: Colors.black.withAlpha(180),
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: PaperfoldShape.controlRadius,
                         ),
                         child: Text(
                           L10n.of(context).readingPageStyleNightMode,
@@ -278,7 +292,8 @@ class _BgimgSelectorState extends ConsumerState<BgimgSelector> {
                         final bgimgDir = getBgimgDir().path;
                         final dayPath =
                             bgimgDir + Platform.pathSeparator + bgimgModel.path;
-                        final nightPath = bgimgDir +
+                        final nightPath =
+                            bgimgDir +
                             Platform.pathSeparator +
                             bgimgModel.nightPath!;
 
@@ -294,9 +309,7 @@ class _BgimgSelectorState extends ConsumerState<BgimgSelector> {
                         width: 36,
                         height: 36,
                         decoration: BoxDecoration(
-                          color: Theme.of(context)
-                              .colorScheme
-                              .primary
+                          color: Theme.of(context).colorScheme.primary
                               .withAlpha(220),
                           shape: BoxShape.circle,
                           boxShadow: [
@@ -453,7 +466,8 @@ class _BgimgSelectorState extends ConsumerState<BgimgSelector> {
                   return buildImportBgimgItem();
                 }
                 final model = bgimgList[index - 1];
-                final isSelected = model.type != BgimgType.none &&
+                final isSelected =
+                    model.type != BgimgType.none &&
                     currentBgimg.type != BgimgType.none &&
                     currentBgimg.path == model.path;
                 final item = switch (model.type) {
@@ -464,10 +478,7 @@ class _BgimgSelectorState extends ConsumerState<BgimgSelector> {
                 if (isSelected) {
                   return Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      item,
-                      _buildBlurOpacityControls(context),
-                    ],
+                    children: [item, _buildBlurOpacityControls(context)],
                   );
                 }
                 return item;

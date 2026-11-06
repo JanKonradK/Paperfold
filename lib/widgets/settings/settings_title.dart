@@ -1,5 +1,7 @@
 import 'package:paperfold/widgets/settings/settings_section.dart';
 import 'package:material_ui/material_ui.dart';
+import 'package:paperfold/widgets/settings/settings_tile.dart';
+import 'package:paperfold/widgets/common/paperfold_pane.dart';
 
 Widget settingsTitle({
   required Icon icon,
@@ -15,31 +17,33 @@ Widget settingsTitle({
   required List<String> subtitle,
 }) {
   return Builder(
-    builder: (BuildContext context) => ListTile(
-      leading: icon,
-      title: Text(title),
-      trailing: const Icon(Icons.chevron_right),
-      selected: !isMobile && selectedIndex == id,
-      subtitle: Text(subtitle.join(' • ')),
-      onTap: () {
-        if (!isMobile) {
-          setDetail(subPage, id);
-          return;
-        }
-        // The route comes from the tapped row's own context, not from a
-        // global navigator key. A settings row opened from a dialog or a
-        // second navigator used to push onto the root one instead.
-        Navigator.of(context).push(
-          MaterialPageRoute<void>(builder: subPage),
-        );
-      },
+    builder: (BuildContext context) => PaperfoldPressable(
+      child: ListTile(
+        leading: SettingsIcon(child: icon),
+        title: Text(title),
+        trailing: const Icon(Icons.chevron_right),
+        selected: !isMobile && selectedIndex == id,
+        subtitle: Text(
+          subtitle.join(' · '),
+          maxLines: MediaQuery.textScalerOf(context).scale(16) > 24 ? null : 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+        onTap: () {
+          if (!isMobile) {
+            setDetail(subPage, id);
+            return;
+          }
+          // The route comes from the tapped row's own context, not from a
+          // global navigator key. A settings row opened from a dialog or a
+          // second navigator used to push onto the root one instead.
+          Navigator.of(context).push(MaterialPageRoute<void>(builder: subPage));
+        },
+      ),
     ),
   );
 }
 
-Widget settingsSections({
-  required List<AbstractSettingsSection> sections,
-}) {
+Widget settingsSections({required List<AbstractSettingsSection> sections}) {
   // return SettingsList(sections: sections);
   return ListView.builder(
     itemCount: sections.length,

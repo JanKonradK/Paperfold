@@ -1,3 +1,4 @@
+import 'package:paperfold/config/paperfold_system.dart';
 import 'package:paperfold/service/vibration_service.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -47,11 +48,11 @@ class _VibrationTestPageState extends State<VibrationTestPage> {
         ],
       ),
       body: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(PaperfoldSpace.md),
         children: [
           Card(
             child: Padding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(PaperfoldSpace.md),
               child: _loading || caps == null
                   ? const Center(child: CircularProgressIndicator())
                   : Column(
@@ -67,13 +68,21 @@ class _VibrationTestPageState extends State<VibrationTestPage> {
                         const SizedBox(height: 12),
                         _buildCapabilityRow('Has Vibrator', caps.hasVibrator),
                         _buildCapabilityRow(
-                            'Has Amplitude Control', caps.hasAmplitudeControl),
-                        _buildCapabilityRow('Supports Custom Patterns',
-                            caps.hasCustomVibrationsSupport),
+                          'Has Amplitude Control',
+                          caps.hasAmplitudeControl,
+                        ),
                         _buildCapabilityRow(
-                            'Can Use Haptics', caps.canUseHaptics),
+                          'Supports Custom Patterns',
+                          caps.hasCustomVibrationsSupport,
+                        ),
                         _buildCapabilityRow(
-                            'Has Any Feedback', caps.hasAnyVibration),
+                          'Can Use Haptics',
+                          caps.canUseHaptics,
+                        ),
+                        _buildCapabilityRow(
+                          'Has Any Feedback',
+                          caps.hasAnyVibration,
+                        ),
                       ],
                     ),
             ),
@@ -81,25 +90,20 @@ class _VibrationTestPageState extends State<VibrationTestPage> {
           const SizedBox(height: 24),
           const Text(
             'Vibration Types',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 12),
           Wrap(
             spacing: 8,
             runSpacing: 8,
-            children: VibrationType.values.map(
-              (type) {
-                return OutlinedButton(
-                  onPressed: (caps?.hasAnyVibration ?? false)
-                      ? () => _trigger(type)
-                      : null,
-                  child: Text(_labelForType(type)),
-                );
-              },
-            ).toList(),
+            children: VibrationType.values.map((type) {
+              return OutlinedButton(
+                onPressed: (caps?.hasAnyVibration ?? false)
+                    ? () => _trigger(type)
+                    : null,
+                child: Text(_labelForType(type)),
+              );
+            }).toList(),
           ),
         ],
       ),
@@ -108,7 +112,7 @@ class _VibrationTestPageState extends State<VibrationTestPage> {
 
   Widget _buildCapabilityRow(String label, bool supported) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
+      padding: const EdgeInsets.symmetric(vertical: PaperfoldSpace.xxs),
       child: Row(
         children: [
           Icon(

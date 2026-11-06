@@ -1,3 +1,4 @@
+import 'package:paperfold/config/paperfold_system.dart';
 import 'package:flutter/foundation.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:paperfold/l10n/generated/L10n.dart';
@@ -91,7 +92,10 @@ class LoadFailure extends StatelessWidget {
               );
             }
             return MessageBlock(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+              padding: const EdgeInsets.symmetric(
+                horizontal: PaperfoldSpace.md,
+                vertical: 20,
+              ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [

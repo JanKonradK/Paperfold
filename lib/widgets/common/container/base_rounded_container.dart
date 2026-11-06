@@ -1,3 +1,6 @@
+import 'package:paperfold/config/paperfold_system.dart';
+import 'package:paperfold/config/paperfold_motion.dart';
+import 'package:paperfold/config/paperfold_visual_policy.dart';
 import 'package:material_ui/material_ui.dart';
 
 abstract class BaseRoundedContainer extends StatelessWidget {
@@ -10,11 +13,11 @@ abstract class BaseRoundedContainer extends StatelessWidget {
     this.margin,
     this.radius,
     this.constraints,
-    this.animationDuration = const Duration(milliseconds: 250),
-    this.animationCurve = Curves.easeInOut,
+    this.animationDuration = PaperfoldMotion.move,
+    this.animationCurve = PaperfoldMotion.settle,
   });
 
-  static const double _defaultRadius = 30;
+  static const double _defaultRadius = PaperfoldShape.pane;
 
   final Widget child;
   final double? width;
@@ -34,14 +37,16 @@ abstract class BaseRoundedContainer extends StatelessWidget {
     final BorderRadiusGeometry borderRadius = _borderRadius;
 
     return AnimatedContainer(
-      duration: animationDuration,
+      duration: PaperfoldVisualPolicy.motionAllowed(context)
+          ? PaperfoldMotion.of(context, animationDuration)
+          : Duration.zero,
       curve: animationCurve,
       margin: margin?.add(const EdgeInsets.all(1)) ?? const EdgeInsets.all(1),
       width: width,
       height: height,
       constraints: constraints,
       decoration: decoration(context, borderRadius),
-      child: ClipRSuperellipse(
+      child: ClipRRect(
         borderRadius: borderRadius,
         // Paint row ink above the card fill, within its rounded clip.
         child: Material(
@@ -65,7 +70,7 @@ abstract class BaseRoundedContainer extends StatelessWidget {
   }) {
     return ShapeDecoration(
       color: color,
-      shape: RoundedSuperellipseBorder(
+      shape: RoundedRectangleBorder(
         borderRadius: borderRadius,
         side: borderSide,
       ),

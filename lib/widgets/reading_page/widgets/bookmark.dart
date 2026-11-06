@@ -1,3 +1,4 @@
+import 'package:paperfold/config/paperfold_system.dart';
 import 'package:paperfold/l10n/generated/L10n.dart';
 import 'package:paperfold/models/bookmark.dart';
 import 'package:paperfold/page/book_player/epub_player.dart';
@@ -36,9 +37,8 @@ class _BookmarkWidgetState extends ConsumerState<BookmarkWidget> {
               children: [
                 Text(
                   L10n.of(context).noBookmarks,
-                  style: Theme.of(context).textTheme.titleLarge!.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                  style: Theme.of(context).textTheme.titleLarge!
+                      .copyWith(fontWeight: FontWeight.bold),
                 ),
                 SizedBox(height: 16.0),
                 Text(L10n.of(context).noBookmarksTip),
@@ -59,9 +59,9 @@ class _BookmarkWidgetState extends ConsumerState<BookmarkWidget> {
                   widget.onNavigate();
                 },
                 onDelete: (id) {
-                  ref.read(bookmarkProvider(bookId).notifier).removeBookmark(
-                        id: id,
-                      );
+                  ref
+                      .read(bookmarkProvider(bookId).notifier)
+                      .removeBookmark(id: id);
                 },
               ),
             );
@@ -72,9 +72,7 @@ class _BookmarkWidgetState extends ConsumerState<BookmarkWidget> {
         return errorHandler(error, stack: stackTrace);
       },
       loading: () {
-        return const Center(
-          child: CircularProgressIndicator(),
-        );
+        return const Center(child: CircularProgressIndicator());
       },
     );
   }
@@ -96,16 +94,11 @@ class BookmarkItem extends StatelessWidget {
     return GestureDetector(
       onTap: () => onTap(bookmark.cfi),
       child: FilledContainer(
-        padding: const EdgeInsets.all(12.0),
+        padding: const EdgeInsets.all(PaperfoldSpace.sm),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              bookmark.content,
-              style: TextStyle(
-                fontSize: 16,
-              ),
-            ),
+            Text(bookmark.content, style: TextStyle(fontSize: 16)),
             const Divider(height: 2),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -114,18 +107,20 @@ class BookmarkItem extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(bookmark.chapter,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            color:
-                                Theme.of(context).colorScheme.onSurfaceVariant,
-                          )),
-                      Text('${(bookmark.percentage * 100).toStringAsFixed(2)}%',
-                          style: TextStyle(
-                            color:
-                                Theme.of(context).colorScheme.onSurfaceVariant,
-                          )),
+                      Text(
+                        bookmark.chapter,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                      Text(
+                        '${(bookmark.percentage * 100).toStringAsFixed(2)}%',
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -133,7 +128,7 @@ class BookmarkItem extends StatelessWidget {
                   delete: () {
                     onDelete(bookmark.id!);
                   },
-                )
+                ),
               ],
             ),
           ],

@@ -1,3 +1,5 @@
+import 'package:paperfold/config/paperfold_visual_policy.dart';
+import 'package:paperfold/config/paperfold_motion.dart';
 import 'package:paperfold/enums/chart_mode.dart';
 import 'package:paperfold/l10n/generated/L10n.dart';
 import 'package:paperfold/providers/statistic_data.dart';
@@ -24,11 +26,14 @@ class StatisticCard extends ConsumerWidget {
       ChartMode.week: () => isPlus
           ? currentDate.add(const Duration(days: 7))
           : currentDate.subtract(const Duration(days: 7)),
-      ChartMode.month: () => DateTime(currentDate.year,
-          isPlus ? currentDate.month + 1 : currentDate.month - 1),
+      ChartMode.month: () => DateTime(
+        currentDate.year,
+        isPlus ? currentDate.month + 1 : currentDate.month - 1,
+      ),
       ChartMode.year: () => DateTime(
-          isPlus ? currentDate.year + 1 : currentDate.year - 1,
-          currentDate.month),
+        isPlus ? currentDate.year + 1 : currentDate.year - 1,
+        currentDate.month,
+      ),
     };
 
     newDate = durationMap[currentMode]!();
@@ -70,109 +75,106 @@ class StatisticCard extends ConsumerWidget {
     ];
 
     Widget segmentButton(data) => Row(
-          children: [
-            Expanded(
-              child: AnxSegmentedButton<ChartMode>(
-                segments: segmentButtonItems,
-                selected: {data.mode},
-                onSelectionChanged: (Set<ChartMode> newSelection) {
-                  ref
-                      .read(statisticDataProvider.notifier)
-                      .setMode(newSelection.first);
-                },
-              ),
-            ),
-          ],
-        );
+      children: [
+        Expanded(
+          child: AnxSegmentedButton<ChartMode>(
+            segments: segmentButtonItems,
+            selected: {data.mode},
+            onSelectionChanged: (Set<ChartMode> newSelection) {
+              ref
+                  .read(statisticDataProvider.notifier)
+                  .setMode(newSelection.first);
+            },
+          ),
+        ),
+      ],
+    );
 
     Widget barChart(data) => SizedBox(
-          height: 300,
-          child: Column(
+      height: 300,
+      child: Column(
+        children: [
+          Row(
             children: [
-              Row(
-                children: [
-                  IconButton(
-                    onPressed: () =>
-                        _changeDate(ref, false, data.mode, data.date),
-                    icon: const Icon(Icons.chevron_left),
-                  ),
-                  const Spacer(),
-                  TextButton(
-                    onPressed: () async {
-                      final newDate = await showDatePicker(
-                        context: context,
-                        initialEntryMode: DatePickerEntryMode.calendarOnly,
-                        firstDate: DateTime(2024),
-                        lastDate: DateTime.now(),
-                        initialDate: data.date,
-                      );
-                      if (newDate != null) {
-                        ref
-                            .read(statisticDataProvider.notifier)
-                            .setDate(newDate);
-                      }
-                    },
-                    child: Text(
-                      data.mode == ChartMode.week
-                          ? weekOfYear(data.date)
-                          : data.mode == ChartMode.month
-                              ? '${data.date.year}.${data.date.month}'
-                              : data.date.year.toString(),
-                    ),
-                  ),
-                  const Spacer(),
-                  IconButton(
-                    onPressed: () =>
-                        _changeDate(ref, true, data.mode, data.date),
-                    icon: const Icon(Icons.chevron_right),
-                  ),
-                ],
+              IconButton(
+                onPressed: () => _changeDate(ref, false, data.mode, data.date),
+                icon: const Icon(Icons.chevron_left),
               ),
-              const SizedBox(height: 10),
-              Expanded(
-                child: statisticData.when(
-                  data: (data) => StatisticChart(
-                    readingTime: data.readingTime,
-                    xLabels: data.xLabels,
-                  ),
-                  loading: () => const Center(
-                    child: CircularProgressIndicator(),
-                  ),
-                  error: (error, stack) => LoadFailure.inline(
-                    title: L10n.of(context).statisticsLoadFailed,
-                    error: error,
-                  ),
+              const Spacer(),
+              TextButton(
+                onPressed: () async {
+                  final newDate = await showDatePicker(
+                    context: context,
+                    initialEntryMode: DatePickerEntryMode.calendarOnly,
+                    firstDate: DateTime(2024),
+                    lastDate: DateTime.now(),
+                    initialDate: data.date,
+                  );
+                  if (newDate != null) {
+                    ref.read(statisticDataProvider.notifier).setDate(newDate);
+                  }
+                },
+                child: Text(
+                  data.mode == ChartMode.week
+                      ? weekOfYear(data.date)
+                      : data.mode == ChartMode.month
+                      ? '${data.date.year}.${data.date.month}'
+                      : data.date.year.toString(),
                 ),
-              )
+              ),
+              const Spacer(),
+              IconButton(
+                onPressed: () => _changeDate(ref, true, data.mode, data.date),
+                icon: const Icon(Icons.chevron_right),
+              ),
             ],
           ),
-        );
-    return AnimatedSize(
-      duration: const Duration(milliseconds: 300),
-      curve: Curves.easeOutBack,
-      alignment: Alignment.topCenter,
-      child: FilledContainer(
-        padding: const EdgeInsets.fromLTRB(10, 0, 10, 5),
-        child: statisticData.when(
-            data: (data) => Column(
-                  children: [
-                    const SizedBox(height: 10),
-                    segmentButton(data),
-                    const SizedBox(height: 10),
-                    if (data.mode == ChartMode.heatmap) const HeatmapChart(),
-                    if (data.mode != ChartMode.heatmap) barChart(data),
-                  ],
-                ),
-            loading: () => const Center(
-                  child: CircularProgressIndicator(),
-                ),
-            // Rethrowing inside a builder took the whole widget tree down
-            // with a red screen. A chart that cannot load is not fatal.
-            error: (error, stack) => LoadFailure.inline(
-                  title: L10n.of(context).statisticsLoadFailed,
-                  error: error,
-                )),
+          const SizedBox(height: 10),
+          Expanded(
+            child: statisticData.when(
+              data: (data) => StatisticChart(
+                readingTime: data.readingTime,
+                xLabels: data.xLabels,
+              ),
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (error, stack) => LoadFailure.inline(
+                title: L10n.of(context).statisticsLoadFailed,
+                error: error,
+              ),
+            ),
+          ),
+        ],
       ),
+    );
+    final body = FilledContainer(
+      padding: const EdgeInsets.fromLTRB(10, 0, 10, 5),
+      child: statisticData.when(
+        data: (data) => Column(
+          children: [
+            const SizedBox(height: 10),
+            segmentButton(data),
+            const SizedBox(height: 10),
+            if (data.mode == ChartMode.heatmap) const HeatmapChart(),
+            if (data.mode != ChartMode.heatmap) barChart(data),
+          ],
+        ),
+        loading: () => const Center(child: CircularProgressIndicator()),
+        // Rethrowing inside a builder took the whole widget tree down
+        // with a red screen. A chart that cannot load is not fatal.
+        error: (error, stack) => LoadFailure.inline(
+          title: L10n.of(context).statisticsLoadFailed,
+          error: error,
+        ),
+      ),
+    );
+    if (!PaperfoldVisualPolicy.motionAllowed(context)) return body;
+    return AnimatedSize(
+      duration: PaperfoldVisualPolicy.motionAllowed(context)
+          ? PaperfoldMotion.of(context, PaperfoldMotion.move)
+          : Duration.zero,
+      curve: PaperfoldMotion.settle,
+      alignment: Alignment.topCenter,
+      child: body,
     );
   }
 }

@@ -1,3 +1,5 @@
+import 'package:paperfold/config/paperfold_system.dart';
+
 import 'dart:math' as math;
 
 import 'package:paperfold/config/shared_preference_provider.dart';
@@ -13,17 +15,18 @@ import 'package:paperfold/dao/book_note.dart';
 import 'package:paperfold/models/book_note.dart';
 
 Future<void> showContextMenu(
-    BuildContext context,
-    double left,
-    double top,
-    double right,
-    double bottom,
-    String annoContent,
-    String annoCfi,
-    int? annoId,
-    bool footnote,
-    Axis axis,
-    {String? contextText}) async {
+  BuildContext context,
+  double left,
+  double top,
+  double right,
+  double bottom,
+  String annoContent,
+  String annoCfi,
+  int? annoId,
+  bool footnote,
+  Axis axis, {
+  String? contextText,
+}) async {
   final playerKey = epubPlayerKey.currentState;
   if (playerKey == null) return;
   bool isNewNote = false;
@@ -81,8 +84,10 @@ Future<void> showContextMenu(
   const double verticalMargin = 16;
   const double gap = 12;
 
-  final double maxMenuWidth =
-      math.min(350, math.max(120, screenWidth - horizontalMargin * 2));
+  final double maxMenuWidth = math.min(
+    350,
+    math.max(120, screenWidth - horizontalMargin * 2),
+  );
   final double effectiveHeight = math.max(0, screenHeight - keyboardInset);
   final double maxHeightCandidate = effectiveHeight - verticalMargin * 2;
   final double rawMaxHeight = math.min(
@@ -121,7 +126,7 @@ Future<void> showContextMenu(
     color: Prefs().eInkMode
         ? Colors.white
         : Theme.of(context).colorScheme.secondaryContainer,
-    borderRadius: BorderRadius.circular(10),
+    borderRadius: PaperfoldShape.controlRadius,
     boxShadow: [
       if (!Prefs().eInkMode)
         BoxShadow(
@@ -131,35 +136,33 @@ Future<void> showContextMenu(
           offset: const Offset(0, 3),
         ),
       if (Prefs().eInkMode)
-        const BoxShadow(
-          color: Colors.black,
-          spreadRadius: 1,
-          blurRadius: 0,
-        ),
+        const BoxShadow(color: Colors.black, spreadRadius: 1, blurRadius: 0),
     ],
   );
 
-  playerKey.contextMenuEntry = OverlayEntry(builder: (context) {
-    return _ContextMenuOverlay(
-      axis: axis,
-      selectionRect: selectionRect,
-      viewportRect: viewportRect,
-      annoContent: annoContent,
-      annoCfi: annoCfi,
-      annoId: annoId,
-      footnote: footnote,
-      contextText: contextText,
-      decoration: decoration,
-      onClose: onClose,
-      menuConstraints: menuConstraints,
-      initialPlacement: initialPlacement,
-      showTranslationDefault: !isNewNote && Prefs().autoTranslateSelection,
-      horizontalMargin: horizontalMargin,
-      verticalMargin: verticalMargin,
-      gap: gap,
-      initialBottomInset: keyboardInset,
-    );
-  });
+  playerKey.contextMenuEntry = OverlayEntry(
+    builder: (context) {
+      return _ContextMenuOverlay(
+        axis: axis,
+        selectionRect: selectionRect,
+        viewportRect: viewportRect,
+        annoContent: annoContent,
+        annoCfi: annoCfi,
+        annoId: annoId,
+        footnote: footnote,
+        contextText: contextText,
+        decoration: decoration,
+        onClose: onClose,
+        menuConstraints: menuConstraints,
+        initialPlacement: initialPlacement,
+        showTranslationDefault: !isNewNote && Prefs().autoTranslateSelection,
+        horizontalMargin: horizontalMargin,
+        verticalMargin: verticalMargin,
+        gap: gap,
+        initialBottomInset: keyboardInset,
+      );
+    },
+  );
 
   Overlay.of(context).insert(playerKey.contextMenuEntry!);
 }
@@ -191,8 +194,10 @@ _MenuPlacement _resolveMenuPlacement({
   final double menuWidth = menuSize.width;
   final double menuHeight = menuSize.height;
 
-  final double clampedViewportBottom =
-      math.max(viewportRect.top, viewportRect.bottom - bottomInset);
+  final double clampedViewportBottom = math.max(
+    viewportRect.top,
+    viewportRect.bottom - bottomInset,
+  );
 
   if (axis == Axis.horizontal) {
     final double spaceAbove = selectionRect.top - viewportRect.top;
@@ -372,7 +377,7 @@ class _ContextMenuOverlayState extends State<_ContextMenuOverlay>
     if (renderBox == null) {
       final bool needsStateUpdate =
           (_bottomInset - currentBottomInset).abs() > 0.5 ||
-              _menuConstraints.maxHeight != newConstraints.maxHeight;
+          _menuConstraints.maxHeight != newConstraints.maxHeight;
 
       if (needsStateUpdate) {
         setState(() {
@@ -397,7 +402,7 @@ class _ContextMenuOverlayState extends State<_ContextMenuOverlay>
 
     final bool positionChanged =
         (_position.dx - placement.offset.dx).abs() > 0.5 ||
-            (_position.dy - placement.offset.dy).abs() > 0.5;
+        (_position.dy - placement.offset.dy).abs() > 0.5;
 
     final bool bottomInsetChanged =
         (_bottomInset - currentBottomInset).abs() > 0.5;
@@ -405,7 +410,8 @@ class _ContextMenuOverlayState extends State<_ContextMenuOverlay>
     final bool constraintsChanged =
         _menuConstraints.maxHeight != newConstraints.maxHeight;
 
-    final bool shouldUpdate = _waitingForFirstMeasurement ||
+    final bool shouldUpdate =
+        _waitingForFirstMeasurement ||
         positionChanged ||
         _reverse != placement.shouldReverse ||
         bottomInsetChanged ||

@@ -1,3 +1,6 @@
+import 'package:paperfold/widgets/common/paperfold_modal_motion.dart';
+import 'package:paperfold/widgets/common/paperfold_list_row.dart';
+import 'package:paperfold/config/paperfold_system.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:paperfold/l10n/generated/L10n.dart';
@@ -18,12 +21,14 @@ class OpdsCatalogsPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final L10n l10n = L10n.of(context);
-    final AsyncValue<List<OpdsCatalog>> catalogs =
-        ref.watch(opdsCatalogsProvider);
+    final AsyncValue<List<OpdsCatalog>> catalogs = ref.watch(
+      opdsCatalogsProvider,
+    );
     final theme = Theme.of(context);
     final saved = catalogs.value ?? const <OpdsCatalog>[];
     final suggestions = OnlineBookSource.values.where(
-        (source) => source.isCatalog && !saved.any(source.matchesCatalog));
+      (source) => source.isCatalog && !saved.any(source.matchesCatalog),
+    );
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.opdsFindBooksOnline)),
@@ -33,15 +38,22 @@ class OpdsCatalogsPage extends ConsumerWidget {
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 760),
             child: ListView(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
+              padding: const EdgeInsets.fromLTRB(
+                PaperfoldSpace.gutter,
+                PaperfoldSpace.md,
+                PaperfoldSpace.gutter,
+                PaperfoldSpace.xl,
+              ),
               children: [
-                Text(l10n.onlineCatalogsHeading,
-                    style: theme.textTheme.headlineSmall),
+                Text(
+                  l10n.onlineCatalogsHeading,
+                  style: theme.textTheme.headlineSmall,
+                ),
                 const SizedBox(height: 8),
                 Text(l10n.onlineCatalogsBody),
                 const SizedBox(height: 12),
                 for (final source in suggestions)
-                  ListTile(
+                  PaperfoldListRow(
                     contentPadding: EdgeInsets.zero,
                     leading: const Icon(Icons.menu_book_outlined),
                     title: Text(source.name),
@@ -51,40 +63,44 @@ class OpdsCatalogsPage extends ConsumerWidget {
                   ),
                 if (saved.isNotEmpty) ...[
                   const SizedBox(height: 20),
-                  Text(l10n.onlineSavedCatalogs,
-                      style: theme.textTheme.titleMedium),
+                  Text(
+                    l10n.onlineSavedCatalogs,
+                    style: theme.textTheme.titleMedium,
+                  ),
                 ],
                 catalogs.when(
                   loading: () => const Padding(
-                    padding: EdgeInsets.all(16),
+                    padding: EdgeInsets.all(PaperfoldSpace.md),
                     child: Center(child: CircularProgressIndicator()),
                   ),
                   error: (error, stack) => LoadFailure.inline(
                     onRetry: () =>
                         ref.read(opdsCatalogsProvider.notifier).refresh(),
                   ),
-                  data: (data) => Column(children: [
-                    for (final catalog in data)
-                      ListTile(
-                        contentPadding: EdgeInsets.zero,
-                        minTileHeight: 56,
-                        leading: const Icon(Icons.local_library_outlined),
-                        title: Text(catalog.name),
-                        subtitle: Text(
-                          catalog.url.host == 'standardebooks.org'
-                              ? l10n.onlineStandardAccess
-                              : catalog.needsPassword
-                                  ? '${catalog.url.host} · ${l10n.opdsCatalogNeedsSignIn}'
-                                  : catalog.url.host,
+                  data: (data) => Column(
+                    children: [
+                      for (final catalog in data)
+                        PaperfoldListRow(
+                          contentPadding: EdgeInsets.zero,
+                          minTileHeight: PaperfoldSize.row,
+                          leading: const Icon(Icons.local_library_outlined),
+                          title: Text(catalog.name),
+                          subtitle: Text(
+                            catalog.url.host == 'standardebooks.org'
+                                ? l10n.onlineStandardAccess
+                                : catalog.needsPassword
+                                ? '${catalog.url.host} · ${l10n.opdsCatalogNeedsSignIn}'
+                                : catalog.url.host,
+                          ),
+                          trailing: IconButton(
+                            icon: const Icon(Icons.delete_outline),
+                            tooltip: l10n.opdsRemoveCatalog,
+                            onPressed: () => _remove(context, ref, catalog),
+                          ),
+                          onTap: () => _browse(context, catalog),
                         ),
-                        trailing: IconButton(
-                          icon: const Icon(Icons.delete_outline),
-                          tooltip: l10n.opdsRemoveCatalog,
-                          onPressed: () => _remove(context, ref, catalog),
-                        ),
-                        onTap: () => _browse(context, catalog),
-                      ),
-                  ]),
+                    ],
+                  ),
                 ),
                 const SizedBox(height: 12),
                 Align(
@@ -96,14 +112,17 @@ class OpdsCatalogsPage extends ConsumerWidget {
                   ),
                 ),
                 const SizedBox(height: 32),
-                Text(l10n.onlineWebsitesHeading,
-                    style: theme.textTheme.headlineSmall),
+                Text(
+                  l10n.onlineWebsitesHeading,
+                  style: theme.textTheme.headlineSmall,
+                ),
                 const SizedBox(height: 8),
                 Text(l10n.onlineWebsitesBody),
                 const SizedBox(height: 12),
-                for (final source in OnlineBookSource.values
-                    .where((source) => !source.isCatalog))
-                  ListTile(
+                for (final source in OnlineBookSource.values.where(
+                  (source) => !source.isCatalog,
+                ))
+                  PaperfoldListRow(
                     contentPadding: EdgeInsets.zero,
                     leading: const Icon(Icons.language),
                     title: Text(source.name),
@@ -118,9 +137,11 @@ class OpdsCatalogsPage extends ConsumerWidget {
                     // browsed here, so their downloads reach the library.
                     onTap: () => source == OnlineBookSource.libby
                         ? openBookWebsite(context, source.url)
-                        : Navigator.of(context).push(MaterialPageRoute<void>(
-                            builder: (_) => BookWebPage(url: source.url),
-                          )),
+                        : Navigator.of(context).push(
+                            MaterialPageRoute<void>(
+                              builder: (_) => BookWebPage(url: source.url),
+                            ),
+                          ),
                   ),
               ],
             ),
@@ -131,22 +152,21 @@ class OpdsCatalogsPage extends ConsumerWidget {
   }
 
   void _browse(BuildContext context, OpdsCatalog catalog) {
-    Navigator.of(context).push(MaterialPageRoute<void>(
-      builder: (_) => OpdsBrowsePage(catalog: catalog),
-    ));
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(builder: (_) => OpdsBrowsePage(catalog: catalog)),
+    );
   }
 
   String _description(L10n l10n, OnlineBookSource source) => switch (source) {
-        OnlineBookSource.gutenberg => l10n.onlineGutenbergDescription,
-        OnlineBookSource.ebooksGratuits => l10n.onlineEbooksGratuitsDescription,
-        OnlineBookSource.wikisource => l10n.onlineWikisourceDescription,
-        OnlineBookSource.standardEbooks => l10n.onlineStandardDescription,
-        OnlineBookSource.internetArchive =>
-          l10n.onlineInternetArchiveDescription,
-        OnlineBookSource.globalGrey => l10n.onlineGlobalGreyDescription,
-        OnlineBookSource.openLibrary => l10n.onlineOpenLibraryDescription,
-        OnlineBookSource.libby => l10n.onlineLibbyDescription,
-      };
+    OnlineBookSource.gutenberg => l10n.onlineGutenbergDescription,
+    OnlineBookSource.ebooksGratuits => l10n.onlineEbooksGratuitsDescription,
+    OnlineBookSource.wikisource => l10n.onlineWikisourceDescription,
+    OnlineBookSource.standardEbooks => l10n.onlineStandardDescription,
+    OnlineBookSource.internetArchive => l10n.onlineInternetArchiveDescription,
+    OnlineBookSource.globalGrey => l10n.onlineGlobalGreyDescription,
+    OnlineBookSource.openLibrary => l10n.onlineOpenLibraryDescription,
+    OnlineBookSource.libby => l10n.onlineLibbyDescription,
+  };
 
   Future<void> _remove(
     BuildContext context,
@@ -156,6 +176,7 @@ class OpdsCatalogsPage extends ConsumerWidget {
     final L10n l10n = L10n.of(context);
     final bool? confirmed = await showDialog<bool>(
       context: context,
+      animationStyle: paperfoldModalMotion(context),
       builder: (BuildContext context) => AlertDialog(
         title: Text(l10n.opdsRemoveCatalog),
         // The password goes with it. Say so before, not after.
@@ -178,9 +199,9 @@ class OpdsCatalogsPage extends ConsumerWidget {
       } catch (_) {
         AnxLog.warning('Could not remove catalog');
         if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(l10n.opdsCatalogRemoveFailed)),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(l10n.opdsCatalogRemoveFailed)));
         }
       }
     }
@@ -189,17 +210,22 @@ class OpdsCatalogsPage extends ConsumerWidget {
   Future<void> _addCatalog(BuildContext context, WidgetRef ref) async {
     await showDialog<void>(
       context: context,
-      builder: (context) => _CatalogDialog(onSave: (draft) async {
-        await ref.read(opdsCatalogsProvider.notifier).add(
-              name: draft.name,
-              url: draft.url,
-              authType: draft.password.isEmpty && draft.username.isEmpty
-                  ? OpdsAuthType.none
-                  : OpdsAuthType.basic,
-              username: draft.username.isEmpty ? null : draft.username,
-              password: draft.password,
-            );
-      }),
+      animationStyle: paperfoldModalMotion(context),
+      builder: (context) => _CatalogDialog(
+        onSave: (draft) async {
+          await ref
+              .read(opdsCatalogsProvider.notifier)
+              .add(
+                name: draft.name,
+                url: draft.url,
+                authType: draft.password.isEmpty && draft.username.isEmpty
+                    ? OpdsAuthType.none
+                    : OpdsAuthType.basic,
+                username: draft.username.isEmpty ? null : draft.username,
+                password: draft.password,
+              );
+        },
+      ),
     );
   }
 }
@@ -244,12 +270,14 @@ class _CatalogDialogState extends State<_CatalogDialog> {
       _failed = false;
     });
     try {
-      await widget.onSave(_CatalogDraft(
-        name: _name.text.trim(),
-        url: _parseUrl(_url.text)!,
-        username: _username.text.trim(),
-        password: _password.text,
-      ));
+      await widget.onSave(
+        _CatalogDraft(
+          name: _name.text.trim(),
+          url: _parseUrl(_url.text)!,
+          username: _username.text.trim(),
+          password: _password.text,
+        ),
+      );
       if (mounted) Navigator.of(context).pop();
     } catch (_) {
       AnxLog.warning('Could not save catalog');
@@ -289,8 +317,8 @@ class _CatalogDialogState extends State<_CatalogDialog> {
                   decoration: InputDecoration(labelText: l10n.opdsCatalogName),
                   validator: (String? value) =>
                       (value == null || value.trim().isEmpty)
-                          ? l10n.commonInputCannotBeEmpty
-                          : null,
+                      ? l10n.commonInputCannotBeEmpty
+                      : null,
                 ),
                 TextFormField(
                   enabled: !_saving,
@@ -303,8 +331,9 @@ class _CatalogDialogState extends State<_CatalogDialog> {
                 TextFormField(
                   enabled: !_saving,
                   controller: _username,
-                  decoration:
-                      InputDecoration(labelText: l10n.opdsCatalogUsername),
+                  decoration: InputDecoration(
+                    labelText: l10n.opdsCatalogUsername,
+                  ),
                 ),
                 TextFormField(
                   enabled: !_saving,

@@ -1104,5 +1104,8 @@
   "reminderPermissionDenied": "Paperfold bildirimleri kapalı. Sistem ayarlarından açın.",
   "reminderChannelName": "Okuma hatırlatıcıları",
   "onlineWikisourceDescription": "İngilizce Vikikaynak'tan kamu malı kitaplar. EPUB dosyalarını buradan indirin.",
-  "onlineInternetArchiveDescription": "Kamu malı ve ödünç kitaplardan oluşan büyük bir kütüphane. Bazı kitaplar hesap gerektirir."
+  "onlineInternetArchiveDescription": "Kamu malı ve ödünç kitaplardan oluşan büyük bir kütüphane. Bazı kitaplar hesap gerektirir.",
+  "settingsLibraryBooks": "Kitaplık ve kitaplar",
+  "settingsSyncBackup": "Eşitleme ve yedekleme",
+  "settingsCatalogs": "Kataloglar"
 }

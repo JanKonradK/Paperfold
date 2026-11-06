@@ -1,3 +1,4 @@
+import 'package:paperfold/config/paperfold_system.dart';
 import 'package:paperfold/config/shared_preference_provider.dart';
 import 'package:paperfold/enums/convert_chinese_mode.dart';
 import 'package:paperfold/enums/reading_info.dart';
@@ -31,8 +32,10 @@ class _ReadingMoreSettingsState extends State<ReadingMoreSettings> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(L10n.of(context).readingPageConvertChinese,
-                  style: Theme.of(context).textTheme.titleMedium),
+              Text(
+                L10n.of(context).readingPageConvertChinese,
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
               Row(
                 children: [
                   Expanded(
@@ -59,11 +62,12 @@ class _ReadingMoreSettingsState extends State<ReadingMoreSettings> {
                         setState(() {
                           // Prefs().readingRules.convertChineseMode =
                           //     ConvertChineseMode.values.byName(value.first);
-                          Prefs().readingRules = Prefs()
-                              .readingRules
-                              .copyWith(convertChineseMode: value.first);
-                          epubPlayerKey.currentState
-                              ?.changeReadingRules(Prefs().readingRules);
+                          Prefs().readingRules = Prefs().readingRules.copyWith(
+                            convertChineseMode: value.first,
+                          );
+                          epubPlayerKey.currentState?.changeReadingRules(
+                            Prefs().readingRules,
+                          );
                         });
                       },
                     ),
@@ -88,15 +92,16 @@ class _ReadingMoreSettingsState extends State<ReadingMoreSettings> {
       );
     }
 
-
     Widget columnCount() {
       return StatefulBuilder(
         builder: (context, setState) => Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(L10n.of(context).readingPageColumnCount,
-                style: Theme.of(context).textTheme.titleMedium),
+            Text(
+              L10n.of(context).readingPageColumnCount,
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
             Row(
               children: [
                 Expanded(
@@ -121,9 +126,9 @@ class _ReadingMoreSettingsState extends State<ReadingMoreSettings> {
                     selected: {Prefs().bookStyle.maxColumnCount},
                     onSelectionChanged: (value) {
                       setState(() {
-                        final newBookStyle = Prefs()
-                            .bookStyle
-                            .copyWith(maxColumnCount: value.first);
+                        final newBookStyle = Prefs().bookStyle.copyWith(
+                          maxColumnCount: value.first,
+                        );
                         Prefs().saveBookStyleToPrefs(newBookStyle);
                         epubPlayerKey.currentState?.changeStyle(newBookStyle);
                       });
@@ -145,8 +150,10 @@ class _ReadingMoreSettingsState extends State<ReadingMoreSettings> {
           children: [
             Row(
               children: [
-                Text(L10n.of(context).readingPageColumnThreshold,
-                    style: Theme.of(context).textTheme.titleMedium),
+                Text(
+                  L10n.of(context).readingPageColumnThreshold,
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
                 const SizedBox(width: 8),
                 Text(
                   '${Prefs().bookStyle.columnThreshold.toInt()}px',
@@ -158,8 +165,8 @@ class _ReadingMoreSettingsState extends State<ReadingMoreSettings> {
               Text(
                 L10n.of(context).readingPageColumnThresholdTip,
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
               ),
             Slider(
               value: Prefs().bookStyle.columnThreshold,
@@ -170,8 +177,9 @@ class _ReadingMoreSettingsState extends State<ReadingMoreSettings> {
               onChanged: Prefs().bookStyle.maxColumnCount == 0
                   ? (value) {
                       setState(() {
-                        final newBookStyle =
-                            Prefs().bookStyle.copyWith(columnThreshold: value);
+                        final newBookStyle = Prefs().bookStyle.copyWith(
+                          columnThreshold: value,
+                        );
                         Prefs().saveBookStyleToPrefs(newBookStyle);
                         epubPlayerKey.currentState?.changeStyle(newBookStyle);
                       });
@@ -189,8 +197,10 @@ class _ReadingMoreSettingsState extends State<ReadingMoreSettings> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(L10n.of(context).readingPageWritingDirection,
-                style: Theme.of(context).textTheme.titleMedium),
+            Text(
+              L10n.of(context).readingPageWritingDirection,
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
             Row(
               children: [
                 Expanded(
@@ -217,8 +227,9 @@ class _ReadingMoreSettingsState extends State<ReadingMoreSettings> {
                     selected: {Prefs().writingMode},
                     onSelectionChanged: (value) {
                       setState(() {
-                        final newBookStyle =
-                            Prefs().bookStyle.copyWith(maxColumnCount: 1);
+                        final newBookStyle = Prefs().bookStyle.copyWith(
+                          maxColumnCount: 1,
+                        );
                         Prefs().saveBookStyleToPrefs(newBookStyle);
                         Prefs().writingMode = value.first;
                         epubPlayerKey.currentState?.changeStyle(newBookStyle);
@@ -239,16 +250,17 @@ class _ReadingMoreSettingsState extends State<ReadingMoreSettings> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(L10n.of(context).translationMode,
-                style: Theme.of(context).textTheme.titleMedium),
+            Text(
+              L10n.of(context).translationMode,
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
             if (!isReading)
-              Text(L10n.of(context).readingPageTranslationModeTip,
-                  style: Theme.of(context)
-                      .textTheme
-                      .bodySmall
-                      ?.copyWith(
-                          color:
-                              Theme.of(context).colorScheme.onSurfaceVariant)),
+              Text(
+                L10n.of(context).readingPageTranslationModeTip,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              ),
             Row(
               children: [
                 Expanded(
@@ -274,8 +286,9 @@ class _ReadingMoreSettingsState extends State<ReadingMoreSettings> {
                     selected: {
                       epubPlayerKey.currentState != null
                           ? Prefs().getBookTranslationMode(
-                              epubPlayerKey.currentState!.widget.book.id)
-                          : TranslationModeEnum.off
+                              epubPlayerKey.currentState!.widget.book.id,
+                            )
+                          : TranslationModeEnum.off,
                     },
                     onSelectionChanged: (value) {
                       setState(() {
@@ -319,7 +332,7 @@ class _ReadingMoreSettingsState extends State<ReadingMoreSettings> {
             },
             underline: Container(),
             dropdownColor: Theme.of(context).colorScheme.surfaceContainer,
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: PaperfoldShape.controlRadius,
             items: ReadingInfoEnum.values.map((info) {
               return DropdownMenuItem<ReadingInfoEnum>(
                 value: info,
@@ -352,10 +365,7 @@ class _ReadingMoreSettingsState extends State<ReadingMoreSettings> {
           }) {
             return Row(
               children: [
-                SizedBox(
-                  width: 96,
-                  child: Text(label),
-                ),
+                SizedBox(width: 96, child: Text(label)),
                 Expanded(
                   child: Slider(
                     value: value,
@@ -383,10 +393,7 @@ class _ReadingMoreSettingsState extends State<ReadingMoreSettings> {
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  title,
-                  style: Theme.of(context).textTheme.titleMedium,
-                ),
+                Text(title, style: Theme.of(context).textTheme.titleMedium),
                 const SizedBox(height: 8),
                 Row(
                   children: [
@@ -522,8 +529,10 @@ class _ReadingMoreSettingsState extends State<ReadingMoreSettings> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(L10n.of(context).codeHighlightTheme,
-                  style: Theme.of(context).textTheme.titleMedium),
+              Text(
+                L10n.of(context).codeHighlightTheme,
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
               const SizedBox(height: 8),
               // Quick toggle: Off / Light / Dark
               Row(
@@ -551,8 +560,8 @@ class _ReadingMoreSettingsState extends State<ReadingMoreSettings> {
                         Prefs().codeHighlightTheme == CodeHighlightThemeEnum.off
                             ? 'off'
                             : Prefs().codeHighlightTheme.isLight
-                                ? 'light'
-                                : 'dark'
+                            ? 'light'
+                            : 'dark',
                       },
                       onSelectionChanged: (value) {
                         setState(() {
@@ -578,8 +587,10 @@ class _ReadingMoreSettingsState extends State<ReadingMoreSettings> {
                 const SizedBox(height: 16),
                 // Light themes section
                 if (Prefs().codeHighlightTheme.isLight) ...[
-                  Text(L10n.of(context).codeHighlightLightThemes,
-                      style: Theme.of(context).textTheme.bodySmall),
+                  Text(
+                    L10n.of(context).codeHighlightLightThemes,
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
                   const SizedBox(height: 8),
                   Wrap(
                     spacing: 8,
@@ -603,8 +614,10 @@ class _ReadingMoreSettingsState extends State<ReadingMoreSettings> {
                 ],
                 // Dark themes section
                 if (Prefs().codeHighlightTheme.isDark) ...[
-                  Text(L10n.of(context).codeHighlightDarkThemes,
-                      style: Theme.of(context).textTheme.bodySmall),
+                  Text(
+                    L10n.of(context).codeHighlightDarkThemes,
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
                   const SizedBox(height: 8),
                   Wrap(
                     spacing: 8,

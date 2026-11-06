@@ -886,5 +886,8 @@
   "reminderPermissionDenied": "Paperfold 알림이 꺼져 있습니다. 시스템 설정에서 켜세요.",
   "reminderChannelName": "읽기 알림",
   "onlineWikisourceDescription": "영어 위키문헌의 퍼블릭 도메인 도서입니다. 여기에서 EPUB 파일을 내려받으세요.",
-  "onlineInternetArchiveDescription": "퍼블릭 도메인 도서와 대출 도서가 있는 큰 도서관입니다. 일부 도서는 계정이 필요합니다."
+  "onlineInternetArchiveDescription": "퍼블릭 도메인 도서와 대출 도서가 있는 큰 도서관입니다. 일부 도서는 계정이 필요합니다.",
+  "settingsLibraryBooks": "라이브러리와 책",
+  "settingsSyncBackup": "동기화 및 백업",
+  "settingsCatalogs": "카탈로그"
 }

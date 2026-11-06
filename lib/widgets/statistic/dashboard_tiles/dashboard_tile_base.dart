@@ -1,3 +1,7 @@
+import 'package:paperfold/config/paperfold_system.dart';
+import 'package:paperfold/config/paperfold_visual_policy.dart';
+import 'package:paperfold/config/paperfold_motion.dart';
+
 import 'dart:math';
 
 import 'package:paperfold/l10n/generated/L10n.dart';
@@ -46,7 +50,7 @@ abstract class StatisticsDashboardTileBase {
       height: double.infinity,
       radius: 16,
       color: scheme.surfaceContainerLow,
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(PaperfoldSpace.sm),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -55,15 +59,12 @@ abstract class StatisticsDashboardTileBase {
               title,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                    color: scheme.onSurfaceVariant,
-                  ),
+              style: Theme.of(context).textTheme.labelMedium
+                  ?.copyWith(color: scheme.onSurfaceVariant),
             ),
             const SizedBox(height: 8),
           ],
-          Expanded(
-            child: ClipRect(child: buildContent(context, ref)),
-          ),
+          Expanded(child: ClipRect(child: buildContent(context, ref))),
         ],
       ),
     );
@@ -88,31 +89,34 @@ abstract class StatisticsDashboardTileBase {
 
   Size tileSize(BuildContext context) {
     final scale = _textScale(context);
-    final width = min(flipSquareSize * metadata.columnSpan,
-        MediaQuery.sizeOf(context).width * 0.9);
-    final height = min(flipSquareSize * metadata.rowSpan * scale,
-        MediaQuery.sizeOf(context).height * 0.8);
+    final width = min(
+      flipSquareSize * metadata.columnSpan,
+      MediaQuery.sizeOf(context).width * 0.9,
+    );
+    final height = min(
+      flipSquareSize * metadata.rowSpan * scale,
+      MediaQuery.sizeOf(context).height * 0.8,
+    );
     return Size(width, height);
   }
 
   Size flipSize(BuildContext context) {
     final scale = _textScale(context);
-    final width = min(max(flipSquareSize * metadata.columnSpan, 300.0),
-        MediaQuery.sizeOf(context).width * 0.9);
+    final width = min(
+      max(flipSquareSize * metadata.columnSpan, 300.0),
+      MediaQuery.sizeOf(context).width * 0.9,
+    );
 
     final height = min(
-        (flipSquareSize * metadata.rowSpan + flipTitleSize) * scale,
-        MediaQuery.sizeOf(context).height * 0.8);
+      (flipSquareSize * metadata.rowSpan + flipTitleSize) * scale,
+      MediaQuery.sizeOf(context).height * 0.8,
+    );
 
     return Size(width, height);
   }
 
   Widget buildFlipSide(BuildContext context, WidgetRef ref) {
-    return flipScaffold(
-      context,
-      ref,
-      buildTile(context, ref),
-    );
+    return flipScaffold(context, ref, buildTile(context, ref));
   }
 
   void onTap(BuildContext context, WidgetRef ref) {}
@@ -133,7 +137,10 @@ abstract class StatisticsDashboardTileBase {
         children: [
           FilledContainer(
             radius: 29,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            padding: const EdgeInsets.symmetric(
+              horizontal: PaperfoldSpace.md,
+              vertical: 10,
+            ),
             color: theme.colorScheme.primaryContainer,
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -142,10 +149,7 @@ abstract class StatisticsDashboardTileBase {
               children: [
                 Row(
                   children: [
-                    Icon(
-                      metadata.icon,
-                      color: theme.colorScheme.primary,
-                    ),
+                    Icon(metadata.icon, color: theme.colorScheme.primary),
                     const SizedBox(width: 12),
                     Expanded(
                       child: FittedText(
@@ -171,7 +175,7 @@ abstract class StatisticsDashboardTileBase {
           SizedBox(height: spacing),
           Expanded(
             child: Padding(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(PaperfoldSpace.sm),
               child: ClipRect(child: flipContent),
             ),
           ),
@@ -232,7 +236,9 @@ class DashboardTileShell extends ConsumerWidget {
       ),
       motion: Motion.bouncySpring(
         snapToEnd: true,
-        duration: const Duration(milliseconds: 500),
+        duration: PaperfoldVisualPolicy.motionAllowed(context)
+            ? PaperfoldMotion.of(context, PaperfoldMotion.open)
+            : Duration.zero,
       ),
       child: GestureDetector(
         onTap: () {
@@ -243,25 +249,25 @@ class DashboardTileShell extends ConsumerWidget {
           VibrationService.medium();
           Navigator.of(context)
               .push(
-            PageRouteBuilder(
-              opaque: false,
-              pageBuilder: (context, animation, secondaryAnimation) {
-                return AnimatedBuilder(
-                  animation: animation,
-                  builder: (context, child) {
-                    return DashboardTileDetailView(
-                      tile: tile,
-                      heroTag: heroTag,
-                      animationValue: animation.value,
+                PageRouteBuilder(
+                  opaque: false,
+                  pageBuilder: (context, animation, secondaryAnimation) {
+                    return AnimatedBuilder(
+                      animation: animation,
+                      builder: (context, child) {
+                        return DashboardTileDetailView(
+                          tile: tile,
+                          heroTag: heroTag,
+                          animationValue: animation.value,
+                        );
+                      },
                     );
                   },
-                );
-              },
-            ),
-          )
+                ),
+              )
               .then((_) {
-            VibrationService.rigid();
-          });
+                VibrationService.rigid();
+              });
         },
         child: Stack(
           children: [

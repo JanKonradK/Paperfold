@@ -1,3 +1,5 @@
+import 'package:paperfold/config/paperfold_system.dart';
+
 import 'dart:math';
 
 import 'package:paperfold/enums/excerpt_share_template.dart';
@@ -43,7 +45,7 @@ class ExcerptShareCard extends StatelessWidget {
         width: 500,
         decoration: BoxDecoration(
           color: backgroundColor,
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: PaperfoldShape.controlRadius,
           boxShadow: [
             BoxShadow(
               color: Colors.black45,
@@ -53,7 +55,7 @@ class ExcerptShareCard extends StatelessWidget {
           ],
         ),
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: PaperfoldShape.controlRadius,
           child: child,
         ),
       ),
@@ -65,10 +67,7 @@ class ExcerptShareCard extends StatelessWidget {
     final path = font.path.split('/').last;
     switch (font.name) {
       case 'system':
-        return TextStyle(
-          color: textColor,
-          fontWeight: weight,
-        );
+        return TextStyle(color: textColor, fontWeight: weight);
       default:
         if (path.contains('SourceHanSerifSC')) {
           return TextStyle(
@@ -100,41 +99,41 @@ class ExcerptShareCard extends StatelessWidget {
 
   Widget _getContent({bool verticle = false}) {
     if (verticle) {
-      return LayoutBuilder(builder: (context, constraints) {
-        final textPainter = TextPainter(
-          text: TextSpan(
+      return LayoutBuilder(
+        builder: (context, constraints) {
+          final textPainter = TextPainter(
+            text: TextSpan(
               text: excerpt,
               style: _getTextStyle().copyWith(
                 fontSize: 18,
                 height: 1.1,
                 letterSpacing: 5,
-              )),
-          textDirection: TextDirection.ltr,
-          textAlign: TextAlign.start,
-        );
-        textPainter.layout(maxWidth: 300);
-        final square = textPainter.size.width * textPainter.size.height * 5;
-        final maxHeight = sqrt(square);
-
-        return SizedBox(
-          height: maxHeight,
-          child: MongolText(
-            excerpt,
-            style: _getTextStyle().copyWith(
-              fontSize: 18,
-              height: 1.1,
-              letterSpacing: 5,
+              ),
             ),
-          ),
-        );
-      });
+            textDirection: TextDirection.ltr,
+            textAlign: TextAlign.start,
+          );
+          textPainter.layout(maxWidth: 300);
+          final square = textPainter.size.width * textPainter.size.height * 5;
+          final maxHeight = sqrt(square);
+
+          return SizedBox(
+            height: maxHeight,
+            child: MongolText(
+              excerpt,
+              style: _getTextStyle().copyWith(
+                fontSize: 18,
+                height: 1.1,
+                letterSpacing: 5,
+              ),
+            ),
+          );
+        },
+      );
     } else {
       return Text(
         excerpt,
-        style: _getTextStyle().copyWith(
-          fontSize: 18,
-          height: 2,
-        ),
+        style: _getTextStyle().copyWith(fontSize: 18, height: 2),
       );
     }
   }
@@ -149,9 +148,7 @@ class ExcerptShareCard extends StatelessWidget {
     color ??= textColor;
     if (verticle) {
       return ConstrainedBox(
-        constraints: BoxConstraints(
-          maxHeight: 350,
-        ),
+        constraints: BoxConstraints(maxHeight: 350),
         child: MongolText(
           bookTitle,
           style: _getTextStyle().copyWith(
@@ -192,17 +189,13 @@ class ExcerptShareCard extends StatelessWidget {
         constraints: const BoxConstraints(maxHeight: 350),
         child: MongolText(
           '$leading$chapter',
-          style: _getTextStyle().copyWith(
-            fontSize: textSize,
-          ),
+          style: _getTextStyle().copyWith(fontSize: textSize),
         ),
       );
     } else {
       return Text(
         '$leading$chapter',
-        style: _getTextStyle().copyWith(
-          fontSize: textSize,
-        ),
+        style: _getTextStyle().copyWith(fontSize: textSize),
       );
     }
   }
@@ -218,19 +211,13 @@ class ExcerptShareCard extends StatelessWidget {
         constraints: const BoxConstraints(maxHeight: 350),
         child: MongolText(
           author,
-          style: _getTextStyle().copyWith(
-            fontSize: textSize,
-            color: color,
-          ),
+          style: _getTextStyle().copyWith(fontSize: textSize, color: color),
         ),
       );
     } else {
       return Text(
         author,
-        style: _getTextStyle().copyWith(
-          fontSize: textSize,
-          color: color,
-        ),
+        style: _getTextStyle().copyWith(fontSize: textSize, color: color),
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
       );
@@ -257,12 +244,7 @@ class ExcerptShareCard extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           _getContent(),
-          Row(
-            children: [
-              const Spacer(),
-              _getChapterText(),
-            ],
-          ),
+          Row(children: [const Spacer(), _getChapterText()]),
           const SizedBox(height: 16),
           Divider(thickness: 1, color: textColor.withAlpha(80)),
           const SizedBox(height: 16),
@@ -344,12 +326,7 @@ class ExcerptShareCard extends StatelessWidget {
           const SizedBox(height: 24),
           Column(
             children: [
-              Row(
-                children: [
-                  Spacer(),
-                  _getPaperfoldLogo(),
-                ],
-              ),
+              Row(children: [Spacer(), _getPaperfoldLogo()]),
             ],
           ),
         ],
@@ -361,60 +338,60 @@ class ExcerptShareCard extends StatelessWidget {
     return Column(
       children: [
         Container(
-            padding: const EdgeInsets.all(24.0),
-            decoration: BoxDecoration(
-              color: backgroundColor,
-              image: backgroundImage != null
-                  ? DecorationImage(
-                      image: AssetImage(backgroundImage!),
-                      fit: BoxFit.cover,
-                      colorFilter: ColorFilter.mode(
-                        backgroundColor.withAlpha(200),
-                        BlendMode.dstATop,
-                      ),
-                    )
-                  : null,
-            ),
-            child: Column(
-              children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _getTitleText(
-                      verticle: true,
-                      fontSize: 38,
-                      color: backgroundImage != null ? Colors.white : null,
+          padding: const EdgeInsets.all(24.0),
+          decoration: BoxDecoration(
+            color: backgroundColor,
+            image: backgroundImage != null
+                ? DecorationImage(
+                    image: AssetImage(backgroundImage!),
+                    fit: BoxFit.cover,
+                    colorFilter: ColorFilter.mode(
+                      backgroundColor.withAlpha(200),
+                      BlendMode.dstATop,
                     ),
-                    const SizedBox(width: 16),
-                    _getAuthorText(
-                      verticle: true,
-                      textSize: 25,
-                      color: backgroundImage != null ? Colors.white : null,
-                    ),
-                  ],
-                ),
-                Row(
-                  children: [
-                    const Spacer(),
-                    _getPaperfoldLogo(
-                      fontSize: 16,
-                      color: backgroundImage != null ? Colors.white : null,
-                    ),
-                  ],
-                ),
-              ],
-            )),
-        Divider(
-          color: textColor.withAlpha(40),
-          height: 1,
+                  )
+                : null,
+          ),
+          child: Column(
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _getTitleText(
+                    verticle: true,
+                    fontSize: 38,
+                    color: backgroundImage != null ? Colors.white : null,
+                  ),
+                  const SizedBox(width: 16),
+                  _getAuthorText(
+                    verticle: true,
+                    textSize: 25,
+                    color: backgroundImage != null ? Colors.white : null,
+                  ),
+                ],
+              ),
+              Row(
+                children: [
+                  const Spacer(),
+                  _getPaperfoldLogo(
+                    fontSize: 16,
+                    color: backgroundImage != null ? Colors.white : null,
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
+        Divider(color: textColor.withAlpha(40), height: 1),
         Padding(
           padding: const EdgeInsets.all(24.0),
-          child: Column(children: [
-            _getContent(),
-            const SizedBox(height: 16),
-            _getChapterText(textSize: 20),
-          ]),
+          child: Column(
+            children: [
+              _getContent(),
+              const SizedBox(height: 16),
+              _getChapterText(textSize: 20),
+            ],
+          ),
         ),
       ],
     );

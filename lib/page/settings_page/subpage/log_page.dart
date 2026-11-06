@@ -1,3 +1,5 @@
+import 'package:paperfold/config/paperfold_system.dart';
+
 import 'dart:io';
 
 import 'package:paperfold/l10n/generated/L10n.dart';
@@ -44,13 +46,12 @@ class _LogPageState extends State<LogPage> {
             },
           ),
           IconButton(
-              onPressed: () => showMoreAction(context),
-              icon: const Icon(Icons.more_vert)),
+            onPressed: () => showMoreAction(context),
+            icon: const Icon(Icons.more_vert),
+          ),
         ],
       ),
-      body: ListView(
-        children: [for (final log in logs) logItem(log, context)],
-      ),
+      body: ListView(children: [for (final log in logs) logItem(log, context)]),
     );
   }
 
@@ -72,11 +73,12 @@ class _LogPageState extends State<LogPage> {
           ),
         ),
         PopupMenuItem(
-            child: ListTile(
-          leading: const Icon(Icons.file_upload_outlined),
-          title: Text(L10n.of(context).settingsAdvancedLogExportLog),
-          onTap: () => exportLog(),
-        ))
+          child: ListTile(
+            leading: const Icon(Icons.file_upload_outlined),
+            title: Text(L10n.of(context).settingsAdvancedLogExportLog),
+            onTap: () => exportLog(),
+          ),
+        ),
       ],
     );
   }
@@ -97,9 +99,10 @@ class _LogPageState extends State<LogPage> {
     String fileName =
         'Paperfold-Log-${DateTime.now().year}-${DateTime.now().month}-${DateTime.now().day}.txt';
     String? filePath = await saveFileToDownload(
-        bytes: await logFile.readAsBytes(),
-        fileName: fileName,
-        mimeType: 'text/plain');
+      bytes: await logFile.readAsBytes(),
+      fileName: fileName,
+      mimeType: 'text/plain',
+    );
 
     AnxToast.show("saved $filePath");
   }
@@ -108,39 +111,43 @@ class _LogPageState extends State<LogPage> {
 Widget logItem(String logStr, BuildContext context) {
   final log = AnxLog.parse(logStr);
   return SelectionArea(
-      child: Container(
-    padding: const EdgeInsets.all(20),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-          padding: const EdgeInsets.fromLTRB(8, 1, 8, 1),
-          decoration: BoxDecoration(
-            color: log.color,
-            borderRadius: BorderRadius.circular(100),
-          ),
-          child: Text(log.level.name,
-              style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold)),
-        ),
-        Text(log.time.toString()),
-        const SizedBox(height: 5),
-        Text(log.message),
-        Row(
-          children: [
-            const Spacer(),
-            TextButton(
-              onPressed: () {
-                Clipboard.setData(ClipboardData(text: logStr));
-              },
-              child: Text(L10n.of(context).commonCopy),
+    child: Container(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.fromLTRB(8, 1, 8, 1),
+            decoration: BoxDecoration(
+              color: log.color,
+              borderRadius: PaperfoldShape.controlRadius,
             ),
-          ],
-        ),
-        const Divider(),
-      ],
+            child: Text(
+              log.level.name,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+          Text(log.time.toString()),
+          const SizedBox(height: 5),
+          Text(log.message),
+          Row(
+            children: [
+              const Spacer(),
+              TextButton(
+                onPressed: () {
+                  Clipboard.setData(ClipboardData(text: logStr));
+                },
+                child: Text(L10n.of(context).commonCopy),
+              ),
+            ],
+          ),
+          const Divider(),
+        ],
+      ),
     ),
-  ));
+  );
 }

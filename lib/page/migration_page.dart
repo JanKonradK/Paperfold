@@ -1,3 +1,4 @@
+import 'package:paperfold/config/paperfold_system.dart';
 import 'package:paperfold/l10n/generated/L10n.dart';
 import 'package:paperfold/utils/get_path/macos_migration.dart';
 import 'package:material_ui/material_ui.dart';
@@ -6,10 +7,11 @@ class MigrationPage extends StatefulWidget {
   final Future<void> Function() onMigrationComplete;
   final MigrationCheckResult checkResult;
 
-  const MigrationPage(
-      {super.key,
-      required this.onMigrationComplete,
-      required this.checkResult});
+  const MigrationPage({
+    super.key,
+    required this.onMigrationComplete,
+    required this.checkResult,
+  });
 
   @override
   State<MigrationPage> createState() => _MigrationPageState();
@@ -42,7 +44,8 @@ class _MigrationPageState extends State<MigrationPage> {
         return;
       }
 
-      final success = _isComplete ||
+      final success =
+          _isComplete ||
           await performMigration(
             oldPath: checkResult.oldPath!,
             newPath: checkResult.newPath!,
@@ -85,7 +88,7 @@ class _MigrationPageState extends State<MigrationPage> {
     return Scaffold(
       body: Center(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(32.0),
+          padding: const EdgeInsets.all(PaperfoldSpace.xl),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -93,22 +96,22 @@ class _MigrationPageState extends State<MigrationPage> {
                 _isComplete && !_hasFailed
                     ? Icons.check_circle_outline
                     : _hasFailed
-                        ? Icons.error_outline
-                        : Icons.folder_copy_outlined,
+                    ? Icons.error_outline
+                    : Icons.folder_copy_outlined,
                 size: 64,
                 color: _isComplete && !_hasFailed
-                    ? Colors.green
+                    ? Theme.of(context).colorScheme.primary
                     : _hasFailed
-                        ? Colors.red
-                        : Theme.of(context).colorScheme.primary,
+                    ? Theme.of(context).colorScheme.error
+                    : Theme.of(context).colorScheme.primary,
               ),
               const SizedBox(height: 24),
               Text(
                 _isComplete && !_hasFailed
                     ? l10n.migrationComplete
                     : _hasFailed
-                        ? l10n.migrationFailed
-                        : l10n.migrationInProgress,
+                    ? l10n.migrationFailed
+                    : l10n.migrationInProgress,
                 style: Theme.of(context).textTheme.headlineSmall,
                 textAlign: TextAlign.center,
               ),
@@ -117,8 +120,8 @@ class _MigrationPageState extends State<MigrationPage> {
                 Text(
                   l10n.migrationDoNotClose,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 32),
@@ -136,17 +139,16 @@ class _MigrationPageState extends State<MigrationPage> {
                 Text(
                   '$_progress / $_total',
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
                 ),
               ],
               if (_hasFailed) ...[
                 const SizedBox(height: 16),
                 Text(
                   l10n.storageMigrationFailed,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Colors.red,
-                      ),
+                  style: Theme.of(context).textTheme.bodySmall
+                      ?.copyWith(color: Theme.of(context).colorScheme.error),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 16),

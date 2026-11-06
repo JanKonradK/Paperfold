@@ -1,3 +1,5 @@
+import 'package:paperfold/config/paperfold_system.dart';
+
 import 'dart:async';
 
 import 'package:paperfold/dao/reading_time.dart';
@@ -94,13 +96,15 @@ class _StatisticPageState extends ConsumerState<StatisticPage> {
       AnxLog.warning('Could not refresh statistics', error, stackTrace);
       if (!mounted || !widget.active) return;
       final l10n = L10n.of(context);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(l10n.commonLoadFailedTitle),
-        action: SnackBarAction(
-          label: l10n.commonRetry,
-          onPressed: _refreshData,
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(l10n.commonLoadFailedTitle),
+          action: SnackBarAction(
+            label: l10n.commonRetry,
+            onPressed: _refreshData,
+          ),
         ),
-      ));
+      );
     }
   }
 
@@ -119,7 +123,7 @@ class _StatisticPageState extends ConsumerState<StatisticPage> {
       body: SafeArea(
         bottom: false,
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8),
+          padding: const EdgeInsets.symmetric(horizontal: PaperfoldSpace.xs),
           child: Column(
             children: [
               StatisticsDashboardTitle(),
@@ -147,9 +151,7 @@ class _StatisticPageState extends ConsumerState<StatisticPage> {
                           Expanded(
                             child: CustomScrollView(
                               controller: _scrollController,
-                              slivers: const [
-                                DateBooks(),
-                              ],
+                              slivers: const [DateBooks()],
                             ),
                           ),
                         ],
@@ -174,9 +176,7 @@ class _StatisticPageState extends ConsumerState<StatisticPage> {
                             ],
                           ),
                           const DateBooks(),
-                          const SliverToBoxAdapter(
-                            child: SizedBox(height: 80),
-                          ),
+                          const SliverToBoxAdapter(child: SizedBox(height: 80)),
                         ],
                       );
                     }
@@ -204,10 +204,7 @@ class StatisticsMeasureNote extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          Icon(
-            Icons.schedule_outlined,
-            color: theme.colorScheme.primary,
-          ),
+          Icon(Icons.schedule_outlined, color: theme.colorScheme.primary),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -244,15 +241,16 @@ class StatisticsTrackerSections extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final L10n l10n = L10n.of(context);
-    final AsyncValue<ReadingChallengeData> challenge =
-        ref.watch(readingChallengeProvider);
+    final AsyncValue<ReadingChallengeData> challenge = ref.watch(
+      readingChallengeProvider,
+    );
     final AsyncValue<MonthTrackerData> month = ref.watch(monthTrackerProvider);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8),
+          padding: const EdgeInsets.symmetric(horizontal: PaperfoldSpace.xs),
           child: Text(
             l10n.statisticTrackersTitle,
             style: Theme.of(context).textTheme.headlineSmall,
@@ -260,7 +258,7 @@ class StatisticsTrackerSections extends ConsumerWidget {
         ),
         const SizedBox(height: 12),
         FilledContainer(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(PaperfoldSpace.md),
           child: challenge.when(
             loading: () => const _TrackerLoading(),
             error: (Object error, StackTrace stackTrace) => _TrackerError(
@@ -273,7 +271,7 @@ class StatisticsTrackerSections extends ConsumerWidget {
         ),
         const SizedBox(height: 12),
         FilledContainer(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(PaperfoldSpace.md),
           child: month.when(
             loading: () => const _TrackerLoading(),
             error: (Object error, StackTrace stackTrace) => _TrackerError(
@@ -301,8 +299,8 @@ class _ChallengeStatisticsSection extends StatelessWidget {
     final String paceLabel = pace > 0
         ? l10n.challengePaceAhead(pace)
         : pace < 0
-            ? l10n.challengePaceBehind(-pace)
-            : l10n.challengePaceOnTrack;
+        ? l10n.challengePaceBehind(-pace)
+        : l10n.challengePaceOnTrack;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -330,7 +328,7 @@ class _ChallengeStatisticsSection extends StatelessWidget {
         const SizedBox(height: 8),
         LinearProgressIndicator(
           minHeight: 8,
-          borderRadius: BorderRadius.circular(4),
+          borderRadius: PaperfoldShape.objectRadius,
           value: data.progress.clamp(0, 1),
           backgroundColor: theme.colorScheme.surfaceContainerHighest,
           color: theme.colorScheme.primary,
@@ -343,8 +341,8 @@ class _ChallengeStatisticsSection extends StatelessWidget {
               pace < 0
                   ? Icons.trending_down
                   : pace > 0
-                      ? Icons.trending_up
-                      : Icons.trending_flat,
+                  ? Icons.trending_up
+                  : Icons.trending_flat,
               size: 20,
               color: theme.colorScheme.primary,
             ),
@@ -354,10 +352,7 @@ class _ChallengeStatisticsSection extends StatelessWidget {
         ),
         if (data.finished.isEmpty && data.readingNow.isEmpty) ...<Widget>[
           const SizedBox(height: 12),
-          Text(
-            l10n.challengeEmptyTitle,
-            style: theme.textTheme.titleSmall,
-          ),
+          Text(l10n.challengeEmptyTitle, style: theme.textTheme.titleSmall),
           const SizedBox(height: 2),
           Text(
             l10n.challengeEmptyBody,
@@ -397,10 +392,7 @@ class _MonthStatisticsSection extends StatelessWidget {
       children: <Widget>[
         Row(
           children: <Widget>[
-            Icon(
-              Icons.donut_large_outlined,
-              color: theme.colorScheme.primary,
-            ),
+            Icon(Icons.donut_large_outlined, color: theme.colorScheme.primary),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
@@ -429,10 +421,7 @@ class _MonthStatisticsSection extends StatelessWidget {
         ),
         if (data.daysRead == 0) ...<Widget>[
           const SizedBox(height: 12),
-          Text(
-            l10n.monthTrackerEmptyTitle,
-            style: theme.textTheme.titleSmall,
-          ),
+          Text(l10n.monthTrackerEmptyTitle, style: theme.textTheme.titleSmall),
           const SizedBox(height: 2),
           Text(
             l10n.monthTrackerEmptyBody,
@@ -507,11 +496,8 @@ class _DateBooksState extends ConsumerState<DateBooks> {
   // A Material role. The hardcoded `SourceHanSerif` set this heading in a CJK
   // serif in every language and ignored the Paperfold text theme, which
   // already substitutes a Chinese face where one is needed.
-  TextStyle get titleStyle =>
-      Theme.of(context).textTheme.headlineMedium!.copyWith(
-            fontWeight: FontWeight.bold,
-            overflow: TextOverflow.ellipsis,
-          );
+  TextStyle get titleStyle => Theme.of(context).textTheme.headlineMedium!
+      .copyWith(fontWeight: FontWeight.bold, overflow: TextOverflow.ellipsis);
 
   List<int> deleteBookIds = [];
 
@@ -528,75 +514,77 @@ class _DateBooksState extends ConsumerState<DateBooks> {
     final statisticData = ref.watch(statisticDataProvider);
 
     Widget dragToDelete(Widget child, int bookId) {
-      return StatefulBuilder(builder: (context, localSetState) {
-        if (deleteBookIds.contains(bookId)) {
-          return OutlinedContainer(
-            margin: const EdgeInsets.only(bottom: 10),
-            height: 146,
-            padding: const EdgeInsets.all(8.0),
-            child: Column(
-              children: [
-                const SizedBox(height: 20),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.delete,
-                          size: 30,
-                        ),
-                        Text(
-                          L10n.of(context).statisticDeletedRecords,
-                          style: TextStyle(
-                              fontSize: 20, fontWeight: FontWeight.bold),
-                        ),
-                      ],
-                    ),
-                    FilledButton(
+      return StatefulBuilder(
+        builder: (context, localSetState) {
+          if (deleteBookIds.contains(bookId)) {
+            return OutlinedContainer(
+              margin: const EdgeInsets.only(bottom: 10),
+              height: 146,
+              padding: const EdgeInsets.all(PaperfoldSpace.xs),
+              child: Column(
+                children: [
+                  const SizedBox(height: 20),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.delete, size: 30),
+                          Text(
+                            L10n.of(context).statisticDeletedRecords,
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                      FilledButton(
                         onPressed: () {
                           localSetState(() {
                             deleteBookIds.remove(bookId);
                           });
                         },
-                        child: Text(L10n.of(context).commonUndo)),
-                  ],
-                ),
-                const Spacer(),
-                const Divider(),
-                Row(
-                  children: [
-                    Icon(Icons.info_outline, size: 18),
-                    Text(L10n.of(context).statisticDeletedRecordsTips),
-                  ],
-                ),
-              ],
-            ),
+                        child: Text(L10n.of(context).commonUndo),
+                      ),
+                    ],
+                  ),
+                  const Spacer(),
+                  const Divider(),
+                  Row(
+                    children: [
+                      Icon(Icons.info_outline, size: 18),
+                      Text(L10n.of(context).statisticDeletedRecordsTips),
+                    ],
+                  ),
+                ],
+              ),
+            );
+          }
+          ActionPane actionPane = ActionPane(
+            motion: const StretchMotion(),
+            children: [
+              SlidableAction(
+                onPressed: (context) {
+                  localSetState(() {
+                    deleteBookIds.add(bookId);
+                  });
+                },
+                icon: Icons.delete,
+                label: L10n.of(context).commonDelete,
+                backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+              ),
+            ],
           );
-        }
-        ActionPane actionPane = ActionPane(
-          motion: const StretchMotion(),
-          children: [
-            SlidableAction(
-              onPressed: (context) {
-                localSetState(() {
-                  deleteBookIds.add(bookId);
-                });
-              },
-              icon: Icons.delete,
-              label: L10n.of(context).commonDelete,
-              backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-            ),
-          ],
-        );
-        return Slidable(
-          key: ValueKey(bookId),
-          startActionPane: actionPane,
-          endActionPane: actionPane,
-          child: child,
-        );
-      });
+          return Slidable(
+            key: ValueKey(bookId),
+            startActionPane: actionPane,
+            endActionPane: actionPane,
+            child: child,
+          );
+        },
+      );
     }
 
     return statisticData.when(
@@ -604,12 +592,12 @@ class _DateBooksState extends ConsumerState<DateBooks> {
         final title = data.isSelectingDay
             ? data.date.toString().substring(0, 10)
             : data.mode == ChartMode.week
-                ? weekOfYear(data.date)
-                : data.mode == ChartMode.month
-                    ? '${data.date.year}.${data.date.month}'
-                    : data.mode == ChartMode.year
-                        ? data.date.year.toString()
-                        : L10n.of(context).statisticAllTime;
+            ? weekOfYear(data.date)
+            : data.mode == ChartMode.month
+            ? '${data.date.year}.${data.date.month}'
+            : data.mode == ChartMode.year
+            ? data.date.year.toString()
+            : L10n.of(context).statisticAllTime;
 
         final books = data.bookReadingTime;
         return SliverMainAxisGroup(
@@ -659,9 +647,7 @@ class _DateBooksState extends ConsumerState<DateBooks> {
         );
       },
       loading: () => const SliverToBoxAdapter(
-        child: Center(
-          child: CircularProgressIndicator(),
-        ),
+        child: Center(child: CircularProgressIndicator()),
       ),
       error: (error, stack) => SliverToBoxAdapter(
         child: LoadFailure.inline(
@@ -678,8 +664,11 @@ class _DateBooksState extends ConsumerState<DateBooks> {
 /// on every rebuild and painted a spinner in place of the card, which collapsed
 /// the list under the scroll position.
 class BookStatisticItem extends StatelessWidget {
-  const BookStatisticItem(
-      {super.key, required this.book, required this.readingTime});
+  const BookStatisticItem({
+    super.key,
+    required this.book,
+    required this.readingTime,
+  });
 
   final Book book;
   final int readingTime;
@@ -697,61 +686,69 @@ class BookStatisticItem extends StatelessWidget {
       color: theme.colorScheme.onSurfaceVariant,
       overflow: TextOverflow.ellipsis,
     );
-    final TextStyle bookReadingTimeStyle =
-        theme.textTheme.titleMedium!.copyWith(fontWeight: FontWeight.bold);
+    final TextStyle bookReadingTimeStyle = theme.textTheme.titleMedium!
+        .copyWith(fontWeight: FontWeight.bold);
 
     return GestureDetector(
       onTap: () {
-        Navigator.push(context,
-            MaterialPageRoute(builder: (context) => BookDetail(book: book)));
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => BookDetail(book: book)),
+        );
       },
       child: FilledContainer(
         margin: const EdgeInsets.only(bottom: 10),
-        padding: const EdgeInsets.all(8.0),
+        padding: const EdgeInsets.all(PaperfoldSpace.xs),
         child: Row(
           children: [
             Hero(
-                tag: book.coverFullPath,
-                child: BookCover(
-                  book: book,
-                  height: 130,
-                  width: 90,
-                  radius: 20,
-                )),
+              tag: book.coverFullPath,
+              child: BookCover(
+                book: book,
+                height: 130,
+                width: 90,
+                radius: PaperfoldShape.object,
+              ),
+            ),
             const SizedBox(width: 15),
             Flexible(
               child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(book.title, style: bookTitleStyle),
-                    const SizedBox(height: 10),
-                    Row(
-                      children: [
-                        Expanded(
-                          flex: 3,
-                          child: Text(book.author, style: bookAuthorStyle),
-                        ),
-                        Text(convertSeconds(readingTime),
-                            textAlign: TextAlign.end,
-                            style: bookReadingTimeStyle),
-                      ],
-                    ),
-                    const SizedBox(height: 20),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: LinearProgressIndicator(
-                            value: book.readingPercentage,
-                            backgroundColor: Colors.grey[300],
-                            valueColor: AlwaysStoppedAnimation<Color>(
-                                theme.colorScheme.primary),
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(book.title, style: bookTitleStyle),
+                  const SizedBox(height: 10),
+                  Row(
+                    children: [
+                      Expanded(
+                        flex: 3,
+                        child: Text(book.author, style: bookAuthorStyle),
+                      ),
+                      Text(
+                        convertSeconds(readingTime),
+                        textAlign: TextAlign.end,
+                        style: bookReadingTimeStyle,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: LinearProgressIndicator(
+                          value: book.readingPercentage,
+                          backgroundColor:
+                              theme.colorScheme.surfaceContainerHighest,
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            theme.colorScheme.primary,
                           ),
                         ),
-                        const SizedBox(width: 10),
-                        Text('${(book.readingPercentage * 100).toInt()} %'),
-                      ],
-                    ),
-                  ]),
+                      ),
+                      const SizedBox(width: 10),
+                      Text('${(book.readingPercentage * 100).toInt()} %'),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ],
         ),

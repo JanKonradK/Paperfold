@@ -1,3 +1,6 @@
+import 'package:paperfold/config/paperfold_system.dart';
+import 'package:paperfold/config/paperfold_visual_policy.dart';
+import 'package:paperfold/config/paperfold_motion.dart';
 import 'package:paperfold/dao/book_note.dart';
 import 'package:paperfold/l10n/generated/L10n.dart';
 import 'package:paperfold/models/book_note.dart';
@@ -113,65 +116,68 @@ class ReaderNoteMenuState extends State<ReaderNoteMenu> {
   @override
   Widget build(BuildContext context) {
     return Expanded(
-        child: AnimatedSize(
-      duration: const Duration(milliseconds: 300),
-      curve: Curves.easeOut,
-      child: ConstrainedBox(
-        constraints: BoxConstraints(
-          maxHeight: widget.axis == Axis.vertical ? double.infinity : 200,
-          maxWidth: widget.axis == Axis.vertical ? 100 : double.infinity,
-        ),
-        child: !_showNoteDialog
-            ? null
-            : Container(
-                decoration: widget.decoration,
-                padding: const EdgeInsets.all(8),
-                child: AxisFlex(
-                  reverse: false,
-                  axis: widget.axis,
-                  children: [
-                    Expanded(
-                      child: SingleChildScrollView(
-                        // scrollDirection: widget.axis,
-                        child: TextField(
-                          controller: textFieldController,
-                          decoration: InputDecoration(
-                            border: InputBorder.none,
-                            hintText: L10n.of(context).contextMenuAddNoteTips,
+      child: AnimatedSize(
+        duration: PaperfoldVisualPolicy.motionAllowed(context)
+            ? PaperfoldMotion.of(context, PaperfoldMotion.move)
+            : Duration.zero,
+        curve: Curves.easeOut,
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxHeight: widget.axis == Axis.vertical ? double.infinity : 200,
+            maxWidth: widget.axis == Axis.vertical ? 100 : double.infinity,
+          ),
+          child: !_showNoteDialog
+              ? null
+              : Container(
+                  decoration: widget.decoration,
+                  padding: const EdgeInsets.all(PaperfoldSpace.xs),
+                  child: AxisFlex(
+                    reverse: false,
+                    axis: widget.axis,
+                    children: [
+                      Expanded(
+                        child: SingleChildScrollView(
+                          // scrollDirection: widget.axis,
+                          child: TextField(
+                            controller: textFieldController,
+                            decoration: InputDecoration(
+                              border: InputBorder.none,
+                              hintText: L10n.of(context).contextMenuAddNoteTips,
+                            ),
+                            maxLines: widget.axis == Axis.vertical
+                                ? double.maxFinite.toInt()
+                                : 5,
+                            minLines: 1,
+                            onSubmitted: (String value) {
+                              saveNote();
+                            },
+                            onChanged: (String value) {
+                              setState(() {
+                                showSaveButton = true;
+                              });
+                              _notifySizeChange();
+                            },
                           ),
-                          maxLines: widget.axis == Axis.vertical
-                              ? double.maxFinite.toInt()
-                              : 5,
-                          minLines: 1,
-                          onSubmitted: (String value) {
+                        ),
+                      ),
+                      if (showSaveButton)
+                        IconButton(
+                          icon: const Icon(Icons.check_circle_outline),
+                          onPressed: () {
                             saveNote();
-                          },
-                          onChanged: (String value) {
+                            // remove focus
+                            FocusScope.of(context).unfocus();
                             setState(() {
-                              showSaveButton = true;
+                              showSaveButton = false;
                             });
                             _notifySizeChange();
                           },
                         ),
-                      ),
-                    ),
-                    if (showSaveButton)
-                      IconButton(
-                        icon: const Icon(Icons.check_circle_outline),
-                        onPressed: () {
-                          saveNote();
-                          // remove focus
-                          FocusScope.of(context).unfocus();
-                          setState(() {
-                            showSaveButton = false;
-                          });
-                          _notifySizeChange();
-                        },
-                      ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
+        ),
       ),
-    ));
+    );
   }
 }

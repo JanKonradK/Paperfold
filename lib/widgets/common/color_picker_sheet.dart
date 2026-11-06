@@ -1,3 +1,4 @@
+import 'package:paperfold/widgets/common/paperfold_modal_motion.dart';
 import 'package:paperfold/l10n/generated/L10n.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
@@ -13,6 +14,7 @@ Future<Color?> showRgbColorPicker({
 
   final result = await showDialog<Color>(
     context: context,
+    animationStyle: paperfoldModalMotion(context),
     builder: (dialogContext) {
       return AlertDialog(
         content: SingleChildScrollView(

@@ -886,5 +886,8 @@
   "reminderPermissionDenied": "Paperfold 的通知已关闭。请在系统设置中开启。",
   "reminderChannelName": "阅读提醒",
   "onlineWikisourceDescription": "来自英文维基文库的公有领域图书。可在此下载 EPUB 文件。",
-  "onlineInternetArchiveDescription": "收藏公有领域图书和借阅图书的大型图书馆。部分图书需要账户。"
+  "onlineInternetArchiveDescription": "收藏公有领域图书和借阅图书的大型图书馆。部分图书需要账户。",
+  "settingsLibraryBooks": "书库与书籍",
+  "settingsSyncBackup": "同步与备份",
+  "settingsCatalogs": "书目"
 }

@@ -1,3 +1,5 @@
+import 'package:paperfold/config/paperfold_system.dart';
+import 'package:paperfold/widgets/common/paperfold_modal_motion.dart';
 import 'package:paperfold/constants/note_annotations.dart';
 import 'package:paperfold/enums/hint_key.dart';
 import 'package:paperfold/l10n/generated/L10n.dart';
@@ -29,7 +31,7 @@ class BookNotesList extends ConsumerWidget {
   final Book book;
   final bool reading;
   final void Function(BuildContext context, Book book, {List<BookNote>? notes})?
-      exportNotes;
+  exportNotes;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -48,18 +50,16 @@ class BookNotesList extends ConsumerWidget {
   }
 
   Widget _buildContent(
-      BuildContext context, WidgetRef ref, BookNotesState state) {
+    BuildContext context,
+    WidgetRef ref,
+    BookNotesState state,
+  ) {
     return Column(
       children: [
         StickyHeader(
           header: _header(context, ref, state),
           content: state.visibleNotes.isEmpty
-              ? const Column(
-                  children: [
-                    Divider(),
-                    NotesTips(),
-                  ],
-                )
+              ? const Column(children: [Divider(), NotesTips()])
               : Column(
                   children: [
                     HintBanner(
@@ -89,7 +89,7 @@ class BookNotesList extends ConsumerWidget {
     if (state.isSelecting) {
       final allSelected =
           state.selectedNoteIds.length == state.visibleNotes.length &&
-              state.visibleNotes.isNotEmpty;
+          state.visibleNotes.isNotEmpty;
       return Row(
         children: [
           IconButton(
@@ -152,6 +152,7 @@ class BookNotesList extends ConsumerWidget {
   void _showFilterSheet(BuildContext context, WidgetRef ref) {
     showModalBottomSheet(
       context: context,
+      sheetAnimationStyle: paperfoldModalMotion(context),
       builder: (context) {
         return Consumer(
           builder: (context, ref, _) {
@@ -221,14 +222,19 @@ class BookNotesList extends ConsumerWidget {
                         Expanded(
                           child: ElevatedButton(
                             style: ElevatedButton.styleFrom(
-                              backgroundColor:
-                                  Theme.of(context).colorScheme.primary,
-                              foregroundColor:
-                                  Theme.of(context).colorScheme.onPrimary,
+                              backgroundColor: Theme.of(context)
+                                  .colorScheme
+                                  .primary,
+                              foregroundColor: Theme.of(context)
+                                  .colorScheme
+                                  .onPrimary,
                             ),
                             onPressed: Navigator.of(context).pop,
-                            child: Text(L10n.of(context).notesPageViewAllNNotes(
-                                state.visibleNotes.length)),
+                            child: Text(
+                              L10n.of(context).notesPageViewAllNNotes(
+                                state.visibleNotes.length,
+                              ),
+                            ),
                           ),
                         ),
                       ],
@@ -273,7 +279,7 @@ class BookNotesList extends ConsumerWidget {
     );
 
     return Padding(
-      padding: const EdgeInsets.all(8.0),
+      padding: const EdgeInsets.all(PaperfoldSpace.xs),
       child: isActive
           ? FilledButton(onPressed: onPressed, child: buttonChild)
           : OutlinedButton(onPressed: onPressed, child: buttonChild),
@@ -302,7 +308,7 @@ class BookNotesList extends ConsumerWidget {
     }
 
     return Padding(
-      padding: const EdgeInsets.all(8.0),
+      padding: const EdgeInsets.all(PaperfoldSpace.xs),
       child: Row(
         children: [
           IconButton(
@@ -369,7 +375,10 @@ class BookNotesList extends ConsumerWidget {
   }
 
   ActionPane _actionPane(
-      BuildContext context, WidgetRef ref, BookNote bookNote) {
+    BuildContext context,
+    WidgetRef ref,
+    BookNote bookNote,
+  ) {
     return ActionPane(
       motion: const StretchMotion(),
       children: [
@@ -409,6 +418,7 @@ class BookNotesList extends ConsumerWidget {
 
     showDialog(
       context: context,
+      animationStyle: paperfoldModalMotion(context),
       builder: (context) {
         return StatefulBuilder(
           builder: (context, setState) {
@@ -425,8 +435,8 @@ class BookNotesList extends ConsumerWidget {
                               controller: contentController,
                               decoration: InputDecoration(
                                 border: const OutlineInputBorder(),
-                                hintText:
-                                    L10n.of(context).contextMenuAddNoteTips,
+                                hintText: L10n.of(context)
+                                    .contextMenuAddNoteTips,
                               ),
                               maxLines: 3,
                             )
@@ -438,9 +448,7 @@ class BookNotesList extends ConsumerWidget {
                               },
                               child: Text(
                                 bookNote.content,
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                ),
+                                style: const TextStyle(fontSize: 16),
                               ),
                             ),
                     ),

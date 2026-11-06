@@ -1,3 +1,4 @@
+import 'package:paperfold/config/paperfold_system.dart';
 import 'package:material_ui/material_ui.dart';
 
 /// Centres a short message — an empty state, a failure — and scrolls it only
@@ -13,7 +14,7 @@ class MessageBlock extends StatelessWidget {
     super.key,
     required this.child,
     this.maxWidth = 440,
-    this.padding = const EdgeInsets.all(24),
+    this.padding = const EdgeInsets.all(PaperfoldSpace.lg),
   });
 
   /// Use a column with [MainAxisSize.min]; it is measured under an unbounded
@@ -32,7 +33,9 @@ class MessageBlock extends StatelessWidget {
     return LayoutBuilder(
       builder: (BuildContext context, BoxConstraints constraints) {
         if (!constraints.hasBoundedHeight) {
-          return Center(child: Padding(padding: padding, child: block));
+          return Center(
+            child: Padding(padding: padding, child: block),
+          );
         }
         return Center(
           child: SingleChildScrollView(padding: padding, child: block),

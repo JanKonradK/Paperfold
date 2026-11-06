@@ -1,3 +1,5 @@
+import 'package:paperfold/widgets/common/paperfold_modal_motion.dart';
+
 import 'dart:io';
 
 import 'package:dio/dio.dart';
@@ -218,6 +220,7 @@ Uri? parseBookLink(String text) {
 Future<void> openBookLink(BuildContext context) async {
   final url = await showDialog<Uri>(
     context: context,
+    animationStyle: paperfoldModalMotion(context),
     builder: (context) => const _BookLinkDialog(),
   );
   if (url == null || !context.mounted) return;

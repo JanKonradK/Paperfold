@@ -1,3 +1,4 @@
+import 'package:paperfold/config/paperfold_system.dart';
 import 'package:material_ui/material_ui.dart';
 
 import 'paperfold_glass_surface.dart';
@@ -65,21 +66,24 @@ class _PaperfoldGlassSliderState extends State<PaperfoldGlassSlider> {
                 start: 14,
                 end: 14,
                 child: SizedBox(
-                  height: 8,
+                  height: 4,
                   child: PaperfoldGlassSurface(
-                    borderRadius: BorderRadius.all(Radius.circular(4)),
-                    blurSigma: 8,
+                    borderRadius: BorderRadius.all(
+                      Radius.circular(PaperfoldShape.object),
+                    ),
+                    tier: PaperfoldGlassTier.solid,
                     child: SizedBox.expand(),
                   ),
                 ),
               ),
               SliderTheme(
                 data: SliderTheme.of(context).copyWith(
-                  trackHeight: 8,
+                  trackHeight: 4,
                   activeTrackColor: scheme.primary,
                   inactiveTrackColor: Colors.transparent,
-                  disabledActiveTrackColor:
-                      scheme.onSurface.withValues(alpha: 0.3),
+                  disabledActiveTrackColor: scheme.onSurface.withValues(
+                    alpha: 0.3,
+                  ),
                   disabledInactiveTrackColor: Colors.transparent,
                   thumbColor: Colors.transparent,
                   overlayColor: Colors.transparent,
@@ -95,10 +99,12 @@ class _PaperfoldGlassSliderState extends State<PaperfoldGlassSlider> {
                 child: Slider(
                   value: widget.value,
                   onChanged: widget.onChanged,
-                  onChangeStart:
-                      widget.onChanged == null ? null : _handleChangeStart,
-                  onChangeEnd:
-                      widget.onChanged == null ? null : _handleChangeEnd,
+                  onChangeStart: widget.onChanged == null
+                      ? null
+                      : _handleChangeStart,
+                  onChangeEnd: widget.onChanged == null
+                      ? null
+                      : _handleChangeEnd,
                   min: widget.min,
                   max: widget.max,
                   divisions: widget.divisions,

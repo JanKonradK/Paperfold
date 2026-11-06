@@ -1,3 +1,4 @@
+import 'package:paperfold/config/paperfold_system.dart';
 import 'package:paperfold/l10n/generated/L10n.dart';
 import 'package:paperfold/service/config/config_item.dart';
 import 'package:material_ui/material_ui.dart';
@@ -121,9 +122,7 @@ class _ServiceConfigFormState extends State<ServiceConfigForm> {
               tooltip: isVisible
                   ? L10n.of(context).commonHidePassword
                   : L10n.of(context).commonShowPassword,
-              icon: Icon(
-                isVisible ? Icons.visibility_off : Icons.visibility,
-              ),
+              icon: Icon(isVisible ? Icons.visibility_off : Icons.visibility),
               onPressed: () => _togglePasswordVisibility(item.key),
             ),
           ),
@@ -157,14 +156,13 @@ class _ServiceConfigFormState extends State<ServiceConfigForm> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              padding: const EdgeInsets.symmetric(
+                horizontal: PaperfoldSpace.md,
+              ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    item.label,
-                    style: const TextStyle(fontSize: 16),
-                  ),
+                  Text(item.label, style: const TextStyle(fontSize: 16)),
                   Text(
                     '${currentValue.round()}$unit',
                     style: TextStyle(
@@ -178,7 +176,9 @@ class _ServiceConfigFormState extends State<ServiceConfigForm> {
             ),
             if (item.description != null)
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: PaperfoldSpace.md,
+                ),
                 child: Text(
                   item.description!,
                   style: TextStyle(
@@ -213,7 +213,8 @@ class _ServiceConfigFormState extends State<ServiceConfigForm> {
           return Text(L10n.of(context).commonNoOptions);
         }
 
-        final String currentValue = _currentConfig[item.key]?.toString() ??
+        final String currentValue =
+            _currentConfig[item.key]?.toString() ??
             item.defaultValue?.toString() ??
             item.options!.first['value']?.toString() ??
             '';
@@ -306,16 +307,16 @@ class _ServiceConfigFormState extends State<ServiceConfigForm> {
               ),
               if (item.link != null)
                 Padding(
-                  padding:
-                      const EdgeInsetsDirectional.only(start: 28.0, top: 4.0),
+                  padding: const EdgeInsetsDirectional.only(
+                    start: 28.0,
+                    top: 4.0,
+                  ),
                   child: TextButton(
                     onPressed: () => launchUrl(
                       Uri.parse(item.link!),
                       mode: LaunchMode.externalApplication,
                     ),
-                    child: Text(
-                      L10n.of(context).settingsNarrateClickForHelp,
-                    ),
+                    child: Text(L10n.of(context).settingsNarrateClickForHelp),
                   ),
                 ),
             ],

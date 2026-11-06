@@ -1,3 +1,5 @@
+import 'package:paperfold/widgets/common/paperfold_modal_motion.dart';
+import 'package:paperfold/config/paperfold_system.dart';
 import 'package:paperfold/config/shared_preference_provider.dart';
 import 'package:paperfold/dao/book.dart';
 import 'package:paperfold/l10n/generated/L10n.dart';
@@ -56,7 +58,10 @@ class _AdvancedSettingState extends State<AdvancedSetting> {
       });
     } catch (error, stackTrace) {
       AnxLog.warning(
-          'Could not load file checksum statistics', error, stackTrace);
+        'Could not load file checksum statistics',
+        error,
+        stackTrace,
+      );
       if (mounted) setState(() => _md5LoadError = error);
     }
   }
@@ -94,9 +99,10 @@ class _AdvancedSettingState extends State<AdvancedSetting> {
               },
             ),
             SettingsTile.navigation(
-                leading: const Icon(Icons.bug_report),
-                title: Text(L10n.of(context).settingsAdvancedLog),
-                onPressed: onLogPressed),
+              leading: const Icon(Icons.bug_report),
+              title: Text(L10n.of(context).settingsAdvancedLog),
+              onPressed: onLogPressed,
+            ),
           ],
         ),
         SettingsSection(
@@ -117,37 +123,40 @@ class _AdvancedSettingState extends State<AdvancedSetting> {
                     const Icon(Icons.fingerprint),
                     SizedBox(width: 8),
                     Expanded(
-                        child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(L10n.of(context).md5Statistics),
-                        const SizedBox(height: 4),
-                        Text(
-                          L10n.of(context).md5TotalBooks(_md5Stats!.totalBooks),
-                          style: Theme.of(context).textTheme.bodySmall,
-                        ),
-                        Text(
-                          L10n.of(context)
-                              .md5BooksWithMd5(_md5Stats!.booksWithMd5),
-                          style: Theme.of(context).textTheme.bodySmall,
-                        ),
-                        Text(
-                          L10n.of(context)
-                              .md5BooksWithoutMd5(_md5Stats!.booksWithoutMd5),
-                          style: Theme.of(context).textTheme.bodySmall,
-                        ),
-                        Text(
-                          L10n.of(context)
-                              .md5LocalFiles(_md5Stats!.localFilesCount),
-                          style: Theme.of(context).textTheme.bodySmall,
-                        ),
-                        Text(
-                          L10n.of(context).md5LocalFilesWithoutMd5(
-                              _md5Stats!.localFilesWithoutMd5),
-                          style: Theme.of(context).textTheme.bodySmall,
-                        ),
-                      ],
-                    )),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(L10n.of(context).md5Statistics),
+                          const SizedBox(height: 4),
+                          Text(
+                            L10n.of(context)
+                                .md5TotalBooks(_md5Stats!.totalBooks),
+                            style: Theme.of(context).textTheme.bodySmall,
+                          ),
+                          Text(
+                            L10n.of(context)
+                                .md5BooksWithMd5(_md5Stats!.booksWithMd5),
+                            style: Theme.of(context).textTheme.bodySmall,
+                          ),
+                          Text(
+                            L10n.of(context)
+                                .md5BooksWithoutMd5(_md5Stats!.booksWithoutMd5),
+                            style: Theme.of(context).textTheme.bodySmall,
+                          ),
+                          Text(
+                            L10n.of(context)
+                                .md5LocalFiles(_md5Stats!.localFilesCount),
+                            style: Theme.of(context).textTheme.bodySmall,
+                          ),
+                          Text(
+                            L10n.of(context).md5LocalFilesWithoutMd5(
+                              _md5Stats!.localFilesWithoutMd5,
+                            ),
+                            style: Theme.of(context).textTheme.bodySmall,
+                          ),
+                        ],
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -182,7 +191,8 @@ class _AdvancedSettingState extends State<AdvancedSetting> {
           tiles: [
             SettingsTile.switchTile(
               title: Text(
-                  L10n.of(context).settingsAdvancedEnableJavascriptForEpub),
+                L10n.of(context).settingsAdvancedEnableJavascriptForEpub,
+              ),
               leading: const Icon(Icons.code),
               initialValue: Prefs().enableJsForEpub,
               onToggle: (value) {
@@ -207,11 +217,13 @@ class _AdvancedSettingState extends State<AdvancedSetting> {
             SettingsTile.navigation(
               title: Text(L10n.of(context).settingsAdvancedHttpProxyConfig),
               leading: const Icon(Icons.http),
-              value: Text(Prefs().httpProxyHost.isEmpty
-                  ? L10n.of(context).settingsAdvancedHttpProxyNotConfigured
-                  : Prefs().httpProxyEnabled
-                      ? '${Prefs().httpProxyHost}:${Prefs().httpProxyPort} (Test: ${Prefs().httpProxyTestUrl})'
-                      : '${Prefs().httpProxyHost}:${Prefs().httpProxyPort}'),
+              value: Text(
+                Prefs().httpProxyHost.isEmpty
+                    ? L10n.of(context).settingsAdvancedHttpProxyNotConfigured
+                    : Prefs().httpProxyEnabled
+                    ? '${Prefs().httpProxyHost}:${Prefs().httpProxyPort} (Test: ${Prefs().httpProxyTestUrl})'
+                    : '${Prefs().httpProxyHost}:${Prefs().httpProxyPort}',
+              ),
               onPressed: _showHttpProxyDialog,
             ),
           ],
@@ -253,6 +265,7 @@ class _AdvancedSettingState extends State<AdvancedSetting> {
 
     final confirmed = await showDialog<bool>(
       context: context,
+      animationStyle: paperfoldModalMotion(context),
       builder: (context) => AlertDialog(
         scrollable: true,
         title: Text(L10n.of(context).md5CalculateConfirmTitle),
@@ -264,15 +277,18 @@ class _AdvancedSettingState extends State<AdvancedSetting> {
             const SizedBox(height: 8),
             if (_md5Stats!.localFilesWithoutMd5 < _md5Stats!.booksWithoutMd5)
               Container(
-                padding: const EdgeInsets.all(8),
+                padding: const EdgeInsets.all(PaperfoldSpace.xs),
                 decoration: BoxDecoration(
                   color: Theme.of(context).colorScheme.primary.withAlpha(30),
-                  borderRadius: BorderRadius.circular(4),
+                  borderRadius: PaperfoldShape.objectRadius,
                 ),
                 child: Row(
                   children: [
-                    Icon(Icons.info_outline,
-                        color: Theme.of(context).colorScheme.primary, size: 16),
+                    Icon(
+                      Icons.info_outline,
+                      color: Theme.of(context).colorScheme.primary,
+                      size: 16,
+                    ),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
@@ -332,6 +348,7 @@ class _AdvancedSettingState extends State<AdvancedSetting> {
       if (context.mounted) {
         showDialog(
           context: context,
+          animationStyle: paperfoldModalMotion(context),
           builder: (context) => AlertDialog(
             scrollable: true,
             title: Text(L10n.of(context).md5CalculationComplete),
@@ -339,12 +356,16 @@ class _AdvancedSettingState extends State<AdvancedSetting> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(L10n.of(context)
-                    .md5CalculationResultCalculated(result.calculated)),
-                Text(L10n.of(context)
-                    .md5CalculationResultSkipped(result.skipped)),
                 Text(
-                    L10n.of(context).md5CalculationResultFailed(result.failed)),
+                  L10n.of(context)
+                      .md5CalculationResultCalculated(result.calculated),
+                ),
+                Text(
+                  L10n.of(context).md5CalculationResultSkipped(result.skipped),
+                ),
+                Text(
+                  L10n.of(context).md5CalculationResultFailed(result.failed),
+                ),
                 if (result.missingFiles.isNotEmpty) ...[
                   const SizedBox(height: 8),
                   Text(
@@ -353,8 +374,10 @@ class _AdvancedSettingState extends State<AdvancedSetting> {
                   ),
                   ...result.missingFiles.take(5).map((file) => Text('• $file')),
                   if (result.missingFiles.length > 5)
-                    Text(L10n.of(context)
-                        .md5AndMore(result.missingFiles.length - 5)),
+                    Text(
+                      L10n.of(context)
+                          .md5AndMore(result.missingFiles.length - 5),
+                    ),
                 ],
               ],
             ),
@@ -384,6 +407,7 @@ class _AdvancedSettingState extends State<AdvancedSetting> {
   Future<void> _showHttpProxyDialog(BuildContext context) async {
     await showDialog<void>(
       context: context,
+      animationStyle: paperfoldModalMotion(context),
       builder: (dialogContext) {
         return _HttpProxyDialog(
           onSaved: () {
@@ -413,8 +437,9 @@ class _HttpProxyDialogState extends State<_HttpProxyDialog> {
   void initState() {
     super.initState();
     hostController = TextEditingController(text: Prefs().httpProxyHost);
-    portController =
-        TextEditingController(text: Prefs().httpProxyPort.toString());
+    portController = TextEditingController(
+      text: Prefs().httpProxyPort.toString(),
+    );
     testUrlController = TextEditingController(text: Prefs().httpProxyTestUrl);
   }
 
@@ -520,7 +545,8 @@ class _HttpProxyDialogState extends State<_HttpProxyDialog> {
             final testUrl = testUrlController.text.trim();
             if (host.isEmpty || port == null || port <= 0 || port > 65535) {
               AnxToast.show(
-                  L10n.of(context).settingsAdvancedHttpProxyInvalidInput);
+                L10n.of(context).settingsAdvancedHttpProxyInvalidInput,
+              );
               return;
             }
 
@@ -530,7 +556,8 @@ class _HttpProxyDialogState extends State<_HttpProxyDialog> {
                 hostLower.startsWith('socks4://') ||
                 hostLower.startsWith('socks://')) {
               AnxToast.show(
-                  L10n.of(context).settingsAdvancedHttpProxyInvalidInput);
+                L10n.of(context).settingsAdvancedHttpProxyInvalidInput,
+              );
               return;
             }
 
@@ -540,8 +567,9 @@ class _HttpProxyDialogState extends State<_HttpProxyDialog> {
 
             Prefs().httpProxyHost = host;
             Prefs().httpProxyPort = port;
-            Prefs().httpProxyTestUrl =
-                testUrl.isEmpty ? 'https://google.com' : testUrl;
+            Prefs().httpProxyTestUrl = testUrl.isEmpty
+                ? 'https://google.com'
+                : testUrl;
             widget.onSaved();
             Navigator.of(context).pop();
           },
@@ -590,8 +618,6 @@ Future<void> _showOnboarding(BuildContext context) async {
 void onLogPressed(BuildContext context) {
   Navigator.push(
     context,
-    CupertinoPageRoute(
-      builder: (context) => const LogPage(),
-    ),
+    CupertinoPageRoute(builder: (context) => const LogPage()),
   );
 }

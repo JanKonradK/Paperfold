@@ -1,3 +1,4 @@
+import 'package:paperfold/config/paperfold_system.dart';
 import 'package:paperfold/l10n/generated/L10n.dart';
 import 'package:paperfold/models/book.dart';
 import 'package:paperfold/page/book_notes_page.dart';
@@ -38,26 +39,17 @@ class _NotesPageState extends ConsumerState<NotesPage> {
                   flex: 1,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      notesStatistic(),
-                      bookNotesList(false),
-                    ],
+                    children: [notesStatistic(), bookNotesList(false)],
                   ),
                 ),
                 const VerticalDivider(thickness: 1, width: 1),
-                const Expanded(
-                  flex: 2,
-                  child: NotesDetail(),
-                ),
+                const Expanded(flex: 2, child: NotesDetail()),
               ],
             );
           } else {
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                notesStatistic(),
-                bookNotesList(true),
-              ],
+              children: [notesStatistic(), bookNotesList(true)],
             );
           }
         },
@@ -84,21 +76,23 @@ class _NotesPageState extends ConsumerState<NotesPage> {
           bottom: false,
           child: Padding(
             padding: const EdgeInsets.all(10.0),
-            child:
-                Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              highlightDigit(
-                context,
-                L10n.of(context).notesNotesAcross(data['numberOfNotes']!),
-                textStyle,
-                digitStyle,
-              ),
-              highlightDigit(
-                context,
-                L10n.of(context).notesBooks(data['numberOfBooks']!),
-                textStyle,
-                digitStyle,
-              ),
-            ]),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                highlightDigit(
+                  context,
+                  L10n.of(context).notesNotesAcross(data['numberOfNotes']!),
+                  textStyle,
+                  digitStyle,
+                ),
+                highlightDigit(
+                  context,
+                  L10n.of(context).notesBooks(data['numberOfBooks']!),
+                  textStyle,
+                  digitStyle,
+                ),
+              ],
+            ),
           ),
         );
       },
@@ -119,20 +113,21 @@ class _NotesPageState extends ConsumerState<NotesPage> {
             ? const Expanded(child: Center(child: NotesTips()))
             : Expanded(
                 child: ListView.builder(
-                    // The Journal's note list is pushed as its own route with
-                    // its own app bar. Nothing floats over its foot, so the
-                    // 80 logical pixels reserved here were dead space.
-                    padding: const EdgeInsets.only(bottom: 12),
-                    controller: _scrollController,
-                    itemCount: data.length,
-                    itemBuilder: (context, index) {
-                      return bookNotesItem(
-                        book: data[index]['book']!,
-                        numberOfNotes: data[index]['numberOfNotes']!,
-                        isMobile: isMobile,
-                        readingTime: data[index]['readingTime']!,
-                      );
-                    }),
+                  // The Journal's note list is pushed as its own route with
+                  // its own app bar. Nothing floats over its foot, so the
+                  // 80 logical pixels reserved here were dead space.
+                  padding: const EdgeInsets.only(bottom: 12),
+                  controller: _scrollController,
+                  itemCount: data.length,
+                  itemBuilder: (context, index) {
+                    return bookNotesItem(
+                      book: data[index]['book']!,
+                      numberOfNotes: data[index]['numberOfNotes']!,
+                      isMobile: isMobile,
+                      readingTime: data[index]['readingTime']!,
+                    );
+                  },
+                ),
               );
       },
       loading: () => const Center(child: CircularProgressIndicator()),
@@ -171,11 +166,12 @@ class _NotesPageState extends ConsumerState<NotesPage> {
         Navigator.push(
           context,
           MaterialPageRoute(
-              builder: (context) => BookNotesPage(
-                    book: book,
-                    numberOfNotes: numberOfNotes,
-                    isMobile: true,
-                  )),
+            builder: (context) => BookNotesPage(
+              book: book,
+              numberOfNotes: numberOfNotes,
+              isMobile: true,
+            ),
+          ),
         );
       } else {
         ref
@@ -191,7 +187,7 @@ class _NotesPageState extends ConsumerState<NotesPage> {
       label: book.title,
       child: InkWell(
         onTap: open,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: PaperfoldShape.controlRadius,
         child: FilledContainer(
           margin: const EdgeInsetsDirectional.only(top: 8, start: 15, end: 15),
           padding: const EdgeInsets.all(8.0),
@@ -216,16 +212,22 @@ class _NotesPageState extends ConsumerState<NotesPage> {
                       scrollDirection: Axis.horizontal,
                       child: Row(
                         children: [
-                          Icon(Icons.access_time,
-                              size: 16, color: scheme.onSurfaceVariant),
+                          Icon(
+                            Icons.access_time,
+                            size: 16,
+                            color: scheme.onSurfaceVariant,
+                          ),
                           const SizedBox(width: 4),
                           Text(
                             convertSeconds(readingTime),
                             style: readingTimeStyle,
                           ),
                           Text(' | ', style: readingTimeStyle),
-                          Icon(Icons.bar_chart,
-                              size: 16, color: scheme.onSurfaceVariant),
+                          Icon(
+                            Icons.bar_chart,
+                            size: 16,
+                            color: scheme.onSurfaceVariant,
+                          ),
                           const SizedBox(width: 4),
                           Text(
                             '${(book.readingPercentage * 100).toStringAsFixed(1)}%',
@@ -263,12 +265,15 @@ class NotesDetail extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return ref.watch(notesPageCurrentBookProvider).when(
+    return ref
+        .watch(notesPageCurrentBookProvider)
+        .when(
           data: (current) {
             return BookNotesPage(
-                isMobile: false,
-                book: current.book,
-                numberOfNotes: current.numberOfNotes);
+              isMobile: false,
+              book: current.book,
+              numberOfNotes: current.numberOfNotes,
+            );
           },
           loading: () => const CircularProgressIndicator(),
           error: (error, stack) => NotesTips(),

@@ -1,3 +1,5 @@
+import 'package:paperfold/config/paperfold_system.dart';
+import 'package:paperfold/widgets/common/paperfold_modal_motion.dart';
 import 'package:paperfold/config/shared_preference_provider.dart';
 import 'package:paperfold/l10n/generated/L10n.dart';
 import 'package:paperfold/models/chapter_split_presets.dart';
@@ -38,16 +40,16 @@ class _ChapterSplitRulesPageState extends State<ChapterSplitRulesPage> {
     setState(() {
       _selectedRuleId = storedId ?? activeRule.id;
       _builtinRules = builtinChapterSplitRules
-          .map((rule) => _RuleEntry(
-                rule: rule,
-                evaluation: rule.evaluateSamples(),
-              ))
+          .map(
+            (rule) =>
+                _RuleEntry(rule: rule, evaluation: rule.evaluateSamples()),
+          )
           .toList(growable: false);
       _customRules = prefs.chapterSplitCustomRules
-          .map((rule) => _RuleEntry(
-                rule: rule,
-                evaluation: rule.evaluateSamples(),
-              ))
+          .map(
+            (rule) =>
+                _RuleEntry(rule: rule, evaluation: rule.evaluateSamples()),
+          )
           .toList(growable: false);
     });
   }
@@ -85,6 +87,7 @@ class _ChapterSplitRulesPageState extends State<ChapterSplitRulesPage> {
   Future<void> _onDeleteRule(ChapterSplitRule rule) async {
     final confirmed = await showDialog<bool>(
       context: context,
+      animationStyle: paperfoldModalMotion(context),
       builder: (context) => AlertDialog(
         title: Text(L10n.of(context).deleteCustomRule),
         content: Text(L10n.of(context).removeRule(rule.name)),
@@ -129,19 +132,18 @@ class _ChapterSplitRulesPageState extends State<ChapterSplitRulesPage> {
     }
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: const EdgeInsets.symmetric(
+        horizontal: PaperfoldSpace.md,
+        vertical: PaperfoldSpace.sm,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            title,
-            style: Theme.of(context).textTheme.titleMedium,
-          ),
+          Text(title, style: Theme.of(context).textTheme.titleMedium),
           const SizedBox(height: 12),
-          ...rules.map((entry) => _buildRuleTile(
-                entry: entry,
-                allowActions: allowActions,
-              )),
+          ...rules.map(
+            (entry) => _buildRuleTile(entry: entry, allowActions: allowActions),
+          ),
         ],
       ),
     );
@@ -158,7 +160,10 @@ class _ChapterSplitRulesPageState extends State<ChapterSplitRulesPage> {
     return FilledContainer(
       margin: const EdgeInsets.only(bottom: 12),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+        padding: const EdgeInsets.symmetric(
+          horizontal: PaperfoldSpace.sm,
+          vertical: PaperfoldSpace.sm,
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -181,9 +186,7 @@ class _ChapterSplitRulesPageState extends State<ChapterSplitRulesPage> {
                       const SizedBox(height: 4),
                       SelectableText(
                         rule.pattern,
-                        style: Theme.of(context)
-                            .textTheme
-                            .bodySmall
+                        style: Theme.of(context).textTheme.bodySmall
                             ?.copyWith(fontFamily: 'monospace'),
                       ),
                       if (!evaluation.isValid)
@@ -226,20 +229,22 @@ class _ChapterSplitRulesPageState extends State<ChapterSplitRulesPage> {
             const SizedBox(height: 8),
             ...evaluation.sampleMatches.map(
               (sample) => Padding(
-                padding: const EdgeInsets.symmetric(vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  vertical: PaperfoldSpace.xxs,
+                ),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Icon(
                       evaluation.isValid
                           ? (sample.isMatch
-                              ? Icons.check_circle_outline
-                              : Icons.cancel_outlined)
+                                ? Icons.check_circle_outline
+                                : Icons.cancel_outlined)
                           : Icons.error_outline,
                       color: evaluation.isValid
                           ? (sample.isMatch
-                              ? Colors.green
-                              : Theme.of(context).colorScheme.error)
+                                ? Colors.green
+                                : Theme.of(context).colorScheme.error)
                           : Theme.of(context).colorScheme.error,
                       size: 20,
                     ),
@@ -261,9 +266,7 @@ class _ChapterSplitRulesPageState extends State<ChapterSplitRulesPage> {
                 padding: const EdgeInsets.only(top: 8),
                 child: Text(
                   L10n.of(context).currentlyInUse,
-                  style: Theme.of(context)
-                      .textTheme
-                      .labelMedium
+                  style: Theme.of(context).textTheme.labelMedium
                       ?.copyWith(color: Theme.of(context).colorScheme.primary),
                 ),
               ),
@@ -276,9 +279,7 @@ class _ChapterSplitRulesPageState extends State<ChapterSplitRulesPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(L10n.of(context).chapterSplitting),
-      ),
+      appBar: AppBar(title: Text(L10n.of(context).chapterSplitting)),
       body: ListView(
         children: [
           _buildRuleSection(
@@ -293,7 +294,7 @@ class _ChapterSplitRulesPageState extends State<ChapterSplitRulesPage> {
           ),
           const SizedBox(height: 24),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
+            padding: const EdgeInsets.symmetric(horizontal: PaperfoldSpace.md),
             child: OutlinedButton.icon(
               onPressed: _onAddRule,
               icon: const Icon(Icons.add_circle_outline),
@@ -461,9 +462,11 @@ class _ChapterSplitRuleEditorPageState
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.rule == null
-            ? L10n.of(context).newCustomRule
-            : L10n.of(context).editCustomRule),
+        title: Text(
+          widget.rule == null
+              ? L10n.of(context).newCustomRule
+              : L10n.of(context).editCustomRule,
+        ),
         actions: [
           TextButton(
             onPressed: _canSave ? _onSave : null,
@@ -472,13 +475,11 @@ class _ChapterSplitRuleEditorPageState
         ],
       ),
       body: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(PaperfoldSpace.md),
         children: [
           TextField(
             controller: _nameController,
-            decoration: InputDecoration(
-              labelText: L10n.of(context).ruleName,
-            ),
+            decoration: InputDecoration(labelText: L10n.of(context).ruleName),
           ),
           const SizedBox(height: 16),
           TextField(
@@ -539,27 +540,27 @@ class _ChapterSplitRuleEditorPageState
                 const SizedBox(height: 12),
                 ...evaluation.sampleMatches.map(
                   (sample) => Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      vertical: PaperfoldSpace.xxs,
+                    ),
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Icon(
                           evaluation.isValid
                               ? (sample.isMatch
-                                  ? Icons.check_circle_outline
-                                  : Icons.cancel_outlined)
+                                    ? Icons.check_circle_outline
+                                    : Icons.cancel_outlined)
                               : Icons.error_outline,
                           color: evaluation.isValid
                               ? (sample.isMatch
-                                  ? Colors.green
-                                  : Theme.of(context).colorScheme.error)
+                                    ? Colors.green
+                                    : Theme.of(context).colorScheme.error)
                               : Theme.of(context).colorScheme.error,
                           size: 20,
                         ),
                         const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(sample.sample),
-                        ),
+                        Expanded(child: Text(sample.sample)),
                       ],
                     ),
                   ),

@@ -1,3 +1,7 @@
+import 'package:paperfold/widgets/common/paperfold_modal_motion.dart';
+import 'package:paperfold/widgets/common/paperfold_list_row.dart';
+import 'package:paperfold/config/paperfold_system.dart';
+
 import 'dart:io';
 
 import 'package:dio/dio.dart';
@@ -20,8 +24,12 @@ import 'package:paperfold/widgets/common/message_block.dart';
 /// A feed holds shelves, books, or both. Following a shelf pushes another one
 /// of these, so Back walks the catalog the way Back walks anything else.
 class OpdsBrowsePage extends ConsumerWidget {
-  const OpdsBrowsePage(
-      {super.key, required this.catalog, this.url, this.title});
+  const OpdsBrowsePage({
+    super.key,
+    required this.catalog,
+    this.url,
+    this.title,
+  });
 
   final OpdsCatalog catalog;
 
@@ -105,11 +113,14 @@ class _FeedList extends ConsumerWidget {
     final L10n l10n = L10n.of(context);
 
     return ListView(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
+      padding: const EdgeInsets.symmetric(
+        horizontal: PaperfoldSpace.xs,
+        vertical: PaperfoldSpace.md,
+      ),
       children: <Widget>[
         for (final OpdsLink shelf in feed.navigation)
-          ListTile(
-            minTileHeight: 56,
+          PaperfoldListRow(
+            minTileHeight: PaperfoldSize.row,
             leading: const Icon(Icons.folder_outlined),
             title: Text(shelf.title ?? shelf.href.toString()),
             subtitle: shelf.numberOfItems == null
@@ -130,7 +141,7 @@ class _FeedList extends ConsumerWidget {
           _PublicationTile(catalog: catalog, entry: entry),
         if (feed.nextHref case final Uri next?)
           Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(PaperfoldSpace.md),
             child: OutlinedButton(
               // A page, not an infinite scroll. A catalog can be very large,
               // and the reader decides how much of it to pull.
@@ -182,8 +193,8 @@ class _PublicationTileState extends ConsumerState<_PublicationTile>
     final List<OpdsLink> downloads = widget.entry.downloadLinks;
     final website = widget.entry.websiteHref;
 
-    return ListTile(
-      minTileHeight: 56,
+    return PaperfoldListRow(
+      minTileHeight: PaperfoldSize.row,
       leading: const Icon(Icons.menu_book_outlined),
       title: Text(
         widget.entry.title,
@@ -219,19 +230,20 @@ class _PublicationTileState extends ConsumerState<_PublicationTile>
               ],
             )
           : downloads.isEmpty && website != null
-              ? IconButton(
-                  icon: const Icon(Icons.open_in_new),
-                  tooltip: l10n.onlineOpenWebsite,
-                  onPressed: () => openBookWebsite(context, website),
-                )
-              : IconButton(
-                  icon: const Icon(Icons.download_outlined),
-                  tooltip: downloads.isEmpty
-                      ? l10n.opdsUnsupportedDownload
-                      : l10n.opdsDownload,
-                  onPressed:
-                      downloads.isEmpty ? null : () => _chooseFormat(downloads),
-                ),
+          ? IconButton(
+              icon: const Icon(Icons.open_in_new),
+              tooltip: l10n.onlineOpenWebsite,
+              onPressed: () => openBookWebsite(context, website),
+            )
+          : IconButton(
+              icon: const Icon(Icons.download_outlined),
+              tooltip: downloads.isEmpty
+                  ? l10n.opdsUnsupportedDownload
+                  : l10n.opdsDownload,
+              onPressed: downloads.isEmpty
+                  ? null
+                  : () => _chooseFormat(downloads),
+            ),
     );
   }
 
@@ -241,6 +253,7 @@ class _PublicationTileState extends ConsumerState<_PublicationTile>
         ? downloads.single
         : await showModalBottomSheet<OpdsLink>(
             context: context,
+            sheetAnimationStyle: paperfoldModalMotion(context),
             isScrollControlled: true,
             useSafeArea: true,
             builder: (context) => ConstrainedBox(
@@ -252,13 +265,15 @@ class _PublicationTileState extends ConsumerState<_PublicationTile>
                 shrinkWrap: true,
                 padding: const EdgeInsets.fromLTRB(16, 24, 16, 24),
                 children: [
-                  Text(L10n.of(context).opdsChooseFormat,
-                      style: Theme.of(context).textTheme.titleLarge),
+                  Text(
+                    L10n.of(context).opdsChooseFormat,
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
                   const SizedBox(height: 8),
                   Text(widget.entry.title),
                   const SizedBox(height: 16),
                   for (final link in downloads)
-                    ListTile(
+                    PaperfoldListRow(
                       title: Text(link.downloadExtension!.toUpperCase()),
                       subtitle: link.title == null ? null : Text(link.title!),
                       trailing: const Icon(Icons.download_outlined),
@@ -333,9 +348,8 @@ class _PublicationTileState extends ConsumerState<_PublicationTile>
 
   void _showMessage(String message) {
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(message)),
-      );
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(message)));
     }
   }
 }

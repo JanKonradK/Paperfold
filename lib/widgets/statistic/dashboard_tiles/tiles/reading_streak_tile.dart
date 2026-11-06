@@ -1,3 +1,4 @@
+import 'package:paperfold/config/paperfold_system.dart';
 import 'package:paperfold/l10n/generated/L10n.dart';
 import 'package:paperfold/providers/reading_streak_provider.dart';
 import 'package:paperfold/widgets/common/async_skeleton_wrapper.dart';
@@ -48,8 +49,9 @@ class _ReadingStreakContent extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final hasReadToday = _isSameDay(data.lastReadingDay, DateTime.now());
-    final fireColor =
-        hasReadToday ? theme.colorScheme.primary : theme.colorScheme.outline;
+    final fireColor = hasReadToday
+        ? theme.colorScheme.primary
+        : theme.colorScheme.outline;
     final l10n = L10n.of(context);
     final encouragement = hasReadToday
         ? l10n.tileReadingStreakEncouragementActive
@@ -93,7 +95,7 @@ class _ReadingStreakContent extends StatelessWidget {
                   ),
                 ],
               ),
-            )
+            ),
           ],
         ),
         const SizedBox(height: 8),
@@ -132,25 +134,31 @@ class _StatPill extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      padding: const EdgeInsets.symmetric(
+        horizontal: PaperfoldSpace.sm,
+        vertical: 6,
+      ),
       decoration: BoxDecoration(
         color: theme.colorScheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: PaperfoldShape.paneRadius,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(label,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: theme.textTheme.labelSmall),
+          Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: theme.textTheme.labelSmall,
+          ),
           Text(
             value,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: theme.textTheme.titleMedium
-                ?.copyWith(fontWeight: FontWeight.bold),
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
           ),
         ],
       ),
