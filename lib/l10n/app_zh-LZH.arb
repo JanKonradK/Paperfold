@@ -942,5 +942,11 @@
   "readerPageInformation": "頁面資訊",
   "readerScreen": "螢幕",
   "readerPageTurns": "翻頁",
-  "readerSelectionActions": "選文操作"
+  "readerSelectionActions": "選文操作",
+  "readerGuidePrevious": "前頁",
+  "readerGuideNext": "後頁",
+  "readerGuideMenu": "目錄",
+  "readerGuideGestures": "長按文字以選之。",
+  "readerGuideGotIt": "知矣",
+  "readerGuideShow": "示點按指南"
 }

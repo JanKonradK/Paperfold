@@ -1,3 +1,4 @@
+import 'package:paperfold/widgets/reading_page/reader_tap_guide.dart';
 import 'package:paperfold/service/reader_window.dart';
 import 'package:paperfold/widgets/reading_page/more_settings/more_settings.dart';
 import 'package:paperfold/widgets/reading_page/facing_page.dart';
@@ -69,6 +70,14 @@ class ReadingPageState extends ConsumerState<ReadingPage>
   int _panelVersion = 0;
   late String heroTag;
   bool bookmarkExists = false;
+  bool _readerLoaded = false;
+  final _tapGuideKey = GlobalKey<ReaderTapGuideGateState>();
+
+  void showTapGuide() {
+    hideBottomBar();
+    _tapGuideKey.currentState?.show();
+  }
+
   final _readerWindow = ReaderWindow();
   late PageTurn _lastPagedTurn = Prefs().pageTurnStyle == PageTurn.scroll
       ? PageTurn.slide
@@ -560,37 +569,46 @@ class ReadingPageState extends ConsumerState<ReadingPage>
                 // ever on screen. Upstream got its size from the AI panel's
                 // AxisFlex, which was a non-positioned child; removing the AI
                 // subsystem removed the only thing sizing this Stack.
-                body: Stack(
-                  fit: StackFit.expand,
-                  children: [
-                    Positioned.fill(
-                      child: MouseRegion(
-                        onHover: (PointerHoverEvent detail) {
-                          if (!Prefs().showMenuOnHover) return;
-                          var y = detail.position.dy;
-                          if (y < 30 ||
-                              y > MediaQuery.of(context).size.height - 30) {
-                            showOrHideAppBarAndBottomBar(true);
-                          }
-                        },
-                        child: Focus(
-                          focusNode: _readerFocusNode,
-                          onKeyEvent: _handleReaderKeyEvent,
-                          child: EpubPlayer(
-                            key: epubPlayerKey,
-                            book: _book,
-                            cfi: widget.cfi,
-                            showOrHideAppBarAndBottomBar:
-                                showOrHideAppBarAndBottomBar,
-                            onLoadEnd: () {},
-                            initialThemes: widget.initialThemes,
-                            updateParent: updateState,
+                body: ReaderTapGuideGate(
+                  key: _tapGuideKey,
+                  ready: _readerLoaded,
+                  onDismiss: _requestReaderFocus,
+                  child: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      Positioned.fill(
+                        child: MouseRegion(
+                          onHover: (PointerHoverEvent detail) {
+                            if (!Prefs().showMenuOnHover) return;
+                            var y = detail.position.dy;
+                            if (y < 30 ||
+                                y > MediaQuery.of(context).size.height - 30) {
+                              showOrHideAppBarAndBottomBar(true);
+                            }
+                          },
+                          child: Focus(
+                            focusNode: _readerFocusNode,
+                            onKeyEvent: _handleReaderKeyEvent,
+                            child: EpubPlayer(
+                              key: epubPlayerKey,
+                              book: _book,
+                              cfi: widget.cfi,
+                              showOrHideAppBarAndBottomBar:
+                                  showOrHideAppBarAndBottomBar,
+                              onLoadEnd: () {
+                                if (mounted) {
+                                  setState(() => _readerLoaded = true);
+                                }
+                              },
+                              initialThemes: widget.initialThemes,
+                              updateParent: updateState,
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                    controller,
-                  ],
+                      controller,
+                    ],
+                  ),
                 ),
               ),
             ),

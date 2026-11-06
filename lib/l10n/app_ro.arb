@@ -1160,5 +1160,11 @@
   "readerPageInformation": "Informații pagină",
   "readerScreen": "Ecran",
   "readerPageTurns": "Întoarcerea paginilor",
-  "readerSelectionActions": "Acțiuni de selecție"
+  "readerSelectionActions": "Acțiuni de selecție",
+  "readerGuidePrevious": "Pagina anterioară",
+  "readerGuideNext": "Pagina următoare",
+  "readerGuideMenu": "Meniu",
+  "readerGuideGestures": "Apasă lung pe text pentru a-l selecta.",
+  "readerGuideGotIt": "Am înțeles",
+  "readerGuideShow": "Arată ghidul de atingere"
 }

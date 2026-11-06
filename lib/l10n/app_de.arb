@@ -1160,5 +1160,11 @@
   "readerPageInformation": "Seiteninformationen",
   "readerScreen": "Bildschirm",
   "readerPageTurns": "Seitenwechsel",
-  "readerSelectionActions": "Auswahlaktionen"
+  "readerSelectionActions": "Auswahlaktionen",
+  "readerGuidePrevious": "Vorherige Seite",
+  "readerGuideNext": "Nächste Seite",
+  "readerGuideMenu": "Menü",
+  "readerGuideGestures": "Text zum Auswählen lange drücken.",
+  "readerGuideGotIt": "Verstanden",
+  "readerGuideShow": "Tippbereiche anzeigen"
 }

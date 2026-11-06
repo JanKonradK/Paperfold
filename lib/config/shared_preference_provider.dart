@@ -482,6 +482,13 @@ class Prefs extends ChangeNotifier {
     return DateTime.parse(lastShowUpdateStr);
   }
 
+  bool get readerGuideSeen => prefs.getBool('readerGuideSeen') ?? false;
+
+  set readerGuideSeen(bool value) {
+    prefs.setBool('readerGuideSeen', value);
+    notifyListeners();
+  }
+
   set pageTurningType(int type) {
     prefs.setInt('pageTurningType', type);
     notifyListeners();

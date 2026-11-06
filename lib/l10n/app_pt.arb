@@ -1160,5 +1160,11 @@
   "readerPageInformation": "Informações da página",
   "readerScreen": "Ecrã",
   "readerPageTurns": "Mudança de página",
-  "readerSelectionActions": "Ações de seleção"
+  "readerSelectionActions": "Ações de seleção",
+  "readerGuidePrevious": "Página anterior",
+  "readerGuideNext": "Próxima página",
+  "readerGuideMenu": "Menu",
+  "readerGuideGestures": "Toque e segure o texto para selecioná-lo.",
+  "readerGuideGotIt": "Entendi",
+  "readerGuideShow": "Mostrar guia de toques"
 }

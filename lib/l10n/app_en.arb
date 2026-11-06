@@ -1188,5 +1188,11 @@
   "readerPageInformation": "Page information",
   "readerScreen": "Screen",
   "readerPageTurns": "Page turns",
-  "readerSelectionActions": "Selection actions"
+  "readerSelectionActions": "Selection actions",
+  "readerGuidePrevious": "Previous page",
+  "readerGuideNext": "Next page",
+  "readerGuideMenu": "Menu",
+  "readerGuideGestures": "Long-press text to select it.",
+  "readerGuideGotIt": "Got it",
+  "readerGuideShow": "Show tap guide"
 }

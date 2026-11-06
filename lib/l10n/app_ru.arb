@@ -1160,5 +1160,11 @@
   "readerPageInformation": "Информация на странице",
   "readerScreen": "Экран",
   "readerPageTurns": "Перелистывание",
-  "readerSelectionActions": "Действия с выделением"
+  "readerSelectionActions": "Действия с выделением",
+  "readerGuidePrevious": "Предыдущая страница",
+  "readerGuideNext": "Следующая страница",
+  "readerGuideMenu": "Меню",
+  "readerGuideGestures": "Нажмите и удерживайте текст, чтобы выделить его.",
+  "readerGuideGotIt": "Понятно",
+  "readerGuideShow": "Показать области касания"
 }

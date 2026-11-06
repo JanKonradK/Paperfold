@@ -10,7 +10,6 @@ import 'package:paperfold/config/shared_preference_provider.dart';
 import 'package:paperfold/dao/book.dart';
 import 'package:paperfold/dao/book_note.dart';
 import 'package:paperfold/enums/book_status.dart';
-import 'package:paperfold/enums/page_turn_mode.dart';
 import 'package:paperfold/enums/reading_info.dart';
 import 'package:paperfold/enums/translation_mode.dart';
 import 'package:paperfold/enums/writing_mode.dart';
@@ -680,36 +679,7 @@ class EpubPlayerState extends ConsumerState<EpubPlayer>
     final y = location['y'];
     final part = coordinatesToPart(x, y);
 
-    PageTurningType action;
-    final pageTurnMode = PageTurnMode.fromCode(Prefs().pageTurnMode);
-
-    if (pageTurnMode == PageTurnMode.simple) {
-      // Use predefined page turning types
-      final currentPageTurningType = Prefs().pageTurningType;
-      final pageTurningType = pageTurningTypes[currentPageTurningType];
-      action = pageTurningType[part];
-
-      // Apply swap if enabled
-      if (Prefs().swapPageTurnArea) {
-        if (action == PageTurningType.prev) {
-          action = PageTurningType.next;
-        } else if (action == PageTurningType.next) {
-          action = PageTurningType.prev;
-        }
-      }
-    } else {
-      // Use custom configuration
-      final customConfig = Prefs().customPageTurnConfig;
-      action = PageTurningType.values[customConfig[part]];
-    }
-
-    // Disable mouse/touch page turning when keyboard shortcuts are enabled
-    if (Prefs().keyboardShortcutTurnPage) {
-      // Only allow menu action, disable prev/next page turning
-      if (action == PageTurningType.prev || action == PageTurningType.next) {
-        return;
-      }
-    }
+    final action = currentPageTurningActions()[part];
 
     switch (action) {
       case PageTurningType.prev:

@@ -942,5 +942,11 @@
   "readerPageInformation": "معلومات الصفحة",
   "readerScreen": "الشاشة",
   "readerPageTurns": "تقليب الصفحات",
-  "readerSelectionActions": "إجراءات التحديد"
+  "readerSelectionActions": "إجراءات التحديد",
+  "readerGuidePrevious": "الصفحة السابقة",
+  "readerGuideNext": "الصفحة التالية",
+  "readerGuideMenu": "القائمة",
+  "readerGuideGestures": "اضغط مطولًا على النص لتحديده.",
+  "readerGuideGotIt": "فهمت",
+  "readerGuideShow": "إظهار دليل النقر"
 }
