@@ -1,3 +1,6 @@
+import 'package:paperfold/utils/paperfold_layout.dart';
+import 'package:paperfold/config/shared_preference_provider.dart';
+
 import 'dart:math' as math;
 
 import 'package:material_ui/material_ui.dart';
@@ -205,21 +208,34 @@ class ShelfStageState extends State<ShelfStage>
   @override
   Widget build(BuildContext context) => LayoutBuilder(
     builder: (context, bounds) {
-      final large = MediaQuery.textScalerOf(context).scale(16) >= 24;
-      final width = math.max(48.0, bounds.maxWidth - 32);
-      final columns = math.max(1, (width / (large ? 180 : 120)).floor());
-      final coverWidth = (width - (columns - 1) * 12) / columns;
-      final coverHeight =
-          coverWidth / .68 +
-          MediaQuery.textScalerOf(context).scale(14) * 3 +
-          16;
-      // A shelf is 240 tall on every screen; a wider screen holds more
-      // books per shelf, not bigger ones. Spines above 230 show their author
-      // and foil seal. Never taller than the space the stage has.
-      final spineHeight = math.min(
-        240.0,
-        math.max(72.0, bounds.maxHeight - 52),
+      final layout = PaperfoldLayout.of(context, constraints: bounds);
+      final density = layout.covers(Prefs().libraryCoversPerRow);
+      final columns = density.columns;
+      final coverWidth = density.coverWidth;
+      final width = layout.content;
+      final captionStyle = Theme.of(context).textTheme.labelLarge
+          ?.copyWith(fontSize: 14, height: 20 / 14);
+      final caption = TextPainter(
+        text: TextSpan(text: 'Ag\nAg', style: captionStyle),
+        textDirection: Directionality.of(context),
+        textScaler: MediaQuery.textScalerOf(context),
+      )..layout(maxWidth: coverWidth);
+      final coverHeight = coverWidth * 1.5 + 8 + caption.height;
+      caption.dispose();
+      final portraitCount = Prefs().libraryCoversPerRow <= 0
+          ? layout.defaultCoversPerRow
+          : Prefs().libraryCoversPerRow;
+      final portraitContent = layout.window.shortestSide - 2 * layout.gutter;
+      final count = portraitCount.clamp(
+        1,
+        ((portraitContent + 12) / 84).floor().clamp(1, 100),
       );
+      final chosenWidth = (portraitContent - (count - 1) * 12) / count;
+      final defaultWidth =
+          (portraitContent - (layout.defaultCoversPerRow - 1) * 12) /
+          layout.defaultCoversPerRow;
+      final scale = chosenWidth / defaultWidth;
+      final spineHeight = (240 * scale).clamp(144.0, 320.0);
       final spineRects = <Rect>[];
       final coverRects = <Rect>[];
       final labels = <(double, String)>[];
@@ -243,7 +259,8 @@ class ShelfStageState extends State<ShelfStage>
             '${book.isPhysical ? L10n.of(context).libraryPaperBooks : L10n.of(context).libraryEbooks} · $count',
           ));
         }
-        if (x + book.spineWidth > width && x > 0) {
+        final spineWidth = math.max(48.0, book.spineWidth * scale);
+        if (x + spineWidth > width && x > 0) {
           x = 0;
           y += spineHeight + 16;
         }
@@ -252,22 +269,22 @@ class ShelfStageState extends State<ShelfStage>
         final bookHeight = spineHeight * book.spineHeightFactor;
         spineRects.add(
           Rect.fromLTWH(
-            x + 16,
+            x + layout.gutter,
             y + spineHeight - bookHeight,
-            book.spineWidth,
+            spineWidth,
             bookHeight,
           ),
         );
         // Each group has its own grid origin, resolved below.
         coverRects.add(
           Rect.fromLTWH(
-            16 + ((i - groupStart) % columns) * (coverWidth + 12),
+            layout.gutter + ((i - groupStart) % columns) * (coverWidth + 12),
             0,
             coverWidth,
             coverHeight,
           ),
         );
-        x += book.spineWidth + 4;
+        x += spineWidth + 4;
       }
       double gridY = 36;
       physical = null;
@@ -469,12 +486,16 @@ class ShelfStageState extends State<ShelfStage>
                               ],
                             ),
                           ),
-                          if (t > .5)
+                          if (t > .5) ...[
+                            const SizedBox(height: 8),
                             Text(
                               book.title,
+                              style: Theme.of(context).textTheme.labelLarge
+                                  ?.copyWith(fontSize: 14, height: 20 / 14),
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
                             ),
+                          ],
                         ],
                       ),
               ),

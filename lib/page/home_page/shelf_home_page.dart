@@ -1,3 +1,4 @@
+import 'package:paperfold/utils/paperfold_layout.dart';
 import 'package:paperfold/config/paperfold_system.dart';
 import 'package:paperfold/config/paperfold_motion.dart';
 import 'package:paperfold/widgets/bookshelf/book_detail_route.dart';
@@ -1102,29 +1103,47 @@ class _ShelfCollectionPageState extends ConsumerState<ShelfCollectionPage> {
                     Navigator.of(context).push(bookDetailRoute(context, book)),
                 onOpenOptions: _openBookOptions,
               )
-            : GridView.builder(
-                padding: const EdgeInsetsDirectional.fromSTEB(16, 12, 16, 32),
-                gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                  maxCrossAxisExtent: 190,
-                  mainAxisExtent: 310,
-                  mainAxisSpacing: 24,
-                  crossAxisSpacing: 16,
-                ),
-                itemCount: widget.books.length + widget.wishlistItems.length,
-                itemBuilder: (context, index) {
-                  if (index < widget.books.length) {
-                    final book = widget.books[index];
-                    return _ShelfCoverTile(
-                      book: book,
-                      onOpenOptions: () => _openBookOptions(book),
-                      onOpenBook: () =>
-                          Navigator.of(context)
-                              .push(bookDetailRoute(context, book)),
-                    );
-                  }
-                  final item =
-                      widget.wishlistItems[index - widget.books.length];
-                  return _WishlistCoverTile(item: item);
+            : LayoutBuilder(
+                builder: (context, bounds) {
+                  final layout = PaperfoldLayout.of(
+                    context,
+                    constraints: bounds,
+                  );
+                  final density = layout.covers(Prefs().libraryCoversPerRow);
+                  return GridView.builder(
+                    padding: EdgeInsets.fromLTRB(
+                      layout.gutter,
+                      12,
+                      layout.gutter,
+                      MediaQuery.paddingOf(context).bottom + 32,
+                    ),
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: density.columns,
+                      mainAxisExtent:
+                          density.coverWidth * 1.5 +
+                          MediaQuery.textScalerOf(context).scale(20) * 2 +
+                          40,
+                      mainAxisSpacing: 16,
+                      crossAxisSpacing: 12,
+                    ),
+                    itemCount:
+                        widget.books.length + widget.wishlistItems.length,
+                    itemBuilder: (context, index) {
+                      if (index < widget.books.length) {
+                        final book = widget.books[index];
+                        return _ShelfCoverTile(
+                          book: book,
+                          onOpenOptions: () => _openBookOptions(book),
+                          onOpenBook: () =>
+                              Navigator.of(context)
+                                  .push(bookDetailRoute(context, book)),
+                        );
+                      }
+                      final item =
+                          widget.wishlistItems[index - widget.books.length];
+                      return _WishlistCoverTile(item: item);
+                    },
+                  );
                 },
               ),
       ),
