@@ -1,5 +1,7 @@
 import 'dart:io';
 
+import 'package:paperfold/service/capture_launch.dart';
+
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:material_ui/material_ui.dart';
@@ -24,7 +26,12 @@ abstract final class ReadingReminder {
   /// Desktop systems have no background delivery for a closed app.
   static bool get supported => Platform.isAndroid || Platform.isIOS;
 
-  static Future<void> _init() async {
+  static Future<void> initializeLaunch() => _init();
+
+  static Future<void>? _initializing;
+  static Future<void> _init() => _initializing ??= _initialize();
+
+  static Future<void> _initialize() async {
     if (_ready) return;
     tz_data.initializeTimeZones();
     try {
@@ -34,20 +41,66 @@ abstract final class ReadingReminder {
       // An unknown zone keeps UTC. The reminder then moves with UTC offsets.
       AnxLog.warning('Reminder: time zone not found: $e');
     }
+    final l10n = await L10n.delegate.load(Prefs().locale ?? const Locale('en'));
     await _plugin.initialize(
-      settings: const InitializationSettings(
-        android: AndroidInitializationSettings(
+      settings: InitializationSettings(
+        android: const AndroidInitializationSettings(
           '@drawable/ic_launcher_monochrome',
         ),
         iOS: DarwinInitializationSettings(
           requestAlertPermission: false,
           requestBadgePermission: false,
           requestSoundPermission: false,
+          notificationCategories: [
+            DarwinNotificationCategory(
+              'reading_capture',
+              actions: [
+                DarwinNotificationAction.plain(
+                  'progress',
+                  l10n.captureLogPages,
+                  options: {DarwinNotificationActionOption.foreground},
+                ),
+                DarwinNotificationAction.plain(
+                  'note',
+                  l10n.captureWriteNote,
+                  options: {DarwinNotificationActionOption.foreground},
+                ),
+              ],
+            ),
+          ],
         ),
       ),
+      onDidReceiveNotificationResponse: _respond,
     );
+    final launch = await _plugin.getNotificationAppLaunchDetails();
+    if (launch?.didNotificationLaunchApp == true &&
+        launch?.notificationResponse != null) {
+      _respond(launch!.notificationResponse!);
+    }
     _ready = true;
   }
+
+  static void _respond(NotificationResponse response) {
+    CaptureLaunch.handle(
+      response.payload,
+      source: 'notification',
+      action: response.actionId,
+    );
+  }
+
+  @visibleForTesting
+  static List<AndroidNotificationAction> actions(L10n l10n) => [
+    AndroidNotificationAction(
+      'progress',
+      l10n.captureLogPages,
+      showsUserInterface: true,
+    ),
+    AndroidNotificationAction(
+      'note',
+      l10n.captureWriteNote,
+      showsUserInterface: true,
+    ),
+  ];
 
   /// Asks the system for permission to show notifications.
   static Future<bool> requestPermission() async {
@@ -106,9 +159,13 @@ abstract final class ReadingReminder {
           _channelId,
           l10n.reminderChannelName,
           category: AndroidNotificationCategory.reminder,
+          actions: actions(l10n),
         ),
-        iOS: const DarwinNotificationDetails(),
+        iOS: const DarwinNotificationDetails(
+          categoryIdentifier: 'reading_capture',
+        ),
       ),
+      payload: 'paperfold://open',
       androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
       matchDateTimeComponents: DateTimeComponents.time,
     );

@@ -886,5 +886,13 @@
   "reminderPermissionDenied": "Paperfold 的通知已關閉。請在系統設定中開啟。",
   "reminderChannelName": "閱讀提醒",
   "onlineWikisourceDescription": "來自英文維基文庫的公有領域圖書。可在此下載 EPUB 檔案。",
-  "onlineInternetArchiveDescription": "收藏公有領域圖書與借閱圖書的大型圖書館。部分圖書需要帳號。"
+  "onlineInternetArchiveDescription": "收藏公有領域圖書與借閱圖書的大型圖書館。部分圖書需要帳號。",
+  "captureLogPages": "記錄頁數",
+  "captureWriteNote": "寫筆記",
+  "widgetContinue": "繼續閱讀",
+  "widgetQuickCapture": "快速記錄",
+  "captureNote": "筆記",
+  "captureQuote": "摘錄",
+  "widgetContinueDescription": "繼續閱讀目前的書籍或記錄頁數。",
+  "widgetCaptureDescription": "儲存筆記、摘錄或閱讀進度。"
 }

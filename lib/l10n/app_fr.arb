@@ -1104,5 +1104,13 @@
   "reminderPermissionDenied": "Les notifications de Paperfold sont désactivées. Activez-les dans les réglages du système.",
   "reminderChannelName": "Rappels de lecture",
   "onlineWikisourceDescription": "Livres du domaine public de Wikisource en anglais. Téléchargez les fichiers EPUB ici.",
-  "onlineInternetArchiveDescription": "Une grande bibliothèque de livres du domaine public et en prêt. Certains livres demandent un compte."
+  "onlineInternetArchiveDescription": "Une grande bibliothèque de livres du domaine public et en prêt. Certains livres demandent un compte.",
+  "captureLogPages": "Noter les pages",
+  "captureWriteNote": "Écrire une note",
+  "widgetContinue": "Reprendre la lecture",
+  "widgetQuickCapture": "Saisie rapide",
+  "captureNote": "Note",
+  "captureQuote": "Citation",
+  "widgetContinueDescription": "Reprenez votre livre ou notez les pages lues.",
+  "widgetCaptureDescription": "Enregistrez une note, une citation ou votre progression."
 }

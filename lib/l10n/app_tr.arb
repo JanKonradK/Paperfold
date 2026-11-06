@@ -1104,5 +1104,13 @@
   "reminderPermissionDenied": "Paperfold bildirimleri kapalı. Sistem ayarlarından açın.",
   "reminderChannelName": "Okuma hatırlatıcıları",
   "onlineWikisourceDescription": "İngilizce Vikikaynak'tan kamu malı kitaplar. EPUB dosyalarını buradan indirin.",
-  "onlineInternetArchiveDescription": "Kamu malı ve ödünç kitaplardan oluşan büyük bir kütüphane. Bazı kitaplar hesap gerektirir."
+  "onlineInternetArchiveDescription": "Kamu malı ve ödünç kitaplardan oluşan büyük bir kütüphane. Bazı kitaplar hesap gerektirir.",
+  "captureLogPages": "Sayfaları kaydet",
+  "captureWriteNote": "Not yaz",
+  "widgetContinue": "Okumaya devam et",
+  "widgetQuickCapture": "Hızlı kayıt",
+  "captureNote": "Not",
+  "captureQuote": "Alıntı",
+  "widgetContinueDescription": "Geçerli kitabı okumaya devam edin veya sayfaları kaydedin.",
+  "widgetCaptureDescription": "Not, alıntı veya okuma ilerlemesini kaydedin."
 }

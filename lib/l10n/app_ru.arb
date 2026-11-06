@@ -1104,5 +1104,13 @@
   "reminderPermissionDenied": "Уведомления Paperfold отключены. Включите их в настройках системы.",
   "reminderChannelName": "Напоминания о чтении",
   "onlineWikisourceDescription": "Книги в общественном достоянии из английского Викитеки. Скачивайте файлы EPUB здесь.",
-  "onlineInternetArchiveDescription": "Большая библиотека книг в общественном достоянии и книг на выдачу. Для некоторых нужна учётная запись."
+  "onlineInternetArchiveDescription": "Большая библиотека книг в общественном достоянии и книг на выдачу. Для некоторых нужна учётная запись.",
+  "captureLogPages": "Записать страницы",
+  "captureWriteNote": "Написать заметку",
+  "widgetContinue": "Продолжить чтение",
+  "widgetQuickCapture": "Быстрая запись",
+  "captureNote": "Заметка",
+  "captureQuote": "Цитата",
+  "widgetContinueDescription": "Продолжите текущую книгу или запишите страницы.",
+  "widgetCaptureDescription": "Сохраните заметку, цитату или прогресс чтения."
 }
