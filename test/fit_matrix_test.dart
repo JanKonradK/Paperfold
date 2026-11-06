@@ -8,6 +8,7 @@ import 'package:paperfold/config/shared_preference_provider.dart';
 import 'package:paperfold/l10n/generated/L10n.dart';
 import 'package:paperfold/main.dart';
 import 'package:paperfold/models/book.dart';
+import 'package:paperfold/models/journal_page.dart';
 import 'package:paperfold/enums/book_binding.dart';
 import 'package:paperfold/page/book_detail.dart';
 import 'package:paperfold/page/home_page.dart';
@@ -21,30 +22,50 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'widgets/shelf_home_fixtures.dart';
 
-Widget host(Widget child, double scale) => ProviderScope(
-  overrides: newTestOverrides(),
-  child: MaterialApp(
-    navigatorKey: navigatorKey,
-    locale: const Locale('en'),
-    localizationsDelegates: [
-      L10n.delegate,
-      ...GlobalMaterialLocalizations.delegates,
-    ],
-    supportedLocales: L10n.supportedLocales,
-    theme: paperfoldLibraryTheme(
-      ThemeData(colorScheme: PaperfoldTokens.colorScheme(Brightness.light)),
+late ProviderContainer container;
+
+Widget host(Widget child, double scale) => UncontrolledProviderScope(
+  container: container,
+  child: ProviderScope(
+    overrides: newTestOverrides(
+      journalEntries: List.generate(
+        30,
+        (i) => JournalPage(
+          id: i,
+          bookId: 1,
+          pageIndex: i,
+          body: 'Journal entry $i with a long line of text. ' * 4,
+        ),
+      ),
     ),
-    builder: (context, child) => MediaQuery(
-      data: MediaQuery.of(
-        context,
-      ).copyWith(textScaler: TextScaler.linear(scale), disableAnimations: true),
-      child: child!,
+    child: MaterialApp(
+      navigatorKey: navigatorKey,
+      locale: const Locale('en'),
+      localizationsDelegates: [
+        L10n.delegate,
+        ...GlobalMaterialLocalizations.delegates,
+      ],
+      supportedLocales: L10n.supportedLocales,
+      theme: paperfoldLibraryTheme(
+        ThemeData(colorScheme: PaperfoldTokens.colorScheme(Brightness.light)),
+      ),
+      builder: (context, child) => MediaQuery(
+        data: MediaQuery.of(context).copyWith(
+          textScaler: TextScaler.linear(scale),
+          disableAnimations: true,
+        ),
+        child: child!,
+      ),
+      home: child,
     ),
-    home: child,
   ),
 );
 
 void main() {
+  setUpAll(() {
+    container = ProviderContainer();
+  });
+  tearDownAll(() => container.dispose());
   setUp(() async {
     SharedPreferences.setMockInitialValues({});
     await Prefs().initPrefs();
@@ -174,7 +195,7 @@ void main() {
       for (final label in [
         'Contents',
         'Search',
-        'Bookmarks',
+        'Bookmark',
         'Notes',
         'Progress',
         'Quick settings',
@@ -206,7 +227,15 @@ void main() {
         ),
       );
       await tester.pumpWidget(
-        host(Scaffold(body: ShelfStage(showCovers: true, books: books)), scale),
+        host(
+          Scaffold(
+            body: ListenableBuilder(
+              listenable: Prefs(),
+              builder: (_, _) => ShelfStage(showCovers: true, books: books),
+            ),
+          ),
+          scale,
+        ),
       );
       await tester.pumpAndSettle();
       final context = tester.element(find.byType(ShelfStage));

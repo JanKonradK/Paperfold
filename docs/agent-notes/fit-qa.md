@@ -11,3 +11,13 @@
 - Run build_runner to restore generated source files. No provider source changes.
 - Next: run the matrix, correct defects, run dart analyze, then run the full test suite.
 - Device checks remain necessary for Android brightness, orientation, reader reflow, and frame timing.
+
+- Matrix result: 24 tests pass, including 30 Journal entries and 20 cover samples.
+- Corrected the Statistics date control. Its label now wraps between the arrow buttons at 320 dp.
+- Corrected Library FAB clearance when landscape uses bottom navigation.
+- Added bottom clearance to both scroll panes in wide Statistics.
+- Rotation tests retain the same Bookcase state.
+- Reader tool tests confirm all six callbacks. Existing window tests cover reset after pending changes.
+- Initial dart analyze result: no errors, 21 warnings, and 93 information messages. The result differs from the stated baseline.
+- Additional warnings concern existing development entry points, Riverpod rules, and test imports. No unrelated source changes.
+- Next: full test suite and final analysis.

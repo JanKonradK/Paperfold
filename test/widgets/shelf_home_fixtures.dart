@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:paperfold/enums/book_status.dart';
 import 'package:paperfold/enums/chart_mode.dart';
 import 'package:paperfold/models/book.dart';
+import 'package:paperfold/models/journal_page.dart';
 import 'package:paperfold/models/statistic_data_model.dart';
 import 'package:paperfold/models/wishlist_item.dart';
 import 'package:paperfold/providers/book_list.dart';
@@ -199,6 +200,7 @@ const emptyData = ShelfHomeData(
 ShelfHomeData fakeData = emptyData;
 
 List<Override> newTestOverrides({
+  List<JournalPage> journalEntries = const [],
   void Function()? onJournalBuild,
   void Function()? onJournalRefresh,
   void Function()? onChallengeRefresh,
@@ -212,7 +214,7 @@ List<Override> newTestOverrides({
       journalHomeProvider.overrideWith(
           () => FakeJournalHome(onJournalBuild, onJournalRefresh)),
       journalRecentSourceProvider.overrideWithValue(
-        (entries: (_) async => [], books: () async => []),
+        (entries: (offset) async => journalEntries.skip(offset).take(30).toList(), books: () async => fakeData.readingNow),
       ),
       readingChallengeProvider
           .overrideWith(() => FakeReadingChallenge(onChallengeRefresh)),

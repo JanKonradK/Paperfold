@@ -468,9 +468,7 @@ class _ShelfHomePageState extends ConsumerState<ShelfHomePage>
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       floatingActionButton: Padding(
         padding: EdgeInsets.only(
-          bottom: PaperfoldLayout.of(context).landscape
-              ? 0
-              : MediaQuery.paddingOf(context).bottom,
+          bottom: MediaQuery.paddingOf(context).bottom,
           right: PaperfoldLayout.of(context).gutter - 16,
         ),
         child: FloatingActionButton(
