@@ -59,11 +59,7 @@ class PaperfoldLayout {
   /// Landscape with room for the vertical navigation bar on the start edge.
   bool sideNavigation(BuildContext context) {
     final safe = MediaQuery.paddingOf(context);
-    final height = window.height - safe.vertical;
-    final largeText = MediaQuery.textScalerOf(context).scale(12) > 18;
-    return landscape &&
-        window.width - safe.horizontal >= 600 &&
-        height >= (largeText ? 432 : 320);
+    return landscape && window.width - safe.horizontal >= 600;
   }
 
   /// The default library covers per row in portrait.

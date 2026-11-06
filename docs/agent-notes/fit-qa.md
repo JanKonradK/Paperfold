@@ -21,3 +21,12 @@
 - Initial dart analyze result: no errors, 21 warnings, and 93 information messages. The result differs from the stated baseline.
 - Additional warnings concern existing development entry points, Riverpod rules, and test imports. No unrelated source changes.
 - Next: full test suite and final analysis.
+
+- Added a seventh window: 915x412 with double text. All matrix windows include 24 dp top and bottom insets.
+- Corrected side navigation at large text sizes. It remains on the side in landscape at widths of at least 600 dp.
+- The side bar scrolls when the available height cannot contain all four targets.
+- Corrected Settings category overflow. Removed equal-height rows so wrapped labels receive their natural height.
+- Matrix and Settings tests: 32 pass. Reader window checks: 5 pass.
+- Added a reader exit test after a successful brightness change and rotation lock. Reset occurs once and releases orientation.
+- Final analysis: no errors, 21 existing warnings, 93 existing information messages. No new diagnostics.
+- Final full suite remains in progress.

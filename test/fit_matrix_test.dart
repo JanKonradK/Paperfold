@@ -77,6 +77,7 @@ void main() {
     (const Size(320, 640), 2.0),
     (const Size(412, 915), 1.0),
     (const Size(915, 412), 1.0),
+    (const Size(915, 412), 2.0),
     (const Size(800, 1280), 1.0),
     (const Size(1280, 800), 1.0),
   ]) {
@@ -84,6 +85,7 @@ void main() {
     void window(WidgetTester tester) {
       tester.view.devicePixelRatio = 1;
       tester.view.physicalSize = size;
+      tester.view.padding = const FakeViewPadding(top: 24, bottom: 24);
       addTearDown(tester.view.reset);
     }
 
@@ -108,12 +110,13 @@ void main() {
       }
       expect(tester.takeException(), isNull);
       for (final tab in [0, 2, 3, 1]) {
+        await tester.ensureVisible(find.byKey(ValueKey('navigation-tab-$tab')));
         await tester.tap(find.byKey(ValueKey('navigation-tab-$tab')));
         await tester.pumpAndSettle();
         expect(tester.takeException(), isNull, reason: 'tab $tab');
         final scrolls = find.byType(Scrollable).hitTestable();
         if (scrolls.evaluate().isNotEmpty) {
-          await tester.drag(scrolls.first, const Offset(0, -3000));
+          await tester.drag(scrolls.last, const Offset(0, -3000));
           await tester.pumpAndSettle();
           expect(tester.takeException(), isNull, reason: 'tab $tab scrolled');
         }

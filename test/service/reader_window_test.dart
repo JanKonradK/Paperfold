@@ -73,6 +73,37 @@ void main() {
       await window.restore();
     },
   );
+  test(
+    'exit releases brightness and orientation after a successful lock',
+    () async {
+      final orientations = <dynamic>[];
+      messenger.setMockMethodCallHandler(SystemChannels.platform, (call) async {
+        if (call.method == 'SystemChrome.setPreferredOrientations') {
+          orientations.add(call.arguments);
+        }
+        return null;
+      });
+      addTearDown(
+        () => messenger.setMockMethodCallHandler(SystemChannels.platform, null),
+      );
+      final window = ReaderWindow();
+      await window.setBrightness(0.6);
+      await window.lockRotation(true);
+      expect(window.rotationLocked, isTrue);
+      await window.restore();
+      await window.restore();
+      expect(calls.map((call) => call.method), [
+        'brightness',
+        'rotation',
+        'restore',
+      ]);
+      expect(orientations, [
+        ['DeviceOrientation.landscapeLeft'],
+        <String>[],
+      ]);
+      window.dispose();
+    },
+  );
   test('resume reflects activity recreation clearing window state', () async {
     messenger.setMockMethodCallHandler(ReaderWindow.channel, (call) async {
       if (call.method == 'state') return {'brightness': -1.0, 'locked': false};
