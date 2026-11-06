@@ -97,6 +97,8 @@ class ShelfStage extends StatefulWidget {
     this.pickUpHint,
     this.openHint,
     this.showCovers = false,
+    this.headerBuilder,
+    this.emptyBuilder,
   });
   final List<ShelfBook> books;
   final String? shelfName;
@@ -107,6 +109,7 @@ class ShelfStage extends StatefulWidget {
   final Widget Function(BuildContext, ShelfBook)? optionsBuilder;
   final String? pickUpHint, openHint;
   final bool showCovers;
+  final WidgetBuilder? headerBuilder, emptyBuilder;
   static const headBand = 64.0, footBand = 96.0;
   static const runDuration = PaperfoldMotion.move;
   static const liftDuration = PaperfoldMotion.move;
@@ -119,6 +122,10 @@ class ShelfStage extends StatefulWidget {
 class ShelfStageState extends State<ShelfStage>
     with SingleTickerProviderStateMixin {
   final _scroll = ScrollController();
+  final _headerKey = GlobalKey();
+  double _headerHeight = 0;
+  Size? _geometry;
+  int? _density;
   final _focus = <String, FocusNode>{};
   late final AnimationController _layout;
   int _index = 0;
@@ -149,18 +156,25 @@ class ShelfStageState extends State<ShelfStage>
   void didUpdateWidget(ShelfStage oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.showCovers != widget.showCovers) {
-      if (_scroll.hasClients && _lastRects.isNotEmpty) {
-        final i = _lastRects.indexWhere((r) => r.bottom > _scroll.offset);
-        if (i >= 0) {
-          _anchor = i;
-          _anchorInset = _scroll.offset - _lastRects[i].top;
-        }
-      }
+      _captureAnchor();
       _layout.animateTo(
         widget.showCovers ? 1 : 0,
         duration: bookDetailDuration(context),
         curve: PaperfoldMotion.settle,
       );
+    }
+  }
+
+  void _captureAnchor() {
+    if (!_scroll.hasClients ||
+        _lastRects.isEmpty ||
+        _scroll.offset < _headerHeight)
+      return;
+    final offset = _scroll.offset - _headerHeight;
+    final i = _lastRects.indexWhere((r) => r.bottom > offset);
+    if (i >= 0) {
+      _anchor = i;
+      _anchorInset = offset - _lastRects[i].top;
     }
   }
 
@@ -209,6 +223,17 @@ class ShelfStageState extends State<ShelfStage>
   Widget build(BuildContext context) => LayoutBuilder(
     builder: (context, bounds) {
       final layout = PaperfoldLayout.of(context, constraints: bounds);
+      final geometry = Size(bounds.maxWidth, bounds.maxHeight);
+      if (_geometry != geometry || _density != Prefs().libraryCoversPerRow) {
+        _captureAnchor();
+        _geometry = geometry;
+        _density = Prefs().libraryCoversPerRow;
+      }
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        final height = _headerKey.currentContext?.size?.height ?? 0;
+        if (height != _headerHeight) setState(() => _headerHeight = height);
+      });
       final density = layout.covers(Prefs().libraryCoversPerRow);
       final columns = density.columns;
       final coverWidth = density.coverWidth;
@@ -322,7 +347,7 @@ class ShelfStageState extends State<ShelfStage>
           ];
           _lastRects = rects;
           if (_anchor != null && _anchor! < rects.length) {
-            final top = rects[_anchor!].top + _anchorInset;
+            final top = _headerHeight + rects[_anchor!].top + _anchorInset;
             WidgetsBinding.instance.addPostFrameCallback((_) {
               if (!mounted || !_scroll.hasClients) return;
               final offset = top.clamp(0.0, _scroll.position.maxScrollExtent);
@@ -331,7 +356,9 @@ class ShelfStageState extends State<ShelfStage>
             });
           }
           final height = rects.fold<double>(0, (v, r) => math.max(v, r.bottom));
-          final offset = _scroll.hasClients ? _scroll.offset : 0.0;
+          final offset = _scroll.hasClients
+              ? _scroll.offset - _headerHeight
+              : 0.0;
           return Opacity(
             opacity: spatial ? 1 : (1 - (t - _layout.value).abs()),
             child: Focus(
@@ -352,7 +379,7 @@ class ShelfStageState extends State<ShelfStage>
                       : -1;
                   _index = (_index + step).clamp(0, widget.books.length - 1);
                   _scroll.jumpTo(
-                    (rects[_index].top - 36).clamp(
+                    (_headerHeight + rects[_index].top - 36).clamp(
                       0,
                       _scroll.position.maxScrollExtent,
                     ),
@@ -376,6 +403,12 @@ class ShelfStageState extends State<ShelfStage>
                       PaperfoldSpace.lg,
                 ),
                 children: [
+                  SizedBox(
+                    key: _headerKey,
+                    child: widget.headerBuilder?.call(context),
+                  ),
+                  if (widget.books.isEmpty && widget.emptyBuilder != null)
+                    widget.emptyBuilder!(context),
                   SizedBox(
                     height: height + 16,
                     child: Stack(

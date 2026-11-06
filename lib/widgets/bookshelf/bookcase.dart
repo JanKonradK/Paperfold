@@ -21,9 +21,11 @@ class Bookcase extends StatefulWidget {
     this.showSignposts = true,
     this.showCovers = false,
     this.onOptions,
+    this.headerBuilder,
   });
 
   final List<ShelfRow> shelves;
+  final WidgetBuilder? headerBuilder;
   final int initialShelf;
 
   /// Opens the selected book detail.
@@ -99,23 +101,22 @@ class BookcaseState extends State<Bookcase>
               HeroMode(
                 enabled: i == _shelf,
                 child: RepaintBoundary(
-                  child:
-                      widget.shelves[i].isEmpty && widget.emptyBuilder != null
-                      ? widget.emptyBuilder!(context, widget.shelves[i])
-                      : ShelfStage(
-                          key: _stages.putIfAbsent(
-                            i,
-                            GlobalKey<ShelfStageState>.new,
-                          ),
-                          books: widget.shelves[i].books,
-                          shelfName: widget.shelves[i].name,
-                          showCovers: widget.showCovers,
-                          onOpen: widget.onOpen,
-                          onOptions: widget.onOptions,
-                          optionsBuilder: widget.optionsBuilder,
-                          pickUpHint: widget.pickUpHint,
-                          openHint: widget.openHint,
-                        ),
+                  child: ShelfStage(
+                    headerBuilder: widget.headerBuilder,
+                    emptyBuilder: widget.emptyBuilder == null
+                        ? null
+                        : (context) =>
+                              widget.emptyBuilder!(context, widget.shelves[i]),
+                    key: _stages.putIfAbsent(i, GlobalKey<ShelfStageState>.new),
+                    books: widget.shelves[i].books,
+                    shelfName: widget.shelves[i].name,
+                    showCovers: widget.showCovers,
+                    onOpen: widget.onOpen,
+                    onOptions: widget.onOptions,
+                    optionsBuilder: widget.optionsBuilder,
+                    pickUpHint: widget.pickUpHint,
+                    openHint: widget.openHint,
+                  ),
                 ),
               )
             else
