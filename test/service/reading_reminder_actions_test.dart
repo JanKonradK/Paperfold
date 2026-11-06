@@ -17,6 +17,7 @@ void main() {
       debugDefaultTargetPlatformOverride = TargetPlatform.android;
       AndroidFlutterLocalNotificationsPlugin.registerWith();
       final calls = <MethodCall>[];
+      var failInitialization = true;
       const channel = MethodChannel(
         'dexterous.com/flutter/local_notifications',
       );
@@ -24,6 +25,10 @@ void main() {
           TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
       messenger.setMockMethodCallHandler(channel, (call) async {
         calls.add(call);
+        if (call.method == 'initialize' && failInitialization) {
+          failInitialization = false;
+          throw PlatformException(code: 'temporary_failure');
+        }
         if (call.method == 'getNotificationAppLaunchDetails')
           return {
             'notificationLaunchedApp': true,
@@ -50,6 +55,10 @@ void main() {
       final l10n = await L10n.delegate.load(const Locale('en'));
       try {
         expect(Prefs().readingReminderEnabled, isFalse);
+        await expectLater(
+          ReadingReminder.initializeLaunch(),
+          throwsA(isA<PlatformException>()),
+        );
         await ReadingReminder.schedule(l10n, 1200);
         final schedule =
             calls

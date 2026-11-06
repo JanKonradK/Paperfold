@@ -29,7 +29,11 @@ abstract final class ReadingReminder {
   static Future<void> initializeLaunch() => _init();
 
   static Future<void>? _initializing;
-  static Future<void> _init() => _initializing ??= _initialize();
+  static Future<void> _init() =>
+      _initializing ??= _initialize().onError((error, stack) {
+        _initializing = null;
+        Error.throwWithStackTrace(error, stack);
+      });
 
   static Future<void> _initialize() async {
     if (_ready) return;

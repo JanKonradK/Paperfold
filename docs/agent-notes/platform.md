@@ -25,11 +25,14 @@
 ## Checks
 
 - Five targeted tests passed, including cold and warm notification callbacks.
+- A new check confirms retry after notification initialization fails. Its result is pending.
 - flutter gen-l10n completed.
 - build_runner completed and wrote 77 generated files.
 - The native Kotlin widget classes compiled.
-- The debug APK build is still in progress.
-- The full test suite stopped after 40 passing tests: Dart reported insufficient memory.
+- All Dart and native debug compilation steps passed.
+- APK packaging failed at :app:packageDebug. A retry with a stack trace is in progress.
+- The first full test suite stopped after 40 passing tests: Dart reported insufficient memory.
+- A second full test suite has more than 80 passing tests and continues.
 - Static analysis also stopped because the host had insufficient memory.
 - Several other worktrees have concurrent checks. Do not stop their processes.
 
