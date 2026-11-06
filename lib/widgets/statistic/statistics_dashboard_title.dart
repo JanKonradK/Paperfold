@@ -47,8 +47,14 @@ class _StatisticDashboardTitleState
 
     return Row(
       children: [
-        TotalReadTime(),
-        const Spacer(),
+        // The large total shrinks rather than overflow at 200% text.
+        Expanded(
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: AlignmentDirectional.centerStart,
+            child: TotalReadTime(),
+          ),
+        ),
         if (tilesState.isEditing)
           Row(
             mainAxisSize: MainAxisSize.min,

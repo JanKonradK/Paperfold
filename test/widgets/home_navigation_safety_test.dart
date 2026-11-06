@@ -115,6 +115,19 @@ void main() {
     final bookcase = tester.state<BookcaseState>(find.byType(Bookcase));
     final stage = bookcase.activeStage!;
     final firstBook = find.byKey(const ValueKey('shelf-spine-book-1'));
+    // At 200% text the Continue pane fills a small screen; the shelf is
+    // below it in the same scroll.
+    await tester.scrollUntilVisible(
+      firstBook,
+      120,
+      scrollable: find
+          .descendant(
+            of: find.byKey(const ValueKey('shelf-spines')),
+            matching: find.byType(Scrollable),
+          )
+          .first,
+    );
+    await tester.pumpAndSettle();
     tester.widget<InkWell>(firstBook).focusNode!.requestFocus();
     await tester.pump();
     await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
