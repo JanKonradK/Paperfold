@@ -33,3 +33,23 @@
 - Hidden hover controls on Android. All preference/engine capabilities retained.
 - Fixed asynchronous theme refresh replacing a newer panel and natural landscape lock.
 - Validation underway: scoped analyze clean; navigation tests pass.
+
+## Final checks and handoff
+- Reader checks: 27 pass (18 chrome/layout, 1 style, 4 navigation, 4 window).
+- Layout coverage: 360x800, 412x915, 600x960, 1095x1750 and reversed,
+  plus a 480-wide split window, with RTL and 200% text. Motion-off checks pass.
+- Scoped Flutter analyze: no errors or warnings. The existing hasFlag call in
+  reader_chrome_test.dart has one deprecation info message.
+- flutter gen-l10n completed for all 16 locales. No dependencies changed.
+  flutter pub get restored missing worktree package metadata. build_runner
+  restored ignored generated files. Generated platform registrant changes were reverted.
+- Final flutter test --no-pub --concurrency=1: 492 pass, 1 fails.
+  Failure: home_navigation_safety_test, four tabs at 320px/large text.
+  It reports an overflow in protected shelf_home_page.dart:529 and a wrapped
+  Statistics label. No protected source files were changed.
+- Native compilation was attempted through gradlew, but this checkout has no
+  android/gradlew.bat. Android device/emulator verification remains open:
+  brightness restoration, rotation refusal/recreation, keyboard over a WebView,
+  locator retention through real engine reflow, eInk and tablet frame timing.
+- No foundation changes requested. All changes are committed. The line-ending
+  follow-up preserves the CRLF style of the original reader source files.
