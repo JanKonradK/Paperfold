@@ -5,6 +5,7 @@ import 'package:paperfold/config/shared_preference_provider.dart';
 import 'package:paperfold/l10n/generated/L10n.dart';
 import 'package:paperfold/models/book.dart';
 import 'package:paperfold/page/book_detail.dart';
+import 'package:paperfold/providers/tags.dart';
 import 'package:paperfold/widgets/book_light.dart';
 import 'package:paperfold/widgets/bookshelf/book_detail_route.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -19,10 +20,13 @@ void main() {
         ..id = 42
         ..title = 'The Left Hand of Darkness'
         ..author = 'Ursula Le Guin';
-      await tester.binding.setSurfaceSize(const Size(320, 568));
-      addTearDown(() => tester.binding.setSurfaceSize(null));
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = const Size(320, 568);
+      addTearDown(tester.view.reset);
       await tester.pumpWidget(
         ProviderScope(
+        // No database in a widget test: the book has no tags yet.
+        overrides: [bookTagEditorProvider.overrideWith(_NoTags.new)],
           child: MaterialApp(
             localizationsDelegates: [
               L10n.delegate,
@@ -51,4 +55,10 @@ void main() {
       expect(tester.takeException(), isNull);
     },
   );
+}
+
+class _NoTags extends BookTagEditor {
+  @override
+  Future<BookTagState> build(int bookId) async =>
+      const BookTagState(tags: [], attachedIds: {});
 }

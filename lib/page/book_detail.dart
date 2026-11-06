@@ -1,3 +1,5 @@
+import 'package:paperfold/utils/paperfold_layout.dart';
+import 'package:paperfold/widgets/common/paperfold_grid.dart';
 import 'package:paperfold/widgets/bookshelf/book_spine.dart';
 import 'package:paperfold/dao/reading_time.dart';
 import 'package:paperfold/config/shared_preference_provider.dart';
@@ -59,6 +61,7 @@ class _BookDetailState extends ConsumerState<BookDetail> {
   late double rating;
   bool isEditing = false;
   late Book _book;
+  bool _aboutOpen = false;
   final TextEditingController _newTagController = TextEditingController();
   Color? _pendingTagColor;
 
@@ -104,146 +107,150 @@ class _BookDetailState extends ConsumerState<BookDetail> {
         : percent > 0
         ? l10n.tileContinueReadingTitle
         : l10n.bookStartReading;
+    final layout = PaperfoldLayout.of(context);
+    // Beside the text on a tablet or in landscape; above it on a phone.
+    final side = layout.content >= 600 || layout.landscape;
+    final coverWidth = layout.tablet
+        ? (layout.landscape ? 160.0 : 180.0)
+        : (layout.landscape ? 112.0 : 144.0);
     final cover = BookCover(
       book: _book,
-      width: 144,
-      height: 208,
+      width: coverWidth,
+      height: coverWidth / .68,
       radius: PaperfoldShape.object,
     );
-    Widget buildBookBaseDetail(double width) => Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Center(
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              borderRadius: PaperfoldShape.paneRadius,
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  theme.colorScheme.onSurface.withValues(alpha: .08),
-                  Colors.transparent,
-                ],
-                stops: const [0, .4],
-              ),
+    final primaryButton = FilledButton.icon(
+      key: const ValueKey('open-shelf-book'),
+      style: FilledButton.styleFrom(
+        minimumSize: const Size.fromHeight(PaperfoldSize.primary),
+      ),
+      onPressed: () => pushToReadingPage(ref, context, _book),
+      icon: Icon(_book.isPhysical ? Icons.edit_note : Icons.menu_book_outlined),
+      label: Text(primaryLabel),
+    );
+    final coverCase = DecoratedBox(
+      decoration: BoxDecoration(
+        borderRadius: PaperfoldShape.paneRadius,
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            theme.colorScheme.onSurface.withValues(alpha: .08),
+            Colors.transparent,
+          ],
+          stops: const [0, .4],
+        ),
+      ),
+      child: PaperfoldPane(
+        tier: PaperfoldGlassTier.glassine,
+        padding: const EdgeInsets.all(PaperfoldSpace.lg),
+        child: BookDetailHero(
+          id: widget.heroId ?? 'book-${_book.id}',
+          cover: cover,
+          child: cover,
+        ),
+      ),
+    );
+    final align = side ? TextAlign.start : TextAlign.center;
+    final headerText = BookDetailArrival(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            _book.title,
+            textAlign: align,
+            style: theme.textTheme.headlineMedium?.copyWith(
+              fontFamily: PaperfoldTypeTokens.journalFamily,
             ),
-            child: PaperfoldPane(
+          ),
+          const SizedBox(height: PaperfoldSpace.xs),
+          Text(
+            [
+              _book.author,
+              _book.isPhysical
+                  ? l10n.physicalBookAdd
+                  : _book.filePath.split('.').last.toUpperCase(),
+            ].where((s) => s.isNotEmpty).join(' · '),
+            textAlign: align,
+          ),
+          const SizedBox(height: PaperfoldSpace.md),
+          if (!widget.wishlist)
+            PaperfoldPane(
               tier: PaperfoldGlassTier.glassine,
-              padding: const EdgeInsets.all(PaperfoldSpace.lg),
-              child: BookDetailHero(
-                id: widget.heroId ?? 'book-${_book.id}',
-                cover: cover,
-                child: cover,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    l10n.bookProgressThrough((percent * 100).round()),
+                    style: theme.textTheme.titleMedium,
+                  ),
+                  const SizedBox(height: PaperfoldSpace.xs),
+                  LinearProgressIndicator(value: percent),
+                  if (_book.isPhysical)
+                    Text(
+                      '${l10n.physicalBookCurrentPage}: ${_book.currentPage}',
+                    ),
+                  if (_book.startedOn != null)
+                    Padding(
+                      padding: const EdgeInsets.only(top: PaperfoldSpace.xs),
+                      child: Text(
+                        l10n.bookStartedOn(
+                          MaterialLocalizations.of(context)
+                              .formatShortDate(_book.startedOn!),
+                        ),
+                      ),
+                    ),
+                ],
               ),
             ),
-          ),
-        ),
-        const SizedBox(height: PaperfoldSpace.lg),
-        BookDetailArrival(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(
-                _book.title,
-                textAlign: TextAlign.center,
-                style: theme.textTheme.headlineMedium?.copyWith(
-                  fontFamily: PaperfoldTypeTokens.journalFamily,
-                ),
-              ),
-              const SizedBox(height: PaperfoldSpace.xs),
-              Text(
-                [
-                  _book.author,
-                  _book.isPhysical
-                      ? l10n.physicalBookAdd
-                      : _book.filePath.split('.').last.toUpperCase(),
-                ].where((s) => s.isNotEmpty).join(' · '),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: PaperfoldSpace.md),
-              if (!widget.wishlist)
-                PaperfoldPane(
-                  tier: PaperfoldGlassTier.glassine,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        l10n.bookProgressThrough((percent * 100).round()),
-                        style: theme.textTheme.titleMedium,
-                      ),
-                      const SizedBox(height: PaperfoldSpace.xs),
-                      LinearProgressIndicator(value: percent),
-                      if (_book.isPhysical)
-                        Text(
-                          '${l10n.physicalBookCurrentPage}: ${_book.currentPage}',
-                        ),
-                      if (_book.startedOn != null)
-                        Padding(
-                          padding: const EdgeInsets.only(
-                            top: PaperfoldSpace.xs,
-                          ),
-                          child: Text(
-                            l10n.bookStartedOn(
-                              MaterialLocalizations.of(context)
-                                  .formatShortDate(_book.startedOn!),
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
-              const SizedBox(height: PaperfoldSpace.sm),
-              if (!widget.wishlist)
-                Row(
-                  children: [
-                    Expanded(
-                      child: FilledButton.tonalIcon(
-                        onPressed: () => Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) => BookJournalPage(book: _book),
-                          ),
-                        ),
-                        icon: const Icon(Icons.edit_note),
-                        label: Text(l10n.navJournal),
+          const SizedBox(height: PaperfoldSpace.sm),
+          if (!widget.wishlist && side) ...[
+            primaryButton,
+            const SizedBox(height: PaperfoldSpace.xs),
+          ],
+          if (!widget.wishlist)
+            Row(
+              children: [
+                Expanded(
+                  child: FilledButton.tonalIcon(
+                    onPressed: () => Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => BookJournalPage(book: _book),
                       ),
                     ),
-                    const SizedBox(width: PaperfoldSpace.xs),
-                    Expanded(
-                      child: FilledButton.tonalIcon(
-                        onPressed: () => showShelfBookShelvesSheet(
-                          context,
-                          _book,
-                          onChanged: () async {},
-                        ),
-                        icon: const Icon(Icons.library_books_outlined),
-                        label: Text(l10n.shelfBookOptionShelves),
-                      ),
-                    ),
-                  ],
-                ),
-              if (_book.description?.isNotEmpty == true)
-                Padding(
-                  padding: const EdgeInsets.symmetric(
-                    vertical: PaperfoldSpace.lg,
+                    icon: const Icon(Icons.edit_note),
+                    label: Text(l10n.navJournal),
                   ),
-                  child: Text(_book.description!),
                 ),
-            ],
-          ),
-        ),
-      ],
+                const SizedBox(width: PaperfoldSpace.xs),
+                Expanded(
+                  child: FilledButton.tonalIcon(
+                    onPressed: () => showShelfBookShelvesSheet(
+                      context,
+                      _book,
+                      onChanged: () async {},
+                    ),
+                    icon: const Icon(Icons.library_books_outlined),
+                    label: Text(l10n.shelfBookOptionShelves),
+                  ),
+                ),
+              ],
+            ),
+        ],
+      ),
     );
 
     Widget buildEditButton() {
-      return Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      return Wrap(
+        alignment: WrapAlignment.spaceBetween,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        spacing: PaperfoldSpace.xs,
+        runSpacing: PaperfoldSpace.xs,
         children: [
-          Flexible(
-            child: HintBanner(
-              hintKey: HintKey.editBookDetails,
-              margin: EdgeInsetsDirectional.only(end: 10),
-              child: Text(L10n.of(context).bookDetailEditHint),
-            ),
+          HintBanner(
+            hintKey: HintKey.editBookDetails,
+            margin: EdgeInsetsDirectional.zero,
+            child: Text(L10n.of(context).bookDetailEditHint),
           ),
           OutlinedButton.icon(
             icon: const Icon(Icons.edit),
@@ -431,10 +438,8 @@ class _BookDetailState extends ConsumerState<BookDetail> {
                 ),
               );
             } else {
-              return const Padding(
-                padding: EdgeInsets.only(left: 20, right: 20),
-                child: CircularProgressIndicator(),
-              );
+              // A local lookup: show nothing rather than a spinner.
+              return const SizedBox.shrink();
             }
           },
         );
@@ -449,7 +454,6 @@ class _BookDetailState extends ConsumerState<BookDetail> {
 
       return SizedBox(
         height: 130,
-        width: MediaQuery.of(context).size.width,
         child: FilledContainer(
           child: ListView(
             padding: const EdgeInsets.symmetric(horizontal: 10),
@@ -761,7 +765,7 @@ class _BookDetailState extends ConsumerState<BookDetail> {
                     }),
                   );
                 } else {
-                  return const CircularProgressIndicator();
+                  return const SizedBox.shrink();
                 }
               },
         );
@@ -771,31 +775,25 @@ class _BookDetailState extends ConsumerState<BookDetail> {
         fontSize: 15,
         fontWeight: FontWeight.bold,
       );
-      return SingleChildScrollView(
-        child: SizedBox(
-          // height: 500,
-          width: MediaQuery.of(context).size.width,
-          child: FilledContainer(
-            padding: const EdgeInsets.all(12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '${L10n.of(context).bookDetailImportDate}${widget.book.createTime.toString().substring(0, 10)}',
-                  style: textStyle,
-                ),
-                Text(
-                  '${L10n.of(context).bookDetailLastReadDate}${widget.book.updateTime.toString().substring(0, 10)}',
-                  style: textStyle,
-                ),
-                const Divider(),
-                SizedBox(
-                  // height: 200,
-                  child: buildReadingDetail(),
-                ),
-              ],
+      return FilledContainer(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              '${L10n.of(context).bookDetailImportDate}${widget.book.createTime.toString().substring(0, 10)}',
+              style: textStyle,
             ),
-          ),
+            Text(
+              '${L10n.of(context).bookDetailLastReadDate}${widget.book.updateTime.toString().substring(0, 10)}',
+              style: textStyle,
+            ),
+            const Divider(),
+            SizedBox(
+              // height: 200,
+              child: buildReadingDetail(),
+            ),
+          ],
         ),
       );
     }
@@ -828,25 +826,6 @@ class _BookDetailState extends ConsumerState<BookDetail> {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           if (value == 'customise') buildBindingSection(),
-                          if (value == 'details') ...[
-                            RatingBar.builder(
-                              initialRating: rating,
-                              allowHalfRating: true,
-                              itemSize: 48,
-                              itemBuilder: (_, _) => Icon(
-                                Icons.star,
-                                color: theme.colorScheme.primary,
-                              ),
-                              onRatingUpdate: (value) {
-                                setState(() => rating = value);
-                                updateBookRating(_book, value);
-                              },
-                            ),
-                            buildTagEditor(),
-                            buildEditButton(),
-                            buildBookStatistics(),
-                            buildMoreDetail(),
-                          ],
                         ],
                       ),
                     ),
@@ -854,10 +833,6 @@ class _BookDetailState extends ConsumerState<BookDetail> {
                 }
               },
               itemBuilder: (_) => [
-                PopupMenuItem(
-                  value: 'details',
-                  child: Text(l10n.shelfBookOptionDetails),
-                ),
                 PopupMenuItem(
                   value: 'customise',
                   child: Text(l10n.shelfBookOptionCustomise),
@@ -879,42 +854,100 @@ class _BookDetailState extends ConsumerState<BookDetail> {
         ).background,
         child: SafeArea(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.all(PaperfoldSpace.gutter),
-            child: Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 600),
-                child: buildBookBaseDetail(MediaQuery.sizeOf(context).width),
-              ),
+            padding: EdgeInsets.all(layout.gutter),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                if (side)
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      coverCase,
+                      const SizedBox(width: PaperfoldSpace.lg),
+                      Expanded(child: headerText),
+                    ],
+                  )
+                else ...[
+                  Center(child: coverCase),
+                  const SizedBox(height: PaperfoldSpace.lg),
+                  headerText,
+                ],
+                const SizedBox(height: PaperfoldSpace.lg),
+                PaperfoldGrid(
+                  columns: layout.content >= 720 ? 2 : 1,
+                  gap: 16,
+                  children: [
+                    if (_book.description?.isNotEmpty == true)
+                      PaperfoldPane(
+                        tier: PaperfoldGlassTier.glassine,
+                        padding: EdgeInsets.all(layout.panePadding),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              _book.description!,
+                              maxLines: _aboutOpen ? null : 6,
+                              overflow: _aboutOpen
+                                  ? null
+                                  : TextOverflow.ellipsis,
+                            ),
+                            if (!_aboutOpen)
+                              TextButton(
+                                onPressed: () =>
+                                    setState(() => _aboutOpen = true),
+                                child: Text(l10n.more),
+                              ),
+                          ],
+                        ),
+                      ),
+                    if (!widget.wishlist)
+                      PaperfoldPane(
+                        tier: PaperfoldGlassTier.glassine,
+                        padding: EdgeInsets.all(layout.panePadding),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Text(
+                              l10n.shelfBookOptionDetails,
+                              style: theme.textTheme.titleMedium,
+                            ),
+                            Align(
+                              alignment: AlignmentDirectional.centerStart,
+                              child: RatingBar.builder(
+                                initialRating: rating,
+                                allowHalfRating: true,
+                                itemSize: 40,
+                                itemBuilder: (_, _) => Icon(
+                                  Icons.star,
+                                  color: theme.colorScheme.primary,
+                                ),
+                                onRatingUpdate: (value) {
+                                  setState(() => rating = value);
+                                  updateBookRating(_book, value);
+                                },
+                              ),
+                            ),
+                            buildBookStatistics(),
+                            buildTagEditor(),
+                            buildEditButton(),
+                            buildMoreDetail(),
+                          ],
+                        ),
+                      ),
+                  ],
+                ),
+              ],
             ),
           ),
         ),
       ),
-      bottomNavigationBar: widget.wishlist
+      // A phone keeps the main action under the thumb at every text size.
+      bottomNavigationBar: widget.wishlist || side
           ? null
           : SafeArea(
               child: Padding(
-                padding: const EdgeInsets.all(PaperfoldSpace.gutter),
-                child: Center(
-                  heightFactor: 1,
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 600),
-                    child: FilledButton.icon(
-                      key: const ValueKey('open-shelf-book'),
-                      style: FilledButton.styleFrom(
-                        minimumSize: const Size.fromHeight(
-                          PaperfoldSize.primary,
-                        ),
-                      ),
-                      onPressed: () => pushToReadingPage(ref, context, _book),
-                      icon: Icon(
-                        _book.isPhysical
-                            ? Icons.edit_note
-                            : Icons.menu_book_outlined,
-                      ),
-                      label: Text(primaryLabel),
-                    ),
-                  ),
-                ),
+                padding: EdgeInsets.all(layout.gutter),
+                child: primaryButton,
               ),
             ),
     );

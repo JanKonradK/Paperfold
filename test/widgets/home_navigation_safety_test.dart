@@ -34,8 +34,9 @@ void main() {
             ..addFont(rootBundle.load('assets/fonts/SourceSans3-SemiBold.ttf')))
           .load();
     });
-    await tester.binding.setSurfaceSize(const Size(320, 568));
-    addTearDown(() => tester.binding.setSurfaceSize(null));
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(320, 568);
+    addTearDown(tester.view.reset);
     await tester.pumpWidget(
       ProviderScope(
         overrides: newTestOverrides(),

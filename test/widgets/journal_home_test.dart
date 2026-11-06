@@ -11,12 +11,15 @@ class _Dao extends JournalDao {
 }
 void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));
-  testWidgets('writing comes before records and Recent entries is the default', (tester) async {
+  testWidgets('the first entry is on the first screen and Recent entries is the default', (tester) async {
     await tester.pumpWidget(journalTestHost(JournalHomePage(dao: _Dao(), books: const [])));
     await tester.pumpAndSettle();
     expect(find.text('An unassigned thought'), findsOneWidget);
     final segment = tester.widget<SegmentedButton<bool>>(find.byType(SegmentedButton<bool>));
     expect(segment.selected, {false});
-    expect(tester.getTopLeft(find.text('An unassigned thought')).dy, lessThan(tester.getTopLeft(find.text('Reading challenge')).dy));
+    // The tools are one short row above the feed, so paging never buries
+    // them, and the writing still starts on the first screen.
+    expect(tester.getTopLeft(find.text('Reading challenge')).dy, lessThan(tester.getTopLeft(find.text('An unassigned thought')).dy));
+    expect(find.text('An unassigned thought').hitTestable(), findsOneWidget);
   });
 }

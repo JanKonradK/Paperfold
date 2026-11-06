@@ -5,6 +5,7 @@ import 'package:paperfold/config/shared_preference_provider.dart';
 import 'package:paperfold/l10n/generated/L10n.dart';
 import 'package:paperfold/models/book.dart';
 import 'package:paperfold/page/book_detail.dart';
+import 'package:paperfold/providers/tags.dart';
 import 'package:paperfold/widgets/book_light.dart';
 import 'package:paperfold/widgets/bookshelf/book_detail_route.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -18,6 +19,8 @@ void main() {
     final book = Book.mock()..id = 7;
     await tester.pumpWidget(
       ProviderScope(
+        // No database in a widget test: the book has no tags yet.
+        overrides: [bookTagEditorProvider.overrideWith(_NoTags.new)],
         child: MaterialApp(
           localizationsDelegates: [
             L10n.delegate,
@@ -121,4 +124,10 @@ void main() {
       },
     );
   }
+}
+
+class _NoTags extends BookTagEditor {
+  @override
+  Future<BookTagState> build(int bookId) async =>
+      const BookTagState(tags: [], attachedIds: {});
 }

@@ -18,6 +18,9 @@ import 'package:paperfold/providers/journal_home.dart';
 import 'package:paperfold/providers/month_tracker.dart';
 import 'package:paperfold/service/book.dart';
 import 'package:paperfold/service/quick_capture.dart';
+import 'package:paperfold/utils/paperfold_layout.dart';
+import 'package:paperfold/widgets/common/paperfold_grid.dart';
+import 'package:paperfold/widgets/common/paperfold_pane.dart';
 import 'package:paperfold/widgets/book_light.dart';
 import 'package:paperfold/widgets/paperfold_glass_surface.dart';
 import 'package:paperfold/page/journal/journal_photo.dart';
@@ -142,150 +145,196 @@ class _JournalHomePageState extends ConsumerState<JournalHomePage> {
       ),
       body: RefreshIndicator(
         onRefresh: () => _load(reset: true),
-        child: _JournalColumn(
-          child: ListView(
-            padding: EdgeInsets.fromLTRB(
-              PaperfoldSpace.gutter,
-              0,
-              PaperfoldSpace.gutter,
-              bottom + PaperfoldSize.fab + PaperfoldSpace.xl,
-            ),
-            children: [
-              Text(
-                '${DateFormat.MMMMEEEEd(Localizations.localeOf(context).toLanguageTag()).format(now)}${today == null ? '' : ' · ${l.pagesToday(today)}'}',
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final layout = PaperfoldLayout.of(
+              context,
+              constraints: constraints,
+            );
+            final scheme = Theme.of(context).colorScheme;
+            // Entries side by side only where each still reads as a page.
+            final entryColumns = layout.landscape
+                ? layout.columns(400, gap: 16, max: 3)
+                : layout.content >= 840
+                ? 2
+                : 1;
+            final tools = [
+              (
+                Icons.local_library_outlined,
+                l.challengeTitle,
+                const ReadingChallengePage(),
               ),
-              const SizedBox(height: PaperfoldSpace.md),
-              SegmentedButton<bool>(
-                segments: [
-                  ButtonSegment(value: false, label: Text(l.recentEntries)),
-                  ButtonSegment(value: true, label: Text(l.journalBooks)),
-                ],
-                selected: {_byBook},
-                onSelectionChanged: (value) =>
-                    setState(() => _byBook = value.single),
+              (
+                Icons.calendar_month_outlined,
+                l.monthTrackerTitle,
+                const MonthTrackerPage(),
               ),
-              const SizedBox(height: PaperfoldSpace.md),
-              if (_byBook)
-                ...entries.when(
-                  data: (items) => items
-                      .map(
-                        (entry) => ListTile(
-                          title: Text(entry.book.title),
-                          subtitle: Text(l.journalPagesCount(entry.pageCount)),
-                          onTap: () => Navigator.of(context).push(
-                            MaterialPageRoute<void>(
-                              builder: (_) => BookJournalPage(book: entry.book),
-                            ),
-                          ),
+              (
+                Icons.format_quote_outlined,
+                l.tileNotesTotalTitle,
+                Scaffold(
+                  appBar: AppBar(title: Text(l.tileNotesTotalTitle)),
+                  body: const NotesPage(),
+                ),
+              ),
+            ];
+            return ListView(
+              padding: EdgeInsets.fromLTRB(
+                layout.gutter,
+                0,
+                layout.gutter,
+                bottom + PaperfoldSize.fab + PaperfoldSpace.xl,
+              ),
+              children: [
+                Text(
+                  '${DateFormat.MMMMEEEEd(Localizations.localeOf(context).toLanguageTag()).format(now)}${today == null ? '' : ' · ${l.pagesToday(today)}'}',
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+                const SizedBox(height: PaperfoldSpace.md),
+                // The tools come first, so paging the feed never buries them.
+                PaperfoldGrid(
+                  columns: MediaQuery.textScalerOf(context).scale(1) > 1.5
+                      ? 1
+                      : layout.columns(160, max: 3),
+                  equalHeight: true,
+                  children: [
+                    for (final tool in tools)
+                      PaperfoldPane(
+                        padding: const EdgeInsets.all(PaperfoldSpace.md),
+                        color: scheme.surfaceContainerLow,
+                        semanticLabel: tool.$2,
+                        onTap: () => Navigator.of(context).push(
+                          MaterialPageRoute<void>(builder: (_) => tool.$3),
                         ),
-                      )
-                      .toList(),
-                  error: (_, _) => [Text(l.journalLoadFailed)],
-                  loading: () => [const LinearProgressIndicator()],
-                )
-              else ...[
-                for (var i = 0; i < _pages.length; i++)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: PaperfoldSpace.sm),
-                    child: i == featured && _books[_pages[i].bookId] != null
-                        ? BookLight(
-                            coverPath: _books[_pages[i].bookId]!.coverFullPath,
-                            fallback: Theme.of(context).colorScheme.primary,
-                            borderRadius: PaperfoldShape.paneRadius,
-                            fade: false,
-                            child: Padding(
-                              padding: const EdgeInsets.all(PaperfoldSpace.sm),
-                              child: PaperfoldGlassSurface(
-                                tier: PaperfoldGlassTier.glassine,
-                                borderRadius: PaperfoldShape.controlRadius,
-                                child: _entry(_pages[i]),
+                        child: Row(
+                          children: [
+                            Icon(tool.$1, color: scheme.primary),
+                            const SizedBox(width: PaperfoldSpace.sm),
+                            Expanded(
+                              child: Text(
+                                tool.$2,
+                                style: Theme.of(context).textTheme.titleSmall,
                               ),
                             ),
-                          )
-                        : _entry(_pages[i]),
-                  ),
-                if (_pages.isEmpty && !_loading && !_failed)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                      vertical: PaperfoldSpace.xl,
-                    ),
-                    child: Text(l.journalPlaceholderTitle),
-                  ),
-                if (_loading) const Center(child: CircularProgressIndicator()),
-                if (_failed)
-                  TextButton(
-                    onPressed: () => _load(reset: true),
-                    child: Text(l.journalLoadFailed),
-                  ),
-                if (_more && !_loading)
-                  TextButton(
-                    onPressed: _load,
-                    child: const Icon(Icons.expand_more),
-                  ),
-              ],
-              const SizedBox(height: PaperfoldSpace.lg),
-              LayoutBuilder(
-                builder: (context, constraints) => Wrap(
-                  children: [
-                    for (final record in [
-                      (
-                        Icons.local_library_outlined,
-                        l.challengeTitle,
-                        const ReadingChallengePage(),
-                      ),
-                      (
-                        Icons.calendar_month_outlined,
-                        l.monthTrackerTitle,
-                        const MonthTrackerPage(),
-                      ),
-                      (
-                        Icons.format_quote_outlined,
-                        l.tileNotesTotalTitle,
-                        Scaffold(
-                          appBar: AppBar(title: Text(l.tileNotesTotalTitle)),
-                          body: const NotesPage(),
-                        ),
-                      ),
-                    ])
-                      SizedBox(
-                        width:
-                            constraints.maxWidth /
-                            (MediaQuery.textScalerOf(context).scale(1) > 1.5
-                                ? 1
-                                : 3),
-                        child: TextButton(
-                          onPressed: () => Navigator.of(context).push(
-                            MaterialPageRoute<void>(builder: (_) => record.$3),
-                          ),
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                              vertical: PaperfoldSpace.xs,
-                            ),
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(record.$1),
-                                const SizedBox(height: PaperfoldSpace.xs),
-                                Text(record.$2, textAlign: TextAlign.center),
-                              ],
-                            ),
-                          ),
+                            const Icon(Icons.chevron_right),
+                          ],
                         ),
                       ),
                   ],
                 ),
-              ),
-            ],
-          ),
+                const SizedBox(height: PaperfoldSpace.lg),
+                SegmentedButton<bool>(
+                  segments: [
+                    ButtonSegment(value: false, label: Text(l.recentEntries)),
+                    ButtonSegment(value: true, label: Text(l.journalBooks)),
+                  ],
+                  selected: {_byBook},
+                  onSelectionChanged: (value) =>
+                      setState(() => _byBook = value.single),
+                ),
+                const SizedBox(height: PaperfoldSpace.md),
+                if (_byBook)
+                  entries.when(
+                    data: (items) => PaperfoldGrid(
+                      columns: layout.columns(280, gap: 16, max: 3),
+                      gap: 16,
+                      children: [
+                        for (final entry in items)
+                          PaperfoldPane(
+                            color: scheme.surfaceContainerLow,
+                            padding: EdgeInsets.all(layout.panePadding),
+                            onTap: () => Navigator.of(context).push(
+                              MaterialPageRoute<void>(
+                                builder: (_) =>
+                                    BookJournalPage(book: entry.book),
+                              ),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  entry.book.title,
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .titleMedium,
+                                ),
+                                Text(l.journalPagesCount(entry.pageCount)),
+                              ],
+                            ),
+                          ),
+                      ],
+                    ),
+                    error: (_, _) => Text(l.journalLoadFailed),
+                    loading: () => const LinearProgressIndicator(),
+                  )
+                else ...[
+                  PaperfoldGrid(
+                    columns: entryColumns,
+                    gap: 16,
+                    children: [
+                      for (var i = 0; i < _pages.length; i++)
+                        i == featured && _books[_pages[i].bookId] != null
+                            ? BookLight(
+                                coverPath:
+                                    _books[_pages[i].bookId]!.coverFullPath,
+                                fallback: scheme.primary,
+                                borderRadius: PaperfoldShape.paneRadius,
+                                fade: false,
+                                child: Padding(
+                                  padding: const EdgeInsets.all(
+                                    PaperfoldSpace.sm,
+                                  ),
+                                  child: PaperfoldGlassSurface(
+                                    tier: PaperfoldGlassTier.glassine,
+                                    borderRadius: BorderRadius.circular(
+                                      PaperfoldShape.nested(
+                                        PaperfoldShape.pane,
+                                        PaperfoldSpace.sm,
+                                      ),
+                                    ),
+                                    child: _entry(_pages[i], layout),
+                                  ),
+                                ),
+                              )
+                            : PaperfoldPane(
+                                color: scheme.surfaceContainerLow,
+                                padding: EdgeInsets.zero,
+                                child: _entry(_pages[i], layout),
+                              ),
+                    ],
+                  ),
+                  if (_pages.isEmpty && !_loading && !_failed)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        vertical: PaperfoldSpace.xl,
+                      ),
+                      child: Text(l.journalPlaceholderTitle),
+                    ),
+                  if (_loading)
+                    const Center(child: CircularProgressIndicator()),
+                  if (_failed)
+                    TextButton(
+                      onPressed: () => _load(reset: true),
+                      child: Text(l.journalLoadFailed),
+                    ),
+                  if (_more && !_loading)
+                    TextButton(
+                      onPressed: _load,
+                      child: const Icon(Icons.expand_more),
+                    ),
+                ],
+              ],
+            );
+          },
         ),
       ),
     );
   }
 
-  Widget _entry(JournalPage page) {
+  Widget _entry(JournalPage page, PaperfoldLayout layout) {
     final book = _books[page.bookId];
     return Padding(
-      padding: const EdgeInsets.all(PaperfoldSpace.pane),
+      padding: EdgeInsets.all(layout.panePadding),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -304,6 +353,8 @@ class _JournalHomePageState extends ConsumerState<JournalHomePage> {
               padding: const EdgeInsets.only(top: PaperfoldSpace.xs),
               child: Text(
                 page.sourceExcerpt!,
+                maxLines: 4,
+                overflow: TextOverflow.ellipsis,
                 style: const TextStyle(
                   fontFamily: 'Philosopher',
                   fontSize: 17,
@@ -315,7 +366,11 @@ class _JournalHomePageState extends ConsumerState<JournalHomePage> {
           if (page.body.isNotEmpty)
             Padding(
               padding: const EdgeInsets.only(top: PaperfoldSpace.xs),
-              child: Text(page.body),
+              child: Text(
+                page.body,
+                maxLines: 6,
+                overflow: TextOverflow.ellipsis,
+              ),
             ),
           if (page.photoPath != null) JournalPhoto(path: page.photoPath!),
           if (page.hasSource && book != null)
@@ -371,19 +426,4 @@ class _JournalHomePageState extends ConsumerState<JournalHomePage> {
       ),
     );
   }
-}
-
-/// Keeps the Journal to a readable column on a tablet.
-class _JournalColumn extends StatelessWidget {
-  const _JournalColumn({required this.child});
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) => Align(
-    alignment: Alignment.topCenter,
-    child: ConstrainedBox(
-      constraints: const BoxConstraints(maxWidth: 760),
-      child: child,
-    ),
-  );
 }

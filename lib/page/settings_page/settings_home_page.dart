@@ -1,3 +1,5 @@
+import 'package:paperfold/utils/paperfold_layout.dart';
+import 'package:paperfold/widgets/common/paperfold_grid.dart';
 import 'package:paperfold/config/paperfold_system.dart';
 import 'package:paperfold/page/opds/opds_catalogs_page.dart';
 import 'package:paperfold/page/home_page/notes_page.dart';
@@ -53,9 +55,6 @@ class SettingsHomePage extends ConsumerStatefulWidget {
 }
 
 class _SettingsHomePageState extends ConsumerState<SettingsHomePage> {
-  int selectedIndex = 0;
-  WidgetBuilder? settingsDetail;
-
   @override
   Widget build(BuildContext context) {
     return AnimatedBuilder(
@@ -131,97 +130,95 @@ class _SettingsHomePageState extends ConsumerState<SettingsHomePage> {
           appBar: AppBar(title: Text(l10n.navBarSettings)),
           body: LayoutBuilder(
             builder: (context, constraints) {
-              // The wide layout still shows one screen at a time, so it holds
-              // the builder rather than a built screen.
-              settingsDetail ??= (BuildContext context) => SettingsPageBody(
-                isMobile: false,
-                title: categories[0].title,
-                sections: categories[0].sections,
+              final layout = PaperfoldLayout.of(
+                context,
+                constraints: constraints,
               );
-
-              void setDetail(WidgetBuilder detail, int id) {
-                setState(() {
-                  settingsDetail = detail;
-                  selectedIndex = id;
-                });
-              }
-
-              Widget settingsList(bool isMobile) {
-                return ListView(
-                  padding: EdgeInsets.only(
-                    bottom:
-                        MediaQuery.paddingOf(context).bottom +
-                        PaperfoldSpace.lg,
-                  ),
-                  children: <Widget>[
-                    // The two controls the reader reaches for most, in front of
-                    // the categories rather than on a screen of their own.
-                    SettingsSection(
-                      title: Text(l10n.settingsAppearance),
-                      tiles: [
-                        const CustomSettingsTile(
-                          child: Padding(
-                            padding: EdgeInsets.fromLTRB(20, 8, 20, 8),
-                            child: ThemeShelfPreview(),
-                          ),
-                        ),
-                      ],
-                    ),
-                    for (int index = 0; index < categories.length; index++)
-                      SettingsSection(
-                        tiles: [
-                          CustomSettingsTile(
-                            child: ListTileTheme.merge(
-                              contentPadding:
-                                  settingsListTileTheme.contentPadding,
-                              minLeadingWidth:
-                                  settingsListTileTheme.minLeadingWidth,
-                              horizontalTitleGap:
-                                  settingsListTileTheme.horizontalTitleGap,
-                              minTileHeight:
-                                  settingsListTileTheme.minTileHeight,
-                              child: SettingsPageBuilder(
-                                isMobile: isMobile,
-                                id: index,
-                                selectedIndex: selectedIndex,
-                                setDetail: setDetail,
-                                icon: Icon(categories[index].icon),
-                                title: categories[index].title,
-                                sections: categories[index].sections,
-                                subTitles: categories[index].subtitles,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    SettingsSection(
-                      tiles: [
-                        if (showDeveloperEntry)
-                          SettingsTile.navigation(
-                            leading: const Icon(Icons.developer_mode),
-                            title: Text(l10n.settingsDeveloperOptions),
-                            onPressed: (context) => Navigator.of(context).push(
-                              MaterialPageRoute<void>(
-                                builder: (_) => const DeveloperOptionsPage(),
-                              ),
-                            ),
-                          ),
-                        const CustomSettingsTile(
-                          child: About(leadingColor: true),
-                        ),
-                      ],
-                    ),
-                  ],
-                );
-              }
-
-              // One design on every width: the phone's list, in the
-              // reading column on a wide screen.
-              return Center(
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 760),
-                  child: settingsList(true),
+              // Categories fill the width: two across on a wide portrait
+              // screen, up to three in landscape, one on a phone.
+              final columns = layout.landscape
+                  ? layout.columns(344, gap: 16, max: 3)
+                  : layout.content >= 720
+                  ? 2
+                  : 1;
+              return ListView(
+                padding: EdgeInsets.only(
+                  bottom:
+                      MediaQuery.paddingOf(context).bottom + PaperfoldSpace.lg,
                 ),
+                children: <Widget>[
+                  // The two controls the reader reaches for most, in front of
+                  // the categories rather than on a screen of their own.
+                  SettingsSection(
+                    title: Text(l10n.settingsAppearance),
+                    tiles: [
+                      const CustomSettingsTile(
+                        child: Padding(
+                          padding: EdgeInsets.fromLTRB(20, 8, 20, 8),
+                          child: ThemeShelfPreview(),
+                        ),
+                      ),
+                    ],
+                  ),
+                  Padding(
+                    // Each section insets itself by 16; this brings the
+                    // edge to the page gutter.
+                    padding: EdgeInsets.symmetric(
+                      horizontal: layout.gutter - PaperfoldSpace.gutter,
+                    ),
+                    child: PaperfoldGrid(
+                      columns: columns,
+                      gap: 0,
+                      equalHeight: true,
+                      children: [
+                        for (int index = 0; index < categories.length; index++)
+                          SettingsSection(
+                            tiles: [
+                              CustomSettingsTile(
+                                child: ListTileTheme.merge(
+                                  contentPadding:
+                                      settingsListTileTheme.contentPadding,
+                                  minLeadingWidth:
+                                      settingsListTileTheme.minLeadingWidth,
+                                  horizontalTitleGap:
+                                      settingsListTileTheme.horizontalTitleGap,
+                                  minTileHeight:
+                                      settingsListTileTheme.minTileHeight,
+                                  child: SettingsPageBuilder(
+                                    isMobile: true,
+                                    id: index,
+                                    selectedIndex: -1,
+                                    setDetail: (_, _) {},
+                                    icon: Icon(categories[index].icon),
+                                    title: categories[index].title,
+                                    sections: categories[index].sections,
+                                    subTitles: categories[index].subtitles,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                      ],
+                    ),
+                  ),
+                  SettingsSection(
+                    tiles: [
+                      if (showDeveloperEntry)
+                        SettingsTile.navigation(
+                          leading: const Icon(Icons.developer_mode),
+                          title: Text(l10n.settingsDeveloperOptions),
+                          onPressed: (context) => Navigator.of(context).push(
+                            MaterialPageRoute<void>(
+                              builder: (_) => const DeveloperOptionsPage(),
+                            ),
+                          ),
+                        ),
+                      const CustomSettingsTile(
+                        child: About(leadingColor: true),
+                      ),
+                    ],
+                  ),
+                ],
               );
             },
           ),

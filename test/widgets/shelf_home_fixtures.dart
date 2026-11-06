@@ -13,6 +13,7 @@ import 'package:paperfold/providers/notes_statistics.dart';
 import 'package:paperfold/providers/reading_challenge.dart';
 import 'package:paperfold/providers/shelf_home.dart';
 import 'package:paperfold/providers/statistic_data.dart';
+import 'package:paperfold/providers/tags.dart';
 import 'package:paperfold/providers/total_reading_time.dart';
 
 /// Fakes and data shared by the shelf home tests and the navigation tests.
@@ -222,4 +223,12 @@ List<Override> newTestOverrides({
       dashboardTilesProvider.overrideWith((_) => FakeDashboardTiles()),
       notesStatisticsProvider.overrideWith(FakeNotesStatistics.new),
       bookIdAndNotesProvider.overrideWith(FakeBookIdAndNotes.new),
+      bookTagEditorProvider.overrideWith(FakeNoTags.new),
     ];
+
+/// No database in a widget test: a book has no tags yet.
+class FakeNoTags extends BookTagEditor {
+  @override
+  Future<BookTagState> build(int bookId) async =>
+      const BookTagState(tags: [], attachedIds: {});
+}

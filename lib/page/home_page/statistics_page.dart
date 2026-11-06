@@ -1,3 +1,4 @@
+import 'package:paperfold/utils/paperfold_layout.dart';
 import 'package:paperfold/config/paperfold_system.dart';
 
 import 'dart:async';
@@ -122,69 +123,86 @@ class _StatisticPageState extends ConsumerState<StatisticPage> {
       // ),
       body: SafeArea(
         bottom: false,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: PaperfoldSpace.xs),
-          child: Column(
-            children: [
-              StatisticsDashboardTitle(),
-              Expanded(
-                child: LayoutBuilder(
-                  builder: (context, constraints) {
-                    if (constraints.maxWidth > 600) {
-                      return Row(
-                        children: [
-                          Expanded(
-                            child: SingleChildScrollView(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
+        child: LayoutBuilder(
+          builder: (context, outer) {
+            final layout = PaperfoldLayout.of(context, constraints: outer);
+            final bottom = MediaQuery.paddingOf(context).bottom;
+            return Padding(
+              padding: EdgeInsets.symmetric(horizontal: layout.gutter),
+              child: Column(
+                children: [
+                  StatisticsDashboardTitle(),
+                  Expanded(
+                    child: LayoutBuilder(
+                      builder: (context, constraints) {
+                        // Side by side only in a wide, tall-enough landscape
+                        // window. Portrait keeps one scroll at every width.
+                        if (layout.landscape &&
+                            layout.content >= 1000 &&
+                            MediaQuery.sizeOf(context).height >= 480) {
+                          return Row(
+                            children: [
+                              Expanded(
+                                flex: 3,
+                                child: SingleChildScrollView(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      StatisticsDashboard(),
+                                      const StatisticsMeasureNote(),
+                                      const StatisticCard(),
+                                      const SizedBox(height: 20),
+                                      const StatisticsTrackerSections(),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: PaperfoldSpace.lg),
+                              Expanded(
+                                flex: 2,
+                                child: CustomScrollView(
+                                  controller: _scrollController,
+                                  slivers: const [DateBooks()],
+                                ),
+                              ),
+                            ],
+                          );
+                        } else {
+                          // The head sections keep the lazy list delegate the
+                          // `ListView` gave them; `SliverToBoxAdapter` would lay
+                          // them out on every pass, on screen or not. Only the
+                          // book list changes, from one eager `Column` to a
+                          // builder.
+                          return CustomScrollView(
+                            controller: _scrollController,
+                            slivers: [
+                              SliverList.list(
+                                children: const [
                                   StatisticsDashboard(),
-                                  const StatisticsMeasureNote(),
-                                  const StatisticCard(),
-                                  const SizedBox(height: 20),
-                                  const StatisticsTrackerSections(),
+                                  StatisticsMeasureNote(),
+                                  StatisticCard(),
+                                  SizedBox(height: 20),
+                                  StatisticsTrackerSections(),
+                                  SizedBox(height: 20),
                                 ],
                               ),
-                            ),
-                          ),
-                          const SizedBox(width: 20),
-                          Expanded(
-                            child: CustomScrollView(
-                              controller: _scrollController,
-                              slivers: const [DateBooks()],
-                            ),
-                          ),
-                        ],
-                      );
-                    } else {
-                      // The head sections keep the lazy list delegate the
-                      // `ListView` gave them; `SliverToBoxAdapter` would lay
-                      // them out on every pass, on screen or not. Only the
-                      // book list changes, from one eager `Column` to a
-                      // builder.
-                      return CustomScrollView(
-                        controller: _scrollController,
-                        slivers: [
-                          SliverList.list(
-                            children: const [
-                              StatisticsDashboard(),
-                              StatisticsMeasureNote(),
-                              StatisticCard(),
-                              SizedBox(height: 20),
-                              StatisticsTrackerSections(),
-                              SizedBox(height: 20),
+                              const DateBooks(),
+                              SliverToBoxAdapter(
+                                child: SizedBox(
+                                  height: bottom + PaperfoldSpace.lg,
+                                ),
+                              ),
                             ],
-                          ),
-                          const DateBooks(),
-                          const SliverToBoxAdapter(child: SizedBox(height: 80)),
-                        ],
-                      );
-                    }
-                  },
-                ),
+                          );
+                        }
+                      },
+                    ),
+                  ),
+                ],
               ),
-            ],
-          ),
+            );
+          },
         ),
       ),
     );
