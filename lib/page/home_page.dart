@@ -490,103 +490,102 @@ class _SlidingNavigationBar extends StatelessWidget {
             ? 136.0
             : (largeText ? 104.0 : PaperfoldSize.navigationBar);
         // A tablet gets the phone's bar, centred, not a stretched one.
+        final bar = ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 560),
+          child: Padding(
+            padding: vertical
+                ? const EdgeInsetsDirectional.only(start: 12, end: 12)
+                : EdgeInsetsDirectional.fromSTEB(12, 4, 12, bottomInset + 8),
+            child: SizedBox(
+              width: vertical ? (largeText ? 96 : 76) : null,
+              height: barHeight,
+              child: PaperfoldGlassSurface(
+                shadow: true,
+                // Nothing passes behind this bar any more: `extendBody` is off, so
+                // the page stops above it and the only thing left to blur is the
+                // scaffold's flat ground. The filter cost a full-width readback on
+                // every frame and blurred a solid colour into the same colour.
+                borderRadius: PaperfoldShape.frameRadius,
+                child: Padding(
+                  padding: const EdgeInsets.all(4),
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      final gap = largeText ? 0.0 : 8.0;
+                      final slotWidth =
+                          (constraints.maxWidth - gap * (columns - 1)) /
+                          columns;
+                      final slotHeight =
+                          (constraints.maxHeight - gap * (rows - 1)) / rows;
+                      return Semantics(
+                        role: SemanticsRole.tabBar,
+                        explicitChildNodes: true,
+                        child: Stack(
+                          children: [
+                            AnimatedPositionedDirectional(
+                              key: const Key('sliding-navigation-indicator'),
+                              duration: disableAnimations
+                                  ? Duration.zero
+                                  : PaperfoldMotion.move,
+                              // Lands with a small overshoot under the finger.
+                              curve: PaperfoldMotion.land,
+                              top:
+                                  (selectedIndex ~/ columns) *
+                                  (slotHeight + gap),
+                              start:
+                                  (selectedIndex % columns) * (slotWidth + gap),
+                              width: slotWidth,
+                              height: slotHeight,
+                              child: DecoratedBox(
+                                decoration: BoxDecoration(
+                                  color: scheme.primaryContainer,
+                                  borderRadius: BorderRadius.circular(
+                                    PaperfoldShape.nested(
+                                      PaperfoldShape.frame,
+                                      4,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                            Wrap(
+                              spacing: gap,
+                              runSpacing: gap,
+                              children: [
+                                for (
+                                  var index = 0;
+                                  index < destinations.length;
+                                  index++
+                                )
+                                  SizedBox(
+                                    width: slotWidth,
+                                    height: slotHeight,
+                                    child: _SlidingNavigationItem(
+                                      tabIndex: index,
+                                      destination: destinations[index],
+                                      selected: index == selectedIndex,
+                                      unselectedForeground: glass.foreground,
+                                      onTap: () => onDestinationSelected(index),
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
         return Align(
           alignment: vertical
               ? AlignmentDirectional.centerStart
               : Alignment.center,
           heightFactor: vertical ? null : 1,
           widthFactor: vertical ? 1 : null,
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 560),
-            child: Padding(
-              padding: vertical
-                  ? const EdgeInsetsDirectional.only(start: 12, end: 12)
-                  : EdgeInsetsDirectional.fromSTEB(12, 4, 12, bottomInset + 8),
-              child: SizedBox(
-                width: vertical ? (largeText ? 96 : 76) : null,
-                height: barHeight,
-                child: PaperfoldGlassSurface(
-                  shadow: true,
-                  // Nothing passes behind this bar any more: `extendBody` is off, so
-                  // the page stops above it and the only thing left to blur is the
-                  // scaffold's flat ground. The filter cost a full-width readback on
-                  // every frame and blurred a solid colour into the same colour.
-                  borderRadius: PaperfoldShape.frameRadius,
-                  child: Padding(
-                    padding: const EdgeInsets.all(4),
-                    child: LayoutBuilder(
-                      builder: (context, constraints) {
-                        final gap = largeText ? 0.0 : 8.0;
-                        final slotWidth =
-                            (constraints.maxWidth - gap * (columns - 1)) /
-                            columns;
-                        final slotHeight =
-                            (constraints.maxHeight - gap * (rows - 1)) / rows;
-                        return Semantics(
-                          role: SemanticsRole.tabBar,
-                          explicitChildNodes: true,
-                          child: Stack(
-                            children: [
-                              AnimatedPositionedDirectional(
-                                key: const Key('sliding-navigation-indicator'),
-                                duration: disableAnimations
-                                    ? Duration.zero
-                                    : PaperfoldMotion.move,
-                                // Lands with a small overshoot under the finger.
-                                curve: PaperfoldMotion.land,
-                                top:
-                                    (selectedIndex ~/ columns) *
-                                    (slotHeight + gap),
-                                start:
-                                    (selectedIndex % columns) *
-                                    (slotWidth + gap),
-                                width: slotWidth,
-                                height: slotHeight,
-                                child: DecoratedBox(
-                                  decoration: BoxDecoration(
-                                    color: scheme.primaryContainer,
-                                    borderRadius: BorderRadius.circular(
-                                      PaperfoldShape.nested(
-                                        PaperfoldShape.frame,
-                                        4,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              Wrap(
-                                spacing: gap,
-                                runSpacing: gap,
-                                children: [
-                                  for (
-                                    var index = 0;
-                                    index < destinations.length;
-                                    index++
-                                  )
-                                    SizedBox(
-                                      width: slotWidth,
-                                      height: slotHeight,
-                                      child: _SlidingNavigationItem(
-                                        tabIndex: index,
-                                        destination: destinations[index],
-                                        selected: index == selectedIndex,
-                                        unselectedForeground: glass.foreground,
-                                        onTap: () =>
-                                            onDestinationSelected(index),
-                                      ),
-                                    ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
+          child: vertical ? SingleChildScrollView(child: bar) : bar,
         );
       },
     );

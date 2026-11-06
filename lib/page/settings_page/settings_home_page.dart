@@ -177,7 +177,6 @@ class _SettingsHomePageState extends ConsumerState<SettingsHomePage> {
                     child: PaperfoldGrid(
                       columns: columns,
                       gap: 0,
-                      equalHeight: true,
                       children: [
                         for (int index = 0; index < categories.length; index++)
                           SettingsSection(

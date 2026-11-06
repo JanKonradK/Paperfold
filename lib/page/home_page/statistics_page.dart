@@ -145,6 +145,9 @@ class _StatisticPageState extends ConsumerState<StatisticPage> {
                               Expanded(
                                 flex: 3,
                                 child: SingleChildScrollView(
+                                  padding: EdgeInsets.only(
+                                    bottom: bottom + PaperfoldSpace.lg,
+                                  ),
                                   child: Column(
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
@@ -163,7 +166,14 @@ class _StatisticPageState extends ConsumerState<StatisticPage> {
                                 flex: 2,
                                 child: CustomScrollView(
                                   controller: _scrollController,
-                                  slivers: const [DateBooks()],
+                                  slivers: [
+                                    const DateBooks(),
+                                    SliverToBoxAdapter(
+                                      child: SizedBox(
+                                        height: bottom + PaperfoldSpace.lg,
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
                             ],

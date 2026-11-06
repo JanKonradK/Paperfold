@@ -100,29 +100,30 @@ class StatisticCard extends ConsumerWidget {
                 onPressed: () => _changeDate(ref, false, data.mode, data.date),
                 icon: const Icon(Icons.chevron_left),
               ),
-              const Spacer(),
-              TextButton(
-                onPressed: () async {
-                  final newDate = await showDatePicker(
-                    context: context,
-                    initialEntryMode: DatePickerEntryMode.calendarOnly,
-                    firstDate: DateTime(2024),
-                    lastDate: DateTime.now(),
-                    initialDate: data.date,
-                  );
-                  if (newDate != null) {
-                    ref.read(statisticDataProvider.notifier).setDate(newDate);
-                  }
-                },
-                child: Text(
-                  data.mode == ChartMode.week
-                      ? weekOfYear(data.date)
-                      : data.mode == ChartMode.month
-                      ? '${data.date.year}.${data.date.month}'
-                      : data.date.year.toString(),
+              Expanded(
+                child: TextButton(
+                  onPressed: () async {
+                    final newDate = await showDatePicker(
+                      context: context,
+                      initialEntryMode: DatePickerEntryMode.calendarOnly,
+                      firstDate: DateTime(2024),
+                      lastDate: DateTime.now(),
+                      initialDate: data.date,
+                    );
+                    if (newDate != null) {
+                      ref.read(statisticDataProvider.notifier).setDate(newDate);
+                    }
+                  },
+                  child: Text(
+                    data.mode == ChartMode.week
+                        ? weekOfYear(data.date)
+                        : data.mode == ChartMode.month
+                        ? '${data.date.year}.${data.date.month}'
+                        : data.date.year.toString(),
+                    textAlign: TextAlign.center,
+                  ),
                 ),
               ),
-              const Spacer(),
               IconButton(
                 onPressed: () => _changeDate(ref, true, data.mode, data.date),
                 icon: const Icon(Icons.chevron_right),
