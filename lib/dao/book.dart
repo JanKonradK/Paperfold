@@ -1,3 +1,4 @@
+import 'package:paperfold/service/home_widgets.dart';
 import 'package:paperfold/dao/base_dao.dart';
 import 'package:paperfold/dao/search_pattern.dart';
 import 'package:paperfold/dao/shelf.dart';
@@ -14,7 +15,9 @@ class BookDao extends BaseDao {
       await updateBook(book);
       return book.id;
     }
-    return insert(table, book.toMap());
+    final id = await insert(table, book.toMap());
+    HomeWidgets.refresh();
+    return id;
   }
 
   Future<int> insertBook(Book book) => save(book);
@@ -27,6 +30,7 @@ class BookDao extends BaseDao {
       where: 'id = ?',
       whereArgs: [book.id],
     );
+    HomeWidgets.refresh();
   }
 
   /// Soft-deletes a book and removes it from every shelf atomically.
@@ -48,6 +52,7 @@ class BookDao extends BaseDao {
         whereArgs: [bookId],
       );
     });
+    HomeWidgets.refresh();
   }
 
   Future<List<Book>> selectBooks({bool includeDeleted = true}) {

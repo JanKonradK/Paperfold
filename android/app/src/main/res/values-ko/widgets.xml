@@ -1,0 +1,10 @@
+<resources>
+    <string name="capture_log_pages">페이지 기록</string>
+    <string name="capture_write_note">메모 쓰기</string>
+    <string name="widget_continue">계속 읽기</string>
+    <string name="widget_capture">빠른 기록</string>
+    <string name="capture_note">메모</string>
+    <string name="capture_quote">인용</string>
+    <string name="widget_continue_description">현재 책을 계속 읽거나 페이지를 기록합니다.</string>
+    <string name="widget_capture_description">메모, 인용 또는 독서 진행 상황을 저장합니다.</string>
+</resources>

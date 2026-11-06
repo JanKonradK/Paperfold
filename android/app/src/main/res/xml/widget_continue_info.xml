@@ -1,0 +1,6 @@
+<appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+ android:minWidth="110dp" android:minHeight="160dp" android:targetCellWidth="2" android:targetCellHeight="2"
+ android:minResizeWidth="110dp" android:minResizeHeight="160dp" android:maxResizeWidth="320dp" android:maxResizeHeight="160dp"
+ android:initialLayout="@layout/widget_continue" android:previewLayout="@layout/widget_continue"
+ android:previewImage="@drawable/widget_preview_continue" android:description="@string/widget_continue_description"
+ android:resizeMode="horizontal" android:updatePeriodMillis="0" android:widgetCategory="home_screen"/>

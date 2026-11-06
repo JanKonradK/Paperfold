@@ -1107,5 +1107,13 @@
   "onlineInternetArchiveDescription": "Uma grande biblioteca de livros de domínio público e de empréstimo. Alguns livros exigem uma conta.",
   "settingsLibraryBooks": "Biblioteca e livros",
   "settingsSyncBackup": "Sincronização e backup",
-  "settingsCatalogs": "Catálogos"
+  "settingsCatalogs": "Catálogos",
+  "captureLogPages": "Registar páginas",
+  "captureWriteNote": "Escrever uma nota",
+  "widgetContinue": "Continuar a ler",
+  "widgetQuickCapture": "Registo rápido",
+  "captureNote": "Nota",
+  "captureQuote": "Citação",
+  "widgetContinueDescription": "Continue o livro atual ou registe páginas.",
+  "widgetCaptureDescription": "Guarde uma nota, uma citação ou o progresso de leitura."
 }

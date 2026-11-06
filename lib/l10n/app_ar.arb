@@ -889,5 +889,13 @@
   "onlineInternetArchiveDescription": "مكتبة كبيرة من كتب الملك العام وكتب الإعارة. بعض الكتب تحتاج إلى حساب.",
   "settingsLibraryBooks": "المكتبة والكتب",
   "settingsSyncBackup": "المزامنة والنسخ الاحتياطي",
-  "settingsCatalogs": "الفهارس"
+  "settingsCatalogs": "الفهارس",
+  "captureLogPages": "تسجيل الصفحات",
+  "captureWriteNote": "كتابة ملاحظة",
+  "widgetContinue": "متابعة القراءة",
+  "widgetQuickCapture": "تدوين سريع",
+  "captureNote": "ملاحظة",
+  "captureQuote": "اقتباس",
+  "widgetContinueDescription": "تابع كتابك الحالي أو سجّل الصفحات.",
+  "widgetCaptureDescription": "احفظ ملاحظة أو اقتباسًا أو تقدّم القراءة."
 }

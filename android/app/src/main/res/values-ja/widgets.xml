@@ -1,0 +1,10 @@
+<resources>
+    <string name="capture_log_pages">ページを記録</string>
+    <string name="capture_write_note">メモを書く</string>
+    <string name="widget_continue">読書を続ける</string>
+    <string name="widget_capture">すばやく記録</string>
+    <string name="capture_note">メモ</string>
+    <string name="capture_quote">引用</string>
+    <string name="widget_continue_description">現在の本を読み続けるか、ページを記録します。</string>
+    <string name="widget_capture_description">メモ、引用、読書の進捗を保存します。</string>
+</resources>

@@ -3,6 +3,8 @@ import 'package:paperfold/config/paperfold_motion.dart';
 import 'dart:async';
 import 'dart:io';
 
+import 'package:paperfold/service/capture_launch.dart';
+
 import 'package:paperfold/config/paperfold_visual_policy.dart';
 import 'package:paperfold/utils/platform_utils.dart';
 
@@ -75,6 +77,7 @@ Future<void> _startDataServices() async {
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Prefs().initPrefs();
+  unawaited(CaptureLaunch.initialize());
   PaperfoldVisualPolicy.init();
   HttpOverrides.global = AnxHttpProxyOverrides();
 
@@ -132,6 +135,7 @@ class _MyAppState extends ConsumerState<MyApp>
   @override
   void initState() {
     super.initState();
+    CaptureLaunch.observe(ref);
     _playColdStartOpening = _takeColdStartOpening();
     _openingFinished = Completer<void>();
     if (!_playColdStartOpening) {

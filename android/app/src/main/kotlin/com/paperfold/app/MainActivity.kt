@@ -10,15 +10,43 @@ import io.flutter.plugin.common.MethodChannel
 import java.io.File
 
 class MainActivity : FlutterFragmentActivity() {
+    private var captureChannel: MethodChannel? = null
+    private var pendingLaunch: String? = null
+    private var captureReady = false
+
+    private fun captureUri(intent: Intent?): String? {
+        val uri = intent?.data ?: return null
+        return if (uri.scheme == "paperfold" && (uri.host == "capture" || uri.host == "open")) uri.toString() else null
+    }
+
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         // Ensure the latest intent is stored so plugins relying on Activity#getIntent can read it.
         setIntent(intent)
+        captureUri(intent)?.let {
+            if (!captureReady) pendingLaunch = it
+            else captureChannel?.invokeMethod("launch", it)
+        }
     }
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
+        pendingLaunch = captureUri(intent)
+        captureChannel = MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "com.paperfold.app/capture").also { channel ->
+            channel.setMethodCallHandler { call, result ->
+                when (call.method) {
+                    "takeLaunch" -> { captureReady = true; result.success(pendingLaunch); pendingLaunch = null }
+                    "updateWidgets" -> {
+                        getSharedPreferences("paperfold_widgets", MODE_PRIVATE).edit()
+                            .putString("snapshot", call.arguments as String).apply()
+                        ContinueReadingWidget.refresh(this)
+                        result.success(null)
+                    }
+                    else -> result.notImplemented()
+                }
+            }
+        }
 
         MethodChannel(
             flutterEngine.dartExecutor.binaryMessenger,

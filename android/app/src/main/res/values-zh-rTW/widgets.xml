@@ -1,0 +1,10 @@
+<resources>
+    <string name="capture_log_pages">記錄頁數</string>
+    <string name="capture_write_note">寫筆記</string>
+    <string name="widget_continue">繼續閱讀</string>
+    <string name="widget_capture">快速記錄</string>
+    <string name="capture_note">筆記</string>
+    <string name="capture_quote">摘錄</string>
+    <string name="widget_continue_description">繼續閱讀目前的書籍或記錄頁數。</string>
+    <string name="widget_capture_description">儲存筆記、摘錄或閱讀進度。</string>
+</resources>

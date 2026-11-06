@@ -1107,5 +1107,13 @@
   "onlineInternetArchiveDescription": "Eine große Bibliothek mit gemeinfreien Büchern und Leihbüchern. Manche Bücher brauchen ein Konto.",
   "settingsLibraryBooks": "Bibliothek und Bücher",
   "settingsSyncBackup": "Synchronisierung und Sicherung",
-  "settingsCatalogs": "Kataloge"
+  "settingsCatalogs": "Kataloge",
+  "captureLogPages": "Seiten erfassen",
+  "captureWriteNote": "Notiz schreiben",
+  "widgetContinue": "Weiterlesen",
+  "widgetQuickCapture": "Schnell erfassen",
+  "captureNote": "Notiz",
+  "captureQuote": "Zitat",
+  "widgetContinueDescription": "Aktuelles Buch weiterlesen oder Seiten erfassen.",
+  "widgetCaptureDescription": "Notiz, Zitat oder Lesefortschritt speichern."
 }

@@ -889,5 +889,13 @@
   "onlineInternetArchiveDescription": "藏公有之書與借閱之書之大館。部分之書須帳號。",
   "settingsLibraryBooks": "藏書",
   "settingsSyncBackup": "同步與備份",
-  "settingsCatalogs": "書目"
+  "settingsCatalogs": "書目",
+  "captureLogPages": "記頁",
+  "captureWriteNote": "書札記",
+  "widgetContinue": "續讀",
+  "widgetQuickCapture": "速記",
+  "captureNote": "札記",
+  "captureQuote": "摘句",
+  "widgetContinueDescription": "續讀今書，或記所讀頁。",
+  "widgetCaptureDescription": "存札記、摘句，或讀書進度。"
 }

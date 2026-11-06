@@ -1034,7 +1034,13 @@
   "searchLibraryHint": "Search books, notes, and journal",
   "searchJournalReview": "Review",
   "searchJournalPage": "Journal page {number}",
-  "@searchJournalPage": {"placeholders": {"number": {"type": "int"}}},
+  "@searchJournalPage": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
   "journalBooks": "Book journals",
   "journalHighlightsOverview": "Revisit passages and notes from your library.",
   "challengeSaveFailed": "Your target could not be saved. Try again.",
@@ -1108,5 +1114,13 @@
   "onlineInternetArchiveDescription": "A large library of public domain and lending books. Some books need an account.",
   "settingsLibraryBooks": "Library & books",
   "settingsSyncBackup": "Sync & backup",
-  "settingsCatalogs": "Catalogs"
+  "settingsCatalogs": "Catalogs",
+  "captureLogPages": "Log pages",
+  "captureWriteNote": "Write a note",
+  "widgetContinue": "Continue reading",
+  "widgetQuickCapture": "Quick capture",
+  "captureNote": "Note",
+  "captureQuote": "Quote",
+  "widgetContinueDescription": "Continue your current book or log pages.",
+  "widgetCaptureDescription": "Save a note, a quote, or reading progress."
 }

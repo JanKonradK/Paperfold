@@ -889,5 +889,13 @@
   "onlineInternetArchiveDescription": "收藏公有领域图书和借阅图书的大型图书馆。部分图书需要账户。",
   "settingsLibraryBooks": "书库与书籍",
   "settingsSyncBackup": "同步与备份",
-  "settingsCatalogs": "书目"
+  "settingsCatalogs": "书目",
+  "captureLogPages": "记录页数",
+  "captureWriteNote": "写笔记",
+  "widgetContinue": "继续阅读",
+  "widgetQuickCapture": "快速记录",
+  "captureNote": "笔记",
+  "captureQuote": "摘录",
+  "widgetContinueDescription": "继续阅读当前书籍或记录页数。",
+  "widgetCaptureDescription": "保存笔记、摘录或阅读进度。"
 }

@@ -1,0 +1,10 @@
+<resources>
+    <string name="capture_log_pages">تسجيل الصفحات</string>
+    <string name="capture_write_note">كتابة ملاحظة</string>
+    <string name="widget_continue">متابعة القراءة</string>
+    <string name="widget_capture">تدوين سريع</string>
+    <string name="capture_note">ملاحظة</string>
+    <string name="capture_quote">اقتباس</string>
+    <string name="widget_continue_description">تابع كتابك الحالي أو سجّل الصفحات.</string>
+    <string name="widget_capture_description">احفظ ملاحظة أو اقتباسًا أو تقدّم القراءة.</string>
+</resources>

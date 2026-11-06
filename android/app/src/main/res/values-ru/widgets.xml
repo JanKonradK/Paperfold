@@ -1,0 +1,10 @@
+<resources>
+    <string name="capture_log_pages">Записать страницы</string>
+    <string name="capture_write_note">Написать заметку</string>
+    <string name="widget_continue">Продолжить чтение</string>
+    <string name="widget_capture">Быстрая запись</string>
+    <string name="capture_note">Заметка</string>
+    <string name="capture_quote">Цитата</string>
+    <string name="widget_continue_description">Продолжите текущую книгу или запишите страницы.</string>
+    <string name="widget_capture_description">Сохраните заметку, цитату или прогресс чтения.</string>
+</resources>
