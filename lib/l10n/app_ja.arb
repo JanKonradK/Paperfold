@@ -942,5 +942,11 @@
   "readerPageInformation": "ページ情報",
   "readerScreen": "画面",
   "readerPageTurns": "ページめくり",
-  "readerSelectionActions": "選択時の操作"
+  "readerSelectionActions": "選択時の操作",
+  "readerGuidePrevious": "前のページ",
+  "readerGuideNext": "次のページ",
+  "readerGuideMenu": "メニュー",
+  "readerGuideGestures": "テキストを長押しすると選択できます。",
+  "readerGuideGotIt": "わかりました",
+  "readerGuideShow": "タップガイドを表示"
 }

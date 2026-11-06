@@ -572,6 +572,7 @@ class ReadingPageState extends ConsumerState<ReadingPage>
                 body: ReaderTapGuideGate(
                   key: _tapGuideKey,
                   ready: _readerLoaded,
+                  onDismiss: _requestReaderFocus,
                   child: Stack(
                     fit: StackFit.expand,
                     children: [

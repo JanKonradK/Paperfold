@@ -942,5 +942,11 @@
   "readerPageInformation": "页面信息",
   "readerScreen": "屏幕",
   "readerPageTurns": "翻页",
-  "readerSelectionActions": "选中文字操作"
+  "readerSelectionActions": "选中文字操作",
+  "readerGuidePrevious": "上一页",
+  "readerGuideNext": "下一页",
+  "readerGuideMenu": "菜单",
+  "readerGuideGestures": "长按文字以选择。",
+  "readerGuideGotIt": "知道了",
+  "readerGuideShow": "显示点击指南"
 }

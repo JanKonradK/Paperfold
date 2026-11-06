@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:paperfold/config/paperfold_system.dart';
+import 'package:paperfold/config/paperfold_visual_policy.dart';
 import 'package:paperfold/config/shared_preference_provider.dart';
 import 'package:paperfold/l10n/generated/L10n.dart';
 import 'package:paperfold/widgets/common/paperfold_pane.dart';
@@ -11,10 +12,16 @@ import 'package:pointer_interceptor/pointer_interceptor.dart';
 
 /// Keeps first-open policy separate from the WebView so it can be tested.
 class ReaderTapGuideGate extends StatefulWidget {
-  const ReaderTapGuideGate({super.key, required this.child, this.ready = true});
+  const ReaderTapGuideGate({
+    super.key,
+    required this.child,
+    this.ready = true,
+    this.onDismiss,
+  });
 
   final Widget child;
   final bool ready;
+  final VoidCallback? onDismiss;
 
   @override
   State<ReaderTapGuideGate> createState() => ReaderTapGuideGateState();
@@ -28,6 +35,9 @@ class ReaderTapGuideGateState extends State<ReaderTapGuideGate> {
   void _dismiss() {
     Prefs().readerGuideSeen = true;
     setState(() => _visible = false);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) widget.onDismiss?.call();
+    });
   }
 
   @override
@@ -72,8 +82,9 @@ class ReaderGuideRegion {
               endX * size.width / 3,
               math.min(endY * size.height / 3, bottom),
             );
-            if (rect.width * rect.height > best.width * best.height)
+            if (rect.width * rect.height > best.width * best.height) {
               best = rect;
+            }
           }
         }
       }
@@ -138,7 +149,7 @@ class _ReaderTapGuideState extends State<ReaderTapGuide>
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    if (MediaQuery.disableAnimationsOf(context)) {
+    if (!PaperfoldVisualPolicy.motionAllowed(context)) {
       _motion.stop();
       _motion.value = 1;
     } else if (_motion.value == 0 && !_motion.isAnimating) {

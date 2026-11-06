@@ -942,5 +942,11 @@
   "readerPageInformation": "페이지 정보",
   "readerScreen": "화면",
   "readerPageTurns": "페이지 넘기기",
-  "readerSelectionActions": "선택 작업"
+  "readerSelectionActions": "선택 작업",
+  "readerGuidePrevious": "이전 페이지",
+  "readerGuideNext": "다음 페이지",
+  "readerGuideMenu": "메뉴",
+  "readerGuideGestures": "텍스트를 길게 눌러 선택하세요.",
+  "readerGuideGotIt": "알겠어요",
+  "readerGuideShow": "탭 안내 표시"
 }

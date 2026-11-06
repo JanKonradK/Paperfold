@@ -1160,5 +1160,11 @@
   "readerPageInformation": "Sayfa bilgileri",
   "readerScreen": "Ekran",
   "readerPageTurns": "Sayfa çevirme",
-  "readerSelectionActions": "Seçim işlemleri"
+  "readerSelectionActions": "Seçim işlemleri",
+  "readerGuidePrevious": "Önceki sayfa",
+  "readerGuideNext": "Sonraki sayfa",
+  "readerGuideMenu": "Menü",
+  "readerGuideGestures": "Metni seçmek için basılı tutun.",
+  "readerGuideGotIt": "Anladım",
+  "readerGuideShow": "Dokunma rehberini göster"
 }
