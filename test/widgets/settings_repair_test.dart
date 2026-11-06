@@ -1,3 +1,6 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import 'shelf_home_fixtures.dart';
 // The settings tree, after the repair pass.
 //
 // Each test here stands for one defect that shipped:
@@ -149,7 +152,14 @@ void main() {
     await tester.binding.setSurfaceSize(const Size(412, 915));
     addTearDown(() => tester.binding.setSurfaceSize(null));
 
-    await tester.pumpWidget(_host(const AppearanceSetting()));
+    await tester.pumpWidget(
+      _host(
+        ProviderScope(
+          overrides: newTestOverrides(),
+          child: const AppearanceSetting(),
+        ),
+      ),
+    );
     await tester.pumpAndSettle();
 
     await tester.tap(find.text('E-ink Mode'));
@@ -201,7 +211,14 @@ void main() {
       await tester.binding.setSurfaceSize(const Size(412, 2400));
       addTearDown(() => tester.binding.setSurfaceSize(null));
 
-      await tester.pumpWidget(_host(const AppearanceSetting()));
+      await tester.pumpWidget(
+        _host(
+          ProviderScope(
+            overrides: newTestOverrides(),
+            child: const AppearanceSetting(),
+          ),
+        ),
+      );
       await tester.pumpAndSettle();
 
       // Nothing has read either preference since the navigation became a fixed

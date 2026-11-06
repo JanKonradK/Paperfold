@@ -1158,5 +1158,12 @@
         "type": "String"
       }
     }
-  }
+  },
+  "libraryLayoutTitle": "Library layout",
+  "libraryCoversPerRow": "Covers per row (portrait)",
+  "libraryLayoutAuto": "Auto",
+  "libraryLayoutFewer": "Fewer covers",
+  "libraryLayoutMore": "More covers",
+  "libraryLayoutHelp": "{count} covers per row now. Landscape adds columns at the same approximate cover size.",
+  "@libraryLayoutHelp": {"placeholders": {"count": {"type": "int"}}}
 }

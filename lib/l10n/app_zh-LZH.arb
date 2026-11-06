@@ -919,5 +919,11 @@
   "libraryPaperBooks": "紙本書",
   "bookStartReading": "始讀",
   "bookProgressThrough": "已讀全書之 {percent}%",
-  "bookStartedOn": "始於 {date}"
+  "bookStartedOn": "始於 {date}",
+  "libraryLayoutTitle": "書庫佈局",
+  "libraryCoversPerRow": "每行書面數（直向）",
+  "libraryLayoutAuto": "自定",
+  "libraryLayoutFewer": "減書面",
+  "libraryLayoutMore": "增書面",
+  "libraryLayoutHelp": "今每行書面 {count}。橫置則增列，書面大小略同。"
 }

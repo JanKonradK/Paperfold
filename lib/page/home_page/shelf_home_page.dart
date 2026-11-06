@@ -1,3 +1,4 @@
+import 'package:paperfold/utils/paperfold_layout.dart';
 import 'package:paperfold/config/paperfold_system.dart';
 import 'package:paperfold/config/paperfold_motion.dart';
 import 'package:paperfold/widgets/bookshelf/book_detail_route.dart';
@@ -466,7 +467,12 @@ class _ShelfHomePageState extends ConsumerState<ShelfHomePage>
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       floatingActionButton: Padding(
-        padding: EdgeInsets.only(bottom: MediaQuery.paddingOf(context).bottom),
+        padding: EdgeInsets.only(
+          bottom: PaperfoldLayout.of(context).landscape
+              ? 0
+              : MediaQuery.paddingOf(context).bottom,
+          right: PaperfoldLayout.of(context).gutter - 16,
+        ),
         child: FloatingActionButton(
           heroTag: 'library-add-book',
           tooltip: l10n.shelfAddBooksTooltip,
@@ -488,136 +494,118 @@ class _ShelfHomePageState extends ConsumerState<ShelfHomePage>
               builder: (context, constraints) {
                 final largeText =
                     MediaQuery.textScalerOf(context).scale(16) >= 24;
-                return Column(
+                final narrowTools = constraints.maxWidth < 400 || largeText;
+                final heading = Text(
+                  rows.isEmpty
+                      ? l10n.shelfHomeTitle
+                      : l10n.notesBooks(rows[activeIndex].books.length),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.headlineSmall,
+                );
+                final header = Column(
                   children: [
-                    ConstrainedBox(
-                      constraints: BoxConstraints(
-                        maxHeight: constraints.maxHeight * 0.5,
+                    if (resumeBook != null)
+                      Padding(
+                        padding: EdgeInsets.fromLTRB(
+                          PaperfoldLayout.of(context).gutter,
+                          4,
+                          PaperfoldLayout.of(context).gutter,
+                          8,
+                        ),
+                        child: ContinueReadingBanner(
+                          key: const ValueKey('library-continue-reading'),
+                          book: resumeBook,
+                          compact: PaperfoldLayout.of(context).landscape,
+                          onOpen: _openingBook
+                              ? null
+                              : () => _openBook(resumeBook),
+                        ),
                       ),
-                      child: SingleChildScrollView(
-                        key: const ValueKey('shelf-header-scroll'),
-                        primary: false,
-                        child: Column(
-                          children: [
-                            if (resumeBook != null)
-                              Padding(
-                                padding: const EdgeInsets.fromLTRB(
-                                  20,
-                                  4,
-                                  20,
-                                  8,
+                    Padding(
+                      padding: const EdgeInsetsDirectional.fromSTEB(
+                        24,
+                        8,
+                        12,
+                        4,
+                      ),
+                      child: Flex(
+                        direction: narrowTools
+                            ? Axis.vertical
+                            : Axis.horizontal,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (narrowTools)
+                            heading
+                          else
+                            Expanded(child: heading),
+                          Wrap(
+                            spacing: 8,
+                            crossAxisAlignment: WrapCrossAlignment.center,
+                            children: [
+                              ShelfViewSwitch(
+                                showCovers: Prefs().shelfCoverView,
+                                onChanged: (value) =>
+                                    Prefs().shelfCoverView = value,
+                              ),
+                              IconButton(
+                                key: const ValueKey('shelf-sort-control'),
+                                tooltip: l10n.shelfSortControl,
+                                onPressed: () =>
+                                    showShelfSortSheet(context, controls),
+                                icon: const Icon(Icons.sort_rounded),
+                              ),
+                              Badge.count(
+                                count: controls.filterCount,
+                                isLabelVisible: controls.hasFilters,
+                                child: IconButton(
+                                  key: const ValueKey('shelf-filter-control'),
+                                  tooltip: l10n.shelfFilterControl,
+                                  onPressed: () => showShelfFilterSheet(
+                                    context,
+                                    controls,
+                                    data.tags,
+                                  ),
+                                  icon: const Icon(Icons.filter_alt_outlined),
                                 ),
-                                child: ContinueReadingBanner(
-                                  key: const ValueKey(
-                                    'library-continue-reading',
-                                  ),
-                                  book: resumeBook,
-                                  compact:
-                                      largeText || constraints.maxHeight < 480,
-                                  onOpen: _openingBook
-                                      ? null
-                                      : () => _openBook(resumeBook),
-                                ),
                               ),
-                            Padding(
-                              padding: const EdgeInsetsDirectional.fromSTEB(
-                                24,
-                                8,
-                                12,
-                                4,
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    SizedBox(
+                      height: 38 + MediaQuery.textScalerOf(context).scale(14),
+                      child: ListView.separated(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        scrollDirection: Axis.horizontal,
+                        itemCount: rows.length,
+                        separatorBuilder: (context, index) =>
+                            const SizedBox(width: 8),
+                        itemBuilder: (context, index) => ChoiceChip(
+                          key: ValueKey('shelf-tab-$index'),
+                          label: Text(rows[index].name),
+                          selected: index == activeIndex,
+                          showCheckmark: false,
+                          chipAnimationStyle: ChipAnimationStyle(
+                            selectAnimation: AnimationStyle(
+                              duration: PaperfoldMotion.of(
+                                context,
+                                PaperfoldMotion.tick,
                               ),
-                              child: Row(
-                                children: [
-                                  Expanded(
-                                    child: Text(
-                                      rows.isEmpty
-                                          ? l10n.shelfHomeTitle
-                                          : l10n.notesBooks(
-                                              rows[activeIndex].books.length,
-                                            ),
-                                      maxLines: 2,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: largeText
-                                          ? Theme.of(context)
-                                                .textTheme
-                                                .titleMedium
-                                          : Theme.of(context)
-                                                .textTheme
-                                                .headlineSmall,
-                                    ),
-                                  ),
-                                  ShelfViewSwitch(
-                                    showCovers: Prefs().shelfCoverView,
-                                    onChanged: (value) =>
-                                        Prefs().shelfCoverView = value,
-                                  ),
-                                  IconButton(
-                                    key: const ValueKey('shelf-sort-control'),
-                                    tooltip: l10n.shelfSortControl,
-                                    onPressed: () =>
-                                        showShelfSortSheet(context, controls),
-                                    icon: const Icon(Icons.sort_rounded),
-                                  ),
-                                  Badge.count(
-                                    count: controls.filterCount,
-                                    isLabelVisible: controls.hasFilters,
-                                    child: IconButton(
-                                      key: const ValueKey(
-                                        'shelf-filter-control',
-                                      ),
-                                      tooltip: l10n.shelfFilterControl,
-                                      onPressed: () => showShelfFilterSheet(
-                                        context,
-                                        controls,
-                                        data.tags,
-                                      ),
-                                      icon: const Icon(
-                                        Icons.filter_alt_outlined,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
+                              curve: PaperfoldMotion.land,
                             ),
-                            SizedBox(
-                              height:
-                                  38 +
-                                  MediaQuery.textScalerOf(context).scale(14),
-                              child: ListView.separated(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 20,
-                                ),
-                                scrollDirection: Axis.horizontal,
-                                itemCount: rows.length,
-                                separatorBuilder: (context, index) =>
-                                    const SizedBox(width: 8),
-                                itemBuilder: (context, index) => ChoiceChip(
-                                  key: ValueKey('shelf-tab-$index'),
-                                  label: Text(rows[index].name),
-                                  selected: index == activeIndex,
-                                  showCheckmark: false,
-                                  chipAnimationStyle: ChipAnimationStyle(
-                                    selectAnimation: AnimationStyle(
-                                      duration: PaperfoldMotion.of(
-                                        context,
-                                        PaperfoldMotion.tick,
-                                      ),
-                                      curve: PaperfoldMotion.land,
-                                    ),
-                                  ),
-                                  onSelected: (_) =>
-                                      _bookcaseKey.currentState?.climbTo(index),
-                                ),
-                              ),
-                            ),
-                            ShelfFilterChips(
-                              controls: controls,
-                              tags: data.tags,
-                            ),
-                          ],
+                          ),
+                          onSelected: (_) =>
+                              _bookcaseKey.currentState?.climbTo(index),
                         ),
                       ),
                     ),
+                    ShelfFilterChips(controls: controls, tags: data.tags),
+                  ],
+                );
+                return Column(
+                  children: [
                     Expanded(
                       // Keep the PageView subtree in place when its header hides.
                       key: const ValueKey('shelf-bookcase-region'),
@@ -627,13 +615,14 @@ class _ShelfHomePageState extends ConsumerState<ShelfHomePage>
                         ),
                         child: Bookcase(
                           key: _bookcaseKey,
+                          headerBuilder: (_) => header,
                           showCovers: Prefs().shelfCoverView,
                           showSignposts: false,
                           shelves: rows,
                           initialShelf: activeIndex,
                           onOptions: (shelfBook) {
                             final book = booksById[shelfBook.id];
-                            if (book != null)
+                            if (book != null) {
                               showModalBottomSheet<void>(
                                 context: context,
                                 useSafeArea: true,
@@ -641,6 +630,7 @@ class _ShelfHomePageState extends ConsumerState<ShelfHomePage>
                                 isScrollControlled: true,
                                 builder: (_) => BookBottomSheet(book: book),
                               );
+                            }
                           },
                           onShelfChanged: (index) {
                             if (_shelfIndex != index) {
@@ -900,7 +890,7 @@ class _BookcaseEmptyState extends StatelessWidget {
       container: true,
       label: shelfName,
       child: Center(
-        child: SingleChildScrollView(
+        child: Padding(
           padding: const EdgeInsets.all(24),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -1102,29 +1092,47 @@ class _ShelfCollectionPageState extends ConsumerState<ShelfCollectionPage> {
                     Navigator.of(context).push(bookDetailRoute(context, book)),
                 onOpenOptions: _openBookOptions,
               )
-            : GridView.builder(
-                padding: const EdgeInsetsDirectional.fromSTEB(16, 12, 16, 32),
-                gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                  maxCrossAxisExtent: 190,
-                  mainAxisExtent: 310,
-                  mainAxisSpacing: 24,
-                  crossAxisSpacing: 16,
-                ),
-                itemCount: widget.books.length + widget.wishlistItems.length,
-                itemBuilder: (context, index) {
-                  if (index < widget.books.length) {
-                    final book = widget.books[index];
-                    return _ShelfCoverTile(
-                      book: book,
-                      onOpenOptions: () => _openBookOptions(book),
-                      onOpenBook: () =>
-                          Navigator.of(context)
-                              .push(bookDetailRoute(context, book)),
-                    );
-                  }
-                  final item =
-                      widget.wishlistItems[index - widget.books.length];
-                  return _WishlistCoverTile(item: item);
+            : LayoutBuilder(
+                builder: (context, bounds) {
+                  final layout = PaperfoldLayout.of(
+                    context,
+                    constraints: bounds,
+                  );
+                  final density = layout.covers(Prefs().libraryCoversPerRow);
+                  return GridView.builder(
+                    padding: EdgeInsets.fromLTRB(
+                      layout.gutter,
+                      12,
+                      layout.gutter,
+                      MediaQuery.paddingOf(context).bottom + 32,
+                    ),
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: density.columns,
+                      mainAxisExtent:
+                          density.coverWidth * 1.5 +
+                          MediaQuery.textScalerOf(context).scale(20) * 3 +
+                          24,
+                      mainAxisSpacing: 16,
+                      crossAxisSpacing: 12,
+                    ),
+                    itemCount:
+                        widget.books.length + widget.wishlistItems.length,
+                    itemBuilder: (context, index) {
+                      if (index < widget.books.length) {
+                        final book = widget.books[index];
+                        return _ShelfCoverTile(
+                          book: book,
+                          onOpenOptions: () => _openBookOptions(book),
+                          onOpenBook: () =>
+                              Navigator.of(context)
+                                  .push(bookDetailRoute(context, book)),
+                        );
+                      }
+                      final item =
+                          widget.wishlistItems[index - widget.books.length];
+                      return _WishlistCoverTile(item: item);
+                    },
+                  );
                 },
               ),
       ),
@@ -1268,7 +1276,8 @@ class _ShelfCoverTile extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Expanded(
+                  AspectRatio(
+                    aspectRatio: 2 / 3,
                     child: BookDetailHero(
                       id: 'book-${book.id}',
                       cover: BookCover(book: book),
@@ -1325,7 +1334,8 @@ class _WishlistCoverTile extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Expanded(
+            AspectRatio(
+              aspectRatio: 2 / 3,
               child: DecoratedBox(
                 decoration: BoxDecoration(
                   color: visual.background,

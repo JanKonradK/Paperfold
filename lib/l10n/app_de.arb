@@ -1137,5 +1137,11 @@
   "libraryPaperBooks": "Papierbücher",
   "bookStartReading": "Lesen beginnen",
   "bookProgressThrough": "{percent}% des Buches gelesen",
-  "bookStartedOn": "Begonnen am {date}"
+  "bookStartedOn": "Begonnen am {date}",
+  "libraryLayoutTitle": "Bibliothekslayout",
+  "libraryCoversPerRow": "Cover pro Reihe (Hochformat)",
+  "libraryLayoutAuto": "Automatisch",
+  "libraryLayoutFewer": "Weniger Cover",
+  "libraryLayoutMore": "Mehr Cover",
+  "libraryLayoutHelp": "Jetzt {count} Cover pro Reihe. Im Querformat kommen Spalten bei ungefähr gleicher Covergröße hinzu."
 }

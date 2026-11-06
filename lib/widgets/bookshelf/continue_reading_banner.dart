@@ -1,3 +1,4 @@
+import 'package:paperfold/utils/paperfold_layout.dart';
 import 'package:paperfold/widgets/bookshelf/book_spine.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:paperfold/config/paperfold_system.dart';
@@ -47,103 +48,128 @@ class ContinueReadingBanner extends StatelessWidget {
     final progress = book.readingPercentage.isFinite
         ? book.readingPercentage.clamp(0.0, 1.0)
         : 0.0;
-    final progressLabel = l10n.notesReadPercentage(
-      '${(progress * 100).round()}%',
-    );
+    final progressLabel = book.isPhysical
+        ? '${l10n.physicalBookCurrentPage}: ${book.currentPage}'
+              '${book.totalPages == null ? '' : ' ${l10n.physicalBookOfPages(book.totalPages!)}'}'
+        : l10n.notesReadPercentage('${(progress * 100).round()}%');
 
-    return BookLight(
-      coverPath: book.coverFullPath,
-      fallback: BookSpine.resolveVisual('book-${book.id}', scheme).background,
-      fade: false,
-      borderRadius: PaperfoldShape.paneRadius,
-      child: PaperfoldPressable(
-        child: Semantics(
-          button: true,
-          enabled: onOpen != null,
-          label: [
-            actionLabel,
-            book.title,
-            if (book.author.trim().isNotEmpty) book.author,
-            progressLabel,
-          ].join(', '),
-          onTap: onOpen,
-          excludeSemantics: true,
-          child: compact
-              ? SizedBox(
-                  width: double.infinity,
-                  child: OutlinedButton.icon(
-                    onPressed: onOpen,
-                    icon: const Icon(Icons.menu_book_outlined),
-                    label: Text(actionLabel),
-                  ),
-                )
-              : Material(
-                  color: Colors.transparent,
-                  borderRadius: PaperfoldShape.paneRadius,
-                  clipBehavior: Clip.antiAlias,
-                  child: InkWell(
-                    onTap: onOpen,
-                    child: Padding(
-                      padding: const EdgeInsets.all(12),
-                      child: Row(
-                        children: [
-                          MediaQuery.withNoTextScaling(
-                            child: BookCover(book: book, width: 44, height: 66),
-                          ),
-                          const SizedBox(width: 14),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text(
-                                  book.title,
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: theme.textTheme.titleMedium,
-                                ),
-                                const SizedBox(height: 4),
-                                Wrap(
-                                  spacing: 12,
-                                  runSpacing: 2,
-                                  children: [
-                                    Text(
-                                      actionLabel,
-                                      style: theme.textTheme.labelLarge
-                                          ?.copyWith(color: scheme.primary),
-                                    ),
-                                    Text(
-                                      progressLabel,
-                                      style: theme.textTheme.bodySmall
-                                          ?.copyWith(
-                                            color: scheme.onSurfaceVariant,
-                                          ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 8),
-                                LinearProgressIndicator(
-                                  value: progress,
-                                  minHeight: 2,
-                                  color: scheme.primary,
-                                  backgroundColor: scheme.outlineVariant
-                                      .withValues(alpha: 0.45),
-                                ),
-                              ],
+    final layout = PaperfoldLayout.of(context);
+    final landscape = compact || layout.landscape;
+    final padding = landscape ? 16.0 : layout.panePadding;
+    return LayoutBuilder(
+      builder: (context, bounds) {
+        final coverWidth = landscape
+            ? 80.0
+            : layout.tablet
+            ? ((bounds.maxWidth - 2 * padding) * .22).clamp(144.0, 180.0)
+            : 96.0;
+        final wideButton =
+            bounds.maxWidth - 2 * padding < 320 ||
+            MediaQuery.textScalerOf(context).scale(16) >= 24;
+        final button = FilledButton(
+          style: FilledButton.styleFrom(minimumSize: const Size(48, 48)),
+          onPressed: onOpen,
+          child: Text(actionLabel, textAlign: TextAlign.center),
+        );
+        final progressWidget = Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              progressLabel,
+              style: layout.tablet && !landscape
+                  ? theme.textTheme.bodyLarge
+                  : theme.textTheme.bodyMedium,
+            ),
+            const SizedBox(height: 8),
+            LinearProgressIndicator(value: progress, minHeight: 2),
+          ],
+        );
+        return BookLight(
+          coverPath: book.coverFullPath,
+          fallback: BookSpine.resolveVisual(
+            'book-${book.id}',
+            scheme,
+          ).background,
+          fade: false,
+          borderRadius: PaperfoldShape.paneRadius,
+          child: PaperfoldPressable(
+            child: Material(
+              color: Colors.transparent,
+              borderRadius: PaperfoldShape.paneRadius,
+              clipBehavior: Clip.antiAlias,
+              child: Padding(
+                padding: EdgeInsets.all(padding),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        ExcludeSemantics(
+                          child: MediaQuery.withNoTextScaling(
+                            child: BookCover(
+                              book: book,
+                              width: coverWidth,
+                              height: coverWidth * 1.5,
                             ),
                           ),
-                          const SizedBox(width: 12),
-                          Icon(
-                            Icons.arrow_forward_rounded,
-                            color: scheme.primary,
+                        ),
+                        SizedBox(width: padding),
+                        Expanded(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                book.title,
+                                maxLines: 3,
+                                overflow: TextOverflow.ellipsis,
+                                style: layout.tablet && !landscape
+                                    ? theme.textTheme.headlineMedium
+                                    : theme.textTheme.headlineSmall,
+                              ),
+                              if (book.author.trim().isNotEmpty) ...[
+                                const SizedBox(height: 4),
+                                Text(
+                                  book.author,
+                                  style: layout.tablet && !landscape
+                                      ? theme.textTheme.bodyLarge
+                                      : theme.textTheme.bodyMedium,
+                                ),
+                              ],
+                              const SizedBox(height: 12),
+                              if (landscape && !wideButton)
+                                Row(
+                                  children: [
+                                    Expanded(child: progressWidget),
+                                    const SizedBox(width: 16),
+                                    Flexible(child: button),
+                                  ],
+                                )
+                              else ...[
+                                progressWidget,
+                                if (!wideButton) ...[
+                                  const SizedBox(height: 12),
+                                  button,
+                                ],
+                              ],
+                            ],
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
-                  ),
+                    if (wideButton) ...[
+                      const SizedBox(height: 16),
+                      SizedBox(width: double.infinity, child: button),
+                    ],
+                  ],
                 ),
-        ),
-      ),
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 }

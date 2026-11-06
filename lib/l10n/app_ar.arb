@@ -919,5 +919,11 @@
   "libraryPaperBooks": "كتب ورقية",
   "bookStartReading": "بدء القراءة",
   "bookProgressThrough": "قرأت {percent}% من الكتاب",
-  "bookStartedOn": "بدأت في {date}"
+  "bookStartedOn": "بدأت في {date}",
+  "libraryLayoutTitle": "تخطيط المكتبة",
+  "libraryCoversPerRow": "الأغلفة في كل صف (عمودي)",
+  "libraryLayoutAuto": "تلقائي",
+  "libraryLayoutFewer": "أغلفة أقل",
+  "libraryLayoutMore": "أغلفة أكثر",
+  "libraryLayoutHelp": "{count} أغلفة في كل صف حاليًا. يضيف الوضع الأفقي أعمدة مع الحفاظ على حجم الغلاف التقريبي."
 }

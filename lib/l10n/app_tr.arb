@@ -1137,5 +1137,11 @@
   "libraryPaperBooks": "Basılı kitaplar",
   "bookStartReading": "Okumaya başla",
   "bookProgressThrough": "Kitabın %{percent} kadarı okundu",
-  "bookStartedOn": "Başlangıç: {date}"
+  "bookStartedOn": "Başlangıç: {date}",
+  "libraryLayoutTitle": "Kitaplık düzeni",
+  "libraryCoversPerRow": "Satır başına kapak (dikey)",
+  "libraryLayoutAuto": "Otomatik",
+  "libraryLayoutFewer": "Daha az kapak",
+  "libraryLayoutMore": "Daha fazla kapak",
+  "libraryLayoutHelp": "Şu anda satır başına {count} kapak var. Yatay modda kapak boyutu yaklaşık aynı kalırken sütunlar eklenir."
 }

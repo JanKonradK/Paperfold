@@ -79,18 +79,14 @@ void main() {
     await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
     expect(find.text('42% read'), findsOneWidget);
-    await tester.tap(find.byType(ContinueReadingBanner));
+    await tester.ensureVisible(find.byType(FilledButton));
+    await tester.tap(find.byType(FilledButton));
     expect(opened, 1);
 
     final semantics = tester.ensureSemantics();
     try {
       await tester.pump();
-      expect(
-        find.semantics.byLabel(
-          'Continue reading, A Wizard of Earthsea, Ursula Le Guin, 42% read',
-        ),
-        findsOne,
-      );
+      expect(find.semantics.byLabel('Continue reading'), findsOne);
     } finally {
       semantics.dispose();
     }
@@ -99,6 +95,14 @@ void main() {
     await tester.pumpWidget(host());
     await tester.pumpAndSettle();
     expect(find.text('0% read'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+    current.filePath = '';
+    current.currentPage = 42;
+    current.totalPages = 300;
+    await tester.pumpWidget(host());
+    await tester.pumpAndSettle();
+    expect(find.text('Current page: 42 of 300'), findsOneWidget);
+    expect(find.text('Log progress'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
@@ -148,21 +152,22 @@ void main() {
     expect(tester.takeException(), isNull);
     expect(tester.getSize(find.byType(Bookcase)).height, greaterThan(80));
 
-    // A very tall text-scaled banner can extend below the short header's
-    // viewport. Its visible leading area must still open the book.
-    await tester.tapAt(
-      tester.getTopLeft(
-            find.byKey(const ValueKey('library-continue-reading')),
-          ) +
-          const Offset(24, 24),
-    );
-    expect(openedId, current.id);
-
-    await tester.drag(
-      find.byKey(const ValueKey('shelf-header-scroll')),
-      const Offset(0, -300),
+    await tester.scrollUntilVisible(
+      find.byType(FilledButton),
+      150,
+      scrollable: find
+          .descendant(
+            of: find.byKey(const ValueKey('shelf-spines')),
+            matching: find.byType(Scrollable),
+          )
+          .first,
     );
     await tester.pumpAndSettle();
+    await tester.tap(find.byType(FilledButton));
+    expect(openedId, current.id);
+    await tester.ensureVisible(
+      find.byKey(const ValueKey('shelf-sort-control')),
+    );
     expect(
       find.byKey(const ValueKey('shelf-sort-control')).hitTestable(),
       findsOneWidget,

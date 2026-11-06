@@ -1,3 +1,6 @@
+import 'package:paperfold/utils/paperfold_layout.dart';
+import 'package:paperfold/config/shared_preference_provider.dart';
+
 import 'dart:math' as math;
 
 import 'package:material_ui/material_ui.dart';
@@ -94,6 +97,8 @@ class ShelfStage extends StatefulWidget {
     this.pickUpHint,
     this.openHint,
     this.showCovers = false,
+    this.headerBuilder,
+    this.emptyBuilder,
   });
   final List<ShelfBook> books;
   final String? shelfName;
@@ -104,6 +109,7 @@ class ShelfStage extends StatefulWidget {
   final Widget Function(BuildContext, ShelfBook)? optionsBuilder;
   final String? pickUpHint, openHint;
   final bool showCovers;
+  final WidgetBuilder? headerBuilder, emptyBuilder;
   static const headBand = 64.0, footBand = 96.0;
   static const runDuration = PaperfoldMotion.move;
   static const liftDuration = PaperfoldMotion.move;
@@ -116,6 +122,10 @@ class ShelfStage extends StatefulWidget {
 class ShelfStageState extends State<ShelfStage>
     with SingleTickerProviderStateMixin {
   final _scroll = ScrollController();
+  final _headerKey = GlobalKey();
+  double _headerHeight = 0;
+  Size? _geometry;
+  int? _density;
   final _focus = <String, FocusNode>{};
   late final AnimationController _layout;
   int _index = 0;
@@ -146,18 +156,26 @@ class ShelfStageState extends State<ShelfStage>
   void didUpdateWidget(ShelfStage oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.showCovers != widget.showCovers) {
-      if (_scroll.hasClients && _lastRects.isNotEmpty) {
-        final i = _lastRects.indexWhere((r) => r.bottom > _scroll.offset);
-        if (i >= 0) {
-          _anchor = i;
-          _anchorInset = _scroll.offset - _lastRects[i].top;
-        }
-      }
+      _captureAnchor();
       _layout.animateTo(
         widget.showCovers ? 1 : 0,
         duration: bookDetailDuration(context),
         curve: PaperfoldMotion.settle,
       );
+    }
+  }
+
+  void _captureAnchor() {
+    if (!_scroll.hasClients ||
+        _lastRects.isEmpty ||
+        _scroll.offset < _headerHeight) {
+      return;
+    }
+    final offset = _scroll.offset - _headerHeight;
+    final i = _lastRects.indexWhere((r) => r.bottom > offset);
+    if (i >= 0) {
+      _anchor = i;
+      _anchorInset = offset - _lastRects[i].top;
     }
   }
 
@@ -205,32 +223,73 @@ class ShelfStageState extends State<ShelfStage>
   @override
   Widget build(BuildContext context) => LayoutBuilder(
     builder: (context, bounds) {
-      final large = MediaQuery.textScalerOf(context).scale(16) >= 24;
-      final width = math.max(48.0, bounds.maxWidth - 32);
-      final columns = math.max(1, (width / (large ? 180 : 120)).floor());
-      final coverWidth = (width - (columns - 1) * 12) / columns;
-      final coverHeight =
-          coverWidth / .68 +
-          MediaQuery.textScalerOf(context).scale(14) * 3 +
-          16;
-      // A shelf is 240 tall on every screen; a wider screen holds more
-      // books per shelf, not bigger ones. Spines above 230 show their author
-      // and foil seal. Never taller than the space the stage has.
-      final spineHeight = math.min(
-        240.0,
-        math.max(72.0, bounds.maxHeight - 52),
+      final layout = PaperfoldLayout.of(context, constraints: bounds);
+      final geometry = Size(bounds.maxWidth, bounds.maxHeight);
+      if (_geometry != geometry || _density != Prefs().libraryCoversPerRow) {
+        _captureAnchor();
+        _geometry = geometry;
+        _density = Prefs().libraryCoversPerRow;
+      }
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        final height = _headerKey.currentContext?.size?.height ?? 0;
+        if (height != _headerHeight) setState(() => _headerHeight = height);
+      });
+      final density = layout.covers(Prefs().libraryCoversPerRow);
+      final columns = density.columns;
+      final coverWidth = density.coverWidth;
+      final width = layout.content;
+      final captionStyle = Theme.of(context).textTheme.labelLarge
+          ?.copyWith(fontSize: 14, height: 20 / 14);
+      final caption = TextPainter(
+        text: TextSpan(text: 'Ag\nAg', style: captionStyle),
+        textDirection: Directionality.of(context),
+        textScaler: MediaQuery.textScalerOf(context),
+      )..layout(maxWidth: coverWidth);
+      final captionHeight = caption.height;
+      final coverHeight = coverWidth * 1.5 + 8 + captionHeight;
+      caption.dispose();
+      final portraitCount = Prefs().libraryCoversPerRow <= 0
+          ? layout.defaultCoversPerRow
+          : Prefs().libraryCoversPerRow;
+      final portraitContent = layout.window.shortestSide - 2 * layout.gutter;
+      final count = portraitCount.clamp(
+        1,
+        ((portraitContent + 12) / 84).floor().clamp(1, 100),
       );
+      final chosenWidth = (portraitContent - (count - 1) * 12) / count;
+      final defaultWidth =
+          (portraitContent - (layout.defaultCoversPerRow - 1) * 12) /
+          layout.defaultCoversPerRow;
+      final scale = chosenWidth / defaultWidth;
+      final spineHeight = (240 * scale).clamp(144.0, 320.0);
       final spineRects = <Rect>[];
       final coverRects = <Rect>[];
       final labels = <(double, String)>[];
-      double x = 0, y = 36;
+      var groupLead = 36.0;
+      for (final label in [
+        L10n.of(context).libraryEbooks,
+        L10n.of(context).libraryPaperBooks,
+      ]) {
+        final painter = TextPainter(
+          text: TextSpan(
+            text: '$label · ${widget.books.length}',
+            style: Theme.of(context).textTheme.labelLarge,
+          ),
+          textDirection: Directionality.of(context),
+          textScaler: MediaQuery.textScalerOf(context),
+        )..layout(maxWidth: width);
+        groupLead = math.max(groupLead, painter.height + 12);
+        painter.dispose();
+      }
+      double x = 0, y = groupLead;
       bool? physical;
       var groupStart = 0;
       for (var i = 0; i < widget.books.length; i++) {
         final book = widget.books[i];
         if (physical != book.isPhysical && !book.isWishlist) {
           if (physical != null) {
-            y += spineHeight + 32;
+            y += spineHeight + 16 + groupLead;
           }
           x = 0;
           groupStart = i;
@@ -239,11 +298,12 @@ class ShelfStageState extends State<ShelfStage>
               .where((b) => b.isPhysical == physical)
               .length;
           labels.add((
-            y - 28,
+            y - groupLead,
             '${book.isPhysical ? L10n.of(context).libraryPaperBooks : L10n.of(context).libraryEbooks} · $count',
           ));
         }
-        if (x + book.spineWidth > width && x > 0) {
+        final spineWidth = math.max(48.0, book.spineWidth * scale);
+        if (x + spineWidth > width && x > 0) {
           x = 0;
           y += spineHeight + 16;
         }
@@ -252,24 +312,24 @@ class ShelfStageState extends State<ShelfStage>
         final bookHeight = spineHeight * book.spineHeightFactor;
         spineRects.add(
           Rect.fromLTWH(
-            x + 16,
+            x + layout.gutter,
             y + spineHeight - bookHeight,
-            book.spineWidth,
+            spineWidth,
             bookHeight,
           ),
         );
         // Each group has its own grid origin, resolved below.
         coverRects.add(
           Rect.fromLTWH(
-            16 + ((i - groupStart) % columns) * (coverWidth + 12),
+            layout.gutter + ((i - groupStart) % columns) * (coverWidth + 12),
             0,
             coverWidth,
             coverHeight,
           ),
         );
-        x += book.spineWidth + 4;
+        x += spineWidth + 4;
       }
-      double gridY = 36;
+      double gridY = groupLead;
       physical = null;
       groupStart = 0;
       final gridLabels = <double>[];
@@ -280,11 +340,11 @@ class ShelfStageState extends State<ShelfStage>
             gridY +=
                 ((i - groupStart + columns - 1) ~/ columns) *
                     (coverHeight + 16) +
-                36;
+                groupLead;
           }
           groupStart = i;
           physical = book.isPhysical;
-          gridLabels.add(gridY - 28);
+          gridLabels.add(gridY - groupLead);
         }
         coverRects[i] = coverRects[i].shift(
           Offset(0, gridY + ((i - groupStart) ~/ columns) * (coverHeight + 16)),
@@ -305,7 +365,7 @@ class ShelfStageState extends State<ShelfStage>
           ];
           _lastRects = rects;
           if (_anchor != null && _anchor! < rects.length) {
-            final top = rects[_anchor!].top + _anchorInset;
+            final top = _headerHeight + rects[_anchor!].top + _anchorInset;
             WidgetsBinding.instance.addPostFrameCallback((_) {
               if (!mounted || !_scroll.hasClients) return;
               final offset = top.clamp(0.0, _scroll.position.maxScrollExtent);
@@ -314,13 +374,16 @@ class ShelfStageState extends State<ShelfStage>
             });
           }
           final height = rects.fold<double>(0, (v, r) => math.max(v, r.bottom));
-          final offset = _scroll.hasClients ? _scroll.offset : 0.0;
+          final offset = _scroll.hasClients
+              ? _scroll.offset - _headerHeight
+              : 0.0;
           return Opacity(
             opacity: spatial ? 1 : (1 - (t - _layout.value).abs()),
             child: Focus(
               onKeyEvent: (node, event) {
-                if (event is! KeyDownEvent || widget.books.isEmpty)
+                if (event is! KeyDownEvent || widget.books.isEmpty) {
                   return KeyEventResult.ignored;
+                }
                 if (event.logicalKey == LogicalKeyboardKey.enter ||
                     event.logicalKey == LogicalKeyboardKey.space) {
                   pickUp();
@@ -335,7 +398,7 @@ class ShelfStageState extends State<ShelfStage>
                       : -1;
                   _index = (_index + step).clamp(0, widget.books.length - 1);
                   _scroll.jumpTo(
-                    (rects[_index].top - 36).clamp(
+                    (_headerHeight + rects[_index].top - groupLead).clamp(
                       0,
                       _scroll.position.maxScrollExtent,
                     ),
@@ -360,6 +423,12 @@ class ShelfStageState extends State<ShelfStage>
                 ),
                 children: [
                   SizedBox(
+                    key: _headerKey,
+                    child: widget.headerBuilder?.call(context),
+                  ),
+                  if (widget.books.isEmpty && widget.emptyBuilder != null)
+                    widget.emptyBuilder!(context),
+                  SizedBox(
                     height: height + 16,
                     child: Stack(
                       children: [
@@ -380,8 +449,9 @@ class ShelfStageState extends State<ShelfStage>
                             ),
                         for (var j = 0; j < labels.length; j++)
                           PositionedDirectional(
-                            start: 16,
+                            start: layout.gutter,
                             top: labels[j].$1 * (1 - t) + gridLabels[j] * t,
+                            width: width,
                             child: Text(
                               labels[j].$2,
                               style: Theme.of(context).textTheme.labelLarge,
@@ -401,7 +471,7 @@ class ShelfStageState extends State<ShelfStage>
                                       rects[i].height,
                                     )
                                   : rects[i],
-                              child: _tile(i, t),
+                              child: _tile(i, t, captionHeight),
                             ),
                       ],
                     ),
@@ -414,7 +484,7 @@ class ShelfStageState extends State<ShelfStage>
       );
     },
   );
-  Widget _tile(int i, double t) {
+  Widget _tile(int i, double t, double captionHeight) {
     final book = widget.books[i];
     final visual = BookSpine.resolveVisual(
       book.bindingKey,
@@ -469,12 +539,19 @@ class ShelfStageState extends State<ShelfStage>
                               ],
                             ),
                           ),
-                          if (t > .5)
-                            Text(
-                              book.title,
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
+                          if (t > .5) ...[
+                            const SizedBox(height: 8),
+                            SizedBox(
+                              height: captionHeight,
+                              child: Text(
+                                book.title,
+                                style: Theme.of(context).textTheme.labelLarge
+                                    ?.copyWith(fontSize: 14, height: 20 / 14),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
                             ),
+                          ],
                         ],
                       ),
               ),
