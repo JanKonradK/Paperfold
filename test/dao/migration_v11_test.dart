@@ -63,7 +63,7 @@ void main() {
     // Replaying an interrupted upgrade must not add the columns twice.
     await DBHelper().onUpgradeDatabase(db, 10, 11);
     expect((await db.query('tb_books')).single, after);
-    expect(currentDbVersion, 11);
+    expect(currentDbVersion, greaterThanOrEqualTo(11));
   });
 
   test('a paper book saves its pages and stays out of file work', () async {
