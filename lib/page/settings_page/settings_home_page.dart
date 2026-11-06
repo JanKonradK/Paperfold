@@ -1,3 +1,4 @@
+import 'package:paperfold/widgets/settings/library_layout_control.dart';
 import 'package:paperfold/utils/paperfold_layout.dart';
 import 'package:paperfold/widgets/common/paperfold_grid.dart';
 import 'package:paperfold/config/paperfold_system.dart';
@@ -158,6 +159,13 @@ class _SettingsHomePageState extends ConsumerState<SettingsHomePage> {
                           child: ThemeShelfPreview(),
                         ),
                       ),
+                    ],
+                  ),
+                  // How full the Library shelves are, beside the theme.
+                  SettingsSection(
+                    title: Text(l10n.libraryLayoutTitle),
+                    tiles: const [
+                      CustomSettingsTile(child: LibraryLayoutControl()),
                     ],
                   ),
                   Padding(
