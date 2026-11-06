@@ -13,11 +13,13 @@
 - The new home tests and the radius test pass: 5 tests.
 - The radius test freezes exact occurrences in 12 files owned by other agents.
 - No numeric circular radius remains in this task scope.
+- Statistics charts animate values once in 300 ms, inside RepaintBoundary.
+- Reduced motion uses a dissolve. eInk and Remove animations use zero duration.
 - The scoped analyzer found no errors. It found 14 information messages.
 
 ## Next
 
-- Commit the charts and other screens.
+- Commit the dialogs, search, notes, book edit, and catalog screens.
 - Complete the full test suite.
 
 ## Known test results

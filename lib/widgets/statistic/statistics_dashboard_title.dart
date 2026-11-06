@@ -1,3 +1,4 @@
+import 'package:paperfold/config/paperfold_system.dart';
 import 'package:paperfold/config/shared_preference_provider.dart';
 import 'package:paperfold/l10n/generated/L10n.dart';
 import 'package:paperfold/providers/dashboard_tiles_provider.dart';
@@ -122,14 +123,13 @@ class _AddTileSheetContentState extends ConsumerState<AddTileSheetContent> {
       child: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.all(16.0),
+            padding: const EdgeInsets.all(PaperfoldSpace.md),
             child: Row(
               children: [
                 Text(
                   l10n.statisticsDashboardAddTileTitle,
-                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                  style: Theme.of(context).textTheme.headlineSmall
+                      ?.copyWith(fontWeight: FontWeight.bold),
                 ),
                 const Spacer(),
                 IconButton(
@@ -147,28 +147,30 @@ class _AddTileSheetContentState extends ConsumerState<AddTileSheetContent> {
                 final dashboardTile = dashboardTileRegistry[type]!;
                 final metadata = dashboardTile.metadata;
                 return PageViewModel(
-                    titleWidget: Text(
-                      metadata.title,
-                      style: Theme.of(context).textTheme.headlineMedium,
-                    ),
-                    bodyWidget: Column(
-                      children: [
-                        SizedBox(
-                            height: dashboardTile.tileSize(context).height,
-                            width: dashboardTile.tileSize(context).width,
-                            child: dashboardTile.buildTile(context, ref)),
-                        SizedBox(height: 40),
-                        Text(
-                          metadata.description,
-                          style: Theme.of(context).textTheme.bodyLarge,
-                          textAlign: TextAlign.center,
-                        ),
-                      ],
-                    ),
-                    decoration: PageDecoration(
-                      bodyPadding: EdgeInsets.all(0),
-                      pageMargin: EdgeInsets.all(0),
-                    ));
+                  titleWidget: Text(
+                    metadata.title,
+                    style: Theme.of(context).textTheme.headlineMedium,
+                  ),
+                  bodyWidget: Column(
+                    children: [
+                      SizedBox(
+                        height: dashboardTile.tileSize(context).height,
+                        width: dashboardTile.tileSize(context).width,
+                        child: dashboardTile.buildTile(context, ref),
+                      ),
+                      SizedBox(height: 40),
+                      Text(
+                        metadata.description,
+                        style: Theme.of(context).textTheme.bodyLarge,
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  ),
+                  decoration: PageDecoration(
+                    bodyPadding: EdgeInsets.all(0),
+                    pageMargin: EdgeInsets.all(0),
+                  ),
+                );
               }).toList(),
               onDone: () {
                 // Navigator.pop(context);
@@ -185,19 +187,20 @@ class _AddTileSheetContentState extends ConsumerState<AddTileSheetContent> {
                 color: Colors.black26,
                 spacing: const EdgeInsets.symmetric(horizontal: 3.0),
                 activeShape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(25.0),
+                  borderRadius: PaperfoldShape.paneRadius,
                 ),
               ),
             ),
           ),
           // Add Button
           Padding(
-            padding: const EdgeInsets.all(16.0),
+            padding: const EdgeInsets.all(PaperfoldSpace.md),
             child: SizedBox(
               width: double.infinity,
               child: AnxButton.icon(
-                disabled:
-                    notifier.workingTiles.contains(availableTiles[validIndex]),
+                disabled: notifier.workingTiles.contains(
+                  availableTiles[validIndex],
+                ),
                 onPressed: () {
                   notifier.addTile(availableTiles[validIndex]);
                   setState(() {});
@@ -236,38 +239,39 @@ class TotalReadTime extends ConsumerWidget {
     );
 
     return AsyncSkeletonWrapper<int>(
-        asyncValue: ref.watch(totalReadingTimeProvider),
-        builder: (seconds, _) {
-          final hours = seconds ~/ 3600;
-          final minutes = (seconds % 3600) ~/ 60;
+      asyncValue: ref.watch(totalReadingTimeProvider),
+      builder: (seconds, _) {
+        final hours = seconds ~/ 3600;
+        final minutes = (seconds % 3600) ~/ 60;
 
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  highlightDigit(
-                    context,
-                    L10n.of(context).commonHours(hours),
-                    digitStyle,
-                    textStyle,
-                  ),
-                  highlightDigit(
-                    context,
-                    L10n.of(context).commonMinutes(minutes),
-                    digitStyle,
-                    textStyle,
-                  ),
-                ],
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                highlightDigit(
+                  context,
+                  L10n.of(context).commonHours(hours),
+                  digitStyle,
+                  textStyle,
+                ),
+                highlightDigit(
+                  context,
+                  L10n.of(context).commonMinutes(minutes),
+                  digitStyle,
+                  textStyle,
+                ),
+              ],
+            ),
+            Text(
+              '${Prefs().beginDate.toString().substring(0, 10)} ${L10n.of(context).statisticToPresent}',
+              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
-              Text(
-                '${Prefs().beginDate.toString().substring(0, 10)} ${L10n.of(context).statisticToPresent}',
-                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
-              )
-            ],
-          );
-        });
+            ),
+          ],
+        );
+      },
+    );
   }
 }

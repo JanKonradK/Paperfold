@@ -1,3 +1,6 @@
+import 'package:paperfold/config/paperfold_visual_policy.dart';
+import 'package:paperfold/config/paperfold_motion.dart';
+
 import 'dart:ui';
 
 import 'package:paperfold/widgets/statistic/dashboard_tiles/dashboard_tile_base.dart';
@@ -88,32 +91,33 @@ class _DashboardTileDetailViewState
         GestureDetector(
           onTap: () => Navigator.of(context).pop(),
           child: AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
+            duration: PaperfoldVisualPolicy.motionAllowed(context)
+                ? PaperfoldMotion.of(context, PaperfoldMotion.shift)
+                : Duration.zero,
             decoration: BoxDecoration(
               color: Colors.black.withValues(
-                  alpha: 0.4 * (widget.animationValue * _blurSigma / 10.0)),
+                alpha: 0.4 * (widget.animationValue * _blurSigma / 10.0),
+              ),
             ),
             child: BackdropFilter(
-              filter: ImageFilter.blur(
-                sigmaX: _blurSigma,
-                sigmaY: _blurSigma,
-              ),
-              child: Container(
-                color: Colors.transparent,
-              ),
+              filter: ImageFilter.blur(sigmaX: _blurSigma, sigmaY: _blurSigma),
+              child: Container(color: Colors.transparent),
             ),
           ),
         ),
 
         // Draggable card
         AnimatedPositioned(
-          duration:
-              _isDragging ? Duration.zero : const Duration(milliseconds: 300),
+          duration: _isDragging
+              ? Duration.zero
+              : const Duration(milliseconds: 300),
           curve: Curves.elasticOut,
-          left: MediaQuery.of(context).size.width / 2 -
+          left:
+              MediaQuery.of(context).size.width / 2 -
               widget.tile.flipSize(context).width / 2 +
               _dragOffset.dx,
-          top: MediaQuery.of(context).size.height / 2 -
+          top:
+              MediaQuery.of(context).size.height / 2 -
               widget.tile.flipSize(context).height / 2 +
               _dragOffset.dy,
           child: GestureDetector(

@@ -1,4 +1,4 @@
-import 'package:paperfold/main.dart';
+import 'package:paperfold/widgets/statistic/chart_entrance.dart';
 import 'package:paperfold/providers/statistic_data.dart';
 import 'package:paperfold/utils/date/convert_seconds.dart';
 import 'package:fl_chart/fl_chart.dart';
@@ -9,8 +9,11 @@ class StatisticChart extends ConsumerStatefulWidget {
   final List<int> readingTime;
   final List<String> xLabels;
 
-  const StatisticChart(
-      {super.key, required this.readingTime, required this.xLabels});
+  const StatisticChart({
+    super.key,
+    required this.readingTime,
+    required this.xLabels,
+  });
 
   @override
   ConsumerState<StatisticChart> createState() => _StatisticChartState();
@@ -18,27 +21,37 @@ class StatisticChart extends ConsumerStatefulWidget {
 
 class _StatisticChartState extends ConsumerState<StatisticChart> {
   int? touchedIndex;
-  final Color bottomColor =
-      Theme.of(navigatorKey.currentState!.context).colorScheme.primary;
+  Color get bottomColor => Theme.of(context).colorScheme.primary;
 
-  final Color topColor = Theme.of(navigatorKey.currentState!.context)
-      .colorScheme
-      .primary
-      .withOpacity(0.5);
+  Color get topColor =>
+      Theme.of(context).colorScheme.primary.withValues(alpha: 0.5);
 
   @override
   Widget build(BuildContext context) {
-    return BarChart(
-      BarChartData(
-        barTouchData: barTouchData,
-        titlesData: titlesData,
-        borderData: borderData,
-        barGroups: barGroups,
-        gridData: const FlGridData(show: false),
-        alignment: BarChartAlignment.spaceAround,
-        maxY: widget.readingTime
-                .reduce((value, element) => value > element ? value : element) *
-            1.2,
+    return ChartEntrance(
+      builder: (entrance) => BarChart(
+        BarChartData(
+          barTouchData: barTouchData,
+          titlesData: titlesData,
+          borderData: borderData,
+          barGroups: barGroups
+              .map(
+                (group) => group.copyWith(
+                  barRods: group.barRods
+                      .map((rod) => rod.copyWith(toY: rod.toY * entrance))
+                      .toList(),
+                ),
+              )
+              .toList(),
+          gridData: const FlGridData(show: false),
+          alignment: BarChartAlignment.spaceAround,
+          maxY:
+              widget.readingTime.reduce(
+                (value, element) => value > element ? value : element,
+              ) *
+              1.2,
+        ),
+        duration: Duration.zero,
       ),
     );
   }
@@ -54,10 +67,7 @@ class _StatisticChartState extends ConsumerState<StatisticChart> {
           if (touchedIndex != null && group.x.toInt() == touchedIndex) {
             return BarTooltipItem(
               convertSeconds(widget.readingTime[group.x.toInt()]),
-              TextStyle(
-                color: topColor,
-                fontWeight: FontWeight.bold,
-              ),
+              TextStyle(color: topColor, fontWeight: FontWeight.bold),
             );
           }
           return null;
@@ -85,37 +95,26 @@ class _StatisticChartState extends ConsumerState<StatisticChart> {
   }
 
   FlTitlesData get titlesData => FlTitlesData(
-        show: true,
-        bottomTitles: AxisTitles(
-          sideTitles: SideTitles(
-            showTitles: true,
-            reservedSize: 30,
-            getTitlesWidget: getTitles,
-          ),
-        ),
-        leftTitles: const AxisTitles(
-          sideTitles: SideTitles(showTitles: false),
-        ),
-        topTitles: const AxisTitles(
-          sideTitles: SideTitles(showTitles: false),
-        ),
-        rightTitles: const AxisTitles(
-          sideTitles: SideTitles(showTitles: false),
-        ),
-      );
+    show: true,
+    bottomTitles: AxisTitles(
+      sideTitles: SideTitles(
+        showTitles: true,
+        reservedSize: 30,
+        getTitlesWidget: getTitles,
+      ),
+    ),
+    leftTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+    topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+    rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+  );
 
-  FlBorderData get borderData => FlBorderData(
-        show: false,
-      );
+  FlBorderData get borderData => FlBorderData(show: false);
 
   LinearGradient get _barsGradient => LinearGradient(
-        colors: [
-          bottomColor,
-          topColor,
-        ],
-        begin: Alignment.bottomCenter,
-        end: Alignment.topCenter,
-      );
+    colors: [bottomColor, topColor],
+    begin: Alignment.bottomCenter,
+    end: Alignment.topCenter,
+  );
 
   List<BarChartGroupData> get barGroups {
     List<BarChartGroupData> barGroups = [];
@@ -143,10 +142,8 @@ class _StatisticChartState extends ConsumerState<StatisticChart> {
       fontSize: 14,
     );
     return SideTitleWidget(
-        meta: meta,
-        child: Text(
-          widget.xLabels[value.toInt()],
-          style: style,
-        ));
+      meta: meta,
+      child: Text(widget.xLabels[value.toInt()], style: style),
+    );
   }
 }

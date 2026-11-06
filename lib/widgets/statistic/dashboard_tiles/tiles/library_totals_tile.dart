@@ -1,3 +1,4 @@
+import 'package:paperfold/config/paperfold_system.dart';
 import 'package:paperfold/l10n/generated/L10n.dart';
 import 'package:paperfold/providers/statictics_summary_value.dart';
 import 'package:paperfold/widgets/common/async_skeleton_wrapper.dart';
@@ -24,54 +25,52 @@ class LibraryTotalsTile extends StatisticsDashboardTileBase {
   }
 
   @override
-  Widget buildContent(
-    BuildContext context,
-    WidgetRef ref,
-  ) {
+  Widget buildContent(BuildContext context, WidgetRef ref) {
     final l10n = L10n.of(context);
 
     return AsyncSkeletonWrapper<List>(
-        onRetry: () async {
-          for (final type in StatisticType.values) {
-            ref.invalidate(staticticsSummaryValueProvider(type));
-          }
-        },
-        asyncValue: combineAsyncValues([
-          ref.watch(staticticsSummaryValueProvider(StatisticType.totalBooks)),
-          ref.watch(staticticsSummaryValueProvider(StatisticType.totalDates)),
-          ref.watch(staticticsSummaryValueProvider(StatisticType.totalNotes)),
-        ]),
-        mock: [0, 0, 0],
-        builder: (data, _) {
-          final booksRead = data[0] as int;
-          final daysOfReading = data[1] as int;
-          final notesCount = data[2] as int;
-          return Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Expanded(
-                child: _NumberTile(
-                  icon: Icons.auto_stories,
-                  label: l10n.statisticBooksRead(booksRead),
-                ),
+      onRetry: () async {
+        for (final type in StatisticType.values) {
+          ref.invalidate(staticticsSummaryValueProvider(type));
+        }
+      },
+      asyncValue: combineAsyncValues([
+        ref.watch(staticticsSummaryValueProvider(StatisticType.totalBooks)),
+        ref.watch(staticticsSummaryValueProvider(StatisticType.totalDates)),
+        ref.watch(staticticsSummaryValueProvider(StatisticType.totalNotes)),
+      ]),
+      mock: [0, 0, 0],
+      builder: (data, _) {
+        final booksRead = data[0] as int;
+        final daysOfReading = data[1] as int;
+        final notesCount = data[2] as int;
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Expanded(
+              child: _NumberTile(
+                icon: Icons.auto_stories,
+                label: l10n.statisticBooksRead(booksRead),
               ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: _NumberTile(
-                  icon: Icons.calendar_today,
-                  label: l10n.statisticDaysOfReading(daysOfReading),
-                ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: _NumberTile(
+                icon: Icons.calendar_today,
+                label: l10n.statisticDaysOfReading(daysOfReading),
               ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: _NumberTile(
-                  icon: Icons.note_alt_outlined,
-                  label: l10n.statisticNotes(notesCount),
-                ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: _NumberTile(
+                icon: Icons.note_alt_outlined,
+                label: l10n.statisticNotes(notesCount),
               ),
-            ],
-          );
-        });
+            ),
+          ],
+        );
+      },
+    );
   }
 }
 
@@ -84,9 +83,9 @@ class _NumberTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(PaperfoldSpace.sm),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: PaperfoldShape.controlRadius,
         color: Theme.of(context).colorScheme.surfaceContainerHighest,
       ),
       child: Column(
@@ -94,10 +93,7 @@ class _NumberTile extends StatelessWidget {
         children: [
           Icon(icon, size: 30),
           const SizedBox(height: 2),
-          Text(
-            label,
-            style: Theme.of(context).textTheme.bodyMedium,
-          ),
+          Text(label, style: Theme.of(context).textTheme.bodyMedium),
         ],
       ),
     );
