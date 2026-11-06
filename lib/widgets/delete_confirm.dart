@@ -48,7 +48,7 @@ class _DeleteConfirmState extends State<DeleteConfirm> {
         },
         style: isDelete
             ? TextButton.styleFrom(
-                foregroundColor: Colors.red,
+                foregroundColor: Theme.of(context).colorScheme.error,
               )
             : null,
         child: Text(isDelete ? confirmText : deleteText),
@@ -56,6 +56,9 @@ class _DeleteConfirmState extends State<DeleteConfirm> {
     } else {
       // Icon button mode with default icons
       return IconButton(
+        tooltip: isDelete
+            ? (widget.confirmText ?? L10n.of(context).commonConfirm)
+            : (widget.deleteText ?? L10n.of(context).commonDelete),
         onPressed: () {
           if (isDelete) {
             widget.delete();
@@ -70,7 +73,10 @@ class _DeleteConfirmState extends State<DeleteConfirm> {
         },
         icon: isDelete
             ? (widget.confirmIcon ??
-                const Icon(Icons.check_circle_outline, color: Colors.red))
+                  Icon(
+                    Icons.check_circle_outline,
+                    color: Theme.of(context).colorScheme.error,
+                  ))
             : (widget.deleteIcon ?? const Icon(Icons.delete_outline)),
       );
     }

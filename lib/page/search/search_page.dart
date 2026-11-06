@@ -1,4 +1,6 @@
+import 'package:paperfold/config/paperfold_system.dart';
 import 'package:paperfold/l10n/generated/L10n.dart';
+
 import 'dart:async';
 
 import 'package:paperfold/config/shared_preference_provider.dart';
@@ -83,12 +85,16 @@ class _SearchPageState extends ConsumerState<SearchPage> {
                 ? null
                 : IconButton(
                     icon: const Icon(Icons.clear),
-                    tooltip:
-                        MaterialLocalizations.of(context).clearButtonTooltip,
+                    tooltip: MaterialLocalizations.of(context)
+                        .clearButtonTooltip,
                     onPressed: _clearQuery,
                   ),
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(32)),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+            border: OutlineInputBorder(
+              borderRadius: PaperfoldShape.controlRadius,
+            ),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: PaperfoldSpace.sm,
+            ),
           ),
           textInputAction: TextInputAction.search,
           onChanged: _onQueryChanged,
@@ -108,11 +114,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
         child: asyncResult.when(
           data: (result) {
             if (query.trim().isEmpty) {
-              return Center(
-                child: Text(
-                  L10n.of(context).startTypingToSearch,
-                ),
-              );
+              return Center(child: Text(L10n.of(context).startTypingToSearch));
             }
             if (result.books.isEmpty &&
                 result.noteGroups.isEmpty &&
@@ -125,27 +127,30 @@ class _SearchPageState extends ConsumerState<SearchPage> {
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 960),
                   child: Padding(
-                    padding: const EdgeInsets.all(16.0),
+                    padding: const EdgeInsets.all(PaperfoldSpace.md),
                     child: Column(
                       spacing: 24,
                       children: [
                         if (result.books.isNotEmpty)
                           _SearchResult(
-                              title: L10n.of(context).books,
-                              child: _SearchBookResult(books: result.books)),
+                            title: L10n.of(context).books,
+                            child: _SearchBookResult(books: result.books),
+                          ),
                         if (result.noteGroups.isNotEmpty)
                           _SearchResult(
-                              title: L10n.of(context).notes,
-                              child:
-                                  _SearchNoteResult(group: result.noteGroups)),
+                            title: L10n.of(context).notes,
+                            child: _SearchNoteResult(group: result.noteGroups),
+                          ),
                         if (result.journalResults.isNotEmpty)
                           _SearchResult(
                             title: L10n.of(context).navJournal,
                             child: Column(
                               children: [
-                                for (var index = 0;
-                                    index < result.journalResults.length;
-                                    index++) ...[
+                                for (
+                                  var index = 0;
+                                  index < result.journalResults.length;
+                                  index++
+                                ) ...[
                                   if (index > 0) const Divider(height: 1),
                                   SearchJournalTile(
                                     result: result.journalResults[index],
@@ -176,10 +181,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
 }
 
 class _SearchResult extends ConsumerWidget {
-  const _SearchResult({
-    required this.title,
-    required this.child,
-  });
+  const _SearchResult({required this.title, required this.child});
 
   final String title;
   final Widget child;
@@ -191,15 +193,13 @@ class _SearchResult extends ConsumerWidget {
       children: [
         Text(
           title,
-          style: Theme.of(context)
-              .textTheme
-              .titleLarge!
+          style: Theme.of(context).textTheme.titleLarge!
               .copyWith(fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 6),
         FilledContainer(
           width: double.infinity,
-          padding: const EdgeInsets.all(12.0),
+          padding: const EdgeInsets.all(PaperfoldSpace.sm),
           child: child,
         ),
       ],
@@ -250,8 +250,11 @@ class _SearchNoteResult extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return Column(spacing: 18, children: [
-      ...group.map((item) => Column(
+    return Column(
+      spacing: 18,
+      children: [
+        ...group.map(
+          (item) => Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
@@ -260,30 +263,37 @@ class _SearchNoteResult extends ConsumerWidget {
               ),
               SizedBox(height: 4),
               FilledContainer(
-                  radius: 16,
-                  color: Theme.of(context).scaffoldBackgroundColor,
-                  child: Column(
-                    children: [
-                      ...item.notes.map(
-                        (note) => Padding(
-                          padding: const EdgeInsets.only(bottom: 12),
-                          child: BookNoteTile(
-                            book: item.book,
-                            backgroundColor:
-                                Theme.of(context).scaffoldBackgroundColor,
-                            note: note,
-                            margin: EdgeInsets.zero,
-                            onTap: () {
-                              pushToReadingPage(ref, context, item.book,
-                                  cfi: note.cfi);
-                            },
-                          ),
+                radius: 16,
+                color: Theme.of(context).scaffoldBackgroundColor,
+                child: Column(
+                  children: [
+                    ...item.notes.map(
+                      (note) => Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: BookNoteTile(
+                          book: item.book,
+                          backgroundColor: Theme.of(context)
+                              .scaffoldBackgroundColor,
+                          note: note,
+                          margin: EdgeInsets.zero,
+                          onTap: () {
+                            pushToReadingPage(
+                              ref,
+                              context,
+                              item.book,
+                              cfi: note.cfi,
+                            );
+                          },
                         ),
                       ),
-                    ],
-                  )),
+                    ),
+                  ],
+                ),
+              ),
             ],
-          ))
-    ]);
+          ),
+        ),
+      ],
+    );
   }
 }

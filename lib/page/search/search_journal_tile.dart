@@ -1,3 +1,4 @@
+import 'package:paperfold/config/paperfold_system.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:paperfold/l10n/generated/L10n.dart';
@@ -23,9 +24,13 @@ class SearchJournalTile extends ConsumerWidget {
     final review = result.kind == SearchJournalKind.review;
 
     return ListTile(
-      contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-      leading:
-          Icon(review ? Icons.rate_review_outlined : Icons.article_outlined),
+      contentPadding: const EdgeInsets.symmetric(
+        horizontal: PaperfoldSpace.xs,
+        vertical: PaperfoldSpace.xs,
+      ),
+      leading: Icon(
+        review ? Icons.rate_review_outlined : Icons.article_outlined,
+      ),
       title: Text(
         result.book.title,
         maxLines: 2,
@@ -81,18 +86,23 @@ class SearchJournalTile extends ConsumerWidget {
     ).firstMatch(text);
     final excerpt =
         context?.group(0) ?? String.fromCharCodes(text.runes.take(180));
-    final matches = RegExp(literal, caseSensitive: false, unicode: true)
-        .allMatches(excerpt);
+    final matches = RegExp(
+      literal,
+      caseSensitive: false,
+      unicode: true,
+    ).allMatches(excerpt);
     final spans = <TextSpan>[
       if (context != null && context.start > 0) const TextSpan(text: '…'),
     ];
     var offset = 0;
     for (final match in matches) {
       spans.add(TextSpan(text: excerpt.substring(offset, match.start)));
-      spans.add(TextSpan(
-        text: match.group(0),
-        style: const TextStyle(fontWeight: FontWeight.w700),
-      ));
+      spans.add(
+        TextSpan(
+          text: match.group(0),
+          style: const TextStyle(fontWeight: FontWeight.w700),
+        ),
+      );
       offset = match.end;
     }
     spans.add(TextSpan(text: excerpt.substring(offset)));

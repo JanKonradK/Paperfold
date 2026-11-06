@@ -1,3 +1,4 @@
+import 'package:paperfold/config/paperfold_system.dart';
 import 'package:paperfold/config/shared_preference_provider.dart';
 import 'package:paperfold/l10n/generated/L10n.dart';
 import 'package:paperfold/models/book.dart';
@@ -37,7 +38,7 @@ class _BookNotesPageState extends ConsumerState<BookNotesPage> {
     final l10n = L10n.of(context);
     final theme = Theme.of(context);
     return FilledContainer(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(PaperfoldSpace.md),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -60,9 +61,11 @@ class _BookNotesPageState extends ConsumerState<BookNotesPage> {
                         l10n.notesNotes(numberOfNotes),
                         style: theme.textTheme.titleMedium,
                       ),
-                    Text(l10n.notesReadPercentage(
-                      '${(book.readingPercentage.clamp(0, 1) * 100).round()}%',
-                    )),
+                    Text(
+                      l10n.notesReadPercentage(
+                        '${(book.readingPercentage.clamp(0, 1) * 100).round()}%',
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -112,8 +115,11 @@ class _BookNotesPageState extends ConsumerState<BookNotesPage> {
     );
   }
 
-  Future<void> _handleExportNotes(BuildContext context, Book book,
-      {List<BookNote>? notes}) async {
+  Future<void> _handleExportNotes(
+    BuildContext context,
+    Book book, {
+    List<BookNote>? notes,
+  }) async {
     bool mergeChapters = Prefs().notesExportMergeChapters;
     bool exporting = false;
     Object? exportError;
@@ -132,8 +138,9 @@ class _BookNotesPageState extends ConsumerState<BookNotesPage> {
               padding: const EdgeInsets.all(20),
               child: Consumer(
                 builder: (context, ref, _) {
-                  final asyncState =
-                      ref.watch(bookNotesControllerProvider(book));
+                  final asyncState = ref.watch(
+                    bookNotesControllerProvider(book),
+                  );
                   return asyncState.when(
                     data: (state) {
                       Future<void> export(ExportType type) async {
@@ -147,12 +154,15 @@ class _BookNotesPageState extends ConsumerState<BookNotesPage> {
                           final sorted = ref
                               .read(bookNotesControllerProvider(book).notifier)
                               .notesForExport(
-                                  selectedOnly: false, custom: notes);
+                                selectedOnly: false,
+                                custom: notes,
+                              );
                           await exportNotes(
                             book,
                             sorted,
                             type,
-                            mergeChapterHeadings: mergeChapters &&
+                            mergeChapterHeadings:
+                                mergeChapters &&
                                 state.exportSortMode.field ==
                                     NotesSortField.cfi,
                           );
@@ -161,7 +171,10 @@ class _BookNotesPageState extends ConsumerState<BookNotesPage> {
                           }
                         } catch (error, stackTrace) {
                           AnxLog.warning(
-                              'Could not export notes', error, stackTrace);
+                            'Could not export notes',
+                            error,
+                            stackTrace,
+                          );
                           if (context.mounted) {
                             setModalState(() => exportError = error);
                           }
@@ -211,8 +224,9 @@ class _BookNotesPageState extends ConsumerState<BookNotesPage> {
                                     ? null
                                     : () => export(ExportType.txt),
                                 icon: const Icon(Icons.text_snippet),
-                                label:
-                                    Text(L10n.of(context).notesExportPlainText),
+                                label: Text(
+                                  L10n.of(context).notesExportPlainText,
+                                ),
                               ),
                               OutlinedButton.icon(
                                 onPressed: exporting
@@ -268,8 +282,10 @@ class _BookNotesPageState extends ConsumerState<BookNotesPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(l10n.notesPageExport,
-            style: Theme.of(context).textTheme.titleMedium),
+        Text(
+          l10n.notesPageExport,
+          style: Theme.of(context).textTheme.titleMedium,
+        ),
         const SizedBox(height: 12),
         Wrap(
           spacing: 8,
@@ -285,7 +301,8 @@ class _BookNotesPageState extends ConsumerState<BookNotesPage> {
                 onPressed: enabled
                     ? () {
                         final controller = ref.read(
-                            bookNotesControllerProvider(widget.book).notifier);
+                          bookNotesControllerProvider(widget.book).notifier,
+                        );
                         if (state.exportSortMode.field == field) {
                           controller.toggleExportSortDirection();
                         } else {
@@ -319,9 +336,11 @@ class _BookNotesPageState extends ConsumerState<BookNotesPage> {
     }
     return FilledButton.icon(
       onPressed: onPressed,
-      icon: Icon(current.direction == SortDirection.asc
-          ? Icons.arrow_upward
-          : Icons.arrow_downward),
+      icon: Icon(
+        current.direction == SortDirection.asc
+            ? Icons.arrow_upward
+            : Icons.arrow_downward,
+      ),
       label: Text(label),
     );
   }

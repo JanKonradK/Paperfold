@@ -7,6 +7,8 @@
 - Theme selection keeps the stored theme in eInk mode.
 - Three new group names have translations in all 16 ARB files.
 - Shared settings rows use tonal icon wells and native switches.
+- Search, notes, book edit, context menus, and delete controls use system shapes or semantic colors.
+- Delete icon buttons have action labels. Hint close targets are 48 dp and support RTL.
 - Settings subpages and reader settings use system space and shape tokens.
 - Native modal routes use the shared settle timing.
 - Slider tracks are 4 dp solid surfaces without blur.
@@ -19,7 +21,7 @@
 
 ## Next
 
-- Commit the dialogs, search, notes, book edit, and catalog screens.
+- Commit the catalog and introduction screens.
 - Complete the full test suite.
 
 ## Known test results

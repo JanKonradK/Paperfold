@@ -1,3 +1,6 @@
+import 'package:paperfold/config/paperfold_system.dart';
+import 'package:paperfold/config/paperfold_visual_policy.dart';
+import 'package:paperfold/config/paperfold_motion.dart';
 import 'package:paperfold/config/shared_preference_provider.dart';
 import 'package:paperfold/enums/lang_list.dart';
 import 'package:paperfold/l10n/generated/L10n.dart';
@@ -128,7 +131,9 @@ class _TranslationMenuState extends State<TranslationMenu> {
               iconAlignment: IconAlignment.end,
               style: TextButton.styleFrom(
                 minimumSize: const Size(48, 48),
-                padding: const EdgeInsets.symmetric(horizontal: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: PaperfoldSpace.xs,
+                ),
                 visualDensity: VisualDensity.standard,
               ),
               label: Text(language, overflow: TextOverflow.ellipsis),
@@ -154,13 +159,15 @@ class _TranslationMenuState extends State<TranslationMenu> {
 
     return Expanded(
       child: AnimatedSize(
-        duration: const Duration(milliseconds: 300),
+        duration: PaperfoldVisualPolicy.motionAllowed(context)
+            ? PaperfoldMotion.of(context, PaperfoldMotion.move)
+            : Duration.zero,
         curve: Curves.easeOut,
         child: Container(
           height: widget.axis == Axis.vertical ? double.infinity : height,
           width: widget.axis == Axis.vertical ? 100 * scale : double.infinity,
           decoration: widget.decoration,
-          padding: const EdgeInsets.all(8),
+          padding: const EdgeInsets.all(PaperfoldSpace.xs),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [

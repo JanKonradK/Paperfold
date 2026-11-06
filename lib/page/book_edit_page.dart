@@ -1,3 +1,5 @@
+import 'package:paperfold/config/paperfold_system.dart';
+
 import 'dart:io';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -169,8 +171,9 @@ class _BookEditPageState extends ConsumerState<BookEditPage> {
         if (totalPages != null && book.currentPage > totalPages) {
           book.currentPage = totalPages;
         }
-        book.readingPercentage =
-            totalPages == null ? 0 : book.currentPage / totalPages;
+        book.readingPercentage = totalPages == null
+            ? 0
+            : book.currentPage / totalPages;
       }
       if (_isNew) {
         book.id = await bookDao.insertBook(book);
@@ -234,9 +237,7 @@ class _BookEditPageState extends ConsumerState<BookEditPage> {
       },
       child: Scaffold(
         appBar: AppBar(
-          title: Text(
-            _isNew ? l10n.physicalBookAddTitle : l10n.bookEditTitle,
-          ),
+          title: Text(_isNew ? l10n.physicalBookAddTitle : l10n.bookEditTitle),
           actions: [
             TextButton(
               onPressed: _busy ? null : _save,
@@ -262,7 +263,7 @@ class _BookEditPageState extends ConsumerState<BookEditPage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       ClipRRect(
-                        borderRadius: BorderRadius.circular(4),
+                        borderRadius: PaperfoldShape.objectRadius,
                         child: SizedBox(
                           width: 96,
                           height: 140,
@@ -410,7 +411,7 @@ class _OpenLibrarySheetState extends State<_OpenLibrarySheet> {
     final theme = Theme.of(context);
     Widget message(String text, {bool retry = false}) => Center(
       child: Padding(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(PaperfoldSpace.lg),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [

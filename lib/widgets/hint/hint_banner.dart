@@ -1,3 +1,5 @@
+import 'package:paperfold/config/paperfold_visual_policy.dart';
+import 'package:paperfold/config/paperfold_motion.dart';
 import 'package:paperfold/config/shared_preference_provider.dart';
 import 'package:paperfold/enums/hint_key.dart';
 import 'package:paperfold/l10n/generated/L10n.dart';
@@ -34,8 +36,9 @@ class _HintBannerState extends State<HintBanner>
   @override
   void initState() {
     super.initState();
-    _visible =
-        widget.hintKey == null ? true : Prefs().shouldShowHint(widget.hintKey!);
+    _visible = widget.hintKey == null
+        ? true
+        : Prefs().shouldShowHint(widget.hintKey!);
   }
 
   void _handleClose() {
@@ -61,7 +64,9 @@ class _HintBannerState extends State<HintBanner>
     final backgroundColor = colorScheme.primary.withAlpha(30);
 
     return AnimatedSize(
-      duration: const Duration(milliseconds: 250),
+      duration: PaperfoldVisualPolicy.motionAllowed(context)
+          ? PaperfoldMotion.of(context, PaperfoldMotion.move)
+          : Duration.zero,
       curve: Curves.easeInOut,
       alignment: Alignment.topCenter,
       child: _visible
@@ -71,7 +76,7 @@ class _HintBannerState extends State<HintBanner>
               child: Stack(
                 children: [
                   Padding(
-                    padding: const EdgeInsets.fromLTRB(12, 12, 32, 12),
+                    padding: const EdgeInsets.fromLTRB(12, 12, 48, 12),
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
@@ -87,8 +92,8 @@ class _HintBannerState extends State<HintBanner>
                       ],
                     ),
                   ),
-                  Positioned(
-                    right: 0,
+                  PositionedDirectional(
+                    end: 0,
                     top: 0,
                     child: IconButton(
                       onPressed: _handleClose,
@@ -98,8 +103,10 @@ class _HintBannerState extends State<HintBanner>
                         color: borderColor.withAlpha(220),
                       ),
                       padding: EdgeInsets.zero,
-                      constraints:
-                          const BoxConstraints.tightFor(width: 32, height: 32),
+                      constraints: const BoxConstraints.tightFor(
+                        width: 48,
+                        height: 48,
+                      ),
                       splashRadius: 18,
                       tooltip: L10n.of(context).close,
                     ),

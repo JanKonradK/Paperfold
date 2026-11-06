@@ -1,3 +1,4 @@
+import 'package:paperfold/config/paperfold_system.dart';
 import 'package:paperfold/constants/note_annotations.dart';
 import 'package:paperfold/models/book_note.dart';
 import 'package:paperfold/models/book.dart';
@@ -39,9 +40,8 @@ class BookNoteTile extends StatelessWidget {
     final iconColor = Color(int.tryParse('0xaa${note.color}') ?? 0xaa555555);
     // A theme role. `Colors.grey` measures 2.49:1 on the light paper ground,
     // under the 4.5:1 minimum in DESIGN.md.
-    final infoStyle = Theme.of(context).textTheme.bodyMedium!.copyWith(
-          color: Theme.of(context).colorScheme.onSurfaceVariant,
-        );
+    final infoStyle = Theme.of(context).textTheme.bodyMedium!
+        .copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant);
 
     return GestureDetector(
       onTap: onTap,
@@ -50,7 +50,7 @@ class BookNoteTile extends StatelessWidget {
       behavior: HitTestBehavior.opaque,
       child: FilledContainer(
         color: backgroundColor,
-        padding: const EdgeInsets.all(8.0),
+        padding: const EdgeInsets.all(PaperfoldSpace.xs),
         margin: margin,
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -63,12 +63,7 @@ class BookNoteTile extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    note.content,
-                    style: const TextStyle(
-                      fontSize: 16,
-                    ),
-                  ),
+                  Text(note.content, style: const TextStyle(fontSize: 16)),
                   if (note.readerNote != null && note.readerNote!.isNotEmpty)
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -78,9 +73,7 @@ class BookNoteTile extends StatelessWidget {
                         IntrinsicHeight(
                           child: Row(
                             children: [
-                              const VerticalDivider(
-                                thickness: 3,
-                              ),
+                              const VerticalDivider(thickness: 3),
                               Expanded(
                                 child: Text(
                                   note.readerNote!,
@@ -112,10 +105,7 @@ class BookNoteTile extends StatelessWidget {
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                      Text(
-                        timeToHuman(note.createTime),
-                        style: infoStyle,
-                      ),
+                      Text(timeToHuman(note.createTime), style: infoStyle),
                     ],
                   ),
                   if (trailing == null &&
