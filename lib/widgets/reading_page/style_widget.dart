@@ -1,3 +1,4 @@
+import 'package:paperfold/service/reader_window.dart';
 import 'package:paperfold/widgets/common/paperfold_modal_motion.dart';
 import 'package:paperfold/config/paperfold_system.dart';
 
@@ -73,6 +74,7 @@ enum PageTurn {
 class StyleWidget extends StatefulWidget {
   const StyleWidget({
     super.key,
+    this.readerWindow,
     this.advanced = false,
     this.lastPagedTurn = PageTurn.slide,
     this.onPagedTurnChanged,
@@ -82,6 +84,7 @@ class StyleWidget extends StatefulWidget {
     required this.hideAppBarAndBottomBar,
   });
 
+  final ReaderWindow? readerWindow;
   final bool advanced;
   final PageTurn lastPagedTurn;
   final ValueChanged<PageTurn>? onPagedTurnChanged;
@@ -104,6 +107,7 @@ class StyleWidgetState extends State<StyleWidget> {
     final l10n = L10n.of(context);
     final rows = <Widget>[
       fontSizeSlider(),
+      if (widget.readerWindow?.supported ?? false) _brightness(),
       themeSelector(),
       if (Prefs().useBookStyles)
         TextButton(
@@ -144,8 +148,9 @@ class StyleWidgetState extends State<StyleWidget> {
         value: Prefs().pageTurnStyle == PageTurn.scroll,
         onChanged: (scroll) {
           final current = Prefs().pageTurnStyle;
-          if (scroll && current != PageTurn.scroll)
+          if (scroll && current != PageTurn.scroll) {
             widget.onPagedTurnChanged?.call(current);
+          }
           final next = scroll ? PageTurn.scroll : widget.lastPagedTurn;
           setState(() => Prefs().pageTurnStyle = next);
           widget.epubPlayerKey.currentState?.changePageTurnStyle(next);
@@ -164,9 +169,21 @@ class StyleWidgetState extends State<StyleWidget> {
               DropdownMenuItem(value: item.$1, child: Text(item.$2)),
           ],
           onChanged: (value) {
-            if (value != null)
+            if (value != null) {
               _saveStyle(() => bookStyle.maxColumnCount = value);
+            }
           },
+        ),
+      if (widget.readerWindow?.supported ?? false)
+        ListenableBuilder(
+          listenable: widget.readerWindow!,
+          builder: (context, _) => SwitchListTile(
+            contentPadding: EdgeInsets.zero,
+            title: Text(l10n.readerRotationLock),
+            value: widget.readerWindow!.rotationLocked,
+            onChanged: (value) =>
+                _windowAction(() => widget.readerWindow!.lockRotation(value)),
+          ),
         ),
       TextButton.icon(
         onPressed: () => widget.setCurrentPage(
@@ -217,6 +234,51 @@ class StyleWidgetState extends State<StyleWidget> {
             ),
     );
   }
+
+  Future<void> _windowAction(Future<void> Function() action) async {
+    try {
+      await action();
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(L10n.of(context).readerWindowFailed)),
+        );
+      }
+    }
+  }
+
+  Widget _brightness() => ListenableBuilder(
+    listenable: widget.readerWindow!,
+    builder: (context, _) {
+      final window = widget.readerWindow!;
+      final l10n = L10n.of(context);
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(child: Text(l10n.readerBrightness)),
+              FilterChip(
+                label: Text(l10n.readerSystem),
+                selected: window.brightness == null,
+                onSelected: (_) =>
+                    _windowAction(() => window.setBrightness(null)),
+              ),
+            ],
+          ),
+          Slider(
+            value: window.brightness ?? 0.5,
+            min: 0.05,
+            max: 1,
+            divisions: 95,
+            label: '${((window.brightness ?? 0.5) * 100).round()}%',
+            onChanged: (value) =>
+                _windowAction(() => window.setBrightness(value)),
+          ),
+        ],
+      );
+    },
+  );
 
   void _saveStyle(VoidCallback update) {
     // A secondary panel may have changed the saved style since this one opened.
@@ -724,7 +786,8 @@ class _ThemeChangeWidgetState extends State<ThemeChangeWidget> {
             TextButton(
               child: const Text('OK'),
               onPressed: () {
-                Navigator.of(context).pop(pickedColor.value.toRadixString(16));
+                Navigator.of(context)
+                    .pop(pickedColor.toARGB32().toRadixString(16));
               },
             ),
           ],
@@ -732,6 +795,6 @@ class _ThemeChangeWidgetState extends State<ThemeChangeWidget> {
       },
     );
 
-    return pickedColor.value.toRadixString(16);
+    return pickedColor.toARGB32().toRadixString(16);
   }
 }

@@ -16,3 +16,11 @@
 - Facing page now opens from Notes. Last paged effect is retained in the session.
 - Initial test compile found missing generated models/providers in this fresh worktree.
   Running build_runner to restore ignored generated files (no source model changes).
+
+## Part 3 — Android reader window
+- Added a package-free method channel with validated window-only brightness.
+- System/5–100% brightness and session rotation lock use one ReaderWindow.
+- Flutter requests orientation; Android retains and restores the prior policy.
+- Declines lock in multi-window and Android 16 large-display cases.
+- Handles natural-landscape displays; activity recreation clears overrides.
+- Session exit queues reset after pending updates. Resume reads actual host state.
