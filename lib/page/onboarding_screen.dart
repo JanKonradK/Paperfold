@@ -1,3 +1,4 @@
+import 'package:paperfold/config/paperfold_system.dart';
 import 'package:paperfold/page/settings_page/appearance.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:introduction_screen/introduction_screen.dart';
@@ -52,7 +53,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       nextFlex: 0,
       showBottomPart: true,
       curve: Curves.fastLinearToSlowEaseIn,
-      controlsMargin: const EdgeInsets.all(16),
+      controlsMargin: const EdgeInsets.all(PaperfoldSpace.md),
       controlsPadding: const EdgeInsets.fromLTRB(8.0, 4.0, 8.0, 4.0),
       dotsDecorator: DotsDecorator(
         size: const Size(10.0, 10.0),
@@ -60,7 +61,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         activeSize: const Size(22.0, 10.0),
         activeColor: Theme.of(context).colorScheme.primary,
         activeShape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.all(Radius.circular(25.0)),
+          borderRadius: BorderRadius.all(Radius.circular(PaperfoldShape.pane)),
         ),
       ),
       next: Icon(
@@ -196,12 +197,15 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           ),
           const SizedBox(height: 12),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+            padding: const EdgeInsets.symmetric(
+              horizontal: PaperfoldSpace.sm,
+              vertical: PaperfoldSpace.xxs,
+            ),
             decoration: BoxDecoration(
               border: Border.all(
                 color: Theme.of(context).colorScheme.outline.withAlpha(100),
               ),
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: PaperfoldShape.controlRadius,
             ),
             child: DropdownButton<String>(
               isExpanded: true,
@@ -374,7 +378,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               Column(
                 children: [
                   Container(
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.all(PaperfoldSpace.md),
                     decoration: BoxDecoration(
                       color: Theme.of(context).colorScheme.primaryContainer
                           .withAlpha(50),
@@ -456,11 +460,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               buildThemeColorSelector(),
               const SizedBox(height: 24),
               Container(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(PaperfoldSpace.md),
                 decoration: BoxDecoration(
                   color: Theme.of(context).colorScheme.surfaceContainerHighest
                       .withAlpha(50),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: PaperfoldShape.controlRadius,
                   border: Border.all(
                     color: Theme.of(context).colorScheme.outline.withAlpha(50),
                   ),
@@ -508,11 +512,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         ),
         const SizedBox(height: 32),
         Container(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(PaperfoldSpace.md),
           decoration: BoxDecoration(
             color: Theme.of(context).colorScheme.surfaceContainerHighest
                 .withAlpha(50),
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: PaperfoldShape.controlRadius,
             border: Border.all(
               color: Theme.of(context).colorScheme.outline.withAlpha(50),
             ),

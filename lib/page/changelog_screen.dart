@@ -1,3 +1,5 @@
+import 'package:paperfold/widgets/common/paperfold_pane.dart';
+import 'package:paperfold/config/paperfold_system.dart';
 import 'package:paperfold/l10n/generated/L10n.dart';
 import 'package:paperfold/widgets/markdown/styled_markdown.dart';
 import 'package:material_ui/material_ui.dart';
@@ -38,8 +40,9 @@ class _ChangelogScreenState extends State<ChangelogScreen> {
   Future<void> _loadChangelog() async {
     try {
       // Load changelog from assets
-      final String fullChangelog =
-          await rootBundle.loadString('assets/CHANGELOG.md');
+      final String fullChangelog = await rootBundle.loadString(
+        'assets/CHANGELOG.md',
+      );
       _changelogContent = _extractVersionChangelog(fullChangelog);
     } catch (e) {
       AnxLog.warning('Failed to load changelog from assets: $e');
@@ -111,8 +114,10 @@ class _ChangelogScreenState extends State<ChangelogScreen> {
     }
 
     // Extract the content for this version (skip the header line)
-    final versionContent =
-        lines.sublist(startIndex + 1, endIndex).join('\n').trim();
+    final versionContent = lines
+        .sublist(startIndex + 1, endIndex)
+        .join('\n')
+        .trim();
 
     if (versionContent.isEmpty) {
       return _getDefaultChangelog();
@@ -141,10 +146,8 @@ class _ChangelogScreenState extends State<ChangelogScreen> {
           : Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(16),
-                  color: Theme.of(context).colorScheme.surface,
+                PaperfoldPane(
+                  padding: const EdgeInsets.all(PaperfoldSpace.md),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -156,12 +159,14 @@ class _ChangelogScreenState extends State<ChangelogScreen> {
                             size: 24,
                           ),
                           const SizedBox(width: 8),
-                          Text(
-                            L10n.of(context).updateFromVersion(lastVersion),
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w500,
-                              color: Theme.of(context).colorScheme.onSurface,
+                          Flexible(
+                            child: Text(
+                              L10n.of(context).updateFromVersion(lastVersion),
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w500,
+                                color: Theme.of(context).colorScheme.onSurface,
+                              ),
                             ),
                           ),
                         ],
@@ -180,13 +185,13 @@ class _ChangelogScreenState extends State<ChangelogScreen> {
                 ),
                 Expanded(
                   child: SingleChildScrollView(
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.all(PaperfoldSpace.md),
                     child: StyledMarkdown(data: _changelogContent),
                   ),
                 ),
                 Container(
                   width: double.infinity,
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.all(PaperfoldSpace.md),
                   child: FilledButton(
                     onPressed: _onComplete,
                     child: Text(L10n.of(context).commonOk),

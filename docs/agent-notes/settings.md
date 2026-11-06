@@ -7,6 +7,8 @@
 - Theme selection keeps the stored theme in eInk mode.
 - Three new group names have translations in all 16 ARB files.
 - Shared settings rows use tonal icon wells and native switches.
+- Catalog suggestions, saved catalogs, and browse rows use solid pressable panes.
+- Onboarding, changelog, and migration use system spacing and semantic colors.
 - Search, notes, book edit, context menus, and delete controls use system shapes or semantic colors.
 - Delete icon buttons have action labels. Hint close targets are 48 dp and support RTL.
 - Settings subpages and reader settings use system space and shape tokens.
@@ -21,7 +23,7 @@
 
 ## Next
 
-- Commit the catalog and introduction screens.
+- Review the full test result and record the final result.
 - Complete the full test suite.
 
 ## Known test results
