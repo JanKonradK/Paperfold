@@ -1,5 +1,10 @@
 # Platform implementation
 
+## Commits
+
+- 1f645e1d: Dart launch services, reminder actions, translations, and tests.
+- This commit adds native widget resources and the DAO update hook.
+
 ## Completed
 
 - URI parsing validates the scheme, action, capture kind, and book ID.

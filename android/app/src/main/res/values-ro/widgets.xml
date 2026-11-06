@@ -1,0 +1,10 @@
+<resources>
+    <string name="capture_log_pages">Înregistrează pagini</string>
+    <string name="capture_write_note">Scrie o notă</string>
+    <string name="widget_continue">Continuă lectura</string>
+    <string name="widget_capture">Înregistrare rapidă</string>
+    <string name="capture_note">Notă</string>
+    <string name="capture_quote">Citat</string>
+    <string name="widget_continue_description">Continuă cartea curentă sau înregistrează pagini.</string>
+    <string name="widget_capture_description">Salvează o notă, un citat sau progresul lecturii.</string>
+</resources>

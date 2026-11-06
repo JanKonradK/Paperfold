@@ -1,0 +1,10 @@
+<resources>
+    <string name="capture_log_pages">記頁</string>
+    <string name="capture_write_note">書札記</string>
+    <string name="widget_continue">續讀</string>
+    <string name="widget_capture">速記</string>
+    <string name="capture_note">札記</string>
+    <string name="capture_quote">摘句</string>
+    <string name="widget_continue_description">續讀今書，或記所讀頁。</string>
+    <string name="widget_capture_description">存札記、摘句，或讀書進度。</string>
+</resources>

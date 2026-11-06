@@ -1,0 +1,10 @@
+<resources>
+    <string name="capture_log_pages">Registra pagine</string>
+    <string name="capture_write_note">Scrivi una nota</string>
+    <string name="widget_continue">Continua a leggere</string>
+    <string name="widget_capture">Acquisizione rapida</string>
+    <string name="capture_note">Nota</string>
+    <string name="capture_quote">Citazione</string>
+    <string name="widget_continue_description">Continua il libro attuale o registra le pagine.</string>
+    <string name="widget_capture_description">Salva una nota, una citazione o i progressi.</string>
+</resources>

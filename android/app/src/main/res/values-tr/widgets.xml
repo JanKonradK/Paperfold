@@ -1,0 +1,10 @@
+<resources>
+    <string name="capture_log_pages">Sayfaları kaydet</string>
+    <string name="capture_write_note">Not yaz</string>
+    <string name="widget_continue">Okumaya devam et</string>
+    <string name="widget_capture">Hızlı kayıt</string>
+    <string name="capture_note">Not</string>
+    <string name="capture_quote">Alıntı</string>
+    <string name="widget_continue_description">Geçerli kitabı okumaya devam edin veya sayfaları kaydedin.</string>
+    <string name="widget_capture_description">Not, alıntı veya okuma ilerlemesini kaydedin.</string>
+</resources>

@@ -1,0 +1,10 @@
+<resources>
+    <string name="capture_log_pages">Log pages</string>
+    <string name="capture_write_note">Write a note</string>
+    <string name="widget_continue">Continue reading</string>
+    <string name="widget_capture">Quick capture</string>
+    <string name="capture_note">Note</string>
+    <string name="capture_quote">Quote</string>
+    <string name="widget_continue_description">Continue your current book or log pages.</string>
+    <string name="widget_capture_description">Save a note, a quote, or reading progress.</string>
+</resources>

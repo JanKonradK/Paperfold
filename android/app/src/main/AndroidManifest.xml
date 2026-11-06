@@ -91,11 +91,29 @@
                 <data android:mimeType="application/octet-stream" />
             </intent-filter>
 
+            <meta-data android:name="flutter_deeplinking_enabled" android:value="false" />
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="paperfold" android:host="capture" />
+                <data android:scheme="paperfold" android:host="open" />
+            </intent-filter>
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <receiver android:name=".ContinueReadingWidget" android:exported="false" android:label="@string/widget_continue">
+            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_continue_info" />
+        </receiver>
+
+        <receiver android:name=".QuickCaptureWidget" android:exported="false" android:label="@string/widget_capture">
+            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_capture_info" />
+        </receiver>
 
         <!-- Show and restore the daily reading reminder. -->
         <receiver
