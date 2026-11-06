@@ -1146,5 +1146,13 @@
   "readerRotationLock": "Закрепить текущую ориентацию",
   "readerCustomStyles": "Использовать свои стили текста",
   "readerPaged": "Страницы",
-  "readerWindowFailed": "Не удалось применить настройки экрана"
+  "readerWindowFailed": "Не удалось применить настройки экрана",
+  "readerParagraphs": "Абзацы",
+  "readerText": "Текст",
+  "readerHeadings": "Заголовки",
+  "readerLanguageDirection": "Язык и направление",
+  "readerPageInformation": "Информация на странице",
+  "readerScreen": "Экран",
+  "readerPageTurns": "Перелистывание",
+  "readerSelectionActions": "Действия с выделением"
 }

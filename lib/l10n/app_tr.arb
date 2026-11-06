@@ -1146,5 +1146,13 @@
   "readerRotationLock": "Geçerli yönü kilitle",
   "readerCustomStyles": "Özel metin stillerini kullan",
   "readerPaged": "Sayfalı",
-  "readerWindowFailed": "Ekran ayarları uygulanamadı"
+  "readerWindowFailed": "Ekran ayarları uygulanamadı",
+  "readerParagraphs": "Paragraflar",
+  "readerText": "Metin",
+  "readerHeadings": "Başlıklar",
+  "readerLanguageDirection": "Dil ve yön",
+  "readerPageInformation": "Sayfa bilgileri",
+  "readerScreen": "Ekran",
+  "readerPageTurns": "Sayfa çevirme",
+  "readerSelectionActions": "Seçim işlemleri"
 }

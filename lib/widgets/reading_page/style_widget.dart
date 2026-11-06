@@ -99,6 +99,7 @@ class StyleWidget extends StatefulWidget {
 
 class StyleWidgetState extends State<StyleWidget> {
   BookStyle bookStyle = Prefs().bookStyle;
+  late PageTurn _lastPagedTurn = widget.lastPagedTurn;
   int? currentThemeId = Prefs().readTheme.id;
 
   @override
@@ -149,9 +150,10 @@ class StyleWidgetState extends State<StyleWidget> {
         onChanged: (scroll) {
           final current = Prefs().pageTurnStyle;
           if (scroll && current != PageTurn.scroll) {
+            _lastPagedTurn = current;
             widget.onPagedTurnChanged?.call(current);
           }
-          final next = scroll ? PageTurn.scroll : widget.lastPagedTurn;
+          final next = scroll ? PageTurn.scroll : _lastPagedTurn;
           setState(() => Prefs().pageTurnStyle = next);
           widget.epubPlayerKey.currentState?.changePageTurnStyle(next);
         },
@@ -189,6 +191,8 @@ class StyleWidgetState extends State<StyleWidget> {
         onPressed: () => widget.setCurrentPage(
           StyleWidget(
             advanced: true,
+            lastPagedTurn: _lastPagedTurn,
+            onPagedTurnChanged: widget.onPagedTurnChanged,
             themes: widget.themes,
             epubPlayerKey: widget.epubPlayerKey,
             setCurrentPage: widget.setCurrentPage,
@@ -209,7 +213,6 @@ class StyleWidgetState extends State<StyleWidget> {
                   l10n.readerMoreAppearance,
                   ReadingSettings.style,
                 ),
-                lineHeightAndParagraphSpacingSlider(),
                 fontAndPageTurn(),
                 const StyleSettings(),
                 OutlinedButton(
@@ -381,10 +384,11 @@ class StyleWidgetState extends State<StyleWidget> {
     }
 
     final turnStyle = Prefs().pageTurnStyle;
-    return Row(
+    return Column(
       children: [
         if (!quick)
-          Expanded(
+          SizedBox(
+            width: double.infinity,
             child: DropdownMenu<PageTurn>(
               label: Text(L10n.of(context).readingPagePageTurningMethod),
               initialSelection: turnStyle,
@@ -417,7 +421,8 @@ class StyleWidgetState extends State<StyleWidget> {
                   .toList(),
             ),
           ),
-        Expanded(
+        SizedBox(
+          width: double.infinity,
           child: DropdownMenu<FontModel>(
             label: Text(L10n.of(context).font),
             expandedInsets: const EdgeInsetsDirectional.only(start: 5),

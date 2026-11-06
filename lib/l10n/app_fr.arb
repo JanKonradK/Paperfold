@@ -1146,5 +1146,13 @@
   "readerRotationLock": "Verrouiller l’orientation actuelle",
   "readerCustomStyles": "Utiliser des styles de texte personnalisés",
   "readerPaged": "Pages",
-  "readerWindowFailed": "Impossible d’appliquer les réglages d’écran"
+  "readerWindowFailed": "Impossible d’appliquer les réglages d’écran",
+  "readerParagraphs": "Paragraphes",
+  "readerText": "Texte",
+  "readerHeadings": "Titres",
+  "readerLanguageDirection": "Langue et direction",
+  "readerPageInformation": "Informations de page",
+  "readerScreen": "Écran",
+  "readerPageTurns": "Changement de page",
+  "readerSelectionActions": "Actions de sélection"
 }

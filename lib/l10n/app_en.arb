@@ -1167,5 +1167,13 @@
   "readerRotationLock": "Lock current orientation",
   "readerCustomStyles": "Use custom text styles",
   "readerPaged": "Paged",
-  "readerWindowFailed": "Could not apply screen settings"
+  "readerWindowFailed": "Could not apply screen settings",
+  "readerParagraphs": "Paragraphs",
+  "readerText": "Text",
+  "readerHeadings": "Headings",
+  "readerLanguageDirection": "Language and direction",
+  "readerPageInformation": "Page information",
+  "readerScreen": "Screen",
+  "readerPageTurns": "Page turns",
+  "readerSelectionActions": "Selection actions"
 }

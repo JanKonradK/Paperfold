@@ -1146,5 +1146,13 @@
   "readerRotationLock": "Aktuelle Ausrichtung sperren",
   "readerCustomStyles": "Eigene Textstile verwenden",
   "readerPaged": "Seiten",
-  "readerWindowFailed": "Bildschirmeinstellungen konnten nicht angewendet werden"
+  "readerWindowFailed": "Bildschirmeinstellungen konnten nicht angewendet werden",
+  "readerParagraphs": "Absätze",
+  "readerText": "Text",
+  "readerHeadings": "Überschriften",
+  "readerLanguageDirection": "Sprache und Richtung",
+  "readerPageInformation": "Seiteninformationen",
+  "readerScreen": "Bildschirm",
+  "readerPageTurns": "Seitenwechsel",
+  "readerSelectionActions": "Auswahlaktionen"
 }

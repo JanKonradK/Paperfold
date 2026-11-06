@@ -14,11 +14,13 @@ import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 class BookToc extends ConsumerStatefulWidget {
   const BookToc({
     super.key,
+    this.initialSearchFocus = false,
     required this.epubPlayerKey,
     required this.hideAppBarAndBottomBar,
     required this.closeDrawer,
   });
 
+  final bool initialSearchFocus;
   final GlobalKey<EpubPlayerState> epubPlayerKey;
   final Function hideAppBarAndBottomBar;
   final VoidCallback closeDrawer;
@@ -28,6 +30,7 @@ class BookToc extends ConsumerStatefulWidget {
 }
 
 class _BookTocState extends ConsumerState<BookToc> {
+  final FocusNode _searchFocus = FocusNode();
   final TextEditingController searchBarController = TextEditingController();
   final ScrollController searchResultsScrollController = ScrollController();
   late List<TocItem> tocItems;
@@ -45,6 +48,11 @@ class _BookTocState extends ConsumerState<BookToc> {
   void initState() {
     super.initState();
     searchBarController.text = ref.read(tocSearchProvider).query ?? '';
+    if (widget.initialSearchFocus) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _searchFocus.requestFocus();
+      });
+    }
     // Add listener to save scroll position
     searchResultsScrollController.addListener(_saveScrollPosition);
   }
@@ -59,6 +67,7 @@ class _BookTocState extends ConsumerState<BookToc> {
 
   @override
   void dispose() {
+    _searchFocus.dispose();
     searchBarController.dispose();
     searchResultsScrollController.dispose();
     super.dispose();
@@ -322,6 +331,7 @@ class _BookTocState extends ConsumerState<BookToc> {
       height: 48,
       child: SearchBar(
         controller: searchBarController,
+        focusNode: _searchFocus,
         shadowColor: const WidgetStatePropertyAll<Color>(Colors.transparent),
         padding: const WidgetStatePropertyAll<EdgeInsets>(
           EdgeInsets.symmetric(horizontal: PaperfoldSpace.md),

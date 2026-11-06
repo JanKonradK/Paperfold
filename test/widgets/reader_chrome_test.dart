@@ -4,15 +4,21 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:paperfold/config/paperfold_tokens.dart';
 import 'package:paperfold/l10n/generated/L10n.dart';
 import 'package:paperfold/widgets/reading_page/reader_chrome.dart';
+import 'package:paperfold/widgets/paperfold_glass_surface.dart';
 
 void main() {
   Widget host(
     Widget child, {
     TextDirection direction = TextDirection.ltr,
     bool disableAnimations = false,
+    Size size = const Size(800, 600),
+    double textScale = 1,
   }) {
     return MaterialApp(
-      localizationsDelegates: [L10n.delegate, ...GlobalMaterialLocalizations.delegates],
+      localizationsDelegates: [
+        L10n.delegate,
+        ...GlobalMaterialLocalizations.delegates,
+      ],
       supportedLocales: L10n.supportedLocales,
       locale: const Locale('en'),
       theme: ThemeData(
@@ -22,7 +28,11 @@ void main() {
       home: Directionality(
         textDirection: direction,
         child: MediaQuery(
-          data: MediaQueryData(disableAnimations: disableAnimations),
+          data: MediaQueryData(
+            size: size,
+            textScaler: TextScaler.linear(textScale),
+            disableAnimations: disableAnimations,
+          ),
           child: Scaffold(
             body: Stack(fit: StackFit.expand, children: [child]),
           ),
@@ -54,8 +64,9 @@ void main() {
     );
   }
 
-  testWidgets('the bars sit at the ends of the screen, not in the middle',
-      (tester) async {
+  testWidgets('the bars sit at the ends of the screen, not in the middle', (
+    tester,
+  ) async {
     await tester.pumpWidget(host(chrome()));
     await tester.pumpAndSettle();
 
@@ -63,31 +74,39 @@ void main() {
     final title = tester.getRect(find.text('The Left Hand of Darkness'));
     final tabs = tester.getRect(find.byIcon(Icons.toc));
 
-    expect(title.top, lessThan(screen.height * 0.2),
-        reason: 'the top bar belongs at the top');
-    expect(tabs.bottom, greaterThan(screen.height * 0.8),
-        reason: 'the bottom shell belongs at the bottom');
+    expect(
+      title.top,
+      lessThan(screen.height * 0.2),
+      reason: 'the top bar belongs at the top',
+    );
+    expect(
+      tabs.bottom,
+      greaterThan(screen.height * 0.8),
+      reason: 'the bottom shell belongs at the bottom',
+    );
   });
 
   testWidgets('hidden chrome takes no taps', (tester) async {
     var dismissed = false;
-    await tester.pumpWidget(host(
-      ReaderChrome(
-        visible: false,
-        title: 'A book',
-        bookmarkExists: false,
-        activeTool: ReaderTool.none,
-        onDismiss: () => dismissed = true,
-        onBack: () {},
-        onBookmark: () {},
-        onCopyChapter: () {},
-        onBookDetails: () {},
-        onContents: () {},
-        onNotes: () {},
-        onProgress: () {},
-        onStyle: () {},
+    await tester.pumpWidget(
+      host(
+        ReaderChrome(
+          visible: false,
+          title: 'A book',
+          bookmarkExists: false,
+          activeTool: ReaderTool.none,
+          onDismiss: () => dismissed = true,
+          onBack: () {},
+          onBookmark: () {},
+          onCopyChapter: () {},
+          onBookDetails: () {},
+          onContents: () {},
+          onNotes: () {},
+          onProgress: () {},
+          onStyle: () {},
+        ),
       ),
-    ));
+    );
     await tester.pumpAndSettle();
 
     await tester.tapAt(const Offset(200, 400));
@@ -115,45 +134,54 @@ void main() {
     }
   });
 
-  testWidgets('hidden tools leave the focus and accessibility tree immediately',
-      (tester) async {
-    final handle = tester.ensureSemantics();
-    try {
-      await tester.pumpWidget(host(chrome()));
-      await tester.pumpAndSettle();
-      expect(find.semantics.byLabel('Progress'), findsOne);
-      final backFocus = Focus.of(tester.element(find.byIcon(Icons.arrow_back)));
-      backFocus.requestFocus();
-      await tester.pump();
-      expect(backFocus.hasFocus, isTrue);
+  testWidgets(
+    'hidden tools leave the focus and accessibility tree immediately',
+    (tester) async {
+      final handle = tester.ensureSemantics();
+      try {
+        await tester.pumpWidget(host(chrome()));
+        await tester.pumpAndSettle();
+        expect(find.semantics.byLabel('Progress'), findsOne);
+        final backFocus = Focus.of(
+          tester.element(find.byIcon(Icons.arrow_back)),
+        );
+        backFocus.requestFocus();
+        await tester.pump();
+        expect(backFocus.hasFocus, isTrue);
 
-      await tester.pumpWidget(host(chrome(visible: false)));
-      await tester.pump();
-      expect(backFocus.hasFocus, isFalse);
-      expect(find.semantics.byLabel('Progress'), findsNothing);
-      expect(find.semantics.byLabel('The Left Hand of Darkness'), findsNothing);
-    } finally {
-      handle.dispose();
-    }
-  });
+        await tester.pumpWidget(host(chrome(visible: false)));
+        await tester.pump();
+        expect(backFocus.hasFocus, isFalse);
+        expect(find.semantics.byLabel('Progress'), findsNothing);
+        expect(
+          find.semantics.byLabel('The Left Hand of Darkness'),
+          findsNothing,
+        );
+      } finally {
+        handle.dispose();
+      }
+    },
+  );
 
   testWidgets('the open tool is announced as selected', (tester) async {
     final handle = tester.ensureSemantics();
     await tester.pumpWidget(host(chrome(activeTool: ReaderTool.progress)));
     await tester.pumpAndSettle();
 
-    final node = tester.getSemantics(
-      find.bySemanticsLabel('Progress').first,
-    );
+    final node = tester.getSemantics(find.bySemanticsLabel('Progress').first);
     expect(node.hasFlag(SemanticsFlag.isSelected), isTrue);
     handle.dispose();
   });
 
   testWidgets('an open panel keeps the tools', (tester) async {
-    await tester.pumpWidget(host(chrome(
-      activeTool: ReaderTool.notes,
-      panel: const SizedBox(height: 120, child: Text('panel body')),
-    )));
+    await tester.pumpWidget(
+      host(
+        chrome(
+          activeTool: ReaderTool.notes,
+          panel: const SizedBox(height: 120, child: Text('panel body')),
+        ),
+      ),
+    );
     await tester.pumpAndSettle();
 
     expect(find.text('panel body'), findsOneWidget);
@@ -165,24 +193,34 @@ void main() {
     await tester.pumpAndSettle();
 
     final screen = tester.getSize(find.byType(Scaffold));
-    expect(tester.getRect(find.byIcon(Icons.arrow_back)).top,
-        lessThan(screen.height * 0.2));
-    expect(tester.getRect(find.byIcon(Icons.toc)).bottom,
-        greaterThan(screen.height * 0.8));
+    expect(
+      tester.getRect(find.byIcon(Icons.arrow_back)).top,
+      lessThan(screen.height * 0.2),
+    );
+    expect(
+      tester.getRect(find.byIcon(Icons.toc)).bottom,
+      greaterThan(screen.height * 0.8),
+    );
   });
 
-  testWidgets('the bars are already in place when animations are off',
-      (tester) async {
+  testWidgets('the bars are already in place when animations are off', (
+    tester,
+  ) async {
     await tester.pumpWidget(host(chrome(), disableAnimations: true));
     await tester.pumpAndSettle();
 
-    for (final slide
-        in tester.widgetList<AnimatedSlide>(find.byType(AnimatedSlide))) {
-      expect(slide.duration, Duration.zero,
-          reason: 'the bars must not travel when motion is removed');
+    for (final slide in tester.widgetList<AnimatedSlide>(
+      find.byType(AnimatedSlide),
+    )) {
+      expect(
+        slide.duration,
+        Duration.zero,
+        reason: 'the bars must not travel when motion is removed',
+      );
     }
-    for (final fade
-        in tester.widgetList<AnimatedOpacity>(find.byType(AnimatedOpacity))) {
+    for (final fade in tester.widgetList<AnimatedOpacity>(
+      find.byType(AnimatedOpacity),
+    )) {
       expect(fade.duration, Duration.zero);
     }
   });
@@ -198,4 +236,55 @@ void main() {
       isTrue,
     );
   });
+  for (final size in [
+    const Size(360, 800),
+    const Size(412, 915),
+    const Size(600, 960),
+    const Size(1095, 1750),
+    const Size(800, 360),
+    const Size(915, 412),
+    const Size(960, 600),
+    const Size(1750, 1095),
+    const Size(480, 800),
+  ]) {
+    testWidgets('tools stay available at $size with RTL and large text', (
+      tester,
+    ) async {
+      tester.view.physicalSize = size;
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      await tester.pumpWidget(
+        host(
+          chrome(
+            activeTool: ReaderTool.style,
+            panel: const SingleChildScrollView(
+              child: SizedBox(height: 500, child: Text('quick panel')),
+            ),
+          ),
+          size: size,
+          textScale: 2,
+          direction: TextDirection.rtl,
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+      for (final icon in [
+        Icons.tune,
+        Icons.toc,
+        Icons.search,
+        Icons.bookmarks_outlined,
+        Icons.edit_outlined,
+      ]) {
+        expect(find.byIcon(icon), findsOneWidget);
+      }
+      if (size.width > size.height && size.width >= 840) {
+        final pane = find.ancestor(
+          of: find.byType(SingleChildScrollView),
+          matching: find.byType(PaperfoldGlassSurface),
+        );
+        expect(tester.getSize(pane).width, 360);
+      }
+    });
+  }
 }

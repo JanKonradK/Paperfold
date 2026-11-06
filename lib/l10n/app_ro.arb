@@ -1146,5 +1146,13 @@
   "readerRotationLock": "Blochează orientarea curentă",
   "readerCustomStyles": "Folosește stiluri de text proprii",
   "readerPaged": "Pagini",
-  "readerWindowFailed": "Setările ecranului nu au putut fi aplicate"
+  "readerWindowFailed": "Setările ecranului nu au putut fi aplicate",
+  "readerParagraphs": "Paragrafe",
+  "readerText": "Text",
+  "readerHeadings": "Titluri",
+  "readerLanguageDirection": "Limbă și direcție",
+  "readerPageInformation": "Informații pagină",
+  "readerScreen": "Ecran",
+  "readerPageTurns": "Întoarcerea paginilor",
+  "readerSelectionActions": "Acțiuni de selecție"
 }

@@ -227,7 +227,8 @@ class ReaderChrome extends StatelessWidget {
   Widget _bottomShell(BuildContext context, MediaQueryData media, bool side) {
     final l10n = L10n.of(context);
     final layout = PaperfoldLayout.of(context);
-    final safeH = media.size.height - media.padding.vertical;
+    final safeH =
+        media.size.height - media.padding.vertical - media.viewInsets.bottom;
     final open = panel != null && !side;
     final tools = [
       (Icons.tune, l10n.readerQuickSettings, ReaderTool.style, onStyle),
@@ -246,75 +247,106 @@ class ReaderChrome extends StatelessWidget {
       ),
       (Icons.edit_outlined, l10n.notes, ReaderTool.notes, onNotes),
     ];
+    final progress = Semantics(
+      label: l10n.bookshelfProgress,
+      value: '$chapter ${(percentage * 100).round()}%',
+      excludeSemantics: true,
+      button: true,
+      onTap: onProgress,
+      selected: activeTool == ReaderTool.progress,
+      child: InkWell(
+        onTap: onProgress,
+        borderRadius: PaperfoldShape.frameRadius,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: 48),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Row(
+              children: [
+                const Icon(Icons.data_usage, size: 20),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    chapter.isEmpty ? l10n.bookshelfProgress : chapter,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                Text('${(percentage * 100).round()}%'),
+                const Icon(Icons.chevron_right),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+    final toolRow = LayoutBuilder(
+      builder: (context, constraints) {
+        final wrap =
+            constraints.maxWidth < 360 || media.textScaler.scale(12) > 18;
+        final width = constraints.maxWidth / (wrap ? 3 : 5);
+        return Wrap(
+          children: [
+            for (final tool in tools)
+              SizedBox(
+                width: width,
+                child: _Tab(
+                  icon: tool.$1,
+                  label: tool.$2,
+                  selected: activeTool == tool.$3,
+                  onPressed: tool.$4,
+                ),
+              ),
+          ],
+        );
+      },
+    );
     return Padding(
-      padding: const EdgeInsetsDirectional.fromSTEB(12, 0, 12, 12),
+      padding: EdgeInsetsDirectional.fromSTEB(
+        12,
+        0,
+        12,
+        12 + media.viewInsets.bottom,
+      ),
       child: PaperfoldGlassSurface(
         borderRadius: PaperfoldShape.frameRadius,
         tier: open ? PaperfoldGlassTier.solid : PaperfoldGlassTier.floating,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (open)
-              SizedBox(
-                height: layout.landscape
-                    ? safeH * 0.60
-                    : math.min(
-                        layout.tablet ? 400 : 360,
-                        safeH * (layout.tablet ? 0.40 : 0.48),
-                      ),
-                child: panel,
-              ),
-            Semantics(
-              selected: activeTool == ReaderTool.progress,
-              child: InkWell(
-                onTap: onProgress,
-                borderRadius: PaperfoldShape.frameRadius,
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(minHeight: 48),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: Row(
-                      children: [
-                        const Icon(Icons.data_usage, size: 20),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            chapter.isEmpty ? l10n.bookshelfProgress : chapter,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
+        child: ConstrainedBox(
+          constraints: BoxConstraints(maxHeight: math.max(0, safeH - 80)),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (open)
+                Flexible(
+                  child: SizedBox(
+                    height: layout.landscape
+                        ? safeH * 0.60
+                        : math.min(
+                            layout.tablet ? 400 : 360,
+                            safeH * (layout.tablet ? 0.40 : 0.48),
                           ),
-                        ),
-                        Text('${(percentage * 100).round()}%'),
-                        const Icon(Icons.chevron_right),
-                      ],
-                    ),
+                    child: panel,
                   ),
                 ),
-              ),
-            ),
-            LayoutBuilder(
-              builder: (context, constraints) {
-                final wrap =
-                    constraints.maxWidth < 360 ||
-                    media.textScaler.scale(12) > 18;
-                final width = constraints.maxWidth / (wrap ? 3 : 5);
-                return Wrap(
-                  children: [
-                    for (final tool in tools)
-                      SizedBox(
-                        width: width,
-                        child: _Tab(
-                          icon: tool.$1,
-                          label: tool.$2,
-                          selected: activeTool == tool.$3,
-                          onPressed: tool.$4,
-                        ),
-                      ),
-                  ],
-                );
-              },
-            ),
-          ],
+              if (layout.landscape &&
+                  !side &&
+                  media.size.width >= 720 &&
+                  media.textScaler.scale(12) <= 18)
+                SizedBox(
+                  height: 56,
+                  child: Row(
+                    children: [
+                      Expanded(flex: 2, child: progress),
+                      Expanded(flex: 5, child: toolRow),
+                    ],
+                  ),
+                )
+              else ...[
+                progress,
+                toolRow,
+              ],
+            ],
+          ),
         ),
       ),
     );
@@ -391,16 +423,16 @@ class _Tab extends StatelessWidget {
             color: Colors.transparent,
             child: InkWell(
               onTap: onPressed,
-              borderRadius: PaperfoldShape.controlRadius,
+              customBorder: PaperfoldShape.controlShape,
               child: AnimatedContainer(
                 duration: duration,
                 curve: ReaderChrome._curve,
                 constraints: const BoxConstraints(minHeight: 48),
-                decoration: BoxDecoration(
+                decoration: ShapeDecoration(
                   color: selected
                       ? scheme.primaryContainer
                       : Colors.transparent,
-                  borderRadius: PaperfoldShape.controlRadius,
+                  shape: PaperfoldShape.controlShape,
                 ),
                 child: Padding(
                   padding: const EdgeInsets.symmetric(vertical: 4),
@@ -428,4 +460,3 @@ class _Tab extends StatelessWidget {
     );
   }
 }
-

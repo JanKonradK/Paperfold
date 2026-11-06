@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
@@ -11,28 +9,35 @@ class ReaderWindow extends ChangeNotifier {
   bool _closed = false;
   Future<void> _pending = Future.value();
 
-  bool get supported => Platform.isAndroid;
+  bool get supported => defaultTargetPlatform == TargetPlatform.android;
 
   Future<void> _run(Future<void> Function() action) {
     if (!supported || _closed) return Future.value();
-    final result = _pending.then((_) => action());
+    final result = _pending.then((_) async {
+      try {
+        await action();
+      } catch (_) {
+        try {
+          await SystemChrome.setPreferredOrientations([]);
+          await channel.invokeMethod<void>('restore');
+        } catch (error) {
+          debugPrint('Reader window reset failed: $error');
+        }
+        brightness = null;
+        rotationLocked = false;
+        notifyListeners();
+        rethrow;
+      }
+    });
     // Keep exit/reset ordered after in-flight slider requests, including errors.
     _pending = result.catchError((Object _) {});
     return result;
   }
 
   Future<void> setBrightness(double? value) => _run(() async {
-    try {
-      await channel.invokeMethod<void>('brightness', value?.clamp(0.05, 1.0));
-      brightness = value?.clamp(0.05, 1.0);
-      notifyListeners();
-    } catch (_) {
-      await channel.invokeMethod<void>('restore');
-      brightness = null;
-      rotationLocked = false;
-      notifyListeners();
-      rethrow;
-    }
+    await channel.invokeMethod<void>('brightness', value?.clamp(0.05, 1.0));
+    brightness = value?.clamp(0.05, 1.0);
+    notifyListeners();
   });
 
   Future<void> lockRotation(bool lock) => _run(() async {

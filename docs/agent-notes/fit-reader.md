@@ -24,3 +24,12 @@
 - Declines lock in multi-window and Android 16 large-display cases.
 - Handles natural-landscape displays; activity recreation clears overrides.
 - Session exit queues reset after pending updates. Resume reads actual host state.
+
+## Part 4 — direct tools and secondary groups
+- Search opens BookToc with initial focus; Bookmarks hosts BookmarkWidget directly.
+- The real BookToc path is lib/widgets/reading_page/widgets/book_toc.dart,
+  rather than the abbreviated path in the brief. Added one optional focus argument.
+- Secondary settings now use named expandable groups. CSS keeps explicit Save.
+- Hidden hover controls on Android. All preference/engine capabilities retained.
+- Fixed asynchronous theme refresh replacing a newer panel and natural landscape lock.
+- Validation underway: scoped analyze clean; navigation tests pass.

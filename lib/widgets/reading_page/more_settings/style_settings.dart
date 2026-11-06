@@ -6,7 +6,6 @@ import 'package:paperfold/l10n/generated/L10n.dart';
 import 'package:paperfold/models/book_style.dart';
 import 'package:paperfold/page/reading_page.dart';
 import 'package:paperfold/widgets/icon_and_text.dart';
-import 'package:paperfold/widgets/reading_page/more_settings/custom_css_editor.dart';
 import 'package:material_ui/material_ui.dart';
 
 // Reusable style slider widget that can be disabled
@@ -329,12 +328,46 @@ class _StyleSettingsState extends State<StyleSettings> {
       return StatefulBuilder(
         builder: (BuildContext context, StateSetter setState) => Column(
           children: [
-            textIndent(bookStyle, setState),
-            sideMarginSlider(bookStyle, setState),
-            topBottomMarginSlider(bookStyle, setState),
-            letterSpacingSlider(bookStyle, setState),
-            fontWeightSlider(bookStyle, setState),
-            headingFontSizeSlider(bookStyle, setState),
+            ExpansionTile(
+              title: Text(L10n.of(context).readerParagraphs),
+              children: [
+                StyleSlider(
+                  icon: Icons.height,
+                  label: L10n.of(context).readingPageParagraphSpacing,
+                  value: bookStyle.paragraphSpacing,
+                  min: 0,
+                  max: 5,
+                  divisions: 10,
+                  enabled: !Prefs().useBookStyles,
+                  labelFormatter: (v) => v.toStringAsFixed(1),
+                  onChanged: (v) {
+                    setState(() => bookStyle.paragraphSpacing = v);
+                    epubPlayerKey.currentState?.changeStyle(bookStyle);
+                    Prefs().saveBookStyleToPrefs(bookStyle);
+                  },
+                ),
+                textIndent(bookStyle, setState),
+                textAlignment(),
+              ],
+            ),
+            ExpansionTile(
+              title: Text(L10n.of(context).readingSettingsMargin),
+              children: [
+                sideMarginSlider(bookStyle, setState),
+                topBottomMarginSlider(bookStyle, setState),
+              ],
+            ),
+            ExpansionTile(
+              title: Text(L10n.of(context).readerText),
+              children: [
+                letterSpacingSlider(bookStyle, setState),
+                fontWeightSlider(bookStyle, setState),
+              ],
+            ),
+            ExpansionTile(
+              title: Text(L10n.of(context).readerHeadings),
+              children: [headingFontSizeSlider(bookStyle, setState)],
+            ),
           ],
         ),
       );
@@ -349,8 +382,6 @@ class _StyleSettingsState extends State<StyleSettings> {
           sliders(),
           const SizedBox(height: 16),
           const Divider(),
-          textAlignment(),
-          CustomCSSEditor(),
         ],
       ),
     );

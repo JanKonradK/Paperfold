@@ -21,7 +21,9 @@ class MainActivity : FlutterFragmentActivity() {
         window.attributes = window.attributes.apply {
             screenBrightness = WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_NONE
         }
-        savedInstanceState?.getInt("readerOrientation")?.let { requestedOrientation = it }
+        if (savedInstanceState?.containsKey("readerOrientation") == true) {
+            requestedOrientation = savedInstanceState.getInt("readerOrientation")
+        }
     }
 
     override fun onSaveInstanceState(outState: Bundle) {

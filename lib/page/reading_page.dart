@@ -1,8 +1,8 @@
+import 'package:paperfold/service/reader_window.dart';
 import 'package:paperfold/widgets/reading_page/more_settings/more_settings.dart';
 import 'package:paperfold/widgets/reading_page/facing_page.dart';
 
 import 'dart:async';
-import 'dart:math' as math;
 
 import 'package:paperfold/config/shared_preference_provider.dart';
 import 'package:paperfold/dao/reading_time.dart';
@@ -22,7 +22,8 @@ import 'package:paperfold/widgets/reading_page/reader_chrome.dart';
 import 'package:paperfold/models/reading_time.dart';
 import 'package:paperfold/widgets/reading_page/progress_widget.dart';
 import 'package:paperfold/widgets/reading_page/style_widget.dart';
-import 'package:paperfold/widgets/reading_page/toc_widget.dart';
+import 'package:paperfold/widgets/reading_page/widgets/book_toc.dart';
+import 'package:paperfold/widgets/reading_page/widgets/bookmark.dart';
 import 'package:cupertino_ui/cupertino_ui.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
@@ -65,8 +66,10 @@ class ReadingPageState extends ConsumerState<ReadingPage>
   Timer? _awakeTimer;
   bool bottomBarOffstage = true;
   ReaderTool _activeTool = ReaderTool.none;
+  int _panelVersion = 0;
   late String heroTag;
   bool bookmarkExists = false;
+  final _readerWindow = ReaderWindow();
   late PageTurn _lastPagedTurn = Prefs().pageTurnStyle == PageTurn.scroll
       ? PageTurn.slide
       : Prefs().pageTurnStyle;
@@ -134,6 +137,7 @@ class ReadingPageState extends ConsumerState<ReadingPage>
     // if (_volumeKeyListenerAttached) {
     //   unawaited(_volumeKeyBoard.removeListener());
     // }
+    unawaited(_readerWindow.restore().whenComplete(_readerWindow.dispose));
     _readerFocusNode.dispose();
     super.dispose();
   }
@@ -249,6 +253,7 @@ class ReadingPageState extends ConsumerState<ReadingPage>
     super.didChangeAppLifecycleState(state);
     switch (state) {
       case AppLifecycleState.resumed:
+        unawaited(_readerWindow.refresh());
         if (!_readTimeWatch.isRunning) {
           _readTimeWatch.start();
         }
@@ -306,6 +311,7 @@ class ReadingPageState extends ConsumerState<ReadingPage>
   }
 
   void hideBottomBar() {
+    _panelVersion++;
     setState(() {
       _currentPage = empty;
       _activeTool = ReaderTool.none;
@@ -326,12 +332,34 @@ class ReadingPageState extends ConsumerState<ReadingPage>
   }
 
   Future<void> tocHandler() async {
-    hideBottomBar();
-    _scaffoldKey.currentState?.openDrawer();
+    _showTool(ReaderTool.contents, _bookContents());
   }
+
+  Widget _bookContents({bool search = false}) => BookToc(
+    key: ValueKey(search),
+    initialSearchFocus: search,
+    epubPlayerKey: epubPlayerKey,
+    hideAppBarAndBottomBar: showOrHideAppBarAndBottomBar,
+    closeDrawer: () {},
+  );
+
+  void _searchHandler() =>
+      _showTool(ReaderTool.search, _bookContents(search: true));
+
+  void _bookmarksHandler() => _showTool(
+    ReaderTool.bookmarks,
+    Padding(
+      padding: const EdgeInsets.all(16),
+      child: BookmarkWidget(
+        epubPlayerKey: epubPlayerKey,
+        onNavigate: hideBottomBar,
+      ),
+    ),
+  );
 
   /// Opens a tool, or closes it when it is already the open one.
   void _showTool(ReaderTool tool, Widget panel) {
+    _panelVersion++;
     setState(() {
       if (_activeTool == tool) {
         _activeTool = ReaderTool.none;
@@ -361,12 +389,10 @@ class ReadingPageState extends ConsumerState<ReadingPage>
         try {
           await player.previewPassage(target);
         } catch (_) {
-          if (context.mounted)
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(L10n.of(context).journalPassageOpenFailed),
-              ),
-            );
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(L10n.of(context).journalPassageOpenFailed)),
+          );
         }
       },
     );
@@ -395,9 +421,14 @@ class ReadingPageState extends ConsumerState<ReadingPage>
       return;
     }
     _openQuickSettings(widget.initialThemes);
+    final version = _panelVersion;
     final themes = await themeDao.selectThemes();
-    if (!mounted || bottomBarOffstage || _activeTool != ReaderTool.style)
+    if (!mounted ||
+        bottomBarOffstage ||
+        _activeTool != ReaderTool.style ||
+        version != _panelVersion) {
       return;
+    }
     _openQuickSettings(themes);
   }
 
@@ -406,10 +437,14 @@ class ReadingPageState extends ConsumerState<ReadingPage>
       _activeTool = ReaderTool.style;
       _currentPage = StyleWidget(
         themes: themes,
+        readerWindow: _readerWindow,
         lastPagedTurn: _lastPagedTurn,
         onPagedTurnChanged: (turn) => _lastPagedTurn = turn,
         epubPlayerKey: epubPlayerKey,
-        setCurrentPage: (Widget page) => setState(() => _currentPage = page),
+        setCurrentPage: (Widget page) => setState(() {
+          _panelVersion++;
+          _currentPage = page;
+        }),
         hideAppBarAndBottomBar: showOrHideAppBarAndBottomBar,
       );
     });
@@ -426,6 +461,10 @@ class ReadingPageState extends ConsumerState<ReadingPage>
     } else {
       Navigator.pop(context);
     }
+  }
+
+  void rememberPagedTurn(PageTurn turn) {
+    if (turn != PageTurn.scroll) _lastPagedTurn = turn;
   }
 
   void updateState() {
@@ -485,6 +524,8 @@ class ReadingPageState extends ConsumerState<ReadingPage>
           ),
         ),
         onContents: tocHandler,
+        onSearch: _searchHandler,
+        onBookmarks: _bookmarksHandler,
         onNotes: noteHandler,
         onProgress: progressHandler,
         onStyle: styleHandler,
@@ -510,23 +551,6 @@ class ReadingPageState extends ConsumerState<ReadingPage>
               child: Scaffold(
                 key: _scaffoldKey,
                 resizeToAvoidBottomInset: false,
-                drawer: PointerInterceptor(
-                  child: Drawer(
-                    width: math.min(
-                      MediaQuery.of(context).size.width * 0.8,
-                      420,
-                    ),
-                    child: SafeArea(
-                      child: TocWidget(
-                        epubPlayerKey: epubPlayerKey,
-                        hideAppBarAndBottomBar: showOrHideAppBarAndBottomBar,
-                        closeDrawer: () {
-                          _scaffoldKey.currentState?.closeDrawer();
-                        },
-                      ),
-                    ),
-                  ),
-                ),
                 // A Scaffold gives its body loose constraints, so this Stack must
                 // be told to fill them. Every child here is either positioned or
                 // an Offstage that reports zero size while the toolbar is hidden,

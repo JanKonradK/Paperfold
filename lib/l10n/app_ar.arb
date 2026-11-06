@@ -928,5 +928,13 @@
   "readerRotationLock": "قفل الاتجاه الحالي",
   "readerCustomStyles": "استخدام أنماط نص مخصصة",
   "readerPaged": "صفحات",
-  "readerWindowFailed": "تعذر تطبيق إعدادات الشاشة"
+  "readerWindowFailed": "تعذر تطبيق إعدادات الشاشة",
+  "readerParagraphs": "الفقرات",
+  "readerText": "النص",
+  "readerHeadings": "العناوين",
+  "readerLanguageDirection": "اللغة والاتجاه",
+  "readerPageInformation": "معلومات الصفحة",
+  "readerScreen": "الشاشة",
+  "readerPageTurns": "تقليب الصفحات",
+  "readerSelectionActions": "إجراءات التحديد"
 }

@@ -928,5 +928,13 @@
   "readerRotationLock": "鎖定目前方向",
   "readerCustomStyles": "使用自訂文字樣式",
   "readerPaged": "分頁",
-  "readerWindowFailed": "無法套用螢幕設定"
+  "readerWindowFailed": "無法套用螢幕設定",
+  "readerParagraphs": "段落",
+  "readerText": "文字",
+  "readerHeadings": "標題",
+  "readerLanguageDirection": "語言與方向",
+  "readerPageInformation": "頁面資訊",
+  "readerScreen": "螢幕",
+  "readerPageTurns": "翻頁",
+  "readerSelectionActions": "選取文字操作"
 }

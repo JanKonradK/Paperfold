@@ -1146,5 +1146,13 @@
   "readerRotationLock": "Blocca orientamento attuale",
   "readerCustomStyles": "Usa stili di testo personalizzati",
   "readerPaged": "Pagine",
-  "readerWindowFailed": "Impossibile applicare le impostazioni dello schermo"
+  "readerWindowFailed": "Impossibile applicare le impostazioni dello schermo",
+  "readerParagraphs": "Paragrafi",
+  "readerText": "Testo",
+  "readerHeadings": "Titoli",
+  "readerLanguageDirection": "Lingua e direzione",
+  "readerPageInformation": "Informazioni pagina",
+  "readerScreen": "Schermo",
+  "readerPageTurns": "Cambio pagina",
+  "readerSelectionActions": "Azioni di selezione"
 }
