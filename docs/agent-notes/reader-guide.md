@@ -5,5 +5,8 @@
 - Share the tap action resolver with EpubPlayer, including custom zones, swap, and disabled tap turns.
 - Show the guide after reader load. Save one device-wide seen preference on dismissal.
 - Use connected regions from the existing 3 by 3 layout. Keep arrows aligned with reader direction.
-- In progress: guide widget, settings replay, localization, and widget tests.
+- Implemented: guide gate after onLoadEnd, connected zone paths, pane labels, two arrow pulses, reduced motion, settings replay, and six English strings.
+- Added tests for persistence, replay, tap blocking, all five presets, custom/swap/disabled actions, RTL/semantics, and requested sizes at 200% text.
+- This fresh worktree lacked generated models/providers. Ran flutter pub get and build_runner to prepare checks. No dependencies changed.
+- In progress: run tests and fix any findings.
 - Required checks: changed-file dart analyze and flutter test --concurrency=1.

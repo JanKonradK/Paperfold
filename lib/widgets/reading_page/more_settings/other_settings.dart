@@ -344,6 +344,15 @@ class _OtherSettingsState extends State<OtherSettings> {
               if (AnxPlatform.isDesktop) showMenuOnHover(),
               if (AnxPlatform.isDesktop) keyboardShortcutTurnPage(),
               pageTurningControl(),
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: const Icon(Icons.touch_app_outlined),
+                title: Text(L10n.of(context).readerGuideShow),
+                onTap: () {
+                  Navigator.of(context).pop();
+                  readingPageKey.currentState?.showTapGuide();
+                },
+              ),
             ],
           ),
           ExpansionTile(
