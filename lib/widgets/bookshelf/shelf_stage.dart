@@ -213,11 +213,11 @@ class ShelfStageState extends State<ShelfStage>
           coverWidth / .68 +
           MediaQuery.textScalerOf(context).scale(14) * 3 +
           16;
-      // A shelf is about a third of the screen tall: 240 on a phone, up to
-      // 320 on a tablet, never taller than the space the stage has. Spines
-      // above 230 show their author and foil seal.
+      // A shelf is 240 tall on every screen; a wider screen holds more
+      // books per shelf, not bigger ones. Spines above 230 show their author
+      // and foil seal. Never taller than the space the stage has.
       final spineHeight = math.min(
-        (MediaQuery.sizeOf(context).height * 0.3).clamp(240.0, 320.0),
+        240.0,
         math.max(72.0, bounds.maxHeight - 52),
       );
       final spineRects = <Rect>[];
@@ -715,7 +715,6 @@ class _FlatCover extends StatelessWidget {
     );
   }
 }
-
 
 /// The board a row of books stands on: a lit front edge and a soft shadow.
 class _ShelfBoard extends StatelessWidget {

@@ -215,16 +215,14 @@ class _SettingsHomePageState extends ConsumerState<SettingsHomePage> {
                 );
               }
 
-              if (constraints.maxWidth >= 600) {
-                return Row(
-                  children: [
-                    Expanded(flex: 1, child: settingsList(false)),
-                    const VerticalDivider(thickness: 1, width: 1),
-                    Expanded(flex: 2, child: Builder(builder: settingsDetail!)),
-                  ],
-                );
-              }
-              return settingsList(true);
+              // One design on every width: the phone's list, in the
+              // reading column on a wide screen.
+              return Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 760),
+                  child: settingsList(true),
+                ),
+              );
             },
           ),
         );

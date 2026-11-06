@@ -3,6 +3,7 @@ import 'package:paperfold/dao/book.dart';
 import 'package:paperfold/service/capture_launch.dart';
 import 'package:paperfold/service/quick_capture.dart';
 import 'package:paperfold/page/journal/journal_home_page.dart';
+
 import 'dart:async';
 import 'dart:math' as math;
 
@@ -30,9 +31,7 @@ import 'package:paperfold/config/shared_preference_provider.dart';
 import 'package:paperfold/utils/toast/common.dart';
 import 'package:paperfold/widgets/common/load_failure.dart';
 import 'package:paperfold/widgets/paperfold_glass_surface.dart';
-import 'package:paperfold/widgets/paperfold_logo_mark.dart';
 import 'package:paperfold/widgets/paperfold_library_theme.dart';
-import 'package:paperfold/widgets/settings/about.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:paperfold/config/paperfold_motion.dart';
 import 'package:paperfold/config/paperfold_system.dart';
@@ -189,9 +188,11 @@ class _HomePageState extends ConsumerState<HomePage> {
             TextButton(
               onPressed: () => {
                 launchUrl(
-                    Uri.parse(
-                        'https://developer.microsoft.com/en-us/microsoft-edge/webview2'),
-                    mode: LaunchMode.externalApplication)
+                  Uri.parse(
+                    'https://developer.microsoft.com/en-us/microsoft-edge/webview2',
+                  ),
+                  mode: LaunchMode.externalApplication,
+                ),
               },
               child: Text(L10n.of(context).webview2Install),
             ),
@@ -201,7 +202,8 @@ class _HomePageState extends ConsumerState<HomePage> {
     } else {
       webViewEnvironment = await WebViewEnvironment.create(
         settings: WebViewEnvironmentSettings(
-            userDataFolder: (await getAnxTempDir()).path),
+          userDataFolder: (await getAnxTempDir()).path,
+        ),
       );
     }
   }
@@ -372,7 +374,8 @@ class _HomePageState extends ConsumerState<HomePage> {
           // Only the armed second press leaves. Everything else is ours to
           // answer, so that the last back on the shelf asks before it closes the
           // application rather than closing it.
-          canPop: _leaving &&
+          canPop:
+              _leaving &&
               _destinationHistory.length <= 1 &&
               !(_destination == 1 && _libraryBack.canTakeBack),
           onPopInvokedWithResult: (didPop, result) {
@@ -387,88 +390,18 @@ class _HomePageState extends ConsumerState<HomePage> {
           },
           child: child!,
         ),
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            if (constraints.maxWidth >= 600) {
-              final extended = constraints.maxWidth > 1000;
-              return Scaffold(
-                body: Row(
-                  children: [
-                    SafeArea(
-                      child: NavigationRail(
-                        leading: Semantics(
-                          button: true,
-                          label: l10n.appAbout,
-                          child: Tooltip(
-                            message: l10n.appAbout,
-                            child: InkWell(
-                              onTap: openAboutDialog,
-                              borderRadius: BorderRadius.circular(24),
-                              child: SizedBox(
-                                width: 48,
-                                height: 48,
-                                child: Center(
-                                  child: PaperfoldLogoMark(
-                                    size: 32,
-                                    tint:
-                                        Theme.of(context).colorScheme.secondary,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                        groupAlignment: 1,
-                        extended: extended,
-                        selectedIndex: _destination,
-                        onDestinationSelected: selectDestination,
-                        labelType:
-                            extended ? null : NavigationRailLabelType.all,
-                        destinations: [
-                          for (final destination in destinations)
-                            NavigationRailDestination(
-                              icon: Icon(destination.icon),
-                              selectedIcon: Icon(destination.selectedIcon),
-                              label: Text(destination.label),
-                            ),
-                        ],
-                      ),
-                    ),
-                    const VerticalDivider(width: 1),
-                    Expanded(
-                      child: SafeArea(
-                        top: false,
-                        child: _DestinationFade(
-                          index: _destination,
-                          child: pageStack,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            }
-
-            return Scaffold(
-              // The bar gets its own strip of the screen and the page stops
-              // above it. Under `extendBody` the shelf ran on behind the glass,
-              // so a book title, a shelf name and the destinations were
-              // all printed over one another at the foot of the Library.
-              // Paperfold 3: the page runs on behind the floating glass bar.
-              // The Scaffold adds the bar to the body's bottom padding, so a
-              // scroll view that honours MediaQuery padding stops its last item
-              // above the bar.
-              extendBody: true,
-              body: _DestinationFade(index: _destination, child: pageStack),
-              bottomNavigationBar: _SlidingNavigationBar(
-                selectedIndex: _destination,
-                onDestinationSelected: selectDestination,
-                destinations: [
-                  ...destinations,
-                ],
-              ),
-            );
-          },
+        // One design on every width: the page runs on behind the floating
+        // glass bar. The Scaffold adds the bar to the body's bottom padding,
+        // so a scroll view that honours MediaQuery padding stops its last
+        // item above the bar.
+        child: Scaffold(
+          extendBody: true,
+          body: _DestinationFade(index: _destination, child: pageStack),
+          bottomNavigationBar: _SlidingNavigationBar(
+            selectedIndex: _destination,
+            onDestinationSelected: selectDestination,
+            destinations: destinations,
+          ),
         ),
       ),
     );
@@ -484,12 +417,8 @@ class _SlidingNavigationBar extends StatelessWidget {
 
   final int selectedIndex;
   final ValueChanged<int> onDestinationSelected;
-  final List<
-      ({
-        IconData icon,
-        IconData selectedIcon,
-        String label,
-      })> destinations;
+  final List<({IconData icon, IconData selectedIcon, String label})>
+  destinations;
 
   @override
   Widget build(BuildContext context) {
@@ -504,88 +433,114 @@ class _SlidingNavigationBar extends StatelessWidget {
       mediaQuery.systemGestureInsets.bottom,
     );
 
-    return LayoutBuilder(builder: (context, available) {
-      final columns =
-          largeText && available.maxWidth < 480 ? 2 : destinations.length;
-      final rows = (destinations.length / columns).ceil();
-      final barHeight = rows > 1
-          ? 136.0
-          : (largeText ? 104.0 : PaperfoldSize.navigationBar);
-      return Padding(
-        padding: EdgeInsetsDirectional.fromSTEB(12, 4, 12, bottomInset + 8),
-        child: SizedBox(
-          height: barHeight,
-          child: PaperfoldGlassSurface(
-            shadow: true,
-            // Nothing passes behind this bar any more: `extendBody` is off, so
-            // the page stops above it and the only thing left to blur is the
-            // scaffold's flat ground. The filter cost a full-width readback on
-            // every frame and blurred a solid colour into the same colour.
-            borderRadius: PaperfoldShape.frameRadius,
+    return LayoutBuilder(
+      builder: (context, available) {
+        final columns = largeText && available.maxWidth < 480
+            ? 2
+            : destinations.length;
+        final rows = (destinations.length / columns).ceil();
+        final barHeight = rows > 1
+            ? 136.0
+            : (largeText ? 104.0 : PaperfoldSize.navigationBar);
+        // A tablet gets the phone's bar, centred, not a stretched one.
+        return Align(
+          heightFactor: 1,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 560),
             child: Padding(
-              padding: const EdgeInsets.all(4),
-              child: LayoutBuilder(
-                builder: (context, constraints) {
-                  final gap = largeText ? 0.0 : 8.0;
-                  final slotWidth =
-                      (constraints.maxWidth - gap * (columns - 1)) / columns;
-                  final slotHeight =
-                      (constraints.maxHeight - gap * (rows - 1)) / rows;
-                  return Semantics(
-                    role: SemanticsRole.tabBar,
-                    explicitChildNodes: true,
-                    child: Stack(
-                      children: [
-                        AnimatedPositionedDirectional(
-                          key: const Key('sliding-navigation-indicator'),
-                          duration: disableAnimations
-                              ? Duration.zero
-                              : PaperfoldMotion.move,
-                          // Lands with a small overshoot under the finger.
-                          curve: PaperfoldMotion.land,
-                          top: (selectedIndex ~/ columns) * (slotHeight + gap),
-                          start: (selectedIndex % columns) * (slotWidth + gap),
-                          width: slotWidth,
-                          height: slotHeight,
-                          child: DecoratedBox(
-                            decoration: BoxDecoration(
-                              color: scheme.primaryContainer,
-                              borderRadius: BorderRadius.circular(
-                                PaperfoldShape.nested(PaperfoldShape.frame, 4),
-                              ),
-                            ),
-                          ),
-                        ),
-                        Wrap(
-                          spacing: gap,
-                          runSpacing: gap,
-                          children: [
-                            for (var index = 0;
-                                index < destinations.length;
-                                index++)
-                              SizedBox(
+              padding: EdgeInsetsDirectional.fromSTEB(
+                12,
+                4,
+                12,
+                bottomInset + 8,
+              ),
+              child: SizedBox(
+                height: barHeight,
+                child: PaperfoldGlassSurface(
+                  shadow: true,
+                  // Nothing passes behind this bar any more: `extendBody` is off, so
+                  // the page stops above it and the only thing left to blur is the
+                  // scaffold's flat ground. The filter cost a full-width readback on
+                  // every frame and blurred a solid colour into the same colour.
+                  borderRadius: PaperfoldShape.frameRadius,
+                  child: Padding(
+                    padding: const EdgeInsets.all(4),
+                    child: LayoutBuilder(
+                      builder: (context, constraints) {
+                        final gap = largeText ? 0.0 : 8.0;
+                        final slotWidth =
+                            (constraints.maxWidth - gap * (columns - 1)) /
+                            columns;
+                        final slotHeight =
+                            (constraints.maxHeight - gap * (rows - 1)) / rows;
+                        return Semantics(
+                          role: SemanticsRole.tabBar,
+                          explicitChildNodes: true,
+                          child: Stack(
+                            children: [
+                              AnimatedPositionedDirectional(
+                                key: const Key('sliding-navigation-indicator'),
+                                duration: disableAnimations
+                                    ? Duration.zero
+                                    : PaperfoldMotion.move,
+                                // Lands with a small overshoot under the finger.
+                                curve: PaperfoldMotion.land,
+                                top:
+                                    (selectedIndex ~/ columns) *
+                                    (slotHeight + gap),
+                                start:
+                                    (selectedIndex % columns) *
+                                    (slotWidth + gap),
                                 width: slotWidth,
                                 height: slotHeight,
-                                child: _SlidingNavigationItem(
-                                  tabIndex: index,
-                                  destination: destinations[index],
-                                  selected: index == selectedIndex,
-                                  unselectedForeground: glass.foreground,
-                                  onTap: () => onDestinationSelected(index),
+                                child: DecoratedBox(
+                                  decoration: BoxDecoration(
+                                    color: scheme.primaryContainer,
+                                    borderRadius: BorderRadius.circular(
+                                      PaperfoldShape.nested(
+                                        PaperfoldShape.frame,
+                                        4,
+                                      ),
+                                    ),
+                                  ),
                                 ),
                               ),
-                          ],
-                        ),
-                      ],
+                              Wrap(
+                                spacing: gap,
+                                runSpacing: gap,
+                                children: [
+                                  for (
+                                    var index = 0;
+                                    index < destinations.length;
+                                    index++
+                                  )
+                                    SizedBox(
+                                      width: slotWidth,
+                                      height: slotHeight,
+                                      child: _SlidingNavigationItem(
+                                        tabIndex: index,
+                                        destination: destinations[index],
+                                        selected: index == selectedIndex,
+                                        unselectedForeground: glass.foreground,
+                                        onTap: () =>
+                                            onDestinationSelected(index),
+                                      ),
+                                    ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        );
+                      },
                     ),
-                  );
-                },
+                  ),
+                ),
               ),
             ),
           ),
-        ),
-      );
-    });
+        );
+      },
+    );
   }
 }
 
@@ -599,11 +554,7 @@ class _SlidingNavigationItem extends StatelessWidget {
   });
 
   final int tabIndex;
-  final ({
-    IconData icon,
-    IconData selectedIcon,
-    String label,
-  }) destination;
+  final ({IconData icon, IconData selectedIcon, String label}) destination;
   final bool selected;
   final Color unselectedForeground;
   final VoidCallback onTap;
@@ -612,8 +563,9 @@ class _SlidingNavigationItem extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
-    final foreground =
-        selected ? scheme.onPrimaryContainer : unselectedForeground;
+    final foreground = selected
+        ? scheme.onPrimaryContainer
+        : unselectedForeground;
 
     return Semantics(
       key: ValueKey('navigation-tab-$tabIndex'),
@@ -630,8 +582,9 @@ class _SlidingNavigationItem extends StatelessWidget {
           child: SizedBox.expand(
             child: Padding(
               padding: EdgeInsets.symmetric(
-                horizontal:
-                    MediaQuery.textScalerOf(context).scale(12) > 18 ? 2 : 6,
+                horizontal: MediaQuery.textScalerOf(context).scale(12) > 18
+                    ? 2
+                    : 6,
               ),
               child: Flex(
                 direction: Axis.vertical,
@@ -664,8 +617,9 @@ class _SlidingNavigationItem extends StatelessWidget {
                       style: theme.textTheme.labelSmall?.copyWith(
                         fontSize: 12,
                         color: foreground,
-                        fontWeight:
-                            selected ? FontWeight.w700 : FontWeight.w600,
+                        fontWeight: selected
+                            ? FontWeight.w700
+                            : FontWeight.w600,
                       ),
                     ),
                   ),

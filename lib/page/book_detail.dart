@@ -104,12 +104,10 @@ class _BookDetailState extends ConsumerState<BookDetail> {
         : percent > 0
         ? l10n.tileContinueReadingTitle
         : l10n.bookStartReading;
-    // A larger book in the case on a tablet; the same proportions.
-    final wide = MediaQuery.sizeOf(context).width >= 600;
     final cover = BookCover(
       book: _book,
-      width: wide ? 200 : 144,
-      height: wide ? 289 : 208,
+      width: 144,
+      height: 208,
       radius: PaperfoldShape.object,
     );
     Widget buildBookBaseDetail(double width) => Column(

@@ -30,29 +30,15 @@ class _NotesPageState extends ConsumerState<NotesPage> {
   Widget build(BuildContext context) {
     return SafeArea(
       bottom: false,
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          if (constraints.maxWidth > 600) {
-            return Row(
-              children: [
-                Expanded(
-                  flex: 1,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [notesStatistic(), bookNotesList(false)],
-                  ),
-                ),
-                const VerticalDivider(thickness: 1, width: 1),
-                const Expanded(flex: 2, child: NotesDetail()),
-              ],
-            );
-          } else {
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [notesStatistic(), bookNotesList(true)],
-            );
-          }
-        },
+      // One design on every width: the phone's list, in the reading column.
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 760),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [notesStatistic(), bookNotesList(true)],
+          ),
+        ),
       ),
     );
   }

@@ -232,13 +232,12 @@ void main() {
       expect(
           tester.state<BookcaseState>(find.byType(Bookcase)), same(bookcase));
       expect(bookcase.shelf, 2);
-      expect(find.byType(NavigationRail), findsOneWidget);
-      final rail = tester.widget<NavigationRail>(find.byType(NavigationRail));
-      expect(
-          rail.destinations
-              .map((destination) => (destination.label as Text).data),
-          labels);
-      expect(rail.selectedIndex, 1);
+      // A wide screen keeps the same floating bar, not a rail.
+      expect(find.byType(NavigationRail), findsNothing);
+      for (final label in labels) {
+        expect(find.text(label), findsWidgets);
+      }
+      expect(tester.widget<Semantics>(tab(1)).properties.selected, isTrue);
       expect(tester.state(find.byType(StatisticPage, skipOffstage: false)),
           same(statistics));
       expect(tester.state(find.byType(SettingsHomePage, skipOffstage: false)),
