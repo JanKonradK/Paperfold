@@ -30,7 +30,7 @@ abstract final class ReadingReminder {
 
   static Future<void>? _initializing;
   static Future<void> _init() =>
-      _initializing ??= _initialize().onError((error, stack) {
+      _initializing ??= _initialize().onError<Object>((error, stack) {
         _initializing = null;
         Error.throwWithStackTrace(error, stack);
       });
