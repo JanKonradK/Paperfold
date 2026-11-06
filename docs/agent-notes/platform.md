@@ -3,7 +3,8 @@
 ## Commits
 
 - 1f645e1d: Dart launch services, reminder actions, translations, and tests.
-- This commit adds native widget resources and the DAO update hook.
+- 82a304d1: Native widget resources and the DAO update hook.
+- This commit preserves the original line endings in existing files.
 
 ## Completed
 
