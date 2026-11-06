@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:paperfold/dao/book.dart';
 import 'package:paperfold/dao/journal.dart';
 import 'package:paperfold/models/book.dart';
+import 'package:paperfold/models/journal_page.dart';
 import 'package:paperfold/models/book_review.dart';
 
 /// One book's journal, as the Journal destination lists it.
@@ -67,3 +68,16 @@ class JournalHomeController extends AsyncNotifier<List<JournalEntry>> {
     return entries;
   }
 }
+
+/// Where the Journal home reads recent writing. Tests replace it.
+typedef JournalRecentSource = ({
+  Future<List<JournalPage>> Function(int offset) entries,
+  Future<List<Book>> Function() books,
+});
+
+final journalRecentSourceProvider = Provider<JournalRecentSource>(
+  (ref) => (
+    entries: (offset) => journalDao.recentEntries(offset: offset),
+    books: () => bookDao.selectNotDeleteBooks(),
+  ),
+);

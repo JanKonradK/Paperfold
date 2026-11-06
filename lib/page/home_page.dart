@@ -1,3 +1,7 @@
+import 'package:paperfold/service/book.dart';
+import 'package:paperfold/dao/book.dart';
+import 'package:paperfold/service/capture_launch.dart';
+import 'package:paperfold/service/quick_capture.dart';
 import 'package:paperfold/page/journal/journal_home_page.dart';
 import 'dart:async';
 import 'dart:math' as math;
@@ -7,7 +11,6 @@ import 'package:paperfold/enums/sync_direction.dart';
 import 'package:paperfold/enums/sync_trigger.dart';
 import 'package:paperfold/l10n/generated/L10n.dart';
 import 'package:paperfold/service/initialization_check.dart';
-import 'package:paperfold/page/home_page/notes_page.dart';
 import 'package:paperfold/page/home_page/shelf_home_page.dart';
 import 'package:paperfold/page/settings_page/settings_home_page.dart';
 import 'package:paperfold/page/home_page/statistics_page.dart';
@@ -19,10 +22,6 @@ import 'package:paperfold/utils/get_path/get_temp_dir.dart';
 import 'package:paperfold/utils/load_default_font.dart';
 import 'package:paperfold/utils/log/common.dart';
 import 'package:paperfold/utils/platform_utils.dart';
-import 'package:paperfold/page/journal/book_journal_page.dart';
-import 'package:paperfold/page/search/search_page.dart';
-import 'package:paperfold/page/journal/month_tracker_page.dart';
-import 'package:paperfold/page/journal/reading_challenge_page.dart';
 import 'package:paperfold/providers/journal_home.dart';
 import 'package:paperfold/providers/month_tracker.dart';
 import 'package:paperfold/providers/reading_challenge.dart';
@@ -88,10 +87,70 @@ class _HomePageState extends ConsumerState<HomePage> {
   void initState() {
     super.initState();
     initAnx();
+    QuickCapture.pending.addListener(_onCaptureRequest);
+    CaptureLaunch.openBook.addListener(_onOpenBookRequest);
+    // A cold start from a widget or notification sets these before the home
+    // page exists; answer them once the first frame is up.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _onCaptureRequest();
+      _onOpenBookRequest();
+    });
+  }
+
+  /// Shows the destination at [index], as a tap on the bar would.
+  void _goTo(int index) {
+    if (!mounted || index == _destination) return;
+    setState(() {
+      _leaving = false;
+      _leavingTimer?.cancel();
+      _destination = index;
+      _visitedDestinations.add(index);
+      _destinationHistory = [..._destinationHistory, index];
+    });
+  }
+
+  /// The composer lives in the Journal, which mounts on its first visit.
+  /// Bring it up; the Journal consumes the pending request itself.
+  void _onCaptureRequest() {
+    if (QuickCapture.pending.value == null) return;
+    Navigator.of(context).popUntil((route) => route.isFirst);
+    _goTo(0);
+  }
+
+  Future<void> _onOpenBookRequest() async {
+    final request = CaptureLaunch.takeOpenBook();
+    if (request == null || !mounted) return;
+    Navigator.of(context).popUntil((route) => route.isFirst);
+    final id = request.bookId;
+    if (id == null) {
+      // The current book's Continue pane is on the Library.
+      _goTo(1);
+      return;
+    }
+    try {
+      final book = await bookDao.selectBookById(id);
+      if (!mounted) return;
+      if (book.isPhysical) {
+        QuickCapture.request(
+          QuickCaptureRequest(
+            kind: QuickCaptureKind.progress,
+            bookId: id,
+            source: request.source,
+          ),
+        );
+        return;
+      }
+      await pushToReadingPage(ref, context, book);
+    } catch (e) {
+      AnxLog.info('Open book request $id failed: $e');
+      _goTo(1);
+    }
   }
 
   @override
   void dispose() {
+    QuickCapture.pending.removeListener(_onCaptureRequest);
+    CaptureLaunch.openBook.removeListener(_onOpenBookRequest);
     _leavingTimer?.cancel();
     _libraryBack.dispose();
     super.dispose();
@@ -626,120 +685,6 @@ class _JournalDestination extends StatelessWidget {
   @override
   Widget build(BuildContext context) => const JournalHomePage();
 }
-
-class _JournalTools extends ConsumerWidget {
-  const _JournalTools();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = L10n.of(context);
-    final challenge = ref.watch(readingChallengeProvider);
-    final month = ref.watch(monthTrackerProvider);
-    return Column(
-      children: [
-        _JournalTool(
-          icon: Icons.local_library_outlined,
-          title: l10n.challengeTitle,
-          detail: challenge.hasError
-              ? l10n.statisticTrackerLoadError
-              : challenge.hasValue
-                  ? '${challenge.requireValue.year} · '
-                      '${l10n.challengeProgress(challenge.requireValue.finishedCount, challenge.requireValue.target)}'
-                  : null,
-          page: const ReadingChallengePage(),
-        ),
-        const Divider(height: 1),
-        _JournalTool(
-          icon: Icons.calendar_month_outlined,
-          title: l10n.monthTrackerTitle,
-          detail: month.hasError
-              ? l10n.statisticTrackerLoadError
-              : month.hasValue
-                  ? '${MaterialLocalizations.of(context).formatMonthYear(DateTime(month.requireValue.year, month.requireValue.month))} · '
-                      '${l10n.monthTrackerPagesTotal(month.requireValue.totalPages)}'
-                  : null,
-          page: const MonthTrackerPage(),
-        ),
-        const Divider(height: 1),
-        _JournalTool(
-          icon: Icons.format_quote_outlined,
-          title: l10n.tileNotesTotalTitle,
-          detail: l10n.journalHighlightsOverview,
-          page: Scaffold(
-            appBar: AppBar(title: Text(l10n.tileNotesTotalTitle)),
-            body: const NotesPage(),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _JournalTool extends StatelessWidget {
-  const _JournalTool({
-    required this.icon,
-    required this.title,
-    required this.detail,
-    required this.page,
-  });
-
-  final IconData icon;
-  final String title;
-  final String? detail;
-  final Widget page;
-
-  @override
-  Widget build(BuildContext context) {
-    return ListTile(
-      contentPadding: EdgeInsets.zero,
-      minTileHeight: 76,
-      leading: Icon(icon, color: Theme.of(context).colorScheme.primary),
-      title: Text(title, style: Theme.of(context).textTheme.titleMedium),
-      subtitle: detail == null ? null : Text(detail!),
-      trailing: const Icon(Icons.chevron_right),
-      onTap: () => Navigator.of(context).push(
-        MaterialPageRoute<void>(builder: (_) => page),
-      ),
-    );
-  }
-}
-
-class _DestinationEmptyState extends StatelessWidget {
-  const _DestinationEmptyState({required this.title, required this.body});
-
-  final String title;
-  final String body;
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 440),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.edit_note_outlined,
-                  size: 40, color: Theme.of(context).colorScheme.primary),
-              const SizedBox(height: 16),
-              Text(title,
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.titleLarge),
-              const SizedBox(height: 8),
-              Text(body,
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      )),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
 
 /// Fades the destination in when [index] changes, keeping the page state.
 ///

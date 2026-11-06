@@ -210,6 +210,9 @@ List<Override> newTestOverrides({
       bookListProvider.overrideWith(FakeBookList.new),
       journalHomeProvider.overrideWith(
           () => FakeJournalHome(onJournalBuild, onJournalRefresh)),
+      journalRecentSourceProvider.overrideWithValue(
+        (entries: (_) async => [], books: () async => []),
+      ),
       readingChallengeProvider
           .overrideWith(() => FakeReadingChallenge(onChallengeRefresh)),
       monthTrackerProvider.overrideWith(() => FakeMonthTracker(onMonthRefresh)),

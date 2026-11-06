@@ -4,7 +4,6 @@ import 'package:intl/intl.dart';
 import 'package:paperfold/config/paperfold_system.dart';
 import 'package:paperfold/config/paperfold_motion.dart';
 import 'package:paperfold/widgets/common/paperfold_transition.dart';
-import 'package:paperfold/dao/book.dart';
 import 'package:paperfold/dao/journal.dart';
 import 'package:paperfold/l10n/generated/L10n.dart';
 import 'package:paperfold/models/book.dart';
@@ -86,10 +85,12 @@ class _JournalHomePageState extends ConsumerState<JournalHomePage> {
       _failed = false;
     });
     try {
-      final pages = await (widget.dao ?? journalDao).recentEntries(
-        offset: reset ? 0 : _pages.length,
-      );
-      final books = widget.books ?? await bookDao.selectNotDeleteBooks();
+      final source = ref.read(journalRecentSourceProvider);
+      final offset = reset ? 0 : _pages.length;
+      final pages = widget.dao != null
+          ? await widget.dao!.recentEntries(offset: offset)
+          : await source.entries(offset);
+      final books = widget.books ?? await source.books();
       if (!mounted) return;
       setState(() {
         _pages = reset ? pages : [..._pages, ...pages];
@@ -130,6 +131,7 @@ class _JournalHomePageState extends ConsumerState<JournalHomePage> {
           child: SizedBox(
             height: PaperfoldSize.fab,
             child: FloatingActionButton.extended(
+              heroTag: 'journal-new-entry',
               key: _fab,
               onPressed: () => _compose(),
               icon: const Icon(Icons.edit_outlined),

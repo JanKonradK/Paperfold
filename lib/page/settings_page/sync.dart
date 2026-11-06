@@ -269,7 +269,7 @@ Future<void> restoreBackupFiles(String extractPath) async {
 
   final documentsPath = await getAnxDocumentsPath();
   final targets = {
-    for (final name in ['file', 'cover', 'font', 'bgimg'])
+    for (final name in ['file', 'cover', 'font', 'bgimg', 'journal_photos'])
       name: Directory(path.join(documentsPath, name)),
     'databases': await getAnxDataBasesDir(),
   };
@@ -365,6 +365,7 @@ Future<String> createZipFile(Map<String, dynamic> params) async {
     getCoverDir(path: docPath),
     getFontDir(path: docPath),
     getBgimgDir(path: docPath),
+    Directory(path.join(docPath, 'journal_photos')),
     prefsBackupFile,
   ];
 

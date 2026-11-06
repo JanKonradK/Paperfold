@@ -38,7 +38,14 @@ Future<MigrationCheckResult> checkMigrationNeeded() async {
     final newPath = (await getApplicationSupportDirectory()).path;
 
     // Check if old path has any of our data directories or log file
-    final dataFolders = ['file', 'cover', 'font', 'bgimg', 'databases'];
+    final dataFolders = [
+      'file',
+      'cover',
+      'font',
+      'bgimg',
+      'journal_photos',
+      'databases',
+    ];
     bool oldHasData = false;
 
     for (final folder in dataFolders) {

@@ -137,7 +137,7 @@ void main() {
       expect(navigatorKey.currentState!.canPop(), isFalse);
 
       // Highlights is a Journal tool, not another root destination.
-      final highlights = find.widgetWithText(ListTile, 'Highlights');
+      final highlights = find.text('Highlights').first;
       await tester.ensureVisible(highlights);
       await tester.tap(highlights);
       await tester.pumpAndSettle();

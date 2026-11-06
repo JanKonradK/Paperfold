@@ -468,6 +468,7 @@ class _ShelfHomePageState extends ConsumerState<ShelfHomePage>
       floatingActionButton: Padding(
         padding: EdgeInsets.only(bottom: MediaQuery.paddingOf(context).bottom),
         child: FloatingActionButton(
+          heroTag: 'library-add-book',
           tooltip: l10n.shelfAddBooksTooltip,
           onPressed: _openAddBooksSheet,
           child: const Icon(Icons.add_rounded),

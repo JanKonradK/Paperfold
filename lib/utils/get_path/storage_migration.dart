@@ -10,7 +10,14 @@ import 'package:path_provider/path_provider.dart';
 typedef MigrationProgressCallback = void Function(
     String currentItem, int progress, int total);
 
-const _dataFolders = ['file', 'cover', 'font', 'bgimg', 'databases'];
+const _dataFolders = [
+  'file',
+  'cover',
+  'font',
+  'bgimg',
+  'journal_photos',
+  'databases',
+];
 
 Future<bool> isStorageDestinationEmpty(String root) async {
   for (final name in _dataFolders) {

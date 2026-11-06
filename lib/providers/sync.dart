@@ -11,6 +11,7 @@ import 'package:paperfold/providers/book_list.dart';
 import 'package:paperfold/providers/sync_status.dart';
 import 'package:paperfold/providers/tb_groups.dart';
 import 'package:paperfold/service/sync/sync_client_factory.dart';
+import 'package:paperfold/dao/journal.dart';
 import 'package:paperfold/service/sync/sync_client_base.dart';
 import 'package:paperfold/service/database_sync_manager.dart';
 import 'package:paperfold/dao/database.dart';
@@ -396,7 +397,41 @@ class Sync extends _$Sync {
         await io.File(getBasePath(file)).delete();
       }
     }
+    await _syncJournalPhotos(client);
     ref.read(syncStatusProvider.notifier).refresh();
+  }
+
+  /// Page photos sync like covers: upload what the remote lacks, download
+  /// what this device lacks, and drop photos no journal entry uses.
+  Future<void> _syncJournalPhotos(SyncClientBase client) async {
+    final current = (await journalDao.currentPhotos()).toSet();
+    final remote = {
+      for (final f in await client.safeReadDir('/anx/data/journal_photos'))
+        'journal_photos/${f.name!}',
+    };
+    final localDir = io.Directory(getBasePath('journal_photos'));
+    final local = localDir.existsSync()
+        ? {
+            for (final e in localDir.listSync())
+              'journal_photos/${basename(e.path)}',
+          }
+        : <String>{};
+    for (final file in current) {
+      if (!remote.contains(file) && local.contains(file)) {
+        await uploadFile(getBasePath(file), 'anx/data/$file');
+      } else if (!local.contains(file) && remote.contains(file)) {
+        await io.Directory(getBasePath('journal_photos')).create(
+          recursive: true,
+        );
+        await downloadFile('anx/data/$file', getBasePath(file));
+      }
+    }
+    for (final file in remote.difference(current)) {
+      await client.remove('anx/data/$file');
+    }
+    for (final file in local.difference(current)) {
+      await io.File(getBasePath(file)).delete();
+    }
   }
 
   Future<bool> syncDatabase(SyncDirection direction) async {

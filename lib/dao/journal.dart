@@ -176,6 +176,17 @@ class JournalDao extends BaseDao {
     await delete(pageTable, where: 'book_id = ?', whereArgs: [bookId]);
   }
 
+  /// Every saved page photo, as a path relative to the documents folder.
+  /// Sync and backup use it to keep `journal_photos/` complete.
+  Future<List<String>> currentPhotos() async {
+    final rows = await queryList(
+      pageTable,
+      mapper: JournalPage.fromDb,
+      where: "photo_path IS NOT NULL AND photo_path <> ''",
+    );
+    return [for (final row in rows) if (row.photoPath != null) row.photoPath!];
+  }
+
   Future<List<JournalPage>> recentEntries({int offset = 0, int limit = 30}) =>
       queryList(
         pageTable,
