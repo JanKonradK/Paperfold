@@ -1143,5 +1143,22 @@
   "libraryLayoutAuto": "Авто",
   "libraryLayoutFewer": "Меньше обложек",
   "libraryLayoutMore": "Больше обложек",
-  "libraryLayoutHelp": "Сейчас в ряду {count} обложек. В горизонтальном режиме добавляются столбцы с примерно тем же размером обложек."
+  "libraryLayoutHelp": "Сейчас в ряду {count} обложек. В горизонтальном режиме добавляются столбцы с примерно тем же размером обложек.",
+  "readerQuickSettings": "Быстрые настройки",
+  "readerAdvancedSettings": "Расширенные настройки чтения",
+  "readerMoreAppearance": "Другие настройки оформления",
+  "readerBrightness": "Яркость",
+  "readerSystem": "Система",
+  "readerRotationLock": "Закрепить текущую ориентацию",
+  "readerCustomStyles": "Использовать свои стили текста",
+  "readerPaged": "Страницы",
+  "readerWindowFailed": "Не удалось применить настройки экрана",
+  "readerParagraphs": "Абзацы",
+  "readerText": "Текст",
+  "readerHeadings": "Заголовки",
+  "readerLanguageDirection": "Язык и направление",
+  "readerPageInformation": "Информация на странице",
+  "readerScreen": "Экран",
+  "readerPageTurns": "Перелистывание",
+  "readerSelectionActions": "Действия с выделением"
 }

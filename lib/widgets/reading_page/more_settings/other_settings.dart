@@ -1,3 +1,4 @@
+import 'package:paperfold/widgets/reading_page/style_widget.dart';
 import 'package:paperfold/config/paperfold_system.dart';
 import 'package:paperfold/utils/platform_utils.dart';
 
@@ -312,18 +313,47 @@ class _OtherSettingsState extends State<OtherSettings> {
       padding: const EdgeInsets.all(PaperfoldSpace.xs),
       child: Column(
         children: [
-          fullScreen(),
-          if (AnxPlatform.isAndroid) keyboardTurnPage(),
-          // if (PageTurnMode.fromCode(Prefs().pageTurnMode) ==
-          //     PageTurnMode.simple)
-          swapPageTurnArea(),
-          showMenuOnHover(),
-          if (AnxPlatform.isDesktop) keyboardShortcutTurnPage(),
-          autoAdjustReadingTheme(),
-          autoTranslateSelection(),
-          autoMarkSelection(),
-          screenTimeout(),
-          pageTurningControl(),
+          ExpansionTile(
+            title: Text(L10n.of(context).readerScreen),
+            children: [fullScreen(), screenTimeout()],
+          ),
+          ExpansionTile(
+            title: Text(L10n.of(context).readerPageTurns),
+            children: [
+              DropdownButtonFormField<PageTurn>(
+                initialValue: Prefs().pageTurnStyle,
+                decoration: InputDecoration(
+                  labelText: L10n.of(context).readingPagePageTurningMethod,
+                ),
+                items: [
+                  for (final turn in PageTurn.values)
+                    DropdownMenuItem(
+                      value: turn,
+                      child: Text(turn.getLabel(context)),
+                    ),
+                ],
+                onChanged: (turn) {
+                  if (turn == null) return;
+                  setState(() => Prefs().pageTurnStyle = turn);
+                  readingPageKey.currentState?.rememberPagedTurn(turn);
+                  epubPlayerKey.currentState?.changePageTurnStyle(turn);
+                },
+              ),
+              if (AnxPlatform.isAndroid) keyboardTurnPage(),
+              swapPageTurnArea(),
+              if (AnxPlatform.isDesktop) showMenuOnHover(),
+              if (AnxPlatform.isDesktop) keyboardShortcutTurnPage(),
+              pageTurningControl(),
+            ],
+          ),
+          ExpansionTile(
+            title: Text(L10n.of(context).readerSelectionActions),
+            children: [autoTranslateSelection(), autoMarkSelection()],
+          ),
+          ExpansionTile(
+            title: Text(L10n.of(context).readingPageTheme),
+            children: [autoAdjustReadingTheme()],
+          ),
         ],
       ),
     );

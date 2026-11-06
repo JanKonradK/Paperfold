@@ -925,5 +925,22 @@
   "libraryLayoutAuto": "自动",
   "libraryLayoutFewer": "减少封面",
   "libraryLayoutMore": "增加封面",
-  "libraryLayoutHelp": "当前每行显示 {count} 个封面。横屏时增加列数，封面大小基本不变。"
+  "libraryLayoutHelp": "当前每行显示 {count} 个封面。横屏时增加列数，封面大小基本不变。",
+  "readerQuickSettings": "快捷设置",
+  "readerAdvancedSettings": "高级阅读设置",
+  "readerMoreAppearance": "更多外观设置",
+  "readerBrightness": "亮度",
+  "readerSystem": "系统",
+  "readerRotationLock": "锁定当前方向",
+  "readerCustomStyles": "使用自定义文字样式",
+  "readerPaged": "分页",
+  "readerWindowFailed": "无法应用屏幕设置",
+  "readerParagraphs": "段落",
+  "readerText": "文字",
+  "readerHeadings": "标题",
+  "readerLanguageDirection": "语言和方向",
+  "readerPageInformation": "页面信息",
+  "readerScreen": "屏幕",
+  "readerPageTurns": "翻页",
+  "readerSelectionActions": "选中文字操作"
 }

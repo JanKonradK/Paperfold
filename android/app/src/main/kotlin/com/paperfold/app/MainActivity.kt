@@ -1,6 +1,9 @@
 package com.paperfold.app
 
 import android.content.pm.PackageManager
+import android.os.Bundle
+import android.view.WindowManager
+import android.content.res.Configuration
 import android.content.Intent
 import android.os.Build
 import androidx.core.content.FileProvider
@@ -10,6 +13,29 @@ import io.flutter.plugin.common.MethodChannel
 import java.io.File
 
 class MainActivity : FlutterFragmentActivity() {
+    private var readerOrientation: Int? = null
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        // Never retain a reader override after activity recreation.
+        window.attributes = window.attributes.apply {
+            screenBrightness = WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_NONE
+        }
+        if (savedInstanceState?.containsKey("readerOrientation") == true) {
+            requestedOrientation = savedInstanceState.getInt("readerOrientation")
+        }
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        readerOrientation?.let { outState.putInt("readerOrientation", it) }
+        super.onSaveInstanceState(outState)
+    }
+
+    private fun restoreReaderOrientation() {
+        readerOrientation?.let { requestedOrientation = it }
+        readerOrientation = null
+    }
+
     private var captureChannel: MethodChannel? = null
     private var pendingLaunch: String? = null
     private var captureReady = false
@@ -32,6 +58,56 @@ class MainActivity : FlutterFragmentActivity() {
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "com.paperfold.app/reader_window")
+            .setMethodCallHandler { call, result ->
+                try {
+                    when (call.method) {
+                        "brightness" -> {
+                            val value = (call.arguments as? Number)?.toFloat()
+                            if (value != null && (!value.isFinite() || value < 0.05f || value > 1f)) {
+                                result.error("BRIGHTNESS_RANGE", "Expected 0.05 to 1", null)
+                            } else {
+                                window.attributes = window.attributes.apply {
+                                    screenBrightness = value ?: WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_NONE
+                                }
+                                result.success(null)
+                            }
+                        }
+                        "rotation" -> {
+                            if ((Build.VERSION.SDK_INT >= 24 && isInMultiWindowMode) ||
+                                (Build.VERSION.SDK_INT >= 36 && resources.configuration.smallestScreenWidthDp >= 600)) {
+                                result.success(null)
+                            } else {
+                                if (readerOrientation == null) readerOrientation = requestedOrientation
+                                @Suppress("DEPRECATION")
+                                val rotation = windowManager.defaultDisplay.rotation
+                                val landscape = resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+                                val naturalLandscape = if (rotation % 2 == 0) landscape else !landscape
+                                result.success((rotation + if (naturalLandscape) 1 else 0) % 4)
+                            }
+                        }
+                        "state" -> result.success(mapOf(
+                            "brightness" to window.attributes.screenBrightness,
+                            "locked" to (readerOrientation != null)
+                        ))
+                        "restoreOrientation" -> { restoreReaderOrientation(); result.success(null) }
+                        "restore" -> {
+                            window.attributes = window.attributes.apply {
+                                screenBrightness = WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_NONE
+                            }
+                            restoreReaderOrientation()
+                            result.success(null)
+                        }
+                        else -> result.notImplemented()
+                    }
+                } catch (error: Exception) {
+                    window.attributes = window.attributes.apply {
+                        screenBrightness = WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_NONE
+                    }
+                    restoreReaderOrientation()
+                    result.error("READER_WINDOW", error.message, null)
+                }
+            }
         pendingLaunch = captureUri(intent)
         captureChannel = MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "com.paperfold.app/capture").also { channel ->
             channel.setMethodCallHandler { call, result ->

@@ -1143,5 +1143,22 @@
   "libraryLayoutAuto": "Automático",
   "libraryLayoutFewer": "Menos portadas",
   "libraryLayoutMore": "Más portadas",
-  "libraryLayoutHelp": "Ahora hay {count} portadas por fila. En horizontal se añaden columnas con un tamaño de portada similar."
+  "libraryLayoutHelp": "Ahora hay {count} portadas por fila. En horizontal se añaden columnas con un tamaño de portada similar.",
+  "readerQuickSettings": "Ajustes rápidos",
+  "readerAdvancedSettings": "Ajustes avanzados de lectura",
+  "readerMoreAppearance": "Más ajustes de apariencia",
+  "readerBrightness": "Brillo",
+  "readerSystem": "Sistema",
+  "readerRotationLock": "Bloquear orientación actual",
+  "readerCustomStyles": "Usar estilos de texto propios",
+  "readerPaged": "Páginas",
+  "readerWindowFailed": "No se pudieron aplicar los ajustes de pantalla",
+  "readerParagraphs": "Párrafos",
+  "readerText": "Texto",
+  "readerHeadings": "Encabezados",
+  "readerLanguageDirection": "Idioma y dirección",
+  "readerPageInformation": "Información de página",
+  "readerScreen": "Pantalla",
+  "readerPageTurns": "Cambio de página",
+  "readerSelectionActions": "Acciones de selección"
 }

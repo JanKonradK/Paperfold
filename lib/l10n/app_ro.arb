@@ -1143,5 +1143,22 @@
   "libraryLayoutAuto": "Automat",
   "libraryLayoutFewer": "Mai puține coperți",
   "libraryLayoutMore": "Mai multe coperți",
-  "libraryLayoutHelp": "Acum sunt {count} coperți pe rând. În modul peisaj se adaugă coloane, păstrând aproximativ aceeași dimensiune a coperților."
+  "libraryLayoutHelp": "Acum sunt {count} coperți pe rând. În modul peisaj se adaugă coloane, păstrând aproximativ aceeași dimensiune a coperților.",
+  "readerQuickSettings": "Setări rapide",
+  "readerAdvancedSettings": "Setări avansate de lectură",
+  "readerMoreAppearance": "Mai multe setări de aspect",
+  "readerBrightness": "Luminozitate",
+  "readerSystem": "Sistem",
+  "readerRotationLock": "Blochează orientarea curentă",
+  "readerCustomStyles": "Folosește stiluri de text proprii",
+  "readerPaged": "Pagini",
+  "readerWindowFailed": "Setările ecranului nu au putut fi aplicate",
+  "readerParagraphs": "Paragrafe",
+  "readerText": "Text",
+  "readerHeadings": "Titluri",
+  "readerLanguageDirection": "Limbă și direcție",
+  "readerPageInformation": "Informații pagină",
+  "readerScreen": "Ecran",
+  "readerPageTurns": "Întoarcerea paginilor",
+  "readerSelectionActions": "Acțiuni de selecție"
 }

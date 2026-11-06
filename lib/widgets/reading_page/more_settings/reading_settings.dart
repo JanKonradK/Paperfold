@@ -650,17 +650,26 @@ class _ReadingMoreSettingsState extends State<ReadingMoreSettings> {
       padding: const EdgeInsets.all(18.0),
       child: Column(
         children: [
-          const Divider(height: 20),
-          writingMode(),
-          translationMode(),
-          columnCount(),
-          columnThreshold(),
-          convertChinese(),
-          const Divider(height: 15),
-          codeHighlightTheme(),
-          const Divider(height: 15),
-          readingInfo(),
-          // const Divider(height: 8),
+          ExpansionTile(
+            title: Text(L10n.of(context).readerLanguageDirection),
+            children: [writingMode(), convertChinese()],
+          ),
+          ExpansionTile(
+            title: Text(L10n.of(context).translationMode),
+            children: [translationMode()],
+          ),
+          ExpansionTile(
+            title: Text(L10n.of(context).readingPageColumnCount),
+            children: [columnCount(), columnThreshold()],
+          ),
+          ExpansionTile(
+            title: Text(L10n.of(context).codeHighlightTheme),
+            children: [codeHighlightTheme()],
+          ),
+          ExpansionTile(
+            title: Text(L10n.of(context).readerPageInformation),
+            children: [readingInfo()],
+          ),
         ],
       ),
     );

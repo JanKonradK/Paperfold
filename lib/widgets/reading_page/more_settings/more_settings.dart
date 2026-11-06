@@ -1,77 +1,54 @@
 import 'package:paperfold/widgets/common/paperfold_modal_motion.dart';
-import 'package:paperfold/config/paperfold_visual_policy.dart';
-import 'package:paperfold/config/paperfold_motion.dart';
 import 'package:paperfold/l10n/generated/L10n.dart';
 import 'package:paperfold/main.dart';
-import 'package:paperfold/page/reading_page.dart';
 import 'package:paperfold/widgets/reading_page/more_settings/other_settings.dart';
 import 'package:paperfold/widgets/reading_page/more_settings/reading_settings.dart';
 import 'package:paperfold/widgets/reading_page/more_settings/style_settings.dart';
-import 'package:contentsize_tabbarview/contentsize_tabbarview.dart';
-// This animation fork takes the legacy TabController. The app-level
-// MaterialUiCompatibilityBridge supplies its theme and localizations.
+import 'package:paperfold/widgets/reading_page/more_settings/custom_css_editor.dart';
 import 'package:flutter/material.dart';
 import 'package:pointer_interceptor/pointer_interceptor.dart';
 
 enum ReadingSettings { theme, style }
 
 void showMoreSettings(ReadingSettings settings) {
-  BuildContext context = navigatorKey.currentContext!;
-  // Navigator.of(context).pop();
-  readingPageKey.currentState!.showOrHideAppBarAndBottomBar(false);
-
-  List<Tab> tabs = [
-    Tab(text: L10n.of(context).readingPageReading),
-    Tab(text: L10n.of(context).readingPageStyle),
-    Tab(text: L10n.of(context).readingPageOther),
-  ];
-
-  List<Widget> children = [
-    const ReadingMoreSettings(),
-    const StyleSettings(),
-    const OtherSettings(),
-  ];
-
-  TabController? tabController = TabController(
-    length: tabs.length,
-    vsync: Navigator.of(context),
-    initialIndex: settings == ReadingSettings.theme ? 0 : 1,
-  );
-
-  showDialog(
+  final context = navigatorKey.currentContext!;
+  showDialog<void>(
     context: context,
     animationStyle: paperfoldModalMotion(context),
-    builder: (context) {
-      return Dialog(
-        child: PointerInterceptor(
-          child: Container(
-            constraints: const BoxConstraints(maxWidth: 600),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TabBar(controller: tabController, tabs: tabs),
-                const Divider(height: 0),
-                ConstrainedBox(
-                  constraints: BoxConstraints(
-                    maxHeight: MediaQuery.of(context).size.height * 0.5,
-                    maxWidth: MediaQuery.of(context).size.width * 0.8,
-                  ),
-                  child: SingleChildScrollView(
-                    child: ContentSizeTabBarView(
-                      animationDuration:
-                          PaperfoldVisualPolicy.motionAllowed(context)
-                          ? PaperfoldMotion.of(context, PaperfoldMotion.open)
-                          : Duration.zero,
-                      controller: tabController,
-                      children: children,
-                    ),
-                  ),
+    builder: (context) => Dialog(
+      child: PointerInterceptor(
+        child: SizedBox(
+          width: MediaQuery.sizeOf(context).width,
+          height: MediaQuery.sizeOf(context).height * 0.85,
+          child: Column(
+            children: [
+              ListTile(
+                title: Text(
+                  settings == ReadingSettings.style
+                      ? L10n.of(context).readerMoreAppearance
+                      : L10n.of(context).readerAdvancedSettings,
                 ),
-              ],
-            ),
+                trailing: CloseButton(),
+              ),
+              Expanded(
+                child: ListView(
+                  padding: const EdgeInsets.all(16),
+                  children: [
+                    if (settings == ReadingSettings.style)
+                      const StyleSettings(),
+                    const ReadingMoreSettings(),
+                    const OtherSettings(),
+                    ExpansionTile(
+                      title: Text(L10n.of(context).settingsAdvanced),
+                      children: [CustomCSSEditor()],
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
         ),
-      );
-    },
+      ),
+    ),
   );
 }

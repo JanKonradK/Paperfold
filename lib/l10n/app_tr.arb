@@ -1143,5 +1143,22 @@
   "libraryLayoutAuto": "Otomatik",
   "libraryLayoutFewer": "Daha az kapak",
   "libraryLayoutMore": "Daha fazla kapak",
-  "libraryLayoutHelp": "Şu anda satır başına {count} kapak var. Yatay modda kapak boyutu yaklaşık aynı kalırken sütunlar eklenir."
+  "libraryLayoutHelp": "Şu anda satır başına {count} kapak var. Yatay modda kapak boyutu yaklaşık aynı kalırken sütunlar eklenir.",
+  "readerQuickSettings": "Hızlı ayarlar",
+  "readerAdvancedSettings": "Gelişmiş okuma ayarları",
+  "readerMoreAppearance": "Diğer görünüm ayarları",
+  "readerBrightness": "Parlaklık",
+  "readerSystem": "Sistem",
+  "readerRotationLock": "Geçerli yönü kilitle",
+  "readerCustomStyles": "Özel metin stillerini kullan",
+  "readerPaged": "Sayfalı",
+  "readerWindowFailed": "Ekran ayarları uygulanamadı",
+  "readerParagraphs": "Paragraflar",
+  "readerText": "Metin",
+  "readerHeadings": "Başlıklar",
+  "readerLanguageDirection": "Dil ve yön",
+  "readerPageInformation": "Sayfa bilgileri",
+  "readerScreen": "Ekran",
+  "readerPageTurns": "Sayfa çevirme",
+  "readerSelectionActions": "Seçim işlemleri"
 }

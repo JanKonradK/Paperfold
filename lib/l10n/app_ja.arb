@@ -925,5 +925,22 @@
   "libraryLayoutAuto": "自動",
   "libraryLayoutFewer": "表紙を減らす",
   "libraryLayoutMore": "表紙を増やす",
-  "libraryLayoutHelp": "現在は1行に{count}冊です。横向きでは表紙の大きさをほぼ維持して列数を増やします。"
+  "libraryLayoutHelp": "現在は1行に{count}冊です。横向きでは表紙の大きさをほぼ維持して列数を増やします。",
+  "readerQuickSettings": "クイック設定",
+  "readerAdvancedSettings": "読書の詳細設定",
+  "readerMoreAppearance": "その他の表示設定",
+  "readerBrightness": "明るさ",
+  "readerSystem": "システム",
+  "readerRotationLock": "現在の向きを固定",
+  "readerCustomStyles": "独自の文字スタイルを使う",
+  "readerPaged": "ページ",
+  "readerWindowFailed": "画面設定を適用できませんでした",
+  "readerParagraphs": "段落",
+  "readerText": "文字",
+  "readerHeadings": "見出し",
+  "readerLanguageDirection": "言語と文字方向",
+  "readerPageInformation": "ページ情報",
+  "readerScreen": "画面",
+  "readerPageTurns": "ページめくり",
+  "readerSelectionActions": "選択時の操作"
 }

@@ -925,5 +925,22 @@
   "libraryLayoutAuto": "자동",
   "libraryLayoutFewer": "표지 수 줄이기",
   "libraryLayoutMore": "표지 수 늘리기",
-  "libraryLayoutHelp": "현재 행당 {count}개입니다. 가로 모드에서는 표지 크기를 비슷하게 유지하면서 열을 추가합니다."
+  "libraryLayoutHelp": "현재 행당 {count}개입니다. 가로 모드에서는 표지 크기를 비슷하게 유지하면서 열을 추가합니다.",
+  "readerQuickSettings": "빠른 설정",
+  "readerAdvancedSettings": "고급 읽기 설정",
+  "readerMoreAppearance": "추가 모양 설정",
+  "readerBrightness": "밝기",
+  "readerSystem": "시스템",
+  "readerRotationLock": "현재 방향 잠금",
+  "readerCustomStyles": "사용자 지정 텍스트 스타일 사용",
+  "readerPaged": "페이지",
+  "readerWindowFailed": "화면 설정을 적용할 수 없습니다",
+  "readerParagraphs": "문단",
+  "readerText": "텍스트",
+  "readerHeadings": "제목",
+  "readerLanguageDirection": "언어 및 방향",
+  "readerPageInformation": "페이지 정보",
+  "readerScreen": "화면",
+  "readerPageTurns": "페이지 넘기기",
+  "readerSelectionActions": "선택 작업"
 }

@@ -1143,5 +1143,22 @@
   "libraryLayoutAuto": "Automatisch",
   "libraryLayoutFewer": "Weniger Cover",
   "libraryLayoutMore": "Mehr Cover",
-  "libraryLayoutHelp": "Jetzt {count} Cover pro Reihe. Im Querformat kommen Spalten bei ungefähr gleicher Covergröße hinzu."
+  "libraryLayoutHelp": "Jetzt {count} Cover pro Reihe. Im Querformat kommen Spalten bei ungefähr gleicher Covergröße hinzu.",
+  "readerQuickSettings": "Schnelleinstellungen",
+  "readerAdvancedSettings": "Erweiterte Leseeinstellungen",
+  "readerMoreAppearance": "Weitere Darstellungseinstellungen",
+  "readerBrightness": "Helligkeit",
+  "readerSystem": "System",
+  "readerRotationLock": "Aktuelle Ausrichtung sperren",
+  "readerCustomStyles": "Eigene Textstile verwenden",
+  "readerPaged": "Seiten",
+  "readerWindowFailed": "Bildschirmeinstellungen konnten nicht angewendet werden",
+  "readerParagraphs": "Absätze",
+  "readerText": "Text",
+  "readerHeadings": "Überschriften",
+  "readerLanguageDirection": "Sprache und Richtung",
+  "readerPageInformation": "Seiteninformationen",
+  "readerScreen": "Bildschirm",
+  "readerPageTurns": "Seitenwechsel",
+  "readerSelectionActions": "Auswahlaktionen"
 }

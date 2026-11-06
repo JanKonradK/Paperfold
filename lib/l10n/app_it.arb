@@ -1143,5 +1143,22 @@
   "libraryLayoutAuto": "Automatico",
   "libraryLayoutFewer": "Meno copertine",
   "libraryLayoutMore": "Più copertine",
-  "libraryLayoutHelp": "Ora {count} copertine per riga. In orizzontale si aggiungono colonne mantenendo circa la stessa dimensione delle copertine."
+  "libraryLayoutHelp": "Ora {count} copertine per riga. In orizzontale si aggiungono colonne mantenendo circa la stessa dimensione delle copertine.",
+  "readerQuickSettings": "Impostazioni rapide",
+  "readerAdvancedSettings": "Impostazioni avanzate di lettura",
+  "readerMoreAppearance": "Altre impostazioni di aspetto",
+  "readerBrightness": "Luminosità",
+  "readerSystem": "Sistema",
+  "readerRotationLock": "Blocca orientamento attuale",
+  "readerCustomStyles": "Usa stili di testo personalizzati",
+  "readerPaged": "Pagine",
+  "readerWindowFailed": "Impossibile applicare le impostazioni dello schermo",
+  "readerParagraphs": "Paragrafi",
+  "readerText": "Testo",
+  "readerHeadings": "Titoli",
+  "readerLanguageDirection": "Lingua e direzione",
+  "readerPageInformation": "Informazioni pagina",
+  "readerScreen": "Schermo",
+  "readerPageTurns": "Cambio pagina",
+  "readerSelectionActions": "Azioni di selezione"
 }

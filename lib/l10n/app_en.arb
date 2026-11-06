@@ -1165,5 +1165,28 @@
   "libraryLayoutFewer": "Fewer covers",
   "libraryLayoutMore": "More covers",
   "libraryLayoutHelp": "{count} covers per row now. Landscape adds columns at the same approximate cover size.",
-  "@libraryLayoutHelp": {"placeholders": {"count": {"type": "int"}}}
+  "@libraryLayoutHelp": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "readerQuickSettings": "Quick settings",
+  "readerAdvancedSettings": "Advanced reader settings",
+  "readerMoreAppearance": "More appearance settings",
+  "readerBrightness": "Brightness",
+  "readerSystem": "System",
+  "readerRotationLock": "Lock current orientation",
+  "readerCustomStyles": "Use custom text styles",
+  "readerPaged": "Paged",
+  "readerWindowFailed": "Could not apply screen settings",
+  "readerParagraphs": "Paragraphs",
+  "readerText": "Text",
+  "readerHeadings": "Headings",
+  "readerLanguageDirection": "Language and direction",
+  "readerPageInformation": "Page information",
+  "readerScreen": "Screen",
+  "readerPageTurns": "Page turns",
+  "readerSelectionActions": "Selection actions"
 }

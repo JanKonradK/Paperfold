@@ -925,5 +925,22 @@
   "libraryLayoutAuto": "自動",
   "libraryLayoutFewer": "減少封面",
   "libraryLayoutMore": "增加封面",
-  "libraryLayoutHelp": "目前每列顯示 {count} 個封面。橫向時增加欄數，封面大小大致不變。"
+  "libraryLayoutHelp": "目前每列顯示 {count} 個封面。橫向時增加欄數，封面大小大致不變。",
+  "readerQuickSettings": "快速設定",
+  "readerAdvancedSettings": "進階閱讀設定",
+  "readerMoreAppearance": "更多外觀設定",
+  "readerBrightness": "亮度",
+  "readerSystem": "系統",
+  "readerRotationLock": "鎖定目前方向",
+  "readerCustomStyles": "使用自訂文字樣式",
+  "readerPaged": "分頁",
+  "readerWindowFailed": "無法套用螢幕設定",
+  "readerParagraphs": "段落",
+  "readerText": "文字",
+  "readerHeadings": "標題",
+  "readerLanguageDirection": "語言與方向",
+  "readerPageInformation": "頁面資訊",
+  "readerScreen": "螢幕",
+  "readerPageTurns": "翻頁",
+  "readerSelectionActions": "選取文字操作"
 }

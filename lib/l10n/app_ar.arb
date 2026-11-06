@@ -925,5 +925,22 @@
   "libraryLayoutAuto": "تلقائي",
   "libraryLayoutFewer": "أغلفة أقل",
   "libraryLayoutMore": "أغلفة أكثر",
-  "libraryLayoutHelp": "{count} أغلفة في كل صف حاليًا. يضيف الوضع الأفقي أعمدة مع الحفاظ على حجم الغلاف التقريبي."
+  "libraryLayoutHelp": "{count} أغلفة في كل صف حاليًا. يضيف الوضع الأفقي أعمدة مع الحفاظ على حجم الغلاف التقريبي.",
+  "readerQuickSettings": "إعدادات سريعة",
+  "readerAdvancedSettings": "إعدادات القارئ المتقدمة",
+  "readerMoreAppearance": "المزيد من إعدادات المظهر",
+  "readerBrightness": "السطوع",
+  "readerSystem": "النظام",
+  "readerRotationLock": "قفل الاتجاه الحالي",
+  "readerCustomStyles": "استخدام أنماط نص مخصصة",
+  "readerPaged": "صفحات",
+  "readerWindowFailed": "تعذر تطبيق إعدادات الشاشة",
+  "readerParagraphs": "الفقرات",
+  "readerText": "النص",
+  "readerHeadings": "العناوين",
+  "readerLanguageDirection": "اللغة والاتجاه",
+  "readerPageInformation": "معلومات الصفحة",
+  "readerScreen": "الشاشة",
+  "readerPageTurns": "تقليب الصفحات",
+  "readerSelectionActions": "إجراءات التحديد"
 }
