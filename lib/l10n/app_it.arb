@@ -1137,5 +1137,11 @@
   "libraryPaperBooks": "Libri cartacei",
   "bookStartReading": "Inizia a leggere",
   "bookProgressThrough": "{percent}% del libro letto",
-  "bookStartedOn": "Iniziato il {date}"
+  "bookStartedOn": "Iniziato il {date}",
+  "libraryLayoutTitle": "Layout della biblioteca",
+  "libraryCoversPerRow": "Copertine per riga (verticale)",
+  "libraryLayoutAuto": "Automatico",
+  "libraryLayoutFewer": "Meno copertine",
+  "libraryLayoutMore": "Più copertine",
+  "libraryLayoutHelp": "Ora {count} copertine per riga. In orizzontale si aggiungono colonne mantenendo circa la stessa dimensione delle copertine."
 }

@@ -919,5 +919,11 @@
   "libraryPaperBooks": "紙本書",
   "bookStartReading": "開始閱讀",
   "bookProgressThrough": "已讀全書的 {percent}%",
-  "bookStartedOn": "開始於 {date}"
+  "bookStartedOn": "開始於 {date}",
+  "libraryLayoutTitle": "書庫配置",
+  "libraryCoversPerRow": "每列封面數（直向）",
+  "libraryLayoutAuto": "自動",
+  "libraryLayoutFewer": "減少封面",
+  "libraryLayoutMore": "增加封面",
+  "libraryLayoutHelp": "目前每列顯示 {count} 個封面。橫向時增加欄數，封面大小大致不變。"
 }

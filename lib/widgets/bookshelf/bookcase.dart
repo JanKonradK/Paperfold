@@ -98,24 +98,32 @@ class BookcaseState extends State<Bookcase>
         children: [
           for (var i = 0; i < widget.shelves.length; i++)
             if (i == _shelf || _stages.containsKey(i))
-              HeroMode(
-                enabled: i == _shelf,
-                child: RepaintBoundary(
-                  child: ShelfStage(
-                    headerBuilder: widget.headerBuilder,
-                    emptyBuilder: widget.emptyBuilder == null
-                        ? null
-                        : (context) =>
-                              widget.emptyBuilder!(context, widget.shelves[i]),
-                    key: _stages.putIfAbsent(i, GlobalKey<ShelfStageState>.new),
-                    books: widget.shelves[i].books,
-                    shelfName: widget.shelves[i].name,
-                    showCovers: widget.showCovers,
-                    onOpen: widget.onOpen,
-                    onOptions: widget.onOptions,
-                    optionsBuilder: widget.optionsBuilder,
-                    pickUpHint: widget.pickUpHint,
-                    openHint: widget.openHint,
+              ExcludeFocus(
+                excluding: i != _shelf,
+                child: HeroMode(
+                  enabled: i == _shelf,
+                  child: RepaintBoundary(
+                    child: ShelfStage(
+                      headerBuilder: widget.headerBuilder,
+                      emptyBuilder: widget.emptyBuilder == null
+                          ? null
+                          : (context) => widget.emptyBuilder!(
+                              context,
+                              widget.shelves[i],
+                            ),
+                      key: _stages.putIfAbsent(
+                        i,
+                        GlobalKey<ShelfStageState>.new,
+                      ),
+                      books: widget.shelves[i].books,
+                      shelfName: widget.shelves[i].name,
+                      showCovers: widget.showCovers,
+                      onOpen: widget.onOpen,
+                      onOptions: widget.onOptions,
+                      optionsBuilder: widget.optionsBuilder,
+                      pickUpHint: widget.pickUpHint,
+                      openHint: widget.openHint,
+                    ),
                   ),
                 ),
               )

@@ -919,5 +919,11 @@
   "libraryPaperBooks": "紙の本",
   "bookStartReading": "読み始める",
   "bookProgressThrough": "本の{percent}%を読了",
-  "bookStartedOn": "開始日：{date}"
+  "bookStartedOn": "開始日：{date}",
+  "libraryLayoutTitle": "ライブラリのレイアウト",
+  "libraryCoversPerRow": "1行の表紙数（縦向き）",
+  "libraryLayoutAuto": "自動",
+  "libraryLayoutFewer": "表紙を減らす",
+  "libraryLayoutMore": "表紙を増やす",
+  "libraryLayoutHelp": "現在は1行に{count}冊です。横向きでは表紙の大きさをほぼ維持して列数を増やします。"
 }

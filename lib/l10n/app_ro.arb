@@ -1137,5 +1137,11 @@
   "libraryPaperBooks": "Cărți pe hârtie",
   "bookStartReading": "Începe lectura",
   "bookProgressThrough": "{percent}% din carte citit",
-  "bookStartedOn": "Începută la {date}"
+  "bookStartedOn": "Începută la {date}",
+  "libraryLayoutTitle": "Aspectul bibliotecii",
+  "libraryCoversPerRow": "Coperți pe rând (portret)",
+  "libraryLayoutAuto": "Automat",
+  "libraryLayoutFewer": "Mai puține coperți",
+  "libraryLayoutMore": "Mai multe coperți",
+  "libraryLayoutHelp": "Acum sunt {count} coperți pe rând. În modul peisaj se adaugă coloane, păstrând aproximativ aceeași dimensiune a coperților."
 }

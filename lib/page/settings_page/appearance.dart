@@ -1,3 +1,4 @@
+import 'package:paperfold/widgets/settings/library_layout_control.dart';
 import 'package:paperfold/widgets/common/paperfold_modal_motion.dart';
 import 'package:paperfold/config/shared_preference_provider.dart';
 import 'package:paperfold/l10n/generated/L10n.dart';
@@ -11,7 +12,6 @@ import 'package:paperfold/widgets/settings/settings_section.dart';
 import 'package:paperfold/widgets/settings/settings_tile.dart';
 import 'package:paperfold/enums/book_binding.dart';
 import 'package:paperfold/enums/bookshelf_folder_style.dart';
-import 'package:paperfold/widgets/paperfold_glass_slider.dart';
 
 /// Display name to stored code. The first entry follows the system.
 ///
@@ -181,6 +181,10 @@ class _AppearanceSettingState extends State<AppearanceSetting> {
           ],
         ),
         SettingsSection(
+          title: Text(L10n.of(context).libraryLayoutTitle),
+          tiles: const [CustomSettingsTile(child: LibraryLayoutControl())],
+        ),
+        SettingsSection(
           title: Text(L10n.of(context).settingsBookshelf),
           tiles: [
             CustomSettingsTile(
@@ -238,43 +242,6 @@ class _AppearanceSettingState extends State<AppearanceSetting> {
                     Prefs().defaultBookBinding = selection.first;
                   });
                 },
-              ),
-            ),
-            SettingsControlTile(
-              leading: const Icon(Icons.photo_size_select_large_outlined),
-              title: Text(L10n.of(context).settingsBookshelfCoverWidth),
-              control: Row(
-                children: [
-                  Expanded(
-                    child: PaperfoldGlassSlider(
-                      value: Prefs().bookCoverWidth,
-                      onChanged: (value) {
-                        setState(() {
-                          Prefs().bookCoverWidth = value;
-                        });
-                      },
-                      max: 260,
-                      min: 80,
-                      divisions: 18,
-                      semanticLabel: L10n.of(context)
-                          .settingsBookshelfCoverWidth,
-                      semanticFormatterCallback: (value) =>
-                          value.toStringAsFixed(0),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  // The reading, after the control rather than in front of
-                  // it, and wide enough that three digits do not shift the
-                  // slider as the reader drags.
-                  SizedBox(
-                    width: 40,
-                    child: Text(
-                      Prefs().bookCoverWidth.toStringAsFixed(0),
-                      textAlign: TextAlign.end,
-                      style: Theme.of(context).textTheme.labelLarge,
-                    ),
-                  ),
-                ],
               ),
             ),
             SettingsControlTile(

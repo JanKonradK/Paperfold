@@ -106,10 +106,12 @@ class ContinueReadingBanner extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         ExcludeSemantics(
-                          child: BookCover(
-                            book: book,
-                            width: coverWidth,
-                            height: coverWidth * 1.5,
+                          child: MediaQuery.withNoTextScaling(
+                            child: BookCover(
+                              book: book,
+                              width: coverWidth,
+                              height: coverWidth * 1.5,
+                            ),
                           ),
                         ),
                         SizedBox(width: padding),

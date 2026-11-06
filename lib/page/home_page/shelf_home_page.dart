@@ -608,7 +608,7 @@ class _ShelfHomePageState extends ConsumerState<ShelfHomePage>
                           initialShelf: activeIndex,
                           onOptions: (shelfBook) {
                             final book = booksById[shelfBook.id];
-                            if (book != null)
+                            if (book != null) {
                               showModalBottomSheet<void>(
                                 context: context,
                                 useSafeArea: true,
@@ -616,6 +616,7 @@ class _ShelfHomePageState extends ConsumerState<ShelfHomePage>
                                 isScrollControlled: true,
                                 builder: (_) => BookBottomSheet(book: book),
                               );
+                            }
                           },
                           onShelfChanged: (index) {
                             if (_shelfIndex != index) {
@@ -875,7 +876,7 @@ class _BookcaseEmptyState extends StatelessWidget {
       container: true,
       label: shelfName,
       child: Center(
-        child: SingleChildScrollView(
+        child: Padding(
           padding: const EdgeInsets.all(24),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -1095,8 +1096,8 @@ class _ShelfCollectionPageState extends ConsumerState<ShelfCollectionPage> {
                       crossAxisCount: density.columns,
                       mainAxisExtent:
                           density.coverWidth * 1.5 +
-                          MediaQuery.textScalerOf(context).scale(20) * 2 +
-                          40,
+                          MediaQuery.textScalerOf(context).scale(20) * 3 +
+                          24,
                       mainAxisSpacing: 16,
                       crossAxisSpacing: 12,
                     ),
@@ -1261,7 +1262,8 @@ class _ShelfCoverTile extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Expanded(
+                  AspectRatio(
+                    aspectRatio: 2 / 3,
                     child: BookDetailHero(
                       id: 'book-${book.id}',
                       cover: BookCover(book: book),
@@ -1318,7 +1320,8 @@ class _WishlistCoverTile extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Expanded(
+            AspectRatio(
+              aspectRatio: 2 / 3,
               child: DecoratedBox(
                 decoration: BoxDecoration(
                   color: visual.background,

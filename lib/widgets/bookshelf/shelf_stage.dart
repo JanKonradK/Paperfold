@@ -168,8 +168,9 @@ class ShelfStageState extends State<ShelfStage>
   void _captureAnchor() {
     if (!_scroll.hasClients ||
         _lastRects.isEmpty ||
-        _scroll.offset < _headerHeight)
+        _scroll.offset < _headerHeight) {
       return;
+    }
     final offset = _scroll.offset - _headerHeight;
     final i = _lastRects.indexWhere((r) => r.bottom > offset);
     if (i >= 0) {
@@ -245,7 +246,8 @@ class ShelfStageState extends State<ShelfStage>
         textDirection: Directionality.of(context),
         textScaler: MediaQuery.textScalerOf(context),
       )..layout(maxWidth: coverWidth);
-      final coverHeight = coverWidth * 1.5 + 8 + caption.height;
+      final captionHeight = caption.height;
+      final coverHeight = coverWidth * 1.5 + 8 + captionHeight;
       caption.dispose();
       final portraitCount = Prefs().libraryCoversPerRow <= 0
           ? layout.defaultCoversPerRow
@@ -363,8 +365,9 @@ class ShelfStageState extends State<ShelfStage>
             opacity: spatial ? 1 : (1 - (t - _layout.value).abs()),
             child: Focus(
               onKeyEvent: (node, event) {
-                if (event is! KeyDownEvent || widget.books.isEmpty)
+                if (event is! KeyDownEvent || widget.books.isEmpty) {
                   return KeyEventResult.ignored;
+                }
                 if (event.logicalKey == LogicalKeyboardKey.enter ||
                     event.logicalKey == LogicalKeyboardKey.space) {
                   pickUp();
@@ -451,7 +454,7 @@ class ShelfStageState extends State<ShelfStage>
                                       rects[i].height,
                                     )
                                   : rects[i],
-                              child: _tile(i, t),
+                              child: _tile(i, t, captionHeight),
                             ),
                       ],
                     ),
@@ -464,7 +467,7 @@ class ShelfStageState extends State<ShelfStage>
       );
     },
   );
-  Widget _tile(int i, double t) {
+  Widget _tile(int i, double t, double captionHeight) {
     final book = widget.books[i];
     final visual = BookSpine.resolveVisual(
       book.bindingKey,
@@ -521,12 +524,15 @@ class ShelfStageState extends State<ShelfStage>
                           ),
                           if (t > .5) ...[
                             const SizedBox(height: 8),
-                            Text(
-                              book.title,
-                              style: Theme.of(context).textTheme.labelLarge
-                                  ?.copyWith(fontSize: 14, height: 20 / 14),
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
+                            SizedBox(
+                              height: captionHeight,
+                              child: Text(
+                                book.title,
+                                style: Theme.of(context).textTheme.labelLarge
+                                    ?.copyWith(fontSize: 14, height: 20 / 14),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
                             ),
                           ],
                         ],

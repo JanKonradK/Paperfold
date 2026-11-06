@@ -1137,5 +1137,11 @@
   "libraryPaperBooks": "Libros en papel",
   "bookStartReading": "Empezar a leer",
   "bookProgressThrough": "{percent}% del libro leído",
-  "bookStartedOn": "Empezado el {date}"
+  "bookStartedOn": "Empezado el {date}",
+  "libraryLayoutTitle": "Diseño de la biblioteca",
+  "libraryCoversPerRow": "Portadas por fila (vertical)",
+  "libraryLayoutAuto": "Automático",
+  "libraryLayoutFewer": "Menos portadas",
+  "libraryLayoutMore": "Más portadas",
+  "libraryLayoutHelp": "Ahora hay {count} portadas por fila. En horizontal se añaden columnas con un tamaño de portada similar."
 }
