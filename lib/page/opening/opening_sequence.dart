@@ -1,3 +1,5 @@
+import 'package:paperfold/config/paperfold_system.dart';
+
 import 'dart:async';
 import 'dart:math' as math;
 
@@ -126,7 +128,8 @@ class _OpeningSequenceState extends State<OpeningSequence>
   /// and therefore the whole application awake through both movements as well,
   /// for a mark that is faded out for the length of each of them.
   void _syncHint() {
-    final wanted = !_finished &&
+    final wanted =
+        !_finished &&
         (_stage == _OpeningStage.cover || _stage == _OpeningStage.page);
     if (wanted == _hint.isAnimating) {
       return;
@@ -301,7 +304,8 @@ class _OpeningSequenceState extends State<OpeningSequence>
     // is moving and nobody can see it. Spent one stage later it lands in the
     // middle of the movement that hands over the screen, which is the most
     // watched half second the application has.
-    final revealed = _finished ||
+    final revealed =
+        _finished ||
         _stage == _OpeningStage.page ||
         _stage == _OpeningStage.leaving;
 
@@ -323,7 +327,8 @@ class _OpeningSequenceState extends State<OpeningSequence>
                     turn: _turn,
                     leave: _leave,
                     hint: _hint,
-                    waiting: _stage == _OpeningStage.cover ||
+                    waiting:
+                        _stage == _OpeningStage.cover ||
                         _stage == _OpeningStage.page,
                     curlController: _curlController,
                     coverArtBuilder: widget.coverArtBuilder,
@@ -473,7 +478,7 @@ class _OpeningScene extends StatelessWidget {
       width: bookWidth,
       height: bookHeight,
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(5.0),
+        borderRadius: PaperfoldShape.objectRadius,
         child: Stack(
           fit: StackFit.expand,
           children: [
@@ -550,8 +555,7 @@ class _OpeningScene extends StatelessWidget {
               // the page is a page lying inside its own covers.
               _coverGround,
               Curves.easeInOutCubic.transform(turn.value),
-            )!
-                .withValues(alpha: 1.0 - _chromeReveal(leave.value)),
+            )!.withValues(alpha: 1.0 - _chromeReveal(leave.value)),
           ),
         ),
         SafeArea(
@@ -583,7 +587,7 @@ class _OpeningScene extends StatelessWidget {
                             opacity: 1.0 - gone,
                             child: DecoratedBox(
                               decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(5.0),
+                                borderRadius: PaperfoldShape.objectRadius,
                                 boxShadow: [
                                   BoxShadow(
                                     color: _coverGround.withValues(
@@ -709,8 +713,9 @@ class _TapMarkPainter extends CustomPainter {
       // Out of phase, so the pair reads as something travelling the way the
       // reader reads rather than as two shapes blinking together.
       final phase = still ? 1.0 : (breath.value - i * _lag).clamp(0.0, 1.0);
-      final pulse =
-          still ? 0.9 : (0.36 + 0.54 * Curves.easeInOut.transform(phase));
+      final pulse = still
+          ? 0.9
+          : (0.36 + 0.54 * Curves.easeInOut.transform(phase));
       final tip = centre.dx + direction * (lead + reach);
       canvas.drawPath(
         Path()
@@ -739,7 +744,8 @@ class _BookCover extends StatelessWidget {
     return Semantics(
       label: 'Paperfold',
       image: true,
-      child: artBuilder?.call(context) ??
+      child:
+          artBuilder?.call(context) ??
           Image.asset(
             'assets/images/paperfold_cover.jpg',
             fit: BoxFit.cover,

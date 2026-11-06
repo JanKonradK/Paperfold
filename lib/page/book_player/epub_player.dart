@@ -1,3 +1,5 @@
+import 'package:paperfold/config/paperfold_system.dart';
+
 import 'dart:async';
 import 'dart:convert';
 import 'dart:ui';
@@ -63,14 +65,15 @@ class EpubPlayer extends ConsumerStatefulWidget {
   final List<ReadTheme> initialThemes;
   final Function updateParent;
 
-  const EpubPlayer(
-      {super.key,
-      required this.showOrHideAppBarAndBottomBar,
-      required this.book,
-      this.cfi,
-      required this.onLoadEnd,
-      required this.initialThemes,
-      required this.updateParent});
+  const EpubPlayer({
+    super.key,
+    required this.showOrHideAppBarAndBottomBar,
+    required this.book,
+    this.cfi,
+    required this.onLoadEnd,
+    required this.initialThemes,
+    required this.updateParent,
+  });
 
   @override
   ConsumerState<EpubPlayer> createState() => EpubPlayerState();
@@ -195,29 +198,39 @@ class EpubPlayerState extends ConsumerState<EpubPlayer>
   }
 
   void prevChapter() {
-    webViewController.evaluateJavascript(source: '''
+    webViewController.evaluateJavascript(
+      source: '''
       prevSection()
-      ''');
+      ''',
+    );
   }
 
   void nextChapter() {
-    webViewController.evaluateJavascript(source: '''
+    webViewController.evaluateJavascript(
+      source: '''
       nextSection()
-      ''');
+      ''',
+    );
   }
 
   void setTranslationMode(TranslationModeEnum mode) {
-    webViewController.evaluateJavascript(source: '''
+    webViewController.evaluateJavascript(
+      source:
+          '''
       if (typeof reader.view !== 'undefined' && reader.view.setTranslationMode) {
         reader.view.setTranslationMode('${mode.code}');
       }
-      ''');
+      ''',
+    );
   }
 
   Future<void> goToPercentage(double value) async {
-    await webViewController.evaluateJavascript(source: '''
+    await webViewController.evaluateJavascript(
+      source:
+          '''
       goToPercent($value); 
-      ''');
+      ''',
+    );
   }
 
   void setSelectionClearLocked(bool locked) {
@@ -236,25 +249,30 @@ class EpubPlayerState extends ConsumerState<EpubPlayer>
     String bc = convertDartColorToJs(readTheme.backgroundColor);
     String tc = convertDartColorToJs(readTheme.textColor);
 
-    webViewController.evaluateJavascript(source: '''
+    webViewController.evaluateJavascript(
+      source:
+          '''
       changeStyle({
         backgroundColor: '#$bc',
         fontColor: '#$tc',
       })
-      ''');
+      ''',
+    );
   }
 
   void changeStyle(BookStyle? bookStyle) {
     styleTimer?.cancel();
     String bgimgUrl = Prefs().bgimg.getEffectiveUrl(
-          isDarkMode: isDarkMode,
-          autoAdjust: Prefs().autoAdjustReadingTheme,
-        );
+      isDarkMode: isDarkMode,
+      autoAdjust: Prefs().autoAdjustReadingTheme,
+    );
 
     styleTimer = Timer(const Duration(milliseconds: 300), () {
       if (!mounted) return;
       BookStyle style = bookStyle ?? Prefs().bookStyle;
-      webViewController.evaluateJavascript(source: '''
+      webViewController.evaluateJavascript(
+        source:
+            '''
       changeStyle({
         fontSize: ${style.fontSize},
         spacing: ${style.lineHeight},
@@ -279,7 +297,8 @@ class EpubPlayerState extends ConsumerState<EpubPlayer>
         headingFontSize: ${style.headingFontSize},
         codeHighlightTheme: '${Prefs().codeHighlightTheme.code}',
       })
-      ''');
+      ''',
+      );
     });
   }
 
@@ -290,39 +309,51 @@ class EpubPlayerState extends ConsumerState<EpubPlayer>
       isDarkMode: isDarkMode,
       autoAdjust: Prefs().autoAdjustReadingTheme,
     );
-    webViewController.evaluateJavascript(source: '''
+    webViewController.evaluateJavascript(
+      source:
+          '''
       changeStyle({
         backgroundImage: '$bgimgUrl',
         bgimgBlur: ${bgimg.blur},
         bgimgOpacity: ${bgimg.opacity},
         bgimgFit: '${Prefs().bgimgFit.code}',
       })
-    ''');
+    ''',
+    );
   }
 
   void changeReadingRules(ReadingRules readingRules) {
-    webViewController.evaluateJavascript(source: '''
+    webViewController.evaluateJavascript(
+      source:
+          '''
       readingFeatures({
         convertChineseMode: '${readingRules.convertChineseMode.name}',
       })
-    ''');
+    ''',
+    );
   }
 
   void changeFont(FontModel font) {
-    webViewController.evaluateJavascript(source: '''
+    webViewController.evaluateJavascript(
+      source:
+          '''
       changeStyle({
         fontName: '${font.name}',
         fontPath: '${font.path}',
       })
-    ''');
+    ''',
+    );
   }
 
   void changePageTurnStyle(PageTurn pageTurnStyle) {
-    webViewController.evaluateJavascript(source: '''
+    webViewController.evaluateJavascript(
+      source:
+          '''
       changeStyle({
         pageTurnStyle: '${pageTurnStyle.name}',
       })
-    ''');
+    ''',
+    );
     if (pageTurnStyle.isShaderCurl) {
       // Compile the shader now. Doing it on the first turn would stall the
       // frame the curl starts on, which is the one frame it cannot afford.
@@ -406,7 +437,10 @@ class EpubPlayerState extends ConsumerState<EpubPlayer>
       _finishPassageReturn(cfi);
     } catch (error, stackTrace) {
       AnxLog.warning(
-          'Could not return to the reading position', error, stackTrace);
+        'Could not return to the reading position',
+        error,
+        stackTrace,
+      );
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(L10n.of(context).journalPassageOpenFailed)),
@@ -428,9 +462,12 @@ class EpubPlayerState extends ConsumerState<EpubPlayer>
   }
 
   void addAnnotation(BookNote bookNote) {
-    final noteContent =
-        (bookNote.content).replaceAll('\n', ' ').replaceAll("'", "\\'");
-    webViewController.evaluateJavascript(source: '''
+    final noteContent = (bookNote.content)
+        .replaceAll('\n', ' ')
+        .replaceAll("'", "\\'");
+    webViewController.evaluateJavascript(
+      source:
+          '''
       addAnnotation({
         id: ${bookNote.id},
         type: '${bookNote.type}',
@@ -438,11 +475,14 @@ class EpubPlayerState extends ConsumerState<EpubPlayer>
         color: '#${bookNote.color}',
         note: '$noteContent',
       })
-      ''');
+      ''',
+    );
   }
 
   void addBookmark(BookmarkModel bookmark) {
-    webViewController.evaluateJavascript(source: '''
+    webViewController.evaluateJavascript(
+      source:
+          '''
       addAnnotation({
         id: ${bookmark.id},
         type: 'bookmark',
@@ -450,13 +490,16 @@ class EpubPlayerState extends ConsumerState<EpubPlayer>
         color: '#000000',
         note: 'None',
       })
-      ''');
+      ''',
+    );
   }
 
   void addBookmarkHere() {
-    webViewController.evaluateJavascript(source: '''
+    webViewController.evaluateJavascript(
+      source: '''
       addBookmarkHere()
-      ''');
+      ''',
+    );
   }
 
   void removeAnnotation(String cfi) =>
@@ -475,14 +518,17 @@ class EpubPlayerState extends ConsumerState<EpubPlayer>
     }
     _clearSearchHighlights();
     ref.read(tocSearchProvider.notifier).start(sanitized);
-    webViewController.evaluateJavascript(source: '''
+    webViewController.evaluateJavascript(
+      source:
+          '''
       search('$sanitized', {
         'scope': 'book',
         'matchCase': false,
         'matchDiacritics': false,
         'matchWholeWords': false,
       })
-    ''');
+    ''',
+    );
   }
 
   void _clearSearchHighlights() {
@@ -505,14 +551,10 @@ class EpubPlayerState extends ConsumerState<EpubPlayer>
   }
 
   Future<String> theChapterContent() async =>
-      await webViewController.evaluateJavascript(
-        source: "theChapterContent()",
-      );
+      await webViewController.evaluateJavascript(source: "theChapterContent()");
 
-  Future<String> previousContent(int count) async =>
-      await webViewController.evaluateJavascript(
-        source: "previousContent($count)",
-      );
+  Future<String> previousContent(int count) async => await webViewController
+      .evaluateJavascript(source: "previousContent($count)");
 
   Future<String> _getCurrentChapterContent({int? maxCharacters}) async {
     final raw = await theChapterContent();
@@ -553,8 +595,9 @@ class EpubPlayerState extends ConsumerState<EpubPlayer>
   }
 
   void _registerChapterContentBridge() {
-    ref.read(chapterContentBridgeProvider.notifier).state =
-        ChapterContentHandlers(
+    ref
+        .read(chapterContentBridgeProvider.notifier)
+        .state = ChapterContentHandlers(
       fetchCurrentChapter: ({int? maxCharacters}) =>
           _getCurrentChapterContent(maxCharacters: maxCharacters),
       fetchChapterByHref: (href, {int? maxCharacters}) =>
@@ -621,10 +664,7 @@ class EpubPlayerState extends ConsumerState<EpubPlayer>
       return;
     }
 
-    final opened = await launchUrl(
-      uri,
-      mode: LaunchMode.externalApplication,
-    );
+    final opened = await launchUrl(uri, mode: LaunchMode.externalApplication);
     if (!opened) {
       AnxLog.warning('Failed to open external link: $link');
     }
@@ -687,23 +727,28 @@ class EpubPlayerState extends ConsumerState<EpubPlayer>
   }
 
   Future<void> renderAnnotations(InAppWebViewController controller) async {
-    List<BookNote> annotationList =
-        await bookNoteDao.selectBookNotesByBookId(widget.book.id);
-    String allAnnotations =
-        jsonEncode(annotationList.map((e) => e.toJson()).toList())
-            .replaceAll('\'', '\\\'');
-    controller.evaluateJavascript(source: '''
+    List<BookNote> annotationList = await bookNoteDao.selectBookNotesByBookId(
+      widget.book.id,
+    );
+    String allAnnotations = jsonEncode(
+      annotationList.map((e) => e.toJson()).toList(),
+    ).replaceAll('\'', '\\\'');
+    controller.evaluateJavascript(
+      source:
+          '''
      const allAnnotations = $allAnnotations
      renderAnnotations()
-    ''');
+    ''',
+    );
   }
 
   void getThemeColor() {
     if (Prefs().autoAdjustReadingTheme) {
       List<ReadTheme> themes = widget.initialThemes;
       final isDayMode = !isDarkMode;
-      backgroundColor =
-          isDayMode ? themes[0].backgroundColor : themes[1].backgroundColor;
+      backgroundColor = isDayMode
+          ? themes[0].backgroundColor
+          : themes[1].backgroundColor;
       textColor = isDayMode ? themes[0].textColor : themes[1].textColor;
     } else {
       backgroundColor = Prefs().readTheme.backgroundColor;
@@ -744,54 +789,58 @@ class EpubPlayerState extends ConsumerState<EpubPlayer>
 
   Future<void> setHandler(InAppWebViewController controller) async {
     controller.addJavaScriptHandler(
-        handlerName: 'onLoadEnd',
-        callback: (args) {
-          _revealText();
-          widget.onLoadEnd();
-        });
+      handlerName: 'onLoadEnd',
+      callback: (args) {
+        _revealText();
+        widget.onLoadEnd();
+      },
+    );
 
     controller.addJavaScriptHandler(
-        handlerName: 'onRelocated',
-        callback: (args) {
-          if (!mounted) return;
-          Map<String, dynamic> location = args[0];
-          _finishPassageReturn(location['cfi'] ?? '');
-          if (cfi == location['cfi']) return;
-          // if (chapterHref != location['chapterHref']) {
-          //   refreshToc();
-          // }
-          setState(() {
-            cfi = location['cfi'] ?? '';
-            percentage =
-                double.tryParse(location['percentage'].toString()) ?? 0.0;
-            chapterTitle = location['chapterTitle'] ?? '';
-            chapterHref = location['chapterHref'] ?? '';
-            chapterCurrentPage = location['chapterCurrentPage'] ?? 0;
-            chapterTotalPages = location['chapterTotalPages'] ?? 0;
-            bookmarkExists = location['bookmark']['exists'] ?? false;
-            bookmarkCfi = location['bookmark']['cfi'] ?? '';
-            writingMode =
-                WritingModeEnum.fromCode(location['writingMode'] ?? '');
-          });
-          ref.read(currentReadingProvider.notifier).update(
-                cfi: cfi,
-                percentage: percentage,
-                chapterTitle: chapterTitle,
-                chapterHref: chapterHref,
-                chapterCurrentPage: chapterCurrentPage,
-                chapterTotalPages: chapterTotalPages,
-              );
-          widget.updateParent();
-          saveReadingProgress();
-          _scheduleCurlCapture();
-          readingPageKey.currentState?.resetAwakeTimer();
+      handlerName: 'onRelocated',
+      callback: (args) {
+        if (!mounted) return;
+        Map<String, dynamic> location = args[0];
+        _finishPassageReturn(location['cfi'] ?? '');
+        if (cfi == location['cfi']) return;
+        // if (chapterHref != location['chapterHref']) {
+        //   refreshToc();
+        // }
+        setState(() {
+          cfi = location['cfi'] ?? '';
+          percentage =
+              double.tryParse(location['percentage'].toString()) ?? 0.0;
+          chapterTitle = location['chapterTitle'] ?? '';
+          chapterHref = location['chapterHref'] ?? '';
+          chapterCurrentPage = location['chapterCurrentPage'] ?? 0;
+          chapterTotalPages = location['chapterTotalPages'] ?? 0;
+          bookmarkExists = location['bookmark']['exists'] ?? false;
+          bookmarkCfi = location['bookmark']['cfi'] ?? '';
+          writingMode = WritingModeEnum.fromCode(location['writingMode'] ?? '');
         });
+        ref
+            .read(currentReadingProvider.notifier)
+            .update(
+              cfi: cfi,
+              percentage: percentage,
+              chapterTitle: chapterTitle,
+              chapterHref: chapterHref,
+              chapterCurrentPage: chapterCurrentPage,
+              chapterTotalPages: chapterTotalPages,
+            );
+        widget.updateParent();
+        saveReadingProgress();
+        _scheduleCurlCapture();
+        readingPageKey.currentState?.resetAwakeTimer();
+      },
+    );
     controller.addJavaScriptHandler(
-        handlerName: 'onClick',
-        callback: (args) {
-          Map<String, dynamic> location = args[0];
-          onClick(location);
-        });
+      handlerName: 'onClick',
+      callback: (args) {
+        Map<String, dynamic> location = args[0];
+        onClick(location);
+      },
+    );
     // The swipe that turns a page with the curl. It arrives from JavaScript
     // because the page lives in the WebView, so the finger never lands on a
     // Flutter widget at all.
@@ -799,10 +848,12 @@ class EpubPlayerState extends ConsumerState<EpubPlayer>
       handlerName: 'onPageDragStart',
       callback: (args) {
         final data = args[0] as Map<dynamic, dynamic>;
-        unawaited(_onPageDragStart(
-          (data['dx'] as num).toDouble(),
-          (data['y'] as num).toDouble(),
-        ));
+        unawaited(
+          _onPageDragStart(
+            (data['dx'] as num).toDouble(),
+            (data['y'] as num).toDouble(),
+          ),
+        );
       },
     );
     controller.addJavaScriptHandler(
@@ -833,85 +884,91 @@ class EpubPlayerState extends ConsumerState<EpubPlayer>
       },
     );
     controller.addJavaScriptHandler(
-        handlerName: 'onSetToc',
-        callback: (args) {
-          List<dynamic> t = args[0];
-          final toc = t.map((i) => TocItem.fromJson(i)).toList();
-          ref.read(bookTocProvider.notifier).setToc(toc);
-        });
+      handlerName: 'onSetToc',
+      callback: (args) {
+        List<dynamic> t = args[0];
+        final toc = t.map((i) => TocItem.fromJson(i)).toList();
+        ref.read(bookTocProvider.notifier).setToc(toc);
+      },
+    );
     controller.addJavaScriptHandler(
-        handlerName: 'onSelectionEnd',
-        callback: (args) {
-          removeOverlay();
-          Map<String, dynamic> location = args[0];
-          String cfi = location['cfi'];
-          String text = location['text'];
-          bool footnote = location['footnote'];
-          final rawContextText = location['contextText']?.toString();
-          _lastSelectionContextText =
-              (rawContextText?.trim().isEmpty ?? true) ? null : rawContextText;
-          double left = (location['pos']['left'] as num).toDouble();
-          double top = (location['pos']['top'] as num).toDouble();
-          double right = (location['pos']['right'] as num).toDouble();
-          double bottom = (location['pos']['bottom'] as num).toDouble();
-          showContextMenu(
-            context,
-            left,
-            top,
-            right,
-            bottom,
-            text,
-            cfi,
-            null,
-            footnote,
-            writingMode.isVertical ? Axis.vertical : Axis.horizontal,
-            contextText: _lastSelectionContextText,
-          );
-        });
+      handlerName: 'onSelectionEnd',
+      callback: (args) {
+        removeOverlay();
+        Map<String, dynamic> location = args[0];
+        String cfi = location['cfi'];
+        String text = location['text'];
+        bool footnote = location['footnote'];
+        final rawContextText = location['contextText']?.toString();
+        _lastSelectionContextText = (rawContextText?.trim().isEmpty ?? true)
+            ? null
+            : rawContextText;
+        double left = (location['pos']['left'] as num).toDouble();
+        double top = (location['pos']['top'] as num).toDouble();
+        double right = (location['pos']['right'] as num).toDouble();
+        double bottom = (location['pos']['bottom'] as num).toDouble();
+        showContextMenu(
+          context,
+          left,
+          top,
+          right,
+          bottom,
+          text,
+          cfi,
+          null,
+          footnote,
+          writingMode.isVertical ? Axis.vertical : Axis.horizontal,
+          contextText: _lastSelectionContextText,
+        );
+      },
+    );
     controller.addJavaScriptHandler(
-        handlerName: 'onSelectionCleared',
-        callback: (args) {
-          if (_selectionClearLocked) {
-            _selectionClearPending = true;
-            return;
-          }
-          _lastSelectionContextText = null;
-          removeOverlay();
-        });
+      handlerName: 'onSelectionCleared',
+      callback: (args) {
+        if (_selectionClearLocked) {
+          _selectionClearPending = true;
+          return;
+        }
+        _lastSelectionContextText = null;
+        removeOverlay();
+      },
+    );
     controller.addJavaScriptHandler(
-        handlerName: 'onAnnotationClick',
-        callback: (args) {
-          Map<String, dynamic> annotation = args[0];
+      handlerName: 'onAnnotationClick',
+      callback: (args) {
+        Map<String, dynamic> annotation = args[0];
 
-          if (annotation['annotation'] == null) {
-            // Nothing to open: the tap did not land on a stored annotation.
-            return;
-          }
+        if (annotation['annotation'] == null) {
+          // Nothing to open: the tap did not land on a stored annotation.
+          return;
+        }
 
-          int id = annotation['annotation']['id'];
-          String cfi = annotation['annotation']['value'];
-          String note = annotation['annotation']['note'];
-          final rawContextText = annotation['contextText']?.toString();
-          _lastSelectionContextText =
-              (rawContextText?.trim().isEmpty ?? true) ? null : rawContextText;
-          double left = (annotation['pos']['left'] as num).toDouble();
-          double top = (annotation['pos']['top'] as num).toDouble();
-          double right = (annotation['pos']['right'] as num).toDouble();
-          double bottom = (annotation['pos']['bottom'] as num).toDouble();
-          showContextMenu(
-            context,
-            left,
-            top,
-            right,
-            bottom,
-            note,
-            cfi,
-            id,
-            false,
-            writingMode.isVertical ? Axis.vertical : Axis.horizontal,
-            contextText: _lastSelectionContextText,
-          );
-        });
+        int id = annotation['annotation']['id'];
+        String cfi = annotation['annotation']['value'];
+        String note = annotation['annotation']['note'];
+        final rawContextText = annotation['contextText']?.toString();
+        _lastSelectionContextText = (rawContextText?.trim().isEmpty ?? true)
+            ? null
+            : rawContextText;
+        double left = (annotation['pos']['left'] as num).toDouble();
+        double top = (annotation['pos']['top'] as num).toDouble();
+        double right = (annotation['pos']['right'] as num).toDouble();
+        double bottom = (annotation['pos']['bottom'] as num).toDouble();
+        showContextMenu(
+          context,
+          left,
+          top,
+          right,
+          bottom,
+          note,
+          cfi,
+          id,
+          false,
+          writingMode.isVertical ? Axis.vertical : Axis.horizontal,
+          contextText: _lastSelectionContextText,
+        );
+      },
+    );
     controller.addJavaScriptHandler(
       handlerName: 'onSearch',
       callback: (args) {
@@ -950,12 +1007,12 @@ class EpubPlayerState extends ConsumerState<EpubPlayer>
       callback: (args) {
         String image = args[0];
         Navigator.push(
-            context,
-            MaterialPageRoute(
-                builder: (context) => ImageViewer(
-                      image: image,
-                      bookName: widget.book.title,
-                    )));
+          context,
+          MaterialPageRoute(
+            builder: (context) =>
+                ImageViewer(image: image, bookName: widget.book.title),
+          ),
+        );
       },
     );
     controller.addJavaScriptHandler(
@@ -980,9 +1037,9 @@ class EpubPlayerState extends ConsumerState<EpubPlayer>
         String content = detail['content'];
 
         if (remove) {
-          ref.read(bookmarkProvider(widget.book.id).notifier).removeBookmark(
-                cfi: cfi,
-              );
+          ref
+              .read(bookmarkProvider(widget.book.id).notifier)
+              .removeBookmark(cfi: cfi);
           bookmarkCfi = '';
           bookmarkExists = false;
         } else {
@@ -1016,8 +1073,12 @@ class EpubPlayerState extends ConsumerState<EpubPlayer>
           final from = Prefs().fullTextTranslateFrom;
           final to = Prefs().fullTextTranslateTo;
 
-          return await service.provider
-              .translateTextOnly(text, from, to, isFullText: true);
+          return await service.provider.translateTextOnly(
+            text,
+            from,
+            to,
+            isFullText: true,
+          );
         } catch (e) {
           AnxLog.severe('Translation error: $e');
           return 'Translation error: $e';
@@ -1140,10 +1201,7 @@ class EpubPlayerState extends ConsumerState<EpubPlayer>
       vsync: this,
     )..repeat();
     // A reader that never reports back must not leave the page up for good.
-    _openingFallback = Timer(
-      const Duration(seconds: 8),
-      () => _revealText(),
-    );
+    _openingFallback = Timer(const Duration(seconds: 8), () => _revealText());
     super.initState();
   }
 
@@ -1539,14 +1597,15 @@ class EpubPlayerState extends ConsumerState<EpubPlayer>
     final buttonStyle = TextButton.styleFrom(
       minimumSize: const Size(48, 48),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(32),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: PaperfoldShape.frameRadius),
     );
 
     // Helper method to create history navigation buttons
     Widget createHistoryButton(
-        IconData icon, String label, VoidCallback? onPressed) {
+      IconData icon,
+      String label,
+      VoidCallback? onPressed,
+    ) {
       return TextButton.icon(
         icon: Icon(icon, size: 18, color: buttonColor),
         label: Text(label, style: TextStyle(color: buttonColor, fontSize: 14)),
@@ -1559,32 +1618,36 @@ class EpubPlayerState extends ConsumerState<EpubPlayer>
     final List<Widget> buttons = [];
 
     if (_passageReturnCfi != null) {
-      buttons.add(createHistoryButton(
-        Icons.keyboard_return,
-        l10n.journalReturnToReading,
-        _passageNavigating ? null : returnToReading,
-      ));
+      buttons.add(
+        createHistoryButton(
+          Icons.keyboard_return,
+          l10n.journalReturnToReading,
+          _passageNavigating ? null : returnToReading,
+        ),
+      );
     } else {
       if (canGoBack) {
-        buttons.add(createHistoryButton(
-          Icons.arrow_back,
-          l10n.historyBack,
-          backHistory,
-        ));
+        buttons.add(
+          createHistoryButton(Icons.arrow_back, l10n.historyBack, backHistory),
+        );
       }
 
-      buttons.add(createHistoryButton(
-        Icons.close,
-        l10n.historyClose,
-        () => setState(() => showHistory = false),
-      ));
+      buttons.add(
+        createHistoryButton(
+          Icons.close,
+          l10n.historyClose,
+          () => setState(() => showHistory = false),
+        ),
+      );
 
       if (canGoForward) {
-        buttons.add(createHistoryButton(
-          Icons.arrow_forward,
-          l10n.historyForward,
-          forwardHistory,
-        ));
+        buttons.add(
+          createHistoryButton(
+            Icons.arrow_forward,
+            l10n.historyForward,
+            forwardHistory,
+          ),
+        );
       }
     }
     return Align(
@@ -1592,22 +1655,19 @@ class EpubPlayerState extends ConsumerState<EpubPlayer>
       child: Padding(
         padding: const EdgeInsets.fromLTRB(12, 0, 12, 40),
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(32),
+          borderRadius: PaperfoldShape.frameRadius,
           child: BackdropFilter(
             filter: ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0),
             child: Container(
               decoration: BoxDecoration(
                 color: Theme.of(context).colorScheme.surfaceContainer,
-                borderRadius: BorderRadius.circular(32),
+                borderRadius: PaperfoldShape.frameRadius,
                 border: Border.all(
                   color: Theme.of(context).colorScheme.outline,
                   width: 0.5,
                 ),
               ),
-              child: Wrap(
-                alignment: WrapAlignment.center,
-                children: buttons,
-              ),
+              child: Wrap(alignment: WrapAlignment.center, children: buttons),
             ),
           ),
         ),
@@ -1640,8 +1700,10 @@ class EpubPlayerState extends ConsumerState<EpubPlayer>
         style: textStyle,
       );
 
-      final bookProgressWidget =
-          Text('${(percentage * 100).toStringAsFixed(2)}%', style: textStyle);
+      final bookProgressWidget = Text(
+        '${(percentage * 100).toStringAsFixed(2)}%',
+        style: textStyle,
+      );
 
       final timeWidget = MinuteClock(textStyle: textStyle);
 
@@ -1652,7 +1714,11 @@ class EpubPlayerState extends ConsumerState<EpubPlayer>
               children: [
                 Padding(
                   padding: EdgeInsets.fromLTRB(
-                      0, (textStyle.fontSize ?? 10) * 0.08, 2, 0),
+                    0,
+                    (textStyle.fontSize ?? 10) * 0.08,
+                    2,
+                    0,
+                  ),
                   child: Text('$_batteryLevel', style: batteryTextStyle),
                 ),
                 RotatedBox(
@@ -1667,13 +1733,9 @@ class EpubPlayerState extends ConsumerState<EpubPlayer>
             );
 
       Widget batteryAndTimeWidget() => Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              batteryWidget,
-              const SizedBox(width: 5),
-              timeWidget,
-            ],
-          );
+        mainAxisSize: MainAxisSize.min,
+        children: [batteryWidget, const SizedBox(width: 5), timeWidget],
+      );
 
       switch (readingInfoEnum) {
         case ReadingInfoEnum.chapterTitle:
@@ -1891,8 +1953,10 @@ class _TurningLeaf extends StatelessWidget {
             // to see anyway.
             opacity: turned <= _solidUntil
                 ? 1
-                : (1 - (turned - _solidUntil) / (1 - _solidUntil))
-                    .clamp(0.0, 1.0),
+                : (1 - (turned - _solidUntil) / (1 - _solidUntil)).clamp(
+                    0.0,
+                    1.0,
+                  ),
             child: Stack(
               fit: StackFit.passthrough,
               children: [

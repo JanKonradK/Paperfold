@@ -1,3 +1,5 @@
+import 'package:paperfold/config/paperfold_system.dart';
+
 import 'dart:io';
 import 'dart:ui' as ui;
 
@@ -84,7 +86,7 @@ class _ExcerptShareBottomSheetState
     {'text': Colors.black, 'background': Colors.white},
     {
       'text': const ui.Color.fromARGB(255, 246, 217, 149),
-      'background': const ui.Color.fromARGB(255, 48, 44, 28)
+      'background': const ui.Color.fromARGB(255, 48, 44, 28),
     },
     {'text': Colors.black, 'background': Colors.amber.shade100},
     {'text': Colors.white, 'background': Colors.blueGrey.shade800},
@@ -108,8 +110,9 @@ class _ExcerptShareBottomSheetState
       RenderRepaintBoundary boundary =
           _cardKey.currentContext!.findRenderObject() as RenderRepaintBoundary;
       ui.Image image = await boundary.toImage(pixelRatio: 3.0);
-      ByteData? byteData =
-          await image.toByteData(format: ui.ImageByteFormat.png);
+      ByteData? byteData = await image.toByteData(
+        format: ui.ImageByteFormat.png,
+      );
       return byteData?.buffer.asUint8List();
     } catch (e) {
       AnxToast.show('Capture card error');
@@ -227,14 +230,18 @@ class _ExcerptShareBottomSheetState
                     ),
                     SizedBox(
                       height: 50,
-                      child: ref.watch(fontListProvider).when(
+                      child: ref
+                          .watch(fontListProvider)
+                          .when(
                             data: (data) => ListView.builder(
                               scrollDirection: Axis.horizontal,
                               itemCount: data.length,
                               itemBuilder: (context, index) {
                                 final font = data[index];
                                 return Padding(
-                                  padding: const EdgeInsetsDirectional.only(end: 8.0),
+                                  padding: const EdgeInsetsDirectional.only(
+                                    end: 8.0,
+                                  ),
                                   child: ChoiceChip(
                                     label: Text(font.label),
                                     selected: _font == font,
@@ -252,9 +259,8 @@ class _ExcerptShareBottomSheetState
                             loading: () => const Center(
                               child: CircularProgressIndicator(),
                             ),
-                            error: (error, stack) => LoadFailure.inline(
-                              error: error,
-                            ),
+                            error: (error, stack) =>
+                                LoadFailure.inline(error: error),
                           ),
                     ),
                     const SizedBox(height: 16),
@@ -283,18 +289,20 @@ class _ExcerptShareBottomSheetState
                                 decoration: BoxDecoration(
                                   color: scheme['background'],
                                   border: Border.all(
-                                    color: (_textColor == scheme['text'] &&
+                                    color:
+                                        (_textColor == scheme['text'] &&
                                             _backgroundColor ==
                                                 scheme['background'])
                                         ? Theme.of(context).colorScheme.primary
                                         : Colors.grey,
-                                    width: (_textColor == scheme['text'] &&
+                                    width:
+                                        (_textColor == scheme['text'] &&
                                             _backgroundColor ==
                                                 scheme['background'])
                                         ? 2
                                         : 1,
                                   ),
-                                  borderRadius: BorderRadius.circular(8),
+                                  borderRadius: PaperfoldShape.controlRadius,
                                 ),
                                 child: Center(
                                   child: Text(
@@ -350,7 +358,7 @@ class _ExcerptShareBottomSheetState
                                         : Colors.grey,
                                     width: _backgroundImage == bgImage ? 2 : 1,
                                   ),
-                                  borderRadius: BorderRadius.circular(8),
+                                  borderRadius: PaperfoldShape.controlRadius,
                                 ),
                                 child: bgImage == null
                                     ? const Icon(Icons.block)

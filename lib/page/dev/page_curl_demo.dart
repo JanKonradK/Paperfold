@@ -1,3 +1,5 @@
+import 'package:paperfold/config/paperfold_system.dart';
+
 import 'dart:async';
 
 import 'package:material_ui/material_ui.dart';
@@ -16,9 +18,7 @@ class PageCurlDemoApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF304A8A),
-        ),
+        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF304A8A)),
         sliderTheme: const SliderThemeData(
           showValueIndicator: ShowValueIndicator.onDrag,
         ),
@@ -68,9 +68,7 @@ class _PageCurlDemoPageState extends State<PageCurlDemoPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Page curl lab'),
-      ),
+      appBar: AppBar(title: const Text('Page curl lab')),
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {
@@ -82,11 +80,7 @@ class _PageCurlDemoPageState extends State<PageCurlDemoPage> {
               return SingleChildScrollView(
                 padding: const EdgeInsets.fromLTRB(20.0, 12.0, 20.0, 32.0),
                 child: Column(
-                  children: [
-                    preview,
-                    const SizedBox(height: 28.0),
-                    controls,
-                  ],
+                  children: [preview, const SizedBox(height: 28.0), controls],
                 ),
               );
             }
@@ -120,7 +114,7 @@ class _PageCurlDemoPageState extends State<PageCurlDemoPage> {
         aspectRatio: 0.72,
         child: DecoratedBox(
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(18.0),
+            borderRadius: PaperfoldShape.controlRadius,
             boxShadow: const [
               BoxShadow(
                 color: Color(0x330E1B3D),
@@ -130,7 +124,7 @@ class _PageCurlDemoPageState extends State<PageCurlDemoPage> {
             ],
           ),
           child: ClipRRect(
-            borderRadius: BorderRadius.circular(18.0),
+            borderRadius: PaperfoldShape.controlRadius,
             child: WidgetPageCurl(
               controller: _controller,
               front: const _NightAtlasPage(),
@@ -153,7 +147,7 @@ class _PageCurlDemoPageState extends State<PageCurlDemoPage> {
     return DecoratedBox(
       decoration: BoxDecoration(
         color: colorScheme.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(16.0),
+        borderRadius: PaperfoldShape.controlRadius,
       ),
       child: Padding(
         padding: const EdgeInsets.all(20.0),
@@ -167,9 +161,8 @@ class _PageCurlDemoPageState extends State<PageCurlDemoPage> {
             const SizedBox(height: 6.0),
             Text(
               'Release before halfway to spring back. Release after halfway to complete the turn.',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: colorScheme.onSurfaceVariant,
-                  ),
+              style: Theme.of(context).textTheme.bodyMedium
+                  ?.copyWith(color: colorScheme.onSurfaceVariant),
             ),
             const SizedBox(height: 24.0),
             // No longer a length. The radius of the roll is set by how much
@@ -194,8 +187,10 @@ class _PageCurlDemoPageState extends State<PageCurlDemoPage> {
               onChanged: (value) => setState(() => _shadow = value),
             ),
             const SizedBox(height: 16.0),
-            Text('Reading direction',
-                style: Theme.of(context).textTheme.labelLarge),
+            Text(
+              'Reading direction',
+              style: Theme.of(context).textTheme.labelLarge,
+            ),
             const SizedBox(height: 8.0),
             SegmentedButton<TextDirection>(
               segments: const [
@@ -221,14 +216,8 @@ class _PageCurlDemoPageState extends State<PageCurlDemoPage> {
             const SizedBox(height: 8.0),
             SegmentedButton<PageCurlEffect>(
               segments: const [
-                ButtonSegment(
-                  value: PageCurlEffect.curl,
-                  label: Text('Curl'),
-                ),
-                ButtonSegment(
-                  value: PageCurlEffect.fold,
-                  label: Text('Fold'),
-                ),
+                ButtonSegment(value: PageCurlEffect.curl, label: Text('Curl')),
+                ButtonSegment(value: PageCurlEffect.fold, label: Text('Fold')),
               ],
               selected: {_effect},
               onSelectionChanged: (selection) {
@@ -241,7 +230,8 @@ class _PageCurlDemoPageState extends State<PageCurlDemoPage> {
               contentPadding: EdgeInsets.zero,
               title: const Text('Accessibility cross-fade'),
               subtitle: const Text(
-                  'Simulates the caller-provided reduce-motion flag.'),
+                'Simulates the caller-provided reduce-motion flag.',
+              ),
               value: _reduceMotion,
               onChanged: (value) {
                 setState(() => _reduceMotion = value);
@@ -287,11 +277,11 @@ class _NightAtlasPage extends StatelessWidget {
             Text(
               'THE NIGHT\nATLAS',
               style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w800,
-                    height: 0.94,
-                    letterSpacing: -1.4,
-                  ),
+                color: Colors.white,
+                fontWeight: FontWeight.w800,
+                height: 0.94,
+                letterSpacing: -1.4,
+              ),
             ),
             const SizedBox(height: 18.0),
             const SizedBox(
@@ -349,18 +339,18 @@ class _FieldNotesPage extends StatelessWidget {
               Text(
                 '11 AUGUST',
                 style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                      color: const Color(0xFF467354),
-                      fontWeight: FontWeight.w700,
-                    ),
+                  color: const Color(0xFF467354),
+                  fontWeight: FontWeight.w700,
+                ),
               ),
               const SizedBox(height: 10.0),
               Text(
                 'The path opened after the rain.',
                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      color: const Color(0xFF183224),
-                      fontWeight: FontWeight.w700,
-                      height: 1.12,
-                    ),
+                  color: const Color(0xFF183224),
+                  fontWeight: FontWeight.w700,
+                  height: 1.12,
+                ),
               ),
               const SizedBox(height: 22.0),
               const Text(

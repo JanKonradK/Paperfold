@@ -11,11 +11,13 @@
 - Native modal routes use the shared settle timing.
 - Slider tracks are 4 dp solid surfaces without blur.
 - The new home tests and the radius test pass: 5 tests.
+- The radius test freezes exact occurrences in 12 files owned by other agents.
+- No numeric circular radius remains in this task scope.
 - The scoped analyzer found no errors. It found 14 information messages.
 
 ## Next
 
-- Commit the radius migration, charts, and other screens.
+- Commit the charts and other screens.
 - Complete the full test suite.
 
 ## Known test results

@@ -1,3 +1,4 @@
+import 'package:paperfold/config/paperfold_system.dart';
 import 'package:paperfold/config/shared_preference_provider.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -75,7 +76,7 @@ class IconAndText extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: PaperfoldShape.controlRadius,
         child: content,
       ),
     );

@@ -1,3 +1,5 @@
+import 'package:paperfold/widgets/common/paperfold_modal_motion.dart';
+import 'package:paperfold/config/paperfold_system.dart';
 import 'package:paperfold/config/shared_preference_provider.dart';
 import 'package:paperfold/l10n/generated/L10n.dart';
 import 'package:paperfold/widgets/common/color_picker_sheet.dart';
@@ -32,18 +34,23 @@ class TagChip extends StatelessWidget {
     ThemeData theme = Theme.of(context);
     final isEink = Prefs().eInkMode;
 
-    final einkBgColor =
-        selected ? theme.colorScheme.secondary : Colors.transparent;
-    final einkBorderColor =
-        selected ? Colors.transparent : theme.colorScheme.onSurface;
-    final einkForeground =
-        selected ? theme.colorScheme.onSecondary : theme.colorScheme.onSurface;
+    final einkBgColor = selected
+        ? theme.colorScheme.secondary
+        : Colors.transparent;
+    final einkBorderColor = selected
+        ? Colors.transparent
+        : theme.colorScheme.onSurface;
+    final einkForeground = selected
+        ? theme.colorScheme.onSecondary
+        : theme.colorScheme.onSurface;
 
     final baseColor = _colorForLabel(label);
-    final normalBgColor =
-        selected ? baseColor.withAlpha(46) : Colors.transparent;
-    final normalBorderColor =
-        selected ? Colors.transparent : baseColor.withAlpha(102);
+    final normalBgColor = selected
+        ? baseColor.withAlpha(46)
+        : Colors.transparent;
+    final normalBorderColor = selected
+        ? Colors.transparent
+        : baseColor.withAlpha(102);
     final normalForeground = selected
         ? baseColor
         : Theme.of(context).colorScheme.onSurface.withAlpha(179);
@@ -53,25 +60,25 @@ class TagChip extends StatelessWidget {
     final foreground = isEink ? einkForeground : normalForeground;
 
     return InkWell(
-      borderRadius: BorderRadius.circular(999),
+      borderRadius: PaperfoldShape.controlRadius,
       onTap: onTap,
       onLongPress: onLongPress,
       onSecondaryTap: onLongPress,
       child: Container(
         padding: dense
             ? const EdgeInsets.symmetric(horizontal: 6, vertical: 2)
-            : const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+            : const EdgeInsets.symmetric(
+                horizontal: 14,
+                vertical: PaperfoldSpace.xs,
+              ),
         decoration: BoxDecoration(
           color: bgColor,
-          borderRadius: BorderRadius.circular(999),
+          borderRadius: PaperfoldShape.controlRadius,
           border: Border.all(color: normalBborderColor, width: 1),
         ),
         child: Text(
           '# $label',
-          style: TextStyle(
-            fontWeight: FontWeight.w600,
-            color: foreground,
-          ),
+          style: TextStyle(fontWeight: FontWeight.w600, color: foreground),
         ),
       ),
     );
@@ -89,9 +96,11 @@ class TagChip extends StatelessWidget {
     String nameValue = initialName;
     await showDialog(
       context: context,
+      animationStyle: paperfoldModalMotion(context),
       builder: (dialogContext) {
-        Color colorValue =
-            (initialColor ?? hashColor(initialName)).withAlpha(0xFF);
+        Color colorValue = (initialColor ?? hashColor(initialName)).withAlpha(
+          0xFF,
+        );
         return StatefulBuilder(
           builder: (context, setStateDialog) {
             return AlertDialog(
@@ -99,18 +108,18 @@ class TagChip extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(l10n.tagEditTitle),
-                  DeleteConfirm(delete: () async {
-                    await onDelete();
-                    if (context.mounted) Navigator.of(dialogContext).pop();
-                  }),
+                  DeleteConfirm(
+                    delete: () async {
+                      await onDelete();
+                      if (context.mounted) Navigator.of(dialogContext).pop();
+                    },
+                  ),
                 ],
               ),
               content: TextFormField(
                 initialValue: initialName,
                 onChanged: (value) => nameValue = value,
-                decoration: InputDecoration(
-                  hintText: l10n.tagNamePlaceholder,
-                ),
+                decoration: InputDecoration(hintText: l10n.tagNamePlaceholder),
               ),
               actions: [
                 IconButton(

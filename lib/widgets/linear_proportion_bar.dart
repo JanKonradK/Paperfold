@@ -1,4 +1,6 @@
+import 'package:paperfold/config/paperfold_system.dart';
 import 'package:material_ui/material_ui.dart';
+
 import 'dart:math' as math;
 
 class LinearProportionBar extends StatelessWidget {
@@ -10,7 +12,9 @@ class LinearProportionBar extends StatelessWidget {
     super.key,
     required this.segments,
     this.height = 24.0,
-    this.borderRadius = const BorderRadius.all(Radius.circular(24.0)),
+    this.borderRadius = const BorderRadius.all(
+      Radius.circular(PaperfoldShape.pane),
+    ),
   });
 
   @override
@@ -20,9 +24,7 @@ class LinearProportionBar extends StatelessWidget {
 
     return Container(
       height: height,
-      decoration: BoxDecoration(
-        borderRadius: borderRadius,
-      ),
+      decoration: BoxDecoration(borderRadius: borderRadius),
       child: ClipRRect(
         borderRadius: borderRadius,
         child: Row(
