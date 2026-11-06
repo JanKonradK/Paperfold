@@ -1,3 +1,6 @@
+import 'package:paperfold/config/paperfold_system.dart';
+import 'package:paperfold/config/paperfold_motion.dart';
+import 'package:paperfold/widgets/bookshelf/book_detail_route.dart';
 /*
 THESIS: A personal library of flat, readable book spines on straight shelves.
 OWN-WORLD: Burgundy bookcloth, warm ivory paper, aged gold and dove bindings.
@@ -68,36 +71,10 @@ class ShelfHomeBookActions {
   final ValueChanged<Book>? notes;
 }
 
-/// Lets the Library take the system back before the destination history does.
-///
-/// A reader holding a book off the shelf has somewhere to go back to that the
-/// navigator knows nothing about: the row they took it from. Back used to walk
-/// the tab history instead, so the one gesture everybody reaches for first
-/// either changed tab or left the application, with the book still in the air.
-///
-/// The owner of the handle asks [canTakeBack] to decide whether to intercept,
-/// and calls [takeBack] when it has.
+/// Compatibility handle for the shell. Book detail now owns its Back route.
 class LibraryBackHandle extends ChangeNotifier {
-  bool _canTakeBack = false;
-  bool Function()? _handler;
-
-  /// True while the Library has something of its own to undo.
-  bool get canTakeBack => _canTakeBack;
-
-  /// Returns true when the Library dealt with the back itself.
-  bool takeBack() => _handler?.call() ?? false;
-
-  void _bind(bool Function() handler) => _handler = handler;
-
-  void _unbind(bool Function() handler) {
-    if (identical(_handler, handler)) _handler = null;
-  }
-
-  void _setCanTakeBack(bool value) {
-    if (_canTakeBack == value) return;
-    _canTakeBack = value;
-    notifyListeners();
-  }
+  bool get canTakeBack => false;
+  bool takeBack() => false;
 }
 
 class ShelfHomePage extends ConsumerStatefulWidget {
@@ -124,52 +101,10 @@ class _ShelfHomePageState extends ConsumerState<ShelfHomePage>
   final GlobalKey<BookcaseState> _bookcaseKey = GlobalKey<BookcaseState>();
   int _shelfIndex = 0;
   bool _dragging = false;
-  bool _holding = false;
   bool _openingBook = false;
 
   @override
   bool get wantKeepAlive => true;
-
-  @override
-  void initState() {
-    super.initState();
-    widget.backHandle?._bind(_handleBack);
-  }
-
-  @override
-  void didUpdateWidget(covariant ShelfHomePage oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.backHandle != widget.backHandle) {
-      oldWidget.backHandle?._unbind(_handleBack);
-      widget.backHandle?._bind(_handleBack);
-    }
-  }
-
-  @override
-  void dispose() {
-    widget.backHandle?._unbind(_handleBack);
-    super.dispose();
-  }
-
-  /// What back means on the Library.
-  ///
-  /// Holding a book, it puts the book back on the shelf. Part way into opening
-  /// one, it is swallowed: the reader is already on its way and there is no
-  /// half-open state to return to. On the shelf itself back is not ours, and
-  /// the destination history gets it.
-  bool _handleBack() {
-    final stage = _bookcaseKey.currentState?.activeStage;
-    switch (stage?.phase) {
-      case ShelfPhase.held:
-        stage!.putBack();
-        return true;
-      case ShelfPhase.opening:
-        return true;
-      case ShelfPhase.shelved:
-      case null:
-        return false;
-    }
-  }
 
   Future<File> _copyToTempFile({
     required String sourcePath,
@@ -354,6 +289,8 @@ class _ShelfHomePageState extends ConsumerState<ShelfHomePage>
         label: l10n.shelfBooksToBuy,
         wishlistItems: data.booksToBuy,
       ),
+      for (final entry in data.customShelves.entries)
+        _ShelfSection(label: entry.key, books: entry.value),
     ];
   }
 
@@ -363,9 +300,7 @@ class _ShelfHomePageState extends ConsumerState<ShelfHomePage>
       override(book);
       return;
     }
-    await Navigator.of(context).push<void>(
-      MaterialPageRoute(builder: (context) => BookDetail(book: book)),
-    );
+    await Navigator.of(context).push<void>(bookDetailRoute(context, book));
     if (mounted) await ref.read(shelfHomeProvider.notifier).refresh();
   }
 
@@ -417,11 +352,12 @@ class _ShelfHomePageState extends ConsumerState<ShelfHomePage>
         ShelfRow(
           name: section.label,
           books: [
-            for (final book in controls.booksForShelf(
-              section.books,
-              data.bookTagIds,
-            ))
-              shelfBookFromBook(book),
+            for (final physical in [false, true])
+              for (final book
+                  in controls
+                      .booksForShelf(section.books, data.bookTagIds)
+                      .where((book) => book.isPhysical == physical))
+                shelfBookFromBook(book),
             for (final item in controls.wishlistForShelf(section.wishlistItems))
               shelfBookFromWishlist(item),
           ],
@@ -473,8 +409,14 @@ class _ShelfHomePageState extends ConsumerState<ShelfHomePage>
     final page = Scaffold(
       appBar: AppBar(
         titleSpacing: 16,
-        toolbarHeight: 72,
-        title: const PaperfoldWordmark(),
+        toolbarHeight: PaperfoldSize.appBar,
+        title: ColorFiltered(
+          colorFilter: ColorFilter.mode(
+            PaperfoldBrand.wordmark(Theme.of(context).colorScheme),
+            BlendMode.srcIn,
+          ),
+          child: const PaperfoldWordmark(),
+        ),
         // Stable actions keep the sync subscription attached during loading.
         actions: [
           IconButton(
@@ -538,13 +480,15 @@ class _ShelfHomePageState extends ConsumerState<ShelfHomePage>
           ),
         ],
       ),
-      floatingActionButton: _holding
-          ? null
-          : FloatingActionButton(
-              tooltip: l10n.shelfAddBooksTooltip,
-              onPressed: _openAddBooksSheet,
-              child: const Icon(Icons.add_rounded),
-            ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+      floatingActionButton: Padding(
+        padding: EdgeInsets.only(bottom: MediaQuery.paddingOf(context).bottom),
+        child: FloatingActionButton(
+          tooltip: l10n.shelfAddBooksTooltip,
+          onPressed: _openAddBooksSheet,
+          child: const Icon(Icons.add_rounded),
+        ),
+      ),
       body: SafeArea(
         top: false,
         bottom: false,
@@ -561,149 +505,155 @@ class _ShelfHomePageState extends ConsumerState<ShelfHomePage>
                     MediaQuery.textScalerOf(context).scale(16) >= 24;
                 return Column(
                   children: [
-                    if (!_holding)
-                      ConstrainedBox(
-                        constraints: BoxConstraints(
-                          maxHeight: constraints.maxHeight * 0.5,
-                        ),
-                        child: SingleChildScrollView(
-                          key: const ValueKey('shelf-header-scroll'),
-                          primary: false,
-                          child: Column(
-                            children: [
-                              if (resumeBook != null && !_holding)
-                                Padding(
-                                  padding: const EdgeInsets.fromLTRB(
-                                    20,
-                                    4,
-                                    20,
-                                    8,
-                                  ),
-                                  child: ContinueReadingBanner(
-                                    key: const ValueKey(
-                                      'library-continue-reading',
-                                    ),
-                                    book: resumeBook,
-                                    compact:
-                                        largeText ||
-                                        constraints.maxHeight < 480,
-                                    onOpen: _openingBook
-                                        ? null
-                                        : () => _openBook(resumeBook),
-                                  ),
-                                ),
+                    ConstrainedBox(
+                      constraints: BoxConstraints(
+                        maxHeight: constraints.maxHeight * 0.5,
+                      ),
+                      child: SingleChildScrollView(
+                        key: const ValueKey('shelf-header-scroll'),
+                        primary: false,
+                        child: Column(
+                          children: [
+                            if (resumeBook != null)
                               Padding(
-                                padding: const EdgeInsetsDirectional.fromSTEB(
-                                  24,
-                                  8,
-                                  12,
+                                padding: const EdgeInsets.fromLTRB(
+                                  20,
                                   4,
+                                  20,
+                                  8,
                                 ),
-                                child: Row(
-                                  children: [
-                                    Expanded(
-                                      child: Text(
-                                        rows.isEmpty
-                                            ? l10n.shelfHomeTitle
-                                            : rows[activeIndex].name,
-                                        maxLines: 2,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: largeText
-                                            ? Theme.of(context)
-                                                  .textTheme
-                                                  .titleMedium
-                                            : Theme.of(context)
-                                                  .textTheme
-                                                  .headlineSmall,
+                                child: ContinueReadingBanner(
+                                  key: const ValueKey(
+                                    'library-continue-reading',
+                                  ),
+                                  book: resumeBook,
+                                  compact:
+                                      largeText || constraints.maxHeight < 480,
+                                  onOpen: _openingBook
+                                      ? null
+                                      : () => _openBook(resumeBook),
+                                ),
+                              ),
+                            Padding(
+                              padding: const EdgeInsetsDirectional.fromSTEB(
+                                24,
+                                8,
+                                12,
+                                4,
+                              ),
+                              child: Row(
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      rows.isEmpty
+                                          ? l10n.shelfHomeTitle
+                                          : l10n.notesBooks(
+                                              rows[activeIndex].books.length,
+                                            ),
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: largeText
+                                          ? Theme.of(context)
+                                                .textTheme
+                                                .titleMedium
+                                          : Theme.of(context)
+                                                .textTheme
+                                                .headlineSmall,
+                                    ),
+                                  ),
+                                  ShelfViewSwitch(
+                                    showCovers: Prefs().shelfCoverView,
+                                    onChanged: (value) =>
+                                        Prefs().shelfCoverView = value,
+                                  ),
+                                  IconButton(
+                                    key: const ValueKey('shelf-sort-control'),
+                                    tooltip: l10n.shelfSortControl,
+                                    onPressed: () =>
+                                        showShelfSortSheet(context, controls),
+                                    icon: const Icon(Icons.sort_rounded),
+                                  ),
+                                  Badge.count(
+                                    count: controls.filterCount,
+                                    isLabelVisible: controls.hasFilters,
+                                    child: IconButton(
+                                      key: const ValueKey(
+                                        'shelf-filter-control',
+                                      ),
+                                      tooltip: l10n.shelfFilterControl,
+                                      onPressed: () => showShelfFilterSheet(
+                                        context,
+                                        controls,
+                                        data.tags,
+                                      ),
+                                      icon: const Icon(
+                                        Icons.filter_alt_outlined,
                                       ),
                                     ),
-                                    ShelfViewSwitch(
-                                      showCovers: Prefs().shelfCoverView,
-                                      onChanged: _holding
-                                          ? null
-                                          : (value) =>
-                                                Prefs().shelfCoverView = value,
-                                    ),
-                                    IconButton(
-                                      key: const ValueKey('shelf-sort-control'),
-                                      tooltip: l10n.shelfSortControl,
-                                      onPressed: () =>
-                                          showShelfSortSheet(context, controls),
-                                      icon: const Icon(Icons.sort_rounded),
-                                    ),
-                                    Badge.count(
-                                      count: controls.filterCount,
-                                      isLabelVisible: controls.hasFilters,
-                                      child: IconButton(
-                                        key: const ValueKey(
-                                          'shelf-filter-control',
-                                        ),
-                                        tooltip: l10n.shelfFilterControl,
-                                        onPressed: () => showShelfFilterSheet(
-                                          context,
-                                          controls,
-                                          data.tags,
-                                        ),
-                                        icon: const Icon(
-                                          Icons.filter_alt_outlined,
-                                        ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            SizedBox(
+                              height:
+                                  38 +
+                                  MediaQuery.textScalerOf(context).scale(14),
+                              child: ListView.separated(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 20,
+                                ),
+                                scrollDirection: Axis.horizontal,
+                                itemCount: rows.length,
+                                separatorBuilder: (context, index) =>
+                                    const SizedBox(width: 8),
+                                itemBuilder: (context, index) => ChoiceChip(
+                                  key: ValueKey('shelf-tab-$index'),
+                                  label: Text(rows[index].name),
+                                  selected: index == activeIndex,
+                                  showCheckmark: false,
+                                  chipAnimationStyle: ChipAnimationStyle(
+                                    selectAnimation: AnimationStyle(
+                                      duration: PaperfoldMotion.of(
+                                        context,
+                                        PaperfoldMotion.tick,
                                       ),
+                                      curve: PaperfoldMotion.land,
                                     ),
-                                  ],
+                                  ),
+                                  onSelected: (_) =>
+                                      _bookcaseKey.currentState?.climbTo(index),
                                 ),
                               ),
-                              SizedBox(
-                                height:
-                                    38 +
-                                    MediaQuery.textScalerOf(context).scale(14),
-                                child: ListView.separated(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 20,
-                                  ),
-                                  scrollDirection: Axis.horizontal,
-                                  itemCount: rows.length,
-                                  separatorBuilder: (context, index) =>
-                                      const SizedBox(width: 8),
-                                  itemBuilder: (context, index) => ChoiceChip(
-                                    key: ValueKey('shelf-tab-$index'),
-                                    label: Text(rows[index].name),
-                                    selected: index == activeIndex,
-                                    showCheckmark: false,
-                                    onSelected: _holding
-                                        ? null
-                                        : (_) => _bookcaseKey.currentState
-                                              ?.climbTo(index),
-                                  ),
-                                ),
-                              ),
-                              ShelfFilterChips(
-                                controls: controls,
-                                tags: data.tags,
-                              ),
-                            ],
-                          ),
+                            ),
+                            ShelfFilterChips(
+                              controls: controls,
+                              tags: data.tags,
+                            ),
+                          ],
                         ),
                       ),
+                    ),
                     Expanded(
                       // Keep the PageView subtree in place when its header hides.
                       key: const ValueKey('shelf-bookcase-region'),
                       child: Padding(
-                        padding: EdgeInsets.only(
-                          bottom: _holding
-                              ? 0
-                              : constraints.maxHeight < 400
-                              ? 12
-                              : 72,
-                        ),
+                        padding: EdgeInsets.only(bottom: 0),
                         child: Bookcase(
                           key: _bookcaseKey,
                           showCovers: Prefs().shelfCoverView,
                           showSignposts: false,
                           shelves: rows,
                           initialShelf: activeIndex,
-                          onHoldingChanged: (holding) {
-                            setState(() => _holding = holding);
-                            widget.backHandle?._setCanTakeBack(holding);
+                          onOptions: (shelfBook) {
+                            final book = booksById[shelfBook.id];
+                            if (book != null)
+                              showModalBottomSheet<void>(
+                                context: context,
+                                useSafeArea: true,
+                                showDragHandle: true,
+                                isScrollControlled: true,
+                                builder: (_) => BookBottomSheet(book: book),
+                              );
                           },
                           onShelfChanged: (index) {
                             if (_shelfIndex != index) {
@@ -713,9 +663,22 @@ class _ShelfHomePageState extends ConsumerState<ShelfHomePage>
                           onOpen: (shelfBook) async {
                             final book = booksById[shelfBook.id];
                             if (book != null) {
-                              await _openBook(book);
+                              await _openDetails(book);
                             } else {
-                              await _openShelf(sections.last);
+                              final wishlistBook = Book.physical()
+                                ..id = -int.parse(
+                                  shelfBook.id.replaceFirst('wishlist-', ''),
+                                )
+                                ..title = shelfBook.title
+                                ..author = shelfBook.author;
+                              await Navigator.of(context).push<void>(
+                                bookDetailRoute(
+                                  context,
+                                  wishlistBook,
+                                  wishlist: true,
+                                  heroId: shelfBook.id,
+                                ),
+                              );
                             }
                             _bookcaseKey.currentState?.activeStage?.reset();
                           },
@@ -762,7 +725,7 @@ class _ShelfHomePageState extends ConsumerState<ShelfHomePage>
                                   : null,
                             );
                           },
-                          pickUpHint: l10n.shelfPickUpHint,
+                          pickUpHint: l10n.shelfOpenHint,
                           openHint: l10n.shelfOpenHint,
                         ),
                       ),
@@ -1148,7 +1111,8 @@ class _ShelfCollectionPageState extends ConsumerState<ShelfCollectionPage> {
                 books: widget.books,
                 wishlistItems: widget.wishlistItems,
                 columns: _columns,
-                onOpenBook: (book) => pushToReadingPage(ref, context, book),
+                onOpenBook: (book) =>
+                    Navigator.of(context).push(bookDetailRoute(context, book)),
                 onOpenOptions: _openBookOptions,
               )
             : GridView.builder(
@@ -1166,7 +1130,9 @@ class _ShelfCollectionPageState extends ConsumerState<ShelfCollectionPage> {
                     return _ShelfCoverTile(
                       book: book,
                       onOpenOptions: () => _openBookOptions(book),
-                      onOpenBook: () => pushToReadingPage(ref, context, book),
+                      onOpenBook: () =>
+                          Navigator.of(context)
+                              .push(bookDetailRoute(context, book)),
                     );
                   }
                   final item =
@@ -1315,7 +1281,13 @@ class _ShelfCoverTile extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Expanded(child: BookCover(book: book, radius: 10)),
+                  Expanded(
+                    child: BookDetailHero(
+                      id: 'book-${book.id}',
+                      cover: BookCover(book: book),
+                      child: BookCover(book: book),
+                    ),
+                  ),
                   const SizedBox(height: 10),
                   Text(
                     book.title,

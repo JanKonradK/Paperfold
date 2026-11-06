@@ -20,8 +20,9 @@ void main() {
     await Prefs().initPrefs();
   });
 
-  testWidgets('back puts a held book on its shelf instead of leaving',
-      (tester) async {
+  testWidgets('detail uses a route and Library does not capture Back', (
+    tester,
+  ) async {
     final handle = LibraryBackHandle();
     addTearDown(handle.dispose);
     fakeData = populatedData();
@@ -33,13 +34,19 @@ void main() {
         overrides: newTestOverrides(),
         child: MaterialApp(
           locale: const Locale('en'),
-          localizationsDelegates: [L10n.delegate, ...GlobalMaterialLocalizations.delegates],
+          localizationsDelegates: [
+            L10n.delegate,
+            ...GlobalMaterialLocalizations.delegates,
+          ],
           supportedLocales: L10n.supportedLocales,
           theme: ThemeData(
             useMaterial3: true,
             colorScheme: PaperfoldTokens.colorScheme(Brightness.light),
           ),
-          home: ShelfHomePage(backHandle: handle),
+          home: ShelfHomePage(
+            backHandle: handle,
+            bookActions: ShelfHomeBookActions(details: (_) {}),
+          ),
         ),
       ),
     );
@@ -54,15 +61,10 @@ void main() {
     stage.pickUp();
     await tester.pump();
     await tester.pumpAndSettle();
-    expect(stage.phase, ShelfPhase.held);
-
-    // Now it is, and taking it puts the book back rather than popping a route.
-    expect(handle.canTakeBack, isTrue);
-    expect(handle.takeBack(), isTrue);
-    await tester.pump();
-    await tester.pumpAndSettle();
-
     expect(stage.phase, ShelfPhase.shelved);
+
     expect(handle.canTakeBack, isFalse);
+    expect(handle.takeBack(), isFalse);
+    expect(stage.phase, ShelfPhase.shelved);
   });
 }

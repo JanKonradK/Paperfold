@@ -1105,5 +1105,24 @@
   "reminderPermissionDenied": "Notifications are off for Paperfold. Turn them on in the system settings.",
   "reminderChannelName": "Reading reminders",
   "onlineWikisourceDescription": "Public domain books from English Wikisource. Download EPUB files here.",
-  "onlineInternetArchiveDescription": "A large library of public domain and lending books. Some books need an account."
+  "onlineInternetArchiveDescription": "A large library of public domain and lending books. Some books need an account.",
+  "libraryEbooks": "E-books",
+  "libraryPaperBooks": "Paper books",
+  "bookStartReading": "Start reading",
+  "bookProgressThrough": "{percent}% through the book",
+  "bookStartedOn": "Started {date}",
+  "@bookProgressThrough": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "@bookStartedOn": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  }
 }

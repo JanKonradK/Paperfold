@@ -886,5 +886,10 @@
   "reminderPermissionDenied": "Paperfold の通知がオフです。システム設定でオンにしてください。",
   "reminderChannelName": "読書リマインダー",
   "onlineWikisourceDescription": "英語版ウィキソースのパブリックドメインの本。ここで EPUB ファイルをダウンロードできます。",
-  "onlineInternetArchiveDescription": "パブリックドメインの本と貸出本の大きな図書館。一部の本はアカウントが必要です。"
+  "onlineInternetArchiveDescription": "パブリックドメインの本と貸出本の大きな図書館。一部の本はアカウントが必要です。",
+  "libraryEbooks": "電子書籍",
+  "libraryPaperBooks": "紙の本",
+  "bookStartReading": "読み始める",
+  "bookProgressThrough": "本の{percent}%を読了",
+  "bookStartedOn": "開始日：{date}"
 }

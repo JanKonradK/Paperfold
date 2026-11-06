@@ -1,5 +1,6 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:paperfold/config/paperfold_motion.dart';
+import 'package:paperfold/config/paperfold_system.dart';
 import 'package:paperfold/l10n/generated/L10n.dart';
 
 /// A two-position slider between the spine view and the cover view.
@@ -18,8 +19,8 @@ class ShelfViewSwitch extends StatelessWidget {
   /// Null disables the control.
   final ValueChanged<bool>? onChanged;
 
-  static const double _segment = 44;
-  static const double _height = 36;
+  static const double _segment = 48;
+  static const double _height = PaperfoldSize.control;
 
   @override
   Widget build(BuildContext context) {
@@ -29,7 +30,7 @@ class ShelfViewSwitch extends StatelessWidget {
     final rtl = Directionality.of(context) == TextDirection.rtl;
     final duration = MediaQuery.disableAnimationsOf(context)
         ? Duration.zero
-        : const Duration(milliseconds: 220);
+        : PaperfoldMotion.move;
 
     Widget segment(bool covers, IconData icon, String label) {
       final selected = covers == showCovers;
@@ -88,7 +89,7 @@ class ShelfViewSwitch extends StatelessWidget {
                   height: _height,
                   decoration: BoxDecoration(
                     color: scheme.surfaceContainerHighest,
-                    borderRadius: BorderRadius.circular(_height / 2),
+                    borderRadius: PaperfoldShape.controlRadius,
                   ),
                 ),
                 AnimatedAlign(
@@ -104,7 +105,7 @@ class ShelfViewSwitch extends StatelessWidget {
                       height: _height - 4,
                       decoration: BoxDecoration(
                         color: scheme.secondaryContainer,
-                        borderRadius: BorderRadius.circular(_height / 2),
+                        borderRadius: PaperfoldShape.controlRadius,
                       ),
                     ),
                   ),
@@ -117,7 +118,11 @@ class ShelfViewSwitch extends StatelessWidget {
                       Icons.view_week_outlined,
                       l10n.shelfViewSpines,
                     ),
-                    segment(true, Icons.grid_view_rounded, l10n.shelfViewCoverGrid),
+                    segment(
+                      true,
+                      Icons.grid_view_rounded,
+                      l10n.shelfViewCoverGrid,
+                    ),
                   ],
                 ),
               ],
