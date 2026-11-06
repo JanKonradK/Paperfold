@@ -919,5 +919,14 @@
   "libraryPaperBooks": "紙の本",
   "bookStartReading": "読み始める",
   "bookProgressThrough": "本の{percent}%を読了",
-  "bookStartedOn": "開始日：{date}"
+  "bookStartedOn": "開始日：{date}",
+  "readerQuickSettings": "クイック設定",
+  "readerAdvancedSettings": "読書の詳細設定",
+  "readerMoreAppearance": "その他の表示設定",
+  "readerBrightness": "明るさ",
+  "readerSystem": "システム",
+  "readerRotationLock": "現在の向きを固定",
+  "readerCustomStyles": "独自の文字スタイルを使う",
+  "readerPaged": "ページ",
+  "readerWindowFailed": "画面設定を適用できませんでした"
 }

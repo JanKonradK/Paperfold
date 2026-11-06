@@ -919,5 +919,14 @@
   "libraryPaperBooks": "종이책",
   "bookStartReading": "읽기 시작",
   "bookProgressThrough": "책의 {percent}% 읽음",
-  "bookStartedOn": "시작일: {date}"
+  "bookStartedOn": "시작일: {date}",
+  "readerQuickSettings": "빠른 설정",
+  "readerAdvancedSettings": "고급 읽기 설정",
+  "readerMoreAppearance": "추가 모양 설정",
+  "readerBrightness": "밝기",
+  "readerSystem": "시스템",
+  "readerRotationLock": "현재 방향 잠금",
+  "readerCustomStyles": "사용자 지정 텍스트 스타일 사용",
+  "readerPaged": "페이지",
+  "readerWindowFailed": "화면 설정을 적용할 수 없습니다"
 }

@@ -1137,5 +1137,14 @@
   "libraryPaperBooks": "Basılı kitaplar",
   "bookStartReading": "Okumaya başla",
   "bookProgressThrough": "Kitabın %{percent} kadarı okundu",
-  "bookStartedOn": "Başlangıç: {date}"
+  "bookStartedOn": "Başlangıç: {date}",
+  "readerQuickSettings": "Hızlı ayarlar",
+  "readerAdvancedSettings": "Gelişmiş okuma ayarları",
+  "readerMoreAppearance": "Diğer görünüm ayarları",
+  "readerBrightness": "Parlaklık",
+  "readerSystem": "Sistem",
+  "readerRotationLock": "Geçerli yönü kilitle",
+  "readerCustomStyles": "Özel metin stillerini kullan",
+  "readerPaged": "Sayfalı",
+  "readerWindowFailed": "Ekran ayarları uygulanamadı"
 }

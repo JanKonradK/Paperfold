@@ -1137,5 +1137,14 @@
   "libraryPaperBooks": "Cărți pe hârtie",
   "bookStartReading": "Începe lectura",
   "bookProgressThrough": "{percent}% din carte citit",
-  "bookStartedOn": "Începută la {date}"
+  "bookStartedOn": "Începută la {date}",
+  "readerQuickSettings": "Setări rapide",
+  "readerAdvancedSettings": "Setări avansate de lectură",
+  "readerMoreAppearance": "Mai multe setări de aspect",
+  "readerBrightness": "Luminozitate",
+  "readerSystem": "Sistem",
+  "readerRotationLock": "Blochează orientarea curentă",
+  "readerCustomStyles": "Folosește stiluri de text proprii",
+  "readerPaged": "Pagini",
+  "readerWindowFailed": "Setările ecranului nu au putut fi aplicate"
 }

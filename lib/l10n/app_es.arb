@@ -1137,5 +1137,14 @@
   "libraryPaperBooks": "Libros en papel",
   "bookStartReading": "Empezar a leer",
   "bookProgressThrough": "{percent}% del libro leído",
-  "bookStartedOn": "Empezado el {date}"
+  "bookStartedOn": "Empezado el {date}",
+  "readerQuickSettings": "Ajustes rápidos",
+  "readerAdvancedSettings": "Ajustes avanzados de lectura",
+  "readerMoreAppearance": "Más ajustes de apariencia",
+  "readerBrightness": "Brillo",
+  "readerSystem": "Sistema",
+  "readerRotationLock": "Bloquear orientación actual",
+  "readerCustomStyles": "Usar estilos de texto propios",
+  "readerPaged": "Páginas",
+  "readerWindowFailed": "No se pudieron aplicar los ajustes de pantalla"
 }

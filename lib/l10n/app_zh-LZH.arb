@@ -919,5 +919,14 @@
   "libraryPaperBooks": "紙本書",
   "bookStartReading": "始讀",
   "bookProgressThrough": "已讀全書之 {percent}%",
-  "bookStartedOn": "始於 {date}"
+  "bookStartedOn": "始於 {date}",
+  "readerQuickSettings": "便捷設定",
+  "readerAdvancedSettings": "閱覽詳設",
+  "readerMoreAppearance": "更多外觀設定",
+  "readerBrightness": "明度",
+  "readerSystem": "隨系統",
+  "readerRotationLock": "鎖定今向",
+  "readerCustomStyles": "用自定字式",
+  "readerPaged": "分頁",
+  "readerWindowFailed": "未能設螢幕"
 }

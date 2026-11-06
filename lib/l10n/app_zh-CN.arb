@@ -919,5 +919,14 @@
   "libraryPaperBooks": "纸质书",
   "bookStartReading": "开始阅读",
   "bookProgressThrough": "已读全书的 {percent}%",
-  "bookStartedOn": "开始于 {date}"
+  "bookStartedOn": "开始于 {date}",
+  "readerQuickSettings": "快捷设置",
+  "readerAdvancedSettings": "高级阅读设置",
+  "readerMoreAppearance": "更多外观设置",
+  "readerBrightness": "亮度",
+  "readerSystem": "系统",
+  "readerRotationLock": "锁定当前方向",
+  "readerCustomStyles": "使用自定义文字样式",
+  "readerPaged": "分页",
+  "readerWindowFailed": "无法应用屏幕设置"
 }

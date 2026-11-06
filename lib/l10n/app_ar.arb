@@ -919,5 +919,14 @@
   "libraryPaperBooks": "كتب ورقية",
   "bookStartReading": "بدء القراءة",
   "bookProgressThrough": "قرأت {percent}% من الكتاب",
-  "bookStartedOn": "بدأت في {date}"
+  "bookStartedOn": "بدأت في {date}",
+  "readerQuickSettings": "إعدادات سريعة",
+  "readerAdvancedSettings": "إعدادات القارئ المتقدمة",
+  "readerMoreAppearance": "المزيد من إعدادات المظهر",
+  "readerBrightness": "السطوع",
+  "readerSystem": "النظام",
+  "readerRotationLock": "قفل الاتجاه الحالي",
+  "readerCustomStyles": "استخدام أنماط نص مخصصة",
+  "readerPaged": "صفحات",
+  "readerWindowFailed": "تعذر تطبيق إعدادات الشاشة"
 }

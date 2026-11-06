@@ -1137,5 +1137,14 @@
   "libraryPaperBooks": "Бумажные книги",
   "bookStartReading": "Начать чтение",
   "bookProgressThrough": "Прочитано {percent}% книги",
-  "bookStartedOn": "Начато {date}"
+  "bookStartedOn": "Начато {date}",
+  "readerQuickSettings": "Быстрые настройки",
+  "readerAdvancedSettings": "Расширенные настройки чтения",
+  "readerMoreAppearance": "Другие настройки оформления",
+  "readerBrightness": "Яркость",
+  "readerSystem": "Система",
+  "readerRotationLock": "Закрепить текущую ориентацию",
+  "readerCustomStyles": "Использовать свои стили текста",
+  "readerPaged": "Страницы",
+  "readerWindowFailed": "Не удалось применить настройки экрана"
 }

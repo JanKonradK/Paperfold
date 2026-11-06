@@ -103,7 +103,7 @@ void main() {
       Icons.toc,
       Icons.edit_outlined,
       Icons.data_usage,
-      Icons.palette_outlined,
+      Icons.tune,
     ]) {
       final target = find.ancestor(
         of: find.byIcon(icon),
@@ -149,7 +149,7 @@ void main() {
     handle.dispose();
   });
 
-  testWidgets('an open panel replaces the tools', (tester) async {
+  testWidgets('an open panel keeps the tools', (tester) async {
     await tester.pumpWidget(host(chrome(
       activeTool: ReaderTool.notes,
       panel: const SizedBox(height: 120, child: Text('panel body')),
@@ -157,7 +157,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('panel body'), findsOneWidget);
-    expect(find.byIcon(Icons.toc), findsNothing);
+    expect(find.byIcon(Icons.toc), findsOneWidget);
   });
 
   testWidgets('a right-to-left reader gets the same two bars', (tester) async {

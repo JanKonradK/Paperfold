@@ -1158,5 +1158,14 @@
         "type": "String"
       }
     }
-  }
+  },
+  "readerQuickSettings": "Quick settings",
+  "readerAdvancedSettings": "Advanced reader settings",
+  "readerMoreAppearance": "More appearance settings",
+  "readerBrightness": "Brightness",
+  "readerSystem": "System",
+  "readerRotationLock": "Lock current orientation",
+  "readerCustomStyles": "Use custom text styles",
+  "readerPaged": "Paged",
+  "readerWindowFailed": "Could not apply screen settings"
 }

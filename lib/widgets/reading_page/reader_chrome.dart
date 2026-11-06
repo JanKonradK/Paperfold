@@ -1,3 +1,6 @@
+import 'dart:math' as math;
+
+import 'package:paperfold/utils/paperfold_layout.dart';
 import 'package:paperfold/widgets/common/paperfold_transition.dart';
 import 'package:paperfold/config/paperfold_motion.dart';
 import 'package:paperfold/config/paperfold_system.dart';
@@ -10,7 +13,7 @@ import 'package:paperfold/widgets/paperfold_glass_surface.dart';
 ///
 /// Contents is in this list even though it opens the drawer rather than a
 /// panel, because the reader still needs to see which tool they asked for.
-enum ReaderTool { none, contents, notes, progress, style }
+enum ReaderTool { none, contents, search, bookmarks, notes, progress, style }
 
 /// The chrome that sits over the book: one glass bar at each end.
 ///
@@ -34,10 +37,20 @@ class ReaderChrome extends StatelessWidget {
     required this.onNotes,
     required this.onProgress,
     required this.onStyle,
+    this.onSearch,
+    this.onBookmarks,
+    this.onAdvanced,
+    this.chapter = '',
+    this.percentage = 0,
     this.panel,
     this.onFacingPage,
   });
 
+  final VoidCallback? onSearch;
+  final VoidCallback? onBookmarks;
+  final VoidCallback? onAdvanced;
+  final String chapter;
+  final double percentage;
   final bool visible;
   final String title;
   final bool bookmarkExists;
@@ -64,6 +77,10 @@ class ReaderChrome extends StatelessWidget {
       PaperfoldMotion.shift,
     );
 
+    final side =
+        PaperfoldLayout.of(context).landscape &&
+        media.size.width - media.padding.horizontal >= 840 &&
+        panel != null;
     return ExcludeFocus(
       excluding: !visible,
       child: ExcludeSemantics(
@@ -89,10 +106,34 @@ class ReaderChrome extends StatelessWidget {
                   from: const Offset(0, -1),
                   child: SafeArea(
                     bottom: false,
-                    child: _constrain(_topBar(context)),
+                    child: _constrain(
+                      Padding(
+                        padding: EdgeInsetsDirectional.only(
+                          end: side ? 384 : 0,
+                        ),
+                        child: _topBar(context),
+                      ),
+                    ),
                   ),
                 ),
               ),
+              if (side)
+                PositionedDirectional(
+                  end: media.padding.right + 12,
+                  top: media.padding.top + 12,
+                  bottom: media.padding.bottom + 12,
+                  width: 360,
+                  child: _Reveal(
+                    visible: visible,
+                    duration: duration,
+                    from: const Offset(0, 1),
+                    child: PaperfoldGlassSurface(
+                      borderRadius: PaperfoldShape.frameRadius,
+                      tier: PaperfoldGlassTier.solid,
+                      child: panel!,
+                    ),
+                  ),
+                ),
               Align(
                 alignment: Alignment.bottomCenter,
                 child: _Reveal(
@@ -101,7 +142,14 @@ class ReaderChrome extends StatelessWidget {
                   from: const Offset(0, 1),
                   child: SafeArea(
                     top: false,
-                    child: _constrain(_bottomShell(context, media)),
+                    child: _constrain(
+                      Padding(
+                        padding: EdgeInsetsDirectional.only(
+                          end: side ? 384 : 0,
+                        ),
+                        child: _bottomShell(context, media, side),
+                      ),
+                    ),
                   ),
                 ),
               ),
@@ -115,14 +163,8 @@ class ReaderChrome extends StatelessWidget {
   // heightFactor pins this to the height of the bar. Without it the alignment
   // would expand to the whole stack and park both bars in the middle of the
   // screen.
-  Widget _constrain(Widget child) => Align(
-    alignment: Alignment.center,
-    heightFactor: 1,
-    child: ConstrainedBox(
-      constraints: const BoxConstraints(maxWidth: 600),
-      child: child,
-    ),
-  );
+  Widget _constrain(Widget child) =>
+      Align(alignment: Alignment.center, heightFactor: 1, child: child);
 
   Widget _topBar(BuildContext context) {
     final l10n = L10n.of(context);
@@ -131,7 +173,7 @@ class ReaderChrome extends StatelessWidget {
       child: PaperfoldGlassSurface(
         borderRadius: PaperfoldShape.frameRadius,
         child: SizedBox(
-          height: 56,
+          height: PaperfoldLayout.of(context).landscape ? 48 : 56,
           child: Row(
             children: [
               IconButton(
@@ -167,6 +209,11 @@ class ReaderChrome extends StatelessWidget {
                     value: onBookDetails,
                     child: Text(l10n.readingPageBookDetails),
                   ),
+                  if (onAdvanced != null)
+                    PopupMenuItem(
+                      value: onAdvanced,
+                      child: Text(l10n.readerAdvancedSettings),
+                    ),
                 ],
               ),
               const SizedBox(width: 4),
@@ -177,64 +224,97 @@ class ReaderChrome extends StatelessWidget {
     );
   }
 
-  Widget _bottomShell(BuildContext context, MediaQueryData media) {
+  Widget _bottomShell(BuildContext context, MediaQueryData media, bool side) {
     final l10n = L10n.of(context);
-    final open = panel != null;
+    final layout = PaperfoldLayout.of(context);
+    final safeH = media.size.height - media.padding.vertical;
+    final open = panel != null && !side;
+    final tools = [
+      (Icons.tune, l10n.readerQuickSettings, ReaderTool.style, onStyle),
+      (Icons.toc, l10n.readingContents, ReaderTool.contents, onContents),
+      (
+        Icons.search,
+        l10n.contextMenuSearch,
+        ReaderTool.search,
+        onSearch ?? onContents,
+      ),
+      (
+        Icons.bookmarks_outlined,
+        l10n.readingBookmark,
+        ReaderTool.bookmarks,
+        onBookmarks ?? onContents,
+      ),
+      (Icons.edit_outlined, l10n.notes, ReaderTool.notes, onNotes),
+    ];
     return Padding(
       padding: const EdgeInsetsDirectional.fromSTEB(12, 0, 12, 12),
       child: PaperfoldGlassSurface(
         borderRadius: PaperfoldShape.frameRadius,
         tier: open ? PaperfoldGlassTier.solid : PaperfoldGlassTier.floating,
-        child: Padding(
-          padding: const EdgeInsets.all(4),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (open)
-                ConstrainedBox(
-                  constraints: BoxConstraints(
-                    maxHeight: media.size.height * 0.5,
-                  ),
-                  child: panel,
-                ),
-              if (!open)
-                Row(
-                  children: [
-                    if (onFacingPage != null)
-                      _Tab(
-                        icon: Icons.auto_stories_outlined,
-                        label: l10n.facingPage,
-                        selected: false,
-                        onPressed: onFacingPage!,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (open)
+              SizedBox(
+                height: layout.landscape
+                    ? safeH * 0.60
+                    : math.min(
+                        layout.tablet ? 400 : 360,
+                        safeH * (layout.tablet ? 0.40 : 0.48),
                       ),
-                    _Tab(
-                      icon: Icons.toc,
-                      label: l10n.readingContents,
-                      selected: activeTool == ReaderTool.contents,
-                      onPressed: onContents,
+                child: panel,
+              ),
+            Semantics(
+              selected: activeTool == ReaderTool.progress,
+              child: InkWell(
+                onTap: onProgress,
+                borderRadius: PaperfoldShape.frameRadius,
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(minHeight: 48),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.data_usage, size: 20),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            chapter.isEmpty ? l10n.bookshelfProgress : chapter,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        Text('${(percentage * 100).round()}%'),
+                        const Icon(Icons.chevron_right),
+                      ],
                     ),
-                    _Tab(
-                      icon: Icons.edit_outlined,
-                      label: l10n.notes,
-                      selected: activeTool == ReaderTool.notes,
-                      onPressed: onNotes,
-                    ),
-                    _Tab(
-                      icon: Icons.data_usage,
-                      label: l10n.bookshelfProgress,
-                      selected: activeTool == ReaderTool.progress,
-                      onPressed: onProgress,
-                    ),
-                    _Tab(
-                      icon: Icons.palette_outlined,
-                      label: l10n.readingPageStyle,
-                      selected: activeTool == ReaderTool.style,
-                      onPressed: onStyle,
-                    ),
-                  ],
+                  ),
                 ),
-            ],
-          ),
+              ),
+            ),
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final wrap =
+                    constraints.maxWidth < 360 ||
+                    media.textScaler.scale(12) > 18;
+                final width = constraints.maxWidth / (wrap ? 3 : 5);
+                return Wrap(
+                  children: [
+                    for (final tool in tools)
+                      SizedBox(
+                        width: width,
+                        child: _Tab(
+                          icon: tool.$1,
+                          label: tool.$2,
+                          selected: activeTool == tool.$3,
+                          onPressed: tool.$4,
+                        ),
+                      ),
+                  ],
+                );
+              },
+            ),
+          ],
         ),
       ),
     );
@@ -299,34 +379,45 @@ class _Tab extends StatelessWidget {
       context,
       PaperfoldMotion.shift,
     );
-    return Expanded(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 4),
-        child: Semantics(
-          selected: selected,
-          button: true,
-          label: label,
-          child: Tooltip(
-            message: label,
-            child: Material(
-              color: Colors.transparent,
-              child: InkWell(
-                onTap: onPressed,
-                borderRadius: PaperfoldShape.controlRadius,
-                child: AnimatedContainer(
-                  duration: duration,
-                  curve: ReaderChrome._curve,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    color: selected
-                        ? scheme.primaryContainer
-                        : Colors.transparent,
-                    borderRadius: PaperfoldShape.controlRadius,
-                  ),
-                  child: Icon(
-                    icon,
-                    size: 20,
-                    color: selected ? scheme.onPrimaryContainer : null,
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4),
+      child: Semantics(
+        selected: selected,
+        button: true,
+        label: label,
+        child: Tooltip(
+          message: label,
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: onPressed,
+              borderRadius: PaperfoldShape.controlRadius,
+              child: AnimatedContainer(
+                duration: duration,
+                curve: ReaderChrome._curve,
+                constraints: const BoxConstraints(minHeight: 48),
+                decoration: BoxDecoration(
+                  color: selected
+                      ? scheme.primaryContainer
+                      : Colors.transparent,
+                  borderRadius: PaperfoldShape.controlRadius,
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 4),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        icon,
+                        size: 20,
+                        color: selected ? scheme.onPrimaryContainer : null,
+                      ),
+                      Text(
+                        label,
+                        textAlign: TextAlign.center,
+                        style: Theme.of(context).textTheme.labelSmall,
+                      ),
+                    ],
                   ),
                 ),
               ),
@@ -337,3 +428,4 @@ class _Tab extends StatelessWidget {
     );
   }
 }
+
