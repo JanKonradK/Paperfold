@@ -213,8 +213,11 @@ class ShelfStageState extends State<ShelfStage>
           coverWidth / .68 +
           MediaQuery.textScalerOf(context).scale(14) * 3 +
           16;
+      // A shelf is about a third of the screen tall: 240 on a phone, up to
+      // 320 on a tablet, never taller than the space the stage has. Spines
+      // above 230 show their author and foil seal.
       final spineHeight = math.min(
-        192.0,
+        (MediaQuery.sizeOf(context).height * 0.3).clamp(240.0, 320.0),
         math.max(72.0, bounds.maxHeight - 52),
       );
       final spineRects = <Rect>[];
@@ -244,7 +247,17 @@ class ShelfStageState extends State<ShelfStage>
           x = 0;
           y += spineHeight + 16;
         }
-        spineRects.add(Rect.fromLTWH(x + 16, y, book.spineWidth, spineHeight));
+        // Books stand on the board: hardbacks full height, paperbacks a
+        // little shorter, a series at one shared height.
+        final bookHeight = spineHeight * book.spineHeightFactor;
+        spineRects.add(
+          Rect.fromLTWH(
+            x + 16,
+            y + spineHeight - bookHeight,
+            book.spineWidth,
+            bookHeight,
+          ),
+        );
         // Each group has its own grid origin, resolved below.
         coverRects.add(
           Rect.fromLTWH(
@@ -354,16 +367,14 @@ class ShelfStageState extends State<ShelfStage>
                           for (final bottom
                               in spineRects.map((r) => r.bottom).toSet())
                             Positioned(
-                              left: 16,
-                              right: 16,
+                              left: 8,
+                              right: 8,
                               top: bottom,
-                              height: 8,
+                              height: 12,
                               child: Opacity(
                                 opacity: 1 - t,
-                                child: ColoredBox(
-                                  color: Theme.of(context)
-                                      .colorScheme
-                                      .surfaceContainerHighest,
+                                child: _ShelfBoard(
+                                  scheme: Theme.of(context).colorScheme,
                                 ),
                               ),
                             ),
@@ -700,6 +711,37 @@ class _FlatCover extends StatelessWidget {
       child: ClipRRect(
         borderRadius: PaperfoldShape.objectRadius,
         child: BookCoverImage(path: book.coverPath, fallback: fallback),
+      ),
+    );
+  }
+}
+
+
+/// The board a row of books stands on: a lit front edge and a soft shadow.
+class _ShelfBoard extends StatelessWidget {
+  const _ShelfBoard({required this.scheme});
+  final ColorScheme scheme;
+
+  @override
+  Widget build(BuildContext context) {
+    final light = scheme.brightness == Brightness.light;
+    return DecoratedBox(
+      key: const ValueKey('shelf-board'),
+      decoration: BoxDecoration(
+        color: scheme.surfaceContainerHighest,
+        borderRadius: const BorderRadius.vertical(
+          bottom: Radius.circular(PaperfoldShape.object),
+        ),
+        border: Border(
+          top: BorderSide(color: scheme.primary.withValues(alpha: 0.45)),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: scheme.shadow.withValues(alpha: light ? 0.12 : 0.32),
+            offset: const Offset(0, 6),
+            blurRadius: 9,
+          ),
+        ],
       ),
     );
   }

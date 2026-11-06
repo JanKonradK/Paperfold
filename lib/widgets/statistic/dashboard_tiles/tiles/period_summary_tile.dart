@@ -15,59 +15,59 @@ class PeriodSummaryTile extends StatisticsDashboardTileBase {
 
   @override
   get metadata => StatisticsDashboardTileMetadata(
-        type: StatisticsDashboardTileType.periodSummary,
-        title: l10nLocal.tilePeriodSummaryTitle,
-        description: l10nLocal.tilePeriodSummaryDescription,
-        columnSpan: 2,
-        rowSpan: 1,
-        icon: Icons.bar_chart_rounded,
-      );
+    type: StatisticsDashboardTileType.periodSummary,
+    title: l10nLocal.tilePeriodSummaryTitle,
+    description: l10nLocal.tilePeriodSummaryDescription,
+    columnSpan: 2,
+    rowSpan: 1,
+    icon: Icons.bar_chart_rounded,
+  );
 
   @override
-  Widget buildContent(
-    BuildContext context,
-    WidgetRef ref,
-  ) {
+  Widget buildContent(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
 
     return AsyncSkeletonWrapper(
-        onRetry: () async {
-          ref.invalidate(statisticDataProvider);
-          ref.invalidate(totalReadingTimeProvider);
-        },
-        asyncValue: combineAsyncValues([
-          ref.watch(statisticDataProvider),
-          ref.watch(totalReadingTimeProvider),
-        ]),
-        mock: [
-          StatisticDataModel.mock(),
-          1,
-        ],
-        builder: (data, _) {
-          final statisticData = data[0] as StatisticDataModel;
-          final totalSeconds = data[1] as int;
+      onRetry: () async {
+        ref.invalidate(statisticDataProvider);
+        ref.invalidate(totalReadingTimeProvider);
+      },
+      asyncValue: combineAsyncValues([
+        ref.watch(statisticDataProvider),
+        ref.watch(totalReadingTimeProvider),
+      ]),
+      mock: [StatisticDataModel.mock(), 1],
+      builder: (data, _) {
+        final statisticData = data[0] as StatisticDataModel;
+        final totalSeconds = data[1] as int;
 
-          final periodSeconds = statisticData.mode == ChartMode.heatmap
-              ? totalSeconds
-              : statisticData.readingTime
-                  .fold<int>(0, (sum, seconds) => sum + seconds);
-          final formatted = convertSeconds(periodSeconds);
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(formatted, style: theme.textTheme.headlineSmall),
-              Text(
-                  '${(periodSeconds / totalSeconds * 100).toStringAsFixed(1)}%',
-                  style: theme.textTheme.labelMedium),
-              const Spacer(),
-              LinearProgressIndicator(
-                value: periodSeconds == 0
-                    ? 0
-                    : (periodSeconds / totalSeconds).clamp(0, 1).toDouble(),
-                minHeight: 6,
-              ),
-            ],
-          );
-        });
+        final periodSeconds = statisticData.mode == ChartMode.heatmap
+            ? totalSeconds
+            : statisticData.readingTime.fold<int>(
+                0,
+                (sum, seconds) => sum + seconds,
+              );
+        final formatted = convertSeconds(periodSeconds);
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(formatted, style: theme.textTheme.headlineSmall),
+            Text(
+              totalSeconds <= 0
+                  ? '0%'
+                  : '${(periodSeconds / totalSeconds * 100).toStringAsFixed(1)}%',
+              style: theme.textTheme.labelMedium,
+            ),
+            const Spacer(),
+            LinearProgressIndicator(
+              value: periodSeconds == 0
+                  ? 0
+                  : (periodSeconds / totalSeconds).clamp(0, 1).toDouble(),
+              minHeight: 6,
+            ),
+          ],
+        );
+      },
+    );
   }
 }

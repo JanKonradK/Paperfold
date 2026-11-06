@@ -10,6 +10,7 @@ import 'package:paperfold/l10n/generated/L10n.dart';
 import 'package:paperfold/models/book.dart';
 import 'package:paperfold/models/journal_page.dart';
 import 'package:paperfold/service/journal/entry_draft.dart';
+import 'package:paperfold/widgets/common/paperfold_pane.dart';
 
 Future<void> showFacingPage(
   BuildContext context, {
@@ -19,48 +20,92 @@ Future<void> showFacingPage(
   int? page,
   String? label,
   Future<void> Function(JournalPage)? onOpenEntry,
-}) => showGeneralDialog<void>(
-  context: context,
-  barrierDismissible: true,
-  barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
-  barrierColor: Colors.transparent,
-  transitionDuration: paperfoldTransitionDuration(
-    context,
-    PaperfoldMotion.move,
-  ),
-  pageBuilder: (_, _, _) => Align(
-    alignment: Alignment.bottomCenter,
-    child: Material(
-      color: Theme.of(context).colorScheme.surface,
-      shape: PaperfoldShape.sheetShape,
-      clipBehavior: Clip.antiAlias,
-      child: FacingPage(
+}) {
+  // On a wide screen the journal opens as a real facing page: a column
+  // beside the book, like the right-hand page of an open spread. On a
+  // phone it rises from the foot of the screen.
+  final docked = MediaQuery.sizeOf(context).width >= 840;
+  return showGeneralDialog<void>(
+    context: context,
+    barrierDismissible: true,
+    barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
+    barrierColor: Colors.transparent,
+    transitionDuration: paperfoldTransitionDuration(
+      context,
+      PaperfoldMotion.move,
+    ),
+    pageBuilder: (_, _, _) {
+      final page0 = FacingPage(
         book: book,
         locator: locator,
         progress: progress,
         page: page,
         label: label,
         onOpenEntry: onOpenEntry,
-      ),
-    ),
-  ),
-  transitionBuilder: (context, animation, secondary, child) {
-    final reduced = !PaperfoldVisualPolicy.motionAllowed(context);
-    final t = CurvedAnimation(parent: animation, curve: PaperfoldMotion.settle);
-    return FadeTransition(
-      opacity: reduced
-          ? animation
-          : CurvedAnimation(parent: animation, curve: const Interval(0, 0.4)),
-      child: SlideTransition(
-        position: Tween(
-          begin: reduced ? Offset.zero : const Offset(0, 1),
-          end: Offset.zero,
-        ).animate(t),
-        child: child,
-      ),
-    );
-  },
-);
+        docked: docked,
+      );
+      if (!docked) {
+        return Align(
+          alignment: Alignment.bottomCenter,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 640),
+            child: Material(
+              color: Theme.of(context).colorScheme.surface,
+              shape: PaperfoldShape.sheetShape,
+              clipBehavior: Clip.antiAlias,
+              child: page0,
+            ),
+          ),
+        );
+      }
+      final width = MediaQuery.sizeOf(context).width;
+      return Align(
+        alignment: AlignmentDirectional.centerEnd,
+        child: SizedBox(
+          width: (width * 0.42).clamp(360.0, 520.0),
+          child: Material(
+            color: Theme.of(context).colorScheme.surface,
+            elevation: 6,
+            shadowColor: Theme.of(context).colorScheme.shadow,
+            shape: const RoundedRectangleBorder(
+              borderRadius: BorderRadiusDirectional.horizontal(
+                start: Radius.circular(PaperfoldShape.frame),
+              ),
+            ),
+            clipBehavior: Clip.antiAlias,
+            child: page0,
+          ),
+        ),
+      );
+    },
+    transitionBuilder: (context, animation, secondary, child) {
+      final reduced = !PaperfoldVisualPolicy.motionAllowed(context);
+      final t = CurvedAnimation(
+        parent: animation,
+        curve: PaperfoldMotion.settle,
+      );
+      return FadeTransition(
+        opacity: reduced
+            ? animation
+            : CurvedAnimation(parent: animation, curve: const Interval(0, 0.4)),
+        child: SlideTransition(
+          position: Tween(
+            begin: reduced
+                ? Offset.zero
+                : docked
+                ? Offset(
+                    Directionality.of(context) == TextDirection.rtl ? -1 : 1,
+                    0,
+                  )
+                : const Offset(0, 1),
+            end: Offset.zero,
+          ).animate(t),
+          child: child,
+        ),
+      );
+    },
+  );
+}
 
 /// Location is an immutable opening snapshot, never the reader's live state.
 class FacingPage extends StatefulWidget {
@@ -74,7 +119,11 @@ class FacingPage extends StatefulWidget {
     this.dao,
     this.draft,
     this.onOpenEntry,
+    this.docked = false,
   });
+
+  /// True when the page stands beside the book on a wide screen.
+  final bool docked;
   final Book book;
   final String? locator;
   final double? progress;
@@ -209,9 +258,11 @@ class _FacingPageState extends State<FacingPage> {
       child: Padding(
         padding: EdgeInsets.only(bottom: media.viewInsets.bottom),
         child: SizedBox(
-          height: (available - 120).clamp(180, media.size.height * 0.65),
+          height: widget.docked
+              ? null
+              : (available - 120).clamp(180, media.size.height * 0.65),
           child: SafeArea(
-            top: false,
+            top: widget.docked,
             child: Padding(
               padding: const EdgeInsets.all(PaperfoldSpace.sheetGutter),
               child: Column(
@@ -239,41 +290,46 @@ class _FacingPageState extends State<FacingPage> {
                         for (final entry in _entries)
                           Padding(
                             padding: const EdgeInsets.symmetric(
-                              vertical: PaperfoldSpace.xs,
+                              vertical: PaperfoldSpace.xxs,
                             ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                if (entry.sourceExcerpt?.isNotEmpty ?? false)
-                                  Text(
-                                    entry.sourceExcerpt!,
-                                    style: const TextStyle(
-                                      fontFamily: 'Philosopher',
-                                      fontSize: 17,
-                                      height: 24 / 17,
+                            child: PaperfoldPane(
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .surfaceContainerLow,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  if (entry.sourceExcerpt?.isNotEmpty ?? false)
+                                    Text(
+                                      entry.sourceExcerpt!,
+                                      style: const TextStyle(
+                                        fontFamily: 'Philosopher',
+                                        fontSize: 17,
+                                        height: 24 / 17,
+                                      ),
                                     ),
-                                  ),
-                                if (entry.body.isNotEmpty) Text(entry.body),
-                                if (entry.photoPath != null)
-                                  JournalPhoto(path: entry.photoPath!),
-                                if (entry.hasSource &&
-                                    widget.onOpenEntry != null)
-                                  TextButton.icon(
-                                    icon: const Icon(
-                                      Icons.menu_book_outlined,
-                                      size: PaperfoldSize.smallIcon,
+                                  if (entry.body.isNotEmpty) Text(entry.body),
+                                  if (entry.photoPath != null)
+                                    JournalPhoto(path: entry.photoPath!),
+                                  if (entry.hasSource &&
+                                      widget.onOpenEntry != null)
+                                    TextButton.icon(
+                                      icon: const Icon(
+                                        Icons.menu_book_outlined,
+                                        size: PaperfoldSize.smallIcon,
+                                      ),
+                                      label: Text(
+                                        entry.sourceLabel ??
+                                            entry.sourceChapter ??
+                                            l.journalOpenPassage,
+                                      ),
+                                      onPressed: () async {
+                                        Navigator.of(context).pop();
+                                        await widget.onOpenEntry!(entry);
+                                      },
                                     ),
-                                    label: Text(
-                                      entry.sourceLabel ??
-                                          entry.sourceChapter ??
-                                          l.journalOpenPassage,
-                                    ),
-                                    onPressed: () async {
-                                      Navigator.of(context).pop();
-                                      await widget.onOpenEntry!(entry);
-                                    },
-                                  ),
-                              ],
+                                ],
+                              ),
                             ),
                           ),
                         if (!_later)

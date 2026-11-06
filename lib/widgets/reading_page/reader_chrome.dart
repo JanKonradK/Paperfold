@@ -72,18 +72,13 @@ class ReaderChrome extends StatelessWidget {
           ignoring: !visible,
           child: Stack(
             children: [
+              // A tap on the page hides the bars. The page itself is not
+              // dimmed: the bars float over it, so the reader keeps the
+              // passage in view.
               Positioned.fill(
-                child: AnimatedOpacity(
-                  opacity: visible ? 1 : 0,
-                  duration: duration,
-                  curve: _curve,
-                  child: GestureDetector(
-                    onTap: onDismiss,
-                    behavior: HitTestBehavior.opaque,
-                    child: ColoredBox(
-                      color: Colors.black.withValues(alpha: 0.32),
-                    ),
-                  ),
+                child: GestureDetector(
+                  onTap: onDismiss,
+                  behavior: HitTestBehavior.opaque,
                 ),
               ),
               Align(

@@ -186,10 +186,18 @@ class ThemeShelfPreview extends StatelessWidget {
                               ),
                             ),
                             const SizedBox(height: PaperfoldSpace.xs),
-                            Text(
-                              choice.$2,
-                              style: Theme.of(context).textTheme.labelLarge
-                                  ?.copyWith(color: choice.$3.onSurface),
+                            // One line: a narrow swatch shrinks the name
+                            // rather than breaking it mid-word.
+                            FittedBox(
+                              fit: BoxFit.scaleDown,
+                              alignment: AlignmentDirectional.centerStart,
+                              child: Text(
+                                choice.$2,
+                                maxLines: 1,
+                                softWrap: false,
+                                style: Theme.of(context).textTheme.labelLarge
+                                    ?.copyWith(color: choice.$3.onSurface),
+                              ),
                             ),
                             if ((prefs.eInkMode
                                     ? 'light'

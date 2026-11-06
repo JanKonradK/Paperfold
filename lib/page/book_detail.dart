@@ -104,10 +104,12 @@ class _BookDetailState extends ConsumerState<BookDetail> {
         : percent > 0
         ? l10n.tileContinueReadingTitle
         : l10n.bookStartReading;
+    // A larger book in the case on a tablet; the same proportions.
+    final wide = MediaQuery.sizeOf(context).width >= 600;
     final cover = BookCover(
       book: _book,
-      width: 144,
-      height: 208,
+      width: wide ? 200 : 144,
+      height: wide ? 289 : 208,
       radius: PaperfoldShape.object,
     );
     Widget buildBookBaseDetail(double width) => Column(
@@ -163,6 +165,7 @@ class _BookDetailState extends ConsumerState<BookDetail> {
               const SizedBox(height: PaperfoldSpace.md),
               if (!widget.wishlist)
                 PaperfoldPane(
+                  tier: PaperfoldGlassTier.glassine,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -193,27 +196,30 @@ class _BookDetailState extends ConsumerState<BookDetail> {
                 ),
               const SizedBox(height: PaperfoldSpace.sm),
               if (!widget.wishlist)
-                Wrap(
-                  spacing: PaperfoldSpace.xs,
-                  runSpacing: PaperfoldSpace.xs,
+                Row(
                   children: [
-                    FilledButton.tonalIcon(
-                      onPressed: () => Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => BookJournalPage(book: _book),
+                    Expanded(
+                      child: FilledButton.tonalIcon(
+                        onPressed: () => Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => BookJournalPage(book: _book),
+                          ),
                         ),
+                        icon: const Icon(Icons.edit_note),
+                        label: Text(l10n.navJournal),
                       ),
-                      icon: const Icon(Icons.edit_note),
-                      label: Text(l10n.navJournal),
                     ),
-                    FilledButton.tonalIcon(
-                      onPressed: () => showShelfBookShelvesSheet(
-                        context,
-                        _book,
-                        onChanged: () async {},
+                    const SizedBox(width: PaperfoldSpace.xs),
+                    Expanded(
+                      child: FilledButton.tonalIcon(
+                        onPressed: () => showShelfBookShelvesSheet(
+                          context,
+                          _book,
+                          onChanged: () async {},
+                        ),
+                        icon: const Icon(Icons.library_books_outlined),
+                        label: Text(l10n.shelfBookOptionShelves),
                       ),
-                      icon: const Icon(Icons.library_books_outlined),
-                      label: Text(l10n.shelfBookOptionShelves),
                     ),
                   ],
                 ),
@@ -890,18 +896,26 @@ class _BookDetailState extends ConsumerState<BookDetail> {
           : SafeArea(
               child: Padding(
                 padding: const EdgeInsets.all(PaperfoldSpace.gutter),
-                child: FilledButton.icon(
-                  key: const ValueKey('open-shelf-book'),
-                  style: FilledButton.styleFrom(
-                    minimumSize: const Size.fromHeight(PaperfoldSize.primary),
+                child: Center(
+                  heightFactor: 1,
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 600),
+                    child: FilledButton.icon(
+                      key: const ValueKey('open-shelf-book'),
+                      style: FilledButton.styleFrom(
+                        minimumSize: const Size.fromHeight(
+                          PaperfoldSize.primary,
+                        ),
+                      ),
+                      onPressed: () => pushToReadingPage(ref, context, _book),
+                      icon: Icon(
+                        _book.isPhysical
+                            ? Icons.edit_note
+                            : Icons.menu_book_outlined,
+                      ),
+                      label: Text(primaryLabel),
+                    ),
                   ),
-                  onPressed: () => pushToReadingPage(ref, context, _book),
-                  icon: Icon(
-                    _book.isPhysical
-                        ? Icons.edit_note
-                        : Icons.menu_book_outlined,
-                  ),
-                  label: Text(primaryLabel),
                 ),
               ),
             ),
