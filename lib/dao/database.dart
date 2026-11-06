@@ -15,7 +15,7 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 export 'package:paperfold/enums/book_status.dart';
 
 // Current app database version
-const int currentDbVersion = 11;
+const int currentDbVersion = 12;
 
 const createBookSQL = '''
 CREATE TABLE tb_books (
@@ -142,6 +142,12 @@ CREATE TABLE IF NOT EXISTS tb_journal (
   source_cfi TEXT,
   source_excerpt TEXT,
   source_chapter TEXT,
+  entry_kind TEXT NOT NULL DEFAULT 'note',
+  source_locator TEXT,
+  source_progress REAL,
+  source_page INTEGER,
+  source_label TEXT,
+  photo_path TEXT,
   create_time TEXT,
   update_time TEXT,
   FOREIGN KEY (book_id) REFERENCES tb_books(id)
@@ -250,7 +256,8 @@ CREATE TABLE IF NOT EXISTS tb_shelf_books (
 /// lets code identify the built-in shelf without its translated display name.
 const builtInFavouritesShelfId = -1;
 
-const seedBuiltInFavouritesShelfSQL = '''
+const seedBuiltInFavouritesShelfSQL =
+    '''
 INSERT OR IGNORE INTO tb_shelves (
   id, name, sort_order, create_time, update_time
 ) VALUES (
@@ -498,7 +505,8 @@ class DBHelper {
           if (writeVersion == 2 || readVersion == 2) {
             needsPatch = true;
             AnxLog.info(
-                'Database: Detected WAL mode in header (v$writeVersion/v$readVersion), patching to Legacy mode');
+              'Database: Detected WAL mode in header (v$writeVersion/v$readVersion), patching to Legacy mode',
+            );
           }
         }
       } finally {
@@ -542,7 +550,10 @@ class DBHelper {
   }
 
   Future<void> onUpgradeDatabase(
-      Database db, int oldVersion, int newVersion) async {
+    Database db,
+    int oldVersion,
+    int newVersion,
+  ) async {
     AnxLog.info('Database: upgrade database from $oldVersion to $newVersion');
     switch (oldVersion) {
       case 0:
@@ -567,25 +578,33 @@ class DBHelper {
         // Renaming it would make this statement match nothing, and the paths
         // it exists to repair would stay broken.
         await db.execute(
-            "UPDATE tb_books SET file_path = REPLACE(file_path, '/data/user/0/com.anxcye.anx_reader/app_flutter/', '')");
+          "UPDATE tb_books SET file_path = REPLACE(file_path, '/data/user/0/com.anxcye.anx_reader/app_flutter/', '')",
+        );
         await db.execute(
-            "UPDATE tb_books SET cover_path = REPLACE(cover_path, '/data/user/0/com.anxcye.anx_reader/app_flutter/', '')");
+          "UPDATE tb_books SET cover_path = REPLACE(cover_path, '/data/user/0/com.anxcye.anx_reader/app_flutter/', '')",
+        );
         continue case2;
       case2:
       case 2:
         // replave ' ' with '_' in db and cut file name to 25
         await db.execute(
-            "UPDATE tb_books SET file_path = REPLACE(file_path, ' ', '_')");
+          "UPDATE tb_books SET file_path = REPLACE(file_path, ' ', '_')",
+        );
         await db.execute(
-            "UPDATE tb_books SET cover_path = REPLACE(cover_path, ' ', '_')");
+          "UPDATE tb_books SET cover_path = REPLACE(cover_path, ' ', '_')",
+        );
         await db.execute(
-            "UPDATE tb_books SET file_path = SUBSTR(file_path, 0, 25)");
+          "UPDATE tb_books SET file_path = SUBSTR(file_path, 0, 25)",
+        );
         await db.execute(
-            "UPDATE tb_books SET cover_path = SUBSTR(cover_path, 0, 25)");
-        await db
-            .execute("UPDATE tb_books SET file_path = file_path || '.epub'");
-        await db
-            .execute("UPDATE tb_books SET cover_path = cover_path || '.png'");
+          "UPDATE tb_books SET cover_path = SUBSTR(cover_path, 0, 25)",
+        );
+        await db.execute(
+          "UPDATE tb_books SET file_path = file_path || '.epub'",
+        );
+        await db.execute(
+          "UPDATE tb_books SET cover_path = cover_path || '.png'",
+        );
 
         final basePath = getBasePath('');
         final fileDir = Directory('$basePath/file');
@@ -599,8 +618,9 @@ class DBHelper {
             if (element is File) {
               final path = element.path;
               String pathAfterReplace = path.replaceAll(' ', '_');
-              int endIndex =
-                  (pathAfterReplace.length < 72) ? pathAfterReplace.length : 72;
+              int endIndex = (pathAfterReplace.length < 72)
+                  ? pathAfterReplace.length
+                  : 72;
               final newPath = '${pathAfterReplace.substring(0, endIndex)}.epub';
               element.rename(newPath);
             }
@@ -611,8 +631,9 @@ class DBHelper {
             if (element is File) {
               final path = element.path;
               String pathAfterReplace = path.replaceAll(' ', '_');
-              int endIndex =
-                  (pathAfterReplace.length < 72) ? pathAfterReplace.length : 72;
+              int endIndex = (pathAfterReplace.length < 72)
+                  ? pathAfterReplace.length
+                  : 72;
               final newPath = '${pathAfterReplace.substring(0, endIndex)}.png';
               element.rename(newPath);
             }
@@ -646,7 +667,8 @@ class DBHelper {
 
         // Insert root group
         await db.execute(
-            "INSERT INTO tb_groups (id, name, parent_id, create_time, update_time) VALUES (0, 'Root', NULL, datetime('now'), datetime('now'))");
+          "INSERT INTO tb_groups (id, name, parent_id, create_time, update_time) VALUES (0, 'Root', NULL, datetime('now'), datetime('now'))",
+        );
 
         // Get all unique group_ids from books
         final List<Map<String, dynamic>> uniqueGroups = await db.rawQuery('''
@@ -658,10 +680,13 @@ class DBHelper {
         // Create groups for existing group_ids
         for (var i = 0; i < uniqueGroups.length; i++) {
           final groupId = uniqueGroups[i]['group_id'];
-          await db.execute('''
+          await db.execute(
+            '''
             INSERT INTO tb_groups (id, name, parent_id, create_time, update_time)
             VALUES (?, '...', 0, datetime('now'), datetime('now'))
-          ''', [groupId]);
+          ''',
+            [groupId],
+          );
         }
         continue case7;
       case7:
@@ -681,18 +706,22 @@ class DBHelper {
         // tb_books had no reading status. Without one the to-be-read list
         // cannot work. plan.md Section 3.2.
         await db.execute(
-            "ALTER TABLE tb_books ADD COLUMN status TEXT DEFAULT '$bookStatusNotStarted'");
+          "ALTER TABLE tb_books ADD COLUMN status TEXT DEFAULT '$bookStatusNotStarted'",
+        );
         await db.execute('ALTER TABLE tb_books ADD COLUMN started_on TEXT');
         await db.execute('ALTER TABLE tb_books ADD COLUMN finished_on TEXT');
 
         // Existing books already carry reading_percentage, so derive the
         // status from it rather than marking a half-read library as unread.
         await db.execute(
-            "UPDATE tb_books SET status = '$bookStatusNotStarted' WHERE status IS NULL");
+          "UPDATE tb_books SET status = '$bookStatusNotStarted' WHERE status IS NULL",
+        );
         await db.execute(
-            "UPDATE tb_books SET status = '$bookStatusReading' WHERE reading_percentage > 0 AND reading_percentage < 1");
+          "UPDATE tb_books SET status = '$bookStatusReading' WHERE reading_percentage > 0 AND reading_percentage < 1",
+        );
         await db.execute(
-            "UPDATE tb_books SET status = '$bookStatusFinished' WHERE reading_percentage >= 1");
+          "UPDATE tb_books SET status = '$bookStatusFinished' WHERE reading_percentage >= 1",
+        );
         if (newVersion >= 9) {
           continue case8;
         }
@@ -734,6 +763,25 @@ class DBHelper {
         await db.execute(
           'ALTER TABLE tb_books ADD COLUMN current_page INTEGER DEFAULT 0',
         );
+      }
+    }
+
+    if (oldVersion < 12 && newVersion >= 12) {
+      final columns = await db.rawQuery('PRAGMA table_info(tb_journal)');
+      final names = columns.map((column) => column['name']).toSet();
+      for (final column in {
+        'entry_kind': "TEXT NOT NULL DEFAULT 'note'",
+        'source_locator': 'TEXT',
+        'source_progress': 'REAL',
+        'source_page': 'INTEGER',
+        'source_label': 'TEXT',
+        'photo_path': 'TEXT',
+      }.entries) {
+        if (!names.contains(column.key)) {
+          await db.execute(
+            'ALTER TABLE tb_journal ADD COLUMN ${column.key} ${column.value}',
+          );
+        }
       }
     }
 

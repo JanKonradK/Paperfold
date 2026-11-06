@@ -1115,5 +1115,22 @@
   "captureNote": "Notiz",
   "captureQuote": "Zitat",
   "widgetContinueDescription": "Aktuelles Buch weiterlesen oder Seiten erfassen.",
-  "widgetCaptureDescription": "Notiz, Zitat oder Lesefortschritt speichern."
+  "widgetCaptureDescription": "Notiz, Zitat oder Lesefortschritt speichern.",
+  "newEntry": "Neuer Eintrag",
+  "recentEntries": "Letzte Einträge",
+  "entryNote": "Notiz",
+  "entryQuote": "Zitat",
+  "entryPhoto": "Foto der Seite",
+  "entryUnassigned": "Ohne Buch",
+  "facingPage": "Gegenüberliegende Seite",
+  "showLaterEntries": "Spätere Einträge anzeigen",
+  "pagesToday": "{count} Seiten heute",
+  "entryLocation": "Seite / Kapitel",
+  "@pagesToday": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

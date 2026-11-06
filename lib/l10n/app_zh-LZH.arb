@@ -897,5 +897,22 @@
   "captureNote": "札記",
   "captureQuote": "摘句",
   "widgetContinueDescription": "續讀今書，或記所讀頁。",
-  "widgetCaptureDescription": "存札記、摘句，或讀書進度。"
+  "widgetCaptureDescription": "存札記、摘句，或讀書進度。",
+  "newEntry": "新增札記",
+  "recentEntries": "近記",
+  "entryNote": "札記",
+  "entryQuote": "摘句",
+  "entryPhoto": "書頁攝影",
+  "entryUnassigned": "無書",
+  "facingPage": "對頁",
+  "showLaterEntries": "示後記",
+  "pagesToday": "今日讀 {count} 頁",
+  "entryLocation": "頁 / 章",
+  "@pagesToday": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

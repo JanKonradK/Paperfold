@@ -1122,5 +1122,22 @@
   "captureNote": "Note",
   "captureQuote": "Quote",
   "widgetContinueDescription": "Continue your current book or log pages.",
-  "widgetCaptureDescription": "Save a note, a quote, or reading progress."
+  "widgetCaptureDescription": "Save a note, a quote, or reading progress.",
+  "newEntry": "New entry",
+  "recentEntries": "Recent entries",
+  "entryNote": "Note",
+  "entryQuote": "Quote",
+  "entryPhoto": "Photo of the page",
+  "entryUnassigned": "No book",
+  "facingPage": "Facing page",
+  "showLaterEntries": "Show later entries",
+  "pagesToday": "{count} pages today",
+  "entryLocation": "Page / chapter",
+  "@pagesToday": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

@@ -33,6 +33,22 @@ void main() {
 
   tearDown(() async => db.close());
 
+  test('recent entries page by entry, including unassigned photos', () async {
+    await dao.saveEntry(const JournalPage(bookId: 0, pageIndex: 0, photoPath: 'journal_photos/a.jpg', entryKind: 'photo'));
+    await dao.saveEntry(const JournalPage(bookId: 7, pageIndex: 0, body: 'newest'));
+    expect((await dao.recentEntries(limit: 1)).single.body, 'newest');
+    expect((await dao.recentEntries(offset: 1)).single.photoPath, 'journal_photos/a.jpg');
+  });
+
+  test('facing page orders numeric progress and keeps legacy writing', () async {
+    for (final value in [0.9, 0.2, 0.11]) {
+      await dao.saveEntry(JournalPage(bookId: 7, pageIndex: 0, body: '$value', sourceLocator: 'epubcfi($value)', sourceProgress: value));
+    }
+    await dao.saveEntry(const JournalPage(bookId: 7, pageIndex: 0, body: 'legacy'));
+    expect((await dao.entriesAt(7, progress: 0.3)).map((p) => p.body), ['legacy', '0.11', '0.2']);
+    expect((await dao.entriesAt(7, progress: 0.3, includeLater: true)).length, 4);
+  });
+
   test('a book with no review opens on a blank sheet', () async {
     expect(await dao.findReview(7), isNull);
 

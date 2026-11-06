@@ -897,5 +897,22 @@
   "captureNote": "ملاحظة",
   "captureQuote": "اقتباس",
   "widgetContinueDescription": "تابع كتابك الحالي أو سجّل الصفحات.",
-  "widgetCaptureDescription": "احفظ ملاحظة أو اقتباسًا أو تقدّم القراءة."
+  "widgetCaptureDescription": "احفظ ملاحظة أو اقتباسًا أو تقدّم القراءة.",
+  "newEntry": "إدخال جديد",
+  "recentEntries": "الإدخالات الأخيرة",
+  "entryNote": "ملاحظة",
+  "entryQuote": "اقتباس",
+  "entryPhoto": "صورة الصفحة",
+  "entryUnassigned": "بلا كتاب",
+  "facingPage": "الصفحة المقابلة",
+  "showLaterEntries": "عرض الإدخالات اللاحقة",
+  "pagesToday": "{count} صفحات اليوم",
+  "entryLocation": "الصفحة / الفصل",
+  "@pagesToday": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

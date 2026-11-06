@@ -1115,5 +1115,22 @@
   "captureNote": "Notă",
   "captureQuote": "Citat",
   "widgetContinueDescription": "Continuă cartea curentă sau înregistrează pagini.",
-  "widgetCaptureDescription": "Salvează o notă, un citat sau progresul lecturii."
+  "widgetCaptureDescription": "Salvează o notă, un citat sau progresul lecturii.",
+  "newEntry": "Înregistrare nouă",
+  "recentEntries": "Înregistrări recente",
+  "entryNote": "Notă",
+  "entryQuote": "Citat",
+  "entryPhoto": "Fotografia paginii",
+  "entryUnassigned": "Fără carte",
+  "facingPage": "Pagina alăturată",
+  "showLaterEntries": "Arată înregistrările ulterioare",
+  "pagesToday": "{count} pagini astăzi",
+  "entryLocation": "Pagină / capitol",
+  "@pagesToday": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

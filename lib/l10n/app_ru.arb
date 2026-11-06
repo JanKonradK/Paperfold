@@ -1115,5 +1115,22 @@
   "captureNote": "Заметка",
   "captureQuote": "Цитата",
   "widgetContinueDescription": "Продолжите текущую книгу или запишите страницы.",
-  "widgetCaptureDescription": "Сохраните заметку, цитату или прогресс чтения."
+  "widgetCaptureDescription": "Сохраните заметку, цитату или прогресс чтения.",
+  "newEntry": "Новая запись",
+  "recentEntries": "Последние записи",
+  "entryNote": "Заметка",
+  "entryQuote": "Цитата",
+  "entryPhoto": "Фото страницы",
+  "entryUnassigned": "Без книги",
+  "facingPage": "Соседняя страница",
+  "showLaterEntries": "Показать последующие записи",
+  "pagesToday": "{count} страниц сегодня",
+  "entryLocation": "Страница / глава",
+  "@pagesToday": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

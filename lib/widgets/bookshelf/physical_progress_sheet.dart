@@ -40,6 +40,9 @@ void applyPhysicalProgress(
   }
 }
 
+bool validPhysicalProgress(int page, int? total) =>
+    page >= 0 && (total == null || (total > 0 && page <= total));
+
 /// Asks for the current page of a paper book and saves it.
 ///
 /// Returns true when the progress was saved.
@@ -87,7 +90,7 @@ class _PhysicalProgressSheetState extends State<_PhysicalProgressSheet> {
     final total = totalText.isEmpty ? null : int.tryParse(totalText);
     final knownTotal = total ?? widget.book.totalPages;
     if (page == null ||
-        page < 0 ||
+        !validPhysicalProgress(page, knownTotal) ||
         (totalText.isNotEmpty && (total == null || total < 1)) ||
         (knownTotal != null && page > knownTotal)) {
       setState(() => _invalid = true);

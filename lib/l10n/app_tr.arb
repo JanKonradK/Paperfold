@@ -1115,5 +1115,22 @@
   "captureNote": "Not",
   "captureQuote": "Alıntı",
   "widgetContinueDescription": "Geçerli kitabı okumaya devam edin veya sayfaları kaydedin.",
-  "widgetCaptureDescription": "Not, alıntı veya okuma ilerlemesini kaydedin."
+  "widgetCaptureDescription": "Not, alıntı veya okuma ilerlemesini kaydedin.",
+  "newEntry": "Yeni kayıt",
+  "recentEntries": "Son kayıtlar",
+  "entryNote": "Not",
+  "entryQuote": "Alıntı",
+  "entryPhoto": "Sayfanın fotoğrafı",
+  "entryUnassigned": "Kitap yok",
+  "facingPage": "Karşı sayfa",
+  "showLaterEntries": "Sonraki kayıtları göster",
+  "pagesToday": "Bugün {count} sayfa",
+  "entryLocation": "Sayfa / bölüm",
+  "@pagesToday": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

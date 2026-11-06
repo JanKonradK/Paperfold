@@ -897,5 +897,22 @@
   "captureNote": "筆記",
   "captureQuote": "摘錄",
   "widgetContinueDescription": "繼續閱讀目前的書籍或記錄頁數。",
-  "widgetCaptureDescription": "儲存筆記、摘錄或閱讀進度。"
+  "widgetCaptureDescription": "儲存筆記、摘錄或閱讀進度。",
+  "newEntry": "新增記錄",
+  "recentEntries": "最近記錄",
+  "entryNote": "筆記",
+  "entryQuote": "摘錄",
+  "entryPhoto": "書頁照片",
+  "entryUnassigned": "不關聯書籍",
+  "facingPage": "對頁",
+  "showLaterEntries": "顯示後續記錄",
+  "pagesToday": "今日閱讀 {count} 頁",
+  "entryLocation": "頁碼 / 章節",
+  "@pagesToday": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

@@ -897,5 +897,22 @@
   "captureNote": "메모",
   "captureQuote": "인용",
   "widgetContinueDescription": "현재 책을 계속 읽거나 페이지를 기록합니다.",
-  "widgetCaptureDescription": "메모, 인용 또는 독서 진행 상황을 저장합니다."
+  "widgetCaptureDescription": "메모, 인용 또는 독서 진행 상황을 저장합니다.",
+  "newEntry": "새 기록",
+  "recentEntries": "최근 기록",
+  "entryNote": "메모",
+  "entryQuote": "인용",
+  "entryPhoto": "페이지 사진",
+  "entryUnassigned": "책 없음",
+  "facingPage": "맞은편 페이지",
+  "showLaterEntries": "이후 기록 표시",
+  "pagesToday": "오늘 {count}쪽",
+  "entryLocation": "쪽 / 장",
+  "@pagesToday": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

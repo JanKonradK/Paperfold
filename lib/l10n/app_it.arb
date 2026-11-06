@@ -1115,5 +1115,22 @@
   "captureNote": "Nota",
   "captureQuote": "Citazione",
   "widgetContinueDescription": "Continua il libro attuale o registra le pagine.",
-  "widgetCaptureDescription": "Salva una nota, una citazione o i progressi."
+  "widgetCaptureDescription": "Salva una nota, una citazione o i progressi.",
+  "newEntry": "Nuova voce",
+  "recentEntries": "Voci recenti",
+  "entryNote": "Nota",
+  "entryQuote": "Citazione",
+  "entryPhoto": "Foto della pagina",
+  "entryUnassigned": "Nessun libro",
+  "facingPage": "Pagina a fronte",
+  "showLaterEntries": "Mostra voci successive",
+  "pagesToday": "{count} pagine oggi",
+  "entryLocation": "Pagina / capitolo",
+  "@pagesToday": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

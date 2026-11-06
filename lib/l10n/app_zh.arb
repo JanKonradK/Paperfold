@@ -897,5 +897,22 @@
   "captureNote": "笔记",
   "captureQuote": "摘录",
   "widgetContinueDescription": "继续阅读当前书籍或记录页数。",
-  "widgetCaptureDescription": "保存笔记、摘录或阅读进度。"
+  "widgetCaptureDescription": "保存笔记、摘录或阅读进度。",
+  "newEntry": "新建记录",
+  "recentEntries": "最近记录",
+  "entryNote": "笔记",
+  "entryQuote": "摘录",
+  "entryPhoto": "书页照片",
+  "entryUnassigned": "不关联书籍",
+  "facingPage": "对页",
+  "showLaterEntries": "显示后续记录",
+  "pagesToday": "今日阅读 {count} 页",
+  "entryLocation": "页码 / 章节",
+  "@pagesToday": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

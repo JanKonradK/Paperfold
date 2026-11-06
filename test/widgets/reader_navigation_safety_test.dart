@@ -1,3 +1,6 @@
+import 'package:paperfold/widgets/reading_page/facing_page.dart';
+import 'package:paperfold/dao/journal.dart';
+import 'package:paperfold/models/journal_page.dart';
 import 'dart:async';
 import 'dart:io';
 
@@ -101,7 +104,26 @@ Widget _app(Widget child) => MaterialApp(
       home: Scaffold(body: child),
     );
 
+class _FacingDao extends JournalDao {
+  @override
+  Future<List<JournalPage>> entriesAt(int bookId, {double? progress, int? page, bool includeLater = false}) async => [];
+}
+
 void main() {
+  testWidgets('Back closes Facing page before its reader route', (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    await tester.pumpWidget(_app(Builder(builder: (context) => TextButton(
+      onPressed: () => showModalBottomSheet<void>(context: context, isScrollControlled: true,
+        builder: (_) => FacingPage(book: Book.mock(), dao: _FacingDao(), progress: 0.5)),
+      child: const Text('Reader passage')))));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Reader passage')); await tester.pumpAndSettle();
+    expect(find.byType(FacingPage), findsOneWidget);
+    await tester.binding.handlePopRoute(); await tester.pumpAndSettle();
+    expect(find.byType(FacingPage), findsNothing);
+    expect(find.text('Reader passage'), findsOneWidget);
+  });
+
   testWidgets('reader brightness follows saved mode instead of app chrome',
       (tester) async {
     SharedPreferences.setMockInitialValues({});

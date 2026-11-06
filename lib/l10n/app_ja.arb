@@ -897,5 +897,22 @@
   "captureNote": "メモ",
   "captureQuote": "引用",
   "widgetContinueDescription": "現在の本を読み続けるか、ページを記録します。",
-  "widgetCaptureDescription": "メモ、引用、読書の進捗を保存します。"
+  "widgetCaptureDescription": "メモ、引用、読書の進捗を保存します。",
+  "newEntry": "新しい記録",
+  "recentEntries": "最近の記録",
+  "entryNote": "メモ",
+  "entryQuote": "引用",
+  "entryPhoto": "ページの写真",
+  "entryUnassigned": "本なし",
+  "facingPage": "向かいのページ",
+  "showLaterEntries": "後の記録を表示",
+  "pagesToday": "今日 {count} ページ",
+  "entryLocation": "ページ / 章",
+  "@pagesToday": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }
