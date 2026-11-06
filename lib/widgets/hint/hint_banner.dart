@@ -63,58 +63,60 @@ class _HintBannerState extends State<HintBanner>
     final borderColor = colorScheme.primary;
     final backgroundColor = colorScheme.primary.withAlpha(30);
 
+    final body = _visible
+        ? FilledContainer(
+            margin: widget.margin,
+            color: backgroundColor,
+            child: Stack(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(12, 12, 48, 12),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      if (widget.icon != null) ...[
+                        IconTheme(
+                          data: IconTheme.of(context)
+                              .copyWith(color: borderColor.withAlpha(220)),
+                          child: widget.icon!,
+                        ),
+                        const SizedBox(width: 12),
+                      ],
+                      Expanded(child: widget.child),
+                    ],
+                  ),
+                ),
+                PositionedDirectional(
+                  end: 0,
+                  top: 0,
+                  child: IconButton(
+                    onPressed: _handleClose,
+                    icon: Icon(
+                      Icons.close,
+                      size: 18,
+                      color: borderColor.withAlpha(220),
+                    ),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints.tightFor(
+                      width: 48,
+                      height: 48,
+                    ),
+                    splashRadius: 18,
+                    tooltip: L10n.of(context).close,
+                  ),
+                ),
+              ],
+            ),
+          )
+        : const SizedBox.shrink();
+    if (!PaperfoldVisualPolicy.motionAllowed(context)) return body;
     return AnimatedSize(
       duration: PaperfoldVisualPolicy.motionAllowed(context)
           ? PaperfoldMotion.of(context, PaperfoldMotion.move)
           : Duration.zero,
       curve: Curves.easeInOut,
       alignment: Alignment.topCenter,
-      child: _visible
-          ? FilledContainer(
-              margin: widget.margin,
-              color: backgroundColor,
-              child: Stack(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(12, 12, 48, 12),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        if (widget.icon != null) ...[
-                          IconTheme(
-                            data: IconTheme.of(context)
-                                .copyWith(color: borderColor.withAlpha(220)),
-                            child: widget.icon!,
-                          ),
-                          const SizedBox(width: 12),
-                        ],
-                        Expanded(child: widget.child),
-                      ],
-                    ),
-                  ),
-                  PositionedDirectional(
-                    end: 0,
-                    top: 0,
-                    child: IconButton(
-                      onPressed: _handleClose,
-                      icon: Icon(
-                        Icons.close,
-                        size: 18,
-                        color: borderColor.withAlpha(220),
-                      ),
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints.tightFor(
-                        width: 48,
-                        height: 48,
-                      ),
-                      splashRadius: 18,
-                      tooltip: L10n.of(context).close,
-                    ),
-                  ),
-                ],
-              ),
-            )
-          : const SizedBox.shrink(),
+      child: body,
     );
   }
 }

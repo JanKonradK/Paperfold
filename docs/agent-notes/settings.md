@@ -29,7 +29,10 @@
 ## Known test results
 
 - The first full run passed 295 tests, then the Dart VM could not create a worker thread.
-- A second full run is active. See `full-rest.txt` in this worktree.
+- The second full run found modal access before preference initialization and a zero-duration AnimatedSize layout error.
+- Both implementation errors have fixes. Targeted regression checks are active in `fixes-rest.txt`.
+- The shelf safety test also cannot hit the held-book Open button at 200 percent text. Cause is not yet confirmed.
+- The full run remains active in `full-rest.txt`.
 - The first targeted run failed because generated files were absent.
 - Dependency resolution and build_runner now completed.
 

@@ -1,4 +1,3 @@
-import 'package:paperfold/config/shared_preference_provider.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:paperfold/config/paperfold_motion.dart';
 import 'package:paperfold/config/paperfold_visual_policy.dart';
@@ -11,10 +10,7 @@ class ChartEntrance extends StatelessWidget {
   Widget build(BuildContext context) {
     final media = MediaQuery.of(context);
     final dissolve = media.accessibleNavigation && !media.disableAnimations;
-    final duration =
-        Prefs().eInkMode ||
-            media.disableAnimations ||
-            !PaperfoldVisualPolicy.motionAllowed(context) && !dissolve
+    final duration = !PaperfoldVisualPolicy.glassAllowed(context)
         ? Duration.zero
         : dissolve
         ? PaperfoldMotion.tick

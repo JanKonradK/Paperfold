@@ -146,33 +146,35 @@ class StatisticCard extends ConsumerWidget {
         ],
       ),
     );
+    final body = FilledContainer(
+      padding: const EdgeInsets.fromLTRB(10, 0, 10, 5),
+      child: statisticData.when(
+        data: (data) => Column(
+          children: [
+            const SizedBox(height: 10),
+            segmentButton(data),
+            const SizedBox(height: 10),
+            if (data.mode == ChartMode.heatmap) const HeatmapChart(),
+            if (data.mode != ChartMode.heatmap) barChart(data),
+          ],
+        ),
+        loading: () => const Center(child: CircularProgressIndicator()),
+        // Rethrowing inside a builder took the whole widget tree down
+        // with a red screen. A chart that cannot load is not fatal.
+        error: (error, stack) => LoadFailure.inline(
+          title: L10n.of(context).statisticsLoadFailed,
+          error: error,
+        ),
+      ),
+    );
+    if (!PaperfoldVisualPolicy.motionAllowed(context)) return body;
     return AnimatedSize(
       duration: PaperfoldVisualPolicy.motionAllowed(context)
           ? PaperfoldMotion.of(context, PaperfoldMotion.move)
           : Duration.zero,
       curve: PaperfoldMotion.settle,
       alignment: Alignment.topCenter,
-      child: FilledContainer(
-        padding: const EdgeInsets.fromLTRB(10, 0, 10, 5),
-        child: statisticData.when(
-          data: (data) => Column(
-            children: [
-              const SizedBox(height: 10),
-              segmentButton(data),
-              const SizedBox(height: 10),
-              if (data.mode == ChartMode.heatmap) const HeatmapChart(),
-              if (data.mode != ChartMode.heatmap) barChart(data),
-            ],
-          ),
-          loading: () => const Center(child: CircularProgressIndicator()),
-          // Rethrowing inside a builder took the whole widget tree down
-          // with a red screen. A chart that cannot load is not fatal.
-          error: (error, stack) => LoadFailure.inline(
-            title: L10n.of(context).statisticsLoadFailed,
-            error: error,
-          ),
-        ),
-      ),
+      child: body,
     );
   }
 }
