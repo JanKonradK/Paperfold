@@ -34,6 +34,8 @@ import 'package:paperfold/widgets/paperfold_logo_mark.dart';
 import 'package:paperfold/widgets/paperfold_library_theme.dart';
 import 'package:paperfold/widgets/settings/about.dart';
 import 'package:material_ui/material_ui.dart';
+import 'package:paperfold/config/paperfold_motion.dart';
+import 'package:paperfold/config/paperfold_system.dart';
 import 'package:flutter/semantics.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -327,7 +329,7 @@ class _HomePageState extends ConsumerState<HomePage> {
         ),
         child: LayoutBuilder(
           builder: (context, constraints) {
-            if (constraints.maxWidth > 600) {
+            if (constraints.maxWidth >= 600) {
               final extended = constraints.maxWidth > 1000;
               return Scaffold(
                 body: Row(
@@ -376,7 +378,10 @@ class _HomePageState extends ConsumerState<HomePage> {
                     Expanded(
                       child: SafeArea(
                         top: false,
-                        child: pageStack,
+                        child: _DestinationFade(
+                          index: _destination,
+                          child: pageStack,
+                        ),
                       ),
                     ),
                   ],
@@ -389,8 +394,12 @@ class _HomePageState extends ConsumerState<HomePage> {
               // above it. Under `extendBody` the shelf ran on behind the glass,
               // so a book title, a shelf name and the destinations were
               // all printed over one another at the foot of the Library.
-              extendBody: false,
-              body: pageStack,
+              // Paperfold 3: the page runs on behind the floating glass bar.
+              // The Scaffold adds the bar to the body's bottom padding, so a
+              // scroll view that honours MediaQuery padding stops its last item
+              // above the bar.
+              extendBody: true,
+              body: _DestinationFade(index: _destination, child: pageStack),
               bottomNavigationBar: _SlidingNavigationBar(
                 selectedIndex: _destination,
                 onDestinationSelected: selectDestination,
@@ -439,18 +448,20 @@ class _SlidingNavigationBar extends StatelessWidget {
       final columns =
           largeText && available.maxWidth < 480 ? 2 : destinations.length;
       final rows = (destinations.length / columns).ceil();
-      final barHeight = rows > 1 ? 144.0 : (largeText ? 112.0 : 72.0);
+      final barHeight = rows > 1
+          ? 136.0
+          : (largeText ? 104.0 : PaperfoldSize.navigationBar);
       return Padding(
         padding: EdgeInsetsDirectional.fromSTEB(12, 4, 12, bottomInset + 8),
         child: SizedBox(
           height: barHeight,
           child: PaperfoldGlassSurface(
+            shadow: true,
             // Nothing passes behind this bar any more: `extendBody` is off, so
             // the page stops above it and the only thing left to blur is the
             // scaffold's flat ground. The filter cost a full-width readback on
             // every frame and blurred a solid colour into the same colour.
-            borderRadius: const BorderRadius.all(Radius.circular(28)),
-            allowBlur: false,
+            borderRadius: PaperfoldShape.frameRadius,
             child: Padding(
               padding: const EdgeInsets.all(4),
               child: LayoutBuilder(
@@ -469,8 +480,9 @@ class _SlidingNavigationBar extends StatelessWidget {
                           key: const Key('sliding-navigation-indicator'),
                           duration: disableAnimations
                               ? Duration.zero
-                              : const Duration(milliseconds: 240),
-                          curve: Curves.easeOutCubic,
+                              : PaperfoldMotion.move,
+                          // Lands with a small overshoot under the finger.
+                          curve: PaperfoldMotion.land,
                           top: (selectedIndex ~/ columns) * (slotHeight + gap),
                           start: (selectedIndex % columns) * (slotWidth + gap),
                           width: slotWidth,
@@ -478,7 +490,9 @@ class _SlidingNavigationBar extends StatelessWidget {
                           child: DecoratedBox(
                             decoration: BoxDecoration(
                               color: scheme.primaryContainer,
-                              borderRadius: BorderRadius.circular(24),
+                              borderRadius: BorderRadius.circular(
+                                PaperfoldShape.nested(PaperfoldShape.frame, 4),
+                              ),
                             ),
                           ),
                         ),
@@ -550,7 +564,9 @@ class _SlidingNavigationItem extends StatelessWidget {
       child: ExcludeSemantics(
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(
+            PaperfoldShape.nested(PaperfoldShape.frame, 4),
+          ),
           child: SizedBox.expand(
             child: Padding(
               padding: EdgeInsets.symmetric(
@@ -561,19 +577,32 @@ class _SlidingNavigationItem extends StatelessWidget {
                 direction: Axis.vertical,
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(
-                    selected ? destination.selectedIcon : destination.icon,
-                    size: 18,
-                    color: foreground,
+                  AnimatedScale(
+                    scale: selected ? 1.0 : 0.92,
+                    duration: PaperfoldMotion.of(context, PaperfoldMotion.move),
+                    curve: PaperfoldMotion.land,
+                    child: AnimatedSwitcher(
+                      duration: PaperfoldMotion.of(
+                        context,
+                        PaperfoldMotion.tick,
+                      ),
+                      child: Icon(
+                        selected ? destination.selectedIcon : destination.icon,
+                        key: ValueKey(selected),
+                        size: PaperfoldSize.icon,
+                        color: foreground,
+                      ),
+                    ),
                   ),
-                  const SizedBox(width: 6, height: 4),
+                  const SizedBox(width: 6, height: 2),
                   Flexible(
                     child: Text(
                       destination.label,
                       textAlign: TextAlign.center,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.labelMedium?.copyWith(
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        fontSize: 12,
                         color: foreground,
                         fontWeight:
                             selected ? FontWeight.w700 : FontWeight.w600,
@@ -824,6 +853,69 @@ class _DestinationEmptyState extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+
+/// Fades the destination in when [index] changes, keeping the page state.
+///
+/// The incoming page rises from 98.5% while it fades in over 200 ms. Nothing
+/// runs at rest, and Remove animations shows the page at once.
+class _DestinationFade extends StatefulWidget {
+  const _DestinationFade({required this.index, required this.child});
+
+  final int index;
+  final Widget child;
+
+  @override
+  State<_DestinationFade> createState() => _DestinationFadeState();
+}
+
+class _DestinationFadeState extends State<_DestinationFade>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller = AnimationController(
+    vsync: this,
+    duration: PaperfoldMotion.shift,
+    value: 1,
+  );
+  late final Animation<double> _t = CurvedAnimation(
+    parent: _controller,
+    curve: PaperfoldMotion.settle,
+  );
+
+  @override
+  void didUpdateWidget(_DestinationFade oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.index != widget.index) {
+      if (PaperfoldMotion.reduced(context)) {
+        _controller.value = 1;
+      } else {
+        _controller.forward(from: 0);
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _t,
+      builder: (context, child) => _controller.isCompleted
+          ? child!
+          : Opacity(
+              opacity: _t.value,
+              child: Transform.scale(
+                scale: 0.985 + 0.015 * _t.value,
+                child: child,
+              ),
+            ),
+      child: widget.child,
     );
   }
 }

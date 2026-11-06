@@ -23,9 +23,13 @@ void main() {
 
     final paper = await themeFor({'themeMode': 'light'});
     expect(paper.scaffoldBackgroundColor, PaperfoldTokens.light.ground);
-    expect(paper.textTheme.headlineLarge?.fontFamily,
+    // Paperfold 3: Philosopher is for book titles and display text only;
+    // routine headings use the interface face.
+    expect(paper.textTheme.displayLarge?.fontFamily,
         PaperfoldTypeTokens.journalFamily);
-    expect(paper.textTheme.headlineLarge?.fontStyle, FontStyle.normal);
+    expect(paper.textTheme.headlineLarge?.fontFamily,
+        PaperfoldTypeTokens.chromeFamily);
+    expect(paper.textTheme.displayLarge?.fontStyle, FontStyle.normal);
     expect(paper.textTheme.bodyMedium?.fontFamily,
         PaperfoldTypeTokens.chromeFamily);
     expect(paper.textTheme.labelLarge?.fontFamily,

@@ -93,7 +93,8 @@ abstract final class PaperfoldTokens {
   );
 
   static const PaperfoldPagePalette light = PaperfoldPagePalette(
-    ground: Color(0xFFF3EBDD),
+    // Half the chroma of the old #F3EBDD: the covers carry the warmth.
+    ground: Color(0xFFF3EFE8),
     ink: blackRaspberry,
     inkSoft: spicedHotChocolate,
     accent: darkSienna,
@@ -202,8 +203,14 @@ abstract final class PaperfoldTokens {
         shadow: blackRaspberry,
         primary: burgundy.accent,
         onPrimary: burgundy.ground,
-        primaryContainer: burgundy.accent,
-        onPrimaryContainer: burgundy.ground,
+        // Tonal controls use the raised cloth, not a second gold.
+        primaryContainer: burgundy.surfaceHigh,
+        onPrimaryContainer: burgundy.ink,
+        secondaryContainer: burgundy.surfaceHigh,
+        onSecondaryContainer: burgundy.ink,
+        outline: softDove,
+        outlineVariant: spicedHotChocolate,
+        error: const Color(0xFFFFB4AB),
       );
 
   /// Returns the fixed Paperfold scheme for [brightness].
@@ -223,7 +230,7 @@ abstract final class PaperfoldTokens {
         : const ColorScheme.dark();
     final Color primaryContainer = isLight
         ? const Color(0xFFE8DCD5)
-        : surfaces.goldenTan;
+        : (trueBlack ? const Color(0xFF2D231F) : const Color(0xFF44332D));
     final Color secondary = isLight ? light.inkSoft : surfaces.warmBeige;
     final Color tertiary = isLight
         ? const Color(0xFF695937)
@@ -234,15 +241,15 @@ abstract final class PaperfoldTokens {
       primary: page.accent,
       onPrimary: onAccent,
       primaryContainer: primaryContainer,
-      onPrimaryContainer: light.ink,
+      onPrimaryContainer: isLight ? light.ink : page.ink,
       primaryFixed: surfaces.warmBeige,
       primaryFixedDim: surfaces.goldenTan,
       onPrimaryFixed: light.ink,
       onPrimaryFixedVariant: cover.ground,
       secondary: secondary,
       onSecondary: onAccent,
-      secondaryContainer: surfaces.warmBeige,
-      onSecondaryContainer: light.ink,
+      secondaryContainer: primaryContainer,
+      onSecondaryContainer: isLight ? light.ink : page.ink,
       secondaryFixed: surfaces.warmBeige,
       secondaryFixedDim: surfaces.goldenTan,
       onSecondaryFixed: light.ink,
@@ -265,8 +272,12 @@ abstract final class PaperfoldTokens {
       surfaceContainerHigh: page.surfaceHigh,
       surfaceContainerHighest: page.surfaceHighest,
       onSurfaceVariant: page.inkSoft,
-      outline: surfaces.sageGreen,
+      // Control edges need 3:1 on every surface level; Moon Rock fails on
+      // raised Cream and Burgundy surfaces.
+      outline: isLight ? spicedHotChocolate : moonRock,
       outlineVariant: isLight ? surfaces.warmBeige : surfaces.terracottaBrown,
+      error: isLight ? const Color(0xFFAC001F) : const Color(0xFFFFB4AB),
+      onError: isLight ? Colors.white : const Color(0xFF690005),
       inverseSurface: isLight ? page.ink : light.ground,
       onInverseSurface: isLight ? page.ground : light.ink,
       inversePrimary: isLight ? dark.accent : light.accent,

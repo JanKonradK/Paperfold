@@ -49,7 +49,7 @@ void main() {
   );
 
   testWidgets(
-    'matte controls do not blur, including high contrast and reduced motion',
+    'floating glass blurs only when the visual policy allows it',
     (tester) async {
       Future<void> pumpSurface({
         bool highContrast = false,
@@ -80,7 +80,7 @@ void main() {
           of: find.byType(PaperfoldGlassSurface),
           matching: find.byType(BackdropFilter),
         ),
-        findsNothing,
+        findsOneWidget,
       );
       expect(
         find.descendant(

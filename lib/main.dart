@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:paperfold/config/paperfold_visual_policy.dart';
 import 'package:paperfold/utils/platform_utils.dart';
 
 import 'package:paperfold/config/shared_preference_provider.dart';
@@ -72,6 +73,7 @@ Future<void> _startDataServices() async {
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Prefs().initPrefs();
+  PaperfoldVisualPolicy.init();
   HttpOverrides.global = AnxHttpProxyOverrides();
 
   // Initialize desktop window with validated position

@@ -1,5 +1,4 @@
-import 'package:flutter/animation.dart';
-import 'package:flutter/physics.dart';
+import 'package:flutter/widgets.dart';
 
 /// The timing of everything in Paperfold that moves the way paper moves.
 ///
@@ -30,6 +29,42 @@ class PaperfoldMotion {
   /// Something on its way out, which never has to arrive gently.
   static const Curve depart = Cubic(0.3, 0.0, 0.8, 0.15);
 
+  /// A small overshoot for things that land under a finger: a pressed card
+  /// coming back up, a chip taking its selection, an indicator arriving.
+  /// Only for small distances; paper itself never bounces.
+  static const Curve land = Cubic(0.34, 1.36, 0.64, 1.0);
+
+  // The five speeds of the interface. Everything that is not a page turn
+  // uses one of these.
+
+  /// Reduced motion, eInk, and Remove animations.
+  static const Duration none = Duration.zero;
+
+  /// A press, a selection, a reduced-motion dissolve.
+  static const Duration tick = Duration(milliseconds: 120);
+
+  /// Tabs, reader bars, a destination switch.
+  static const Duration shift = Duration(milliseconds: 200);
+
+  /// Sheets, routes, a spine turning into its cover.
+  static const Duration move = Duration(milliseconds: 300);
+
+  /// A book opening.
+  static const Duration open = Duration(milliseconds: 450);
+
+  /// [duration], or nothing when the system asks for no animation.
+  ///
+  /// Remove animations and eInk give zero. Reduced motion is the caller's
+  /// choice: use [reduced] for a spatial move that should become a dissolve.
+  static Duration of(BuildContext context, Duration duration) {
+    if (MediaQuery.maybeDisableAnimationsOf(context) ?? false) return none;
+    return duration;
+  }
+
+  /// The dissolve that replaces a spatial move under reduced motion.
+  static bool reduced(BuildContext context) =>
+      MediaQuery.maybeDisableAnimationsOf(context) ?? false;
+
   /// A page turned in the reader.
   ///
   /// Short. The reader is going to do this several hundred times in an evening,
@@ -37,7 +72,7 @@ class PaperfoldMotion {
   static const Duration pageTurn = Duration(milliseconds: 380);
 
   /// A cover opening. Slower than a page: a board is a heavier thing.
-  static const Duration coverTurn = Duration(milliseconds: 560);
+  static const Duration coverTurn = open;
 
   /// The first page growing into the application on a cold start.
   static const Duration pageLeave = Duration(milliseconds: 520);
