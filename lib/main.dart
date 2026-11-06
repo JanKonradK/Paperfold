@@ -1,3 +1,5 @@
+import 'package:paperfold/config/paperfold_motion.dart';
+
 import 'dart:async';
 import 'dart:io';
 
@@ -256,6 +258,16 @@ class _MyAppState extends ConsumerState<MyApp>
         builder: (context, prefsNotifier, child) {
           return MaterialApp(
             debugShowCheckedModeBanner: false,
+            themeAnimationDuration:
+                prefsNotifier.eInkMode ||
+                    WidgetsBinding
+                        .instance
+                        .platformDispatcher
+                        .accessibilityFeatures
+                        .disableAnimations
+                ? Duration.zero
+                : PaperfoldMotion.move,
+            themeAnimationCurve: PaperfoldMotion.settle,
             scrollBehavior: ScrollConfiguration.of(context).copyWith(
               physics: const BouncingScrollPhysics(),
               // dragDevices: {

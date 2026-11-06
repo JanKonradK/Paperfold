@@ -1,3 +1,5 @@
+import 'package:paperfold/config/paperfold_system.dart';
+import 'package:paperfold/widgets/common/paperfold_pane.dart';
 import 'package:material_ui/material_ui.dart';
 
 abstract class AbstractSettingsTile extends StatelessWidget {
@@ -11,9 +13,9 @@ abstract class AbstractSettingsTile extends StatelessWidget {
 /// had two left edges down the middle of it.
 const ListTileThemeData settingsListTileTheme = ListTileThemeData(
   contentPadding: EdgeInsetsDirectional.only(start: 8, end: 8),
-  minLeadingWidth: 24,
-  horizontalTitleGap: 10,
-  minTileHeight: 56,
+  minLeadingWidth: 36,
+  horizontalTitleGap: PaperfoldSpace.sm,
+  minTileHeight: PaperfoldSize.row,
 );
 
 enum SettingsTileType { simpleTile, switchTile, navigationTile }
@@ -152,124 +154,134 @@ class AndroidSettingsTile extends StatelessWidget {
         .copyWith(color: enabled ? scheme.onSurface : theme.disabledColor);
     final supportingStyle = (theme.textTheme.bodyMedium ?? const TextStyle())
         .copyWith(
-            color: enabled ? scheme.onSurfaceVariant : theme.disabledColor);
+          color: enabled ? scheme.onSurfaceVariant : theme.disabledColor,
+        );
 
     // A disabled row still reads as one node and still announces that it is
     // disabled. IgnorePointer swallowed the tap without telling anybody why.
     return Semantics(
       enabled: enabled,
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: !enabled || cantShowAnimation
-              ? null
-              : () {
-                  if (tileType == SettingsTileType.switchTile) {
-                    onToggle?.call(!initialValue);
-                  } else {
-                    onPressed?.call(context);
-                  }
-                },
-          highlightColor: theme.listTileTheme.selectedColor,
-          child: ConstrainedBox(
-            // The 48-and-8 Rule. The old fixed padding made a one-line row
-            // about 46 dp high.
-            constraints: const BoxConstraints(minHeight: 48),
-            child: Row(
-              children: [
-                if (leading != null)
-                  Padding(
-                    padding: const EdgeInsetsDirectional.only(start: 8),
-                    child: IconTheme(
-                      data: IconTheme.of(context).copyWith(
-                        color: enabled
-                            ? theme.iconTheme.color
-                            : theme.disabledColor,
-                      ),
-                      child: leading!,
-                    ),
-                  ),
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsetsDirectional.only(
-                      start: 10,
-                      end: 8,
-                      bottom: 12,
-                      top: 12,
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        DefaultTextStyle(
-                          style: titleStyle,
-                          child: title ?? const SizedBox.shrink(),
-                        ),
-                        // A row may carry both a current value and an
-                        // explanation. The old `else if` silently dropped the
-                        // explanation whenever a value was present.
-                        if (value != null)
-                          Padding(
-                            padding: const EdgeInsets.only(top: 4.0),
-                            child: DefaultTextStyle(
-                              style: supportingStyle,
-                              child: value!,
-                            ),
-                          ),
-                        if (description != null)
-                          Padding(
-                            padding: const EdgeInsets.only(top: 4.0),
-                            child: DefaultTextStyle(
-                              style: supportingStyle,
-                              child: description!,
-                            ),
-                          ),
-                      ],
-                    ),
-                  ),
-                ),
-                if (trailing != null && tileType == SettingsTileType.switchTile)
-                  Row(
-                    children: [
-                      trailing!,
-                      Padding(
-                        padding: const EdgeInsetsDirectional.only(end: 8),
-                        child: Switch(
-                          value: initialValue,
-                          // A disabled switch takes its own disabled paint and
-                          // announces itself as disabled.
-                          onChanged: enabled ? onToggle : null,
-                          activeThumbColor: activeSwitchColor,
-                        ),
-                      ),
-                    ],
-                  )
-                else if (tileType == SettingsTileType.switchTile)
-                  Padding(
-                    padding:
-                        const EdgeInsetsDirectional.only(start: 16, end: 8),
-                    child: Switch(
-                      value: initialValue,
-                      onChanged: enabled ? onToggle : null,
-                      activeThumbColor: activeSwitchColor,
-                    ),
-                  )
-                else if (tileType == SettingsTileType.navigationTile)
-                  Padding(
-                    padding: const EdgeInsetsDirectional.only(end: 8),
-                    child: trailing ??
-                        Icon(
-                          Icons.chevron_right,
+      child: PaperfoldPressable(
+        enabled: enabled && !cantShowAnimation,
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: !enabled || cantShowAnimation
+                ? null
+                : () {
+                    if (tileType == SettingsTileType.switchTile) {
+                      onToggle?.call(!initialValue);
+                    } else {
+                      onPressed?.call(context);
+                    }
+                  },
+            highlightColor: theme.listTileTheme.selectedColor,
+            child: ConstrainedBox(
+              // The 48-and-8 Rule. The old fixed padding made a one-line row
+              // about 46 dp high.
+              constraints: const BoxConstraints(minHeight: PaperfoldSize.row),
+              child: Row(
+                children: [
+                  if (leading != null)
+                    Padding(
+                      padding: const EdgeInsetsDirectional.only(start: 8),
+                      child: IconTheme(
+                        data: IconTheme.of(context).copyWith(
                           color: enabled
-                              ? scheme.onSurfaceVariant
+                              ? theme.iconTheme.color
                               : theme.disabledColor,
                         ),
-                  )
-                else if (trailing != null)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: trailing!,
-                  )
-              ],
+                        child: SettingsIcon(child: leading!),
+                      ),
+                    ),
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsetsDirectional.only(
+                        start: 10,
+                        end: 8,
+                        bottom: PaperfoldSpace.xs,
+                        top: PaperfoldSpace.xs,
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          DefaultTextStyle(
+                            style: titleStyle,
+                            child: title ?? const SizedBox.shrink(),
+                          ),
+                          // A row may carry both a current value and an
+                          // explanation. The old `else if` silently dropped the
+                          // explanation whenever a value was present.
+                          if (value != null)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 4.0),
+                              child: DefaultTextStyle(
+                                style: supportingStyle,
+                                child: value!,
+                              ),
+                            ),
+                          if (description != null)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 4.0),
+                              child: DefaultTextStyle(
+                                style: supportingStyle,
+                                child: description!,
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  if (trailing != null &&
+                      tileType == SettingsTileType.switchTile)
+                    Row(
+                      children: [
+                        trailing!,
+                        Padding(
+                          padding: const EdgeInsetsDirectional.only(end: 8),
+                          child: Switch(
+                            value: initialValue,
+                            // A disabled switch takes its own disabled paint and
+                            // announces itself as disabled.
+                            onChanged: enabled ? onToggle : null,
+                            activeThumbColor: activeSwitchColor,
+                          ),
+                        ),
+                      ],
+                    )
+                  else if (tileType == SettingsTileType.switchTile)
+                    Padding(
+                      padding: const EdgeInsetsDirectional.only(
+                        start: 16,
+                        end: 8,
+                      ),
+                      child: Switch(
+                        value: initialValue,
+                        onChanged: enabled ? onToggle : null,
+                        activeThumbColor: activeSwitchColor,
+                      ),
+                    )
+                  else if (tileType == SettingsTileType.navigationTile)
+                    Padding(
+                      padding: const EdgeInsetsDirectional.only(end: 8),
+                      child:
+                          trailing ??
+                          Icon(
+                            Icons.chevron_right,
+                            color: enabled
+                                ? scheme.onSurfaceVariant
+                                : theme.disabledColor,
+                          ),
+                    )
+                  else if (trailing != null)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: PaperfoldSpace.md,
+                      ),
+                      child: trailing!,
+                    ),
+                ],
+              ),
             ),
           ),
         ),
@@ -279,10 +291,7 @@ class AndroidSettingsTile extends StatelessWidget {
 }
 
 class CustomSettingsTile extends AbstractSettingsTile {
-  const CustomSettingsTile({
-    required this.child,
-    super.key,
-  });
+  const CustomSettingsTile({required this.child, super.key});
 
   final Widget child;
 
@@ -333,16 +342,16 @@ class SettingsControlTile extends AbstractSettingsTile {
           // floated in the middle of the block, out of line with every row
           // above and below it.
           SizedBox(
-            width: 24,
+            width: 36,
             child: leading == null
                 ? null
                 : IconTheme(
                     data: IconTheme.of(context)
                         .copyWith(color: theme.iconTheme.color),
-                    child: leading!,
+                    child: SettingsIcon(child: leading!),
                   ),
           ),
-          const SizedBox(width: 10),
+          const SizedBox(width: PaperfoldSpace.sm),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -372,4 +381,27 @@ class SettingsControlTile extends AbstractSettingsTile {
       ),
     );
   }
+}
+
+/// A shared tonal well; the row supplies the 48 dp touch target.
+class SettingsIcon extends StatelessWidget {
+  const SettingsIcon({super.key, required this.child});
+  final Widget child;
+  @override
+  Widget build(BuildContext context) => Container(
+    width: 36,
+    height: 36,
+    decoration: BoxDecoration(
+      color: Theme.of(context).colorScheme.primaryContainer,
+      borderRadius: PaperfoldShape.controlRadius,
+    ),
+    alignment: Alignment.center,
+    child: IconTheme.merge(
+      data: IconThemeData(
+        size: PaperfoldSize.icon,
+        color: Theme.of(context).colorScheme.onPrimaryContainer,
+      ),
+      child: child,
+    ),
+  );
 }

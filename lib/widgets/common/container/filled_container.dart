@@ -47,14 +47,15 @@ class FilledContainer extends BaseRoundedContainer {
     BorderRadiusGeometry borderRadius,
   ) {
     final Color effectiveColor =
-        color ?? Theme.of(context).colorScheme.surfaceContainer;
+        color ?? Theme.of(context).colorScheme.surfaceContainerLow;
 
     return buildShapeDecoration(
       color: effectiveColor,
-      borderSide: const BorderSide(
-          color: Colors.transparent,
-          width: 1,
-          strokeAlign: BorderSide.strokeAlignOutside),
+      borderSide: BorderSide(
+        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.16),
+        width: 1 / MediaQuery.devicePixelRatioOf(context),
+        strokeAlign: BorderSide.strokeAlignOutside,
+      ),
       borderRadius: borderRadius,
     );
   }

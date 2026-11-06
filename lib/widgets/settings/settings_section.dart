@@ -1,4 +1,5 @@
-import 'package:paperfold/widgets/common/container/filled_container.dart';
+import 'package:paperfold/widgets/common/paperfold_pane.dart';
+import 'package:paperfold/config/paperfold_system.dart';
 import 'package:paperfold/widgets/settings/settings_tile.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -40,10 +41,10 @@ class SettingsSection extends AbstractSettingsSection {
         else
           Padding(
             padding: const EdgeInsetsDirectional.only(
-              top: 20,
+              top: PaperfoldSpace.lg,
               bottom: 8,
-              start: 24,
-              end: 24,
+              start: PaperfoldSpace.xl,
+              end: PaperfoldSpace.xl,
             ),
             child: DefaultTextStyle(
               // The Label role. DESIGN.md gives Source Sans 3 to navigation,
@@ -52,20 +53,19 @@ class SettingsSection extends AbstractSettingsSection {
               // titles under it. The bare TextStyle this replaced carried a
               // colour and nothing else, so the header printed at the ambient
               // body size in the platform default face.
-              style:
-                  (theme.textTheme.labelLarge ?? const TextStyle()).copyWith(
-                color: theme.colorScheme.primary,
+              style: (theme.textTheme.labelLarge ?? const TextStyle()).copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
               ),
-              child: Semantics(
-                header: true,
-                child: title!,
-              ),
+              child: Semantics(header: true, child: title!),
             ),
           ),
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8),
-          child: FilledContainer(
-            padding: EdgeInsetsGeometry.zero,
+          padding: const EdgeInsets.symmetric(
+            horizontal: PaperfoldSpace.gutter,
+          ),
+          child: PaperfoldPane(
+            padding: EdgeInsets.zero,
+            color: theme.colorScheme.surfaceContainerLow,
             child: tileList,
           ),
         ),
@@ -74,17 +74,12 @@ class SettingsSection extends AbstractSettingsSection {
   }
 
   Widget buildTileList() {
-    return Column(
-      children: tiles,
-    );
+    return Column(children: tiles);
   }
 }
 
 class CustomSettingsSection extends AbstractSettingsSection {
-  const CustomSettingsSection({
-    required this.child,
-    super.key,
-  });
+  const CustomSettingsSection({required this.child, super.key});
 
   final Widget child;
 
