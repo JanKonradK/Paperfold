@@ -96,7 +96,7 @@ dependencies:
   http: ^1.6.0
   crypto: ^3.0.7
   charset: ^2.0.1
-  flutter_slidable: ^4.0.3
+  flutter_slidable: ^5.2.0
   cached_network_image: ^4.0.4
   lpinyin: ^2.0.3
   mongol: ^11.1.0
