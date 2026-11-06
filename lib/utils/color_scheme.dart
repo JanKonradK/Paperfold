@@ -197,7 +197,9 @@ ThemeData paperfoldComponentTheme(ThemeData themeData) {
   );
   OutlineInputBorder fieldBorder(Color color, [double width = 1]) =>
       OutlineInputBorder(
-        borderRadius: PaperfoldShape.controlRadius,
+        borderRadius: const BorderRadius.all(
+          Radius.circular(PaperfoldShape.field),
+        ),
         borderSide: BorderSide(color: color, width: width),
       );
 
@@ -317,7 +319,10 @@ ThemeData paperfoldComponentTheme(ThemeData themeData) {
       focusedErrorBorder: fieldBorder(colorScheme.error, 2),
     ),
     listTileTheme: themeData.listTileTheme.copyWith(
-      shape: PaperfoldShape.controlShape,
+      // A row can wrap to several lines, so its press shape is not a pill.
+      shape: const RoundedRectangleBorder(
+        borderRadius: PaperfoldShape.controlRadius,
+      ),
       contentPadding: const EdgeInsets.symmetric(
         horizontal: PaperfoldSpace.gutter,
       ),
@@ -412,7 +417,8 @@ ThemeData paperfoldComponentTheme(ThemeData themeData) {
       actionTextColor: colorScheme.inversePrimary,
       elevation: 2,
       insetPadding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
-      shape: PaperfoldShape.controlShape,
+      // A message can wrap; the bar's curve, not a pill.
+      shape: PaperfoldShape.frameShape,
     ),
     pageTransitionsTheme: const PageTransitionsTheme(
       builders: {

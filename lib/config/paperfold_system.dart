@@ -1,19 +1,24 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:paperfold/config/paperfold_tokens.dart';
 
-/// The four corners of Paperfold. Every rounded shape in the app uses one.
+/// The corners of Paperfold. Every rounded shape in the app uses one.
 ///
-/// Each step is the one before it plus 8, so a shape inset by 8 inside the
-/// next one up has a concentric corner: frame 32, pane 24, control 16.
+/// Surfaces share the navigation bar's curve, 32. Controls are pills. Books
+/// stay nearly square. A shape inset inside another uses [nested].
 abstract final class PaperfoldShape {
   /// Books: spines, covers, thumbnails. Nearly square, never sharp.
   static const double object = 4;
 
-  /// Everything a finger presses: buttons, FAB, chips, segments, fields.
+  /// Multiline fields and editors, and inner panels inset 16 in a pane.
+  /// One-line controls are pills: see [controlShape].
   static const double control = 16;
 
-  /// Containers: cards, placards, list groups, the vitrine case.
-  static const double pane = 24;
+  /// A one-line field: half its 40 dp height, so it reads as a pill, and a
+  /// gentle corner when the same field grows to several lines.
+  static const double field = 20;
+
+  /// Containers: cards, panes, list groups. The navigation bar's curve.
+  static const double pane = 32;
 
   /// Things that float: sheets, dialogs, the navigation and reader bars.
   static const double frame = 32;
@@ -41,9 +46,8 @@ abstract final class PaperfoldShape {
     top: Radius.circular(object),
   );
 
-  static const RoundedRectangleBorder controlShape = RoundedRectangleBorder(
-    borderRadius: controlRadius,
-  );
+  /// Buttons, chips, segments, and the FAB: a pill, or a circle when square.
+  static const StadiumBorder controlShape = StadiumBorder();
   static const RoundedRectangleBorder paneShape = RoundedRectangleBorder(
     borderRadius: paneRadius,
   );

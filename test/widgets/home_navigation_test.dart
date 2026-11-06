@@ -40,8 +40,9 @@ void main() {
       var statisticsBuilds = 0;
       var statisticsRefreshes = 0;
       var failStatisticsRefresh = false;
-      await tester.binding.setSurfaceSize(const Size(412, 800));
-      addTearDown(() => tester.binding.setSurfaceSize(null));
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = const Size(412, 800);
+      addTearDown(tester.view.reset);
 
       await tester.pumpWidget(
         ProviderScope(
@@ -227,13 +228,17 @@ void main() {
           tester.state<BookcaseState>(find.byType(Bookcase)), same(bookcase));
       await bookcase.climbTo(2);
       await tester.pumpAndSettle();
-      await tester.binding.setSurfaceSize(const Size(900, 412));
+      tester.view.physicalSize = const Size(900, 412);
       await tester.pumpAndSettle();
       expect(
           tester.state<BookcaseState>(find.byType(Bookcase)), same(bookcase));
       expect(bookcase.shelf, 2);
-      // A wide screen keeps the same floating bar, not a rail.
+      // Landscape stands the same floating bar on the start edge (the end
+      // in RTL), not a rail.
       expect(find.byType(NavigationRail), findsNothing);
+      expect(tester.getCenter(tab(1)).dy,
+          greaterThan(tester.getCenter(tab(0)).dy));
+      expect(tester.getCenter(tab(0)).dx, greaterThan(800));
       for (final label in labels) {
         expect(find.text(label), findsWidgets);
       }

@@ -1,3 +1,4 @@
+import 'package:paperfold/utils/paperfold_layout.dart';
 import 'package:paperfold/service/book.dart';
 import 'package:paperfold/dao/book.dart';
 import 'package:paperfold/service/capture_launch.dart';
@@ -62,6 +63,7 @@ class HomePage extends ConsumerStatefulWidget {
 
 class _HomePageState extends ConsumerState<HomePage> {
   int _destination = 1;
+  final _pageKey = GlobalKey();
   List<int> _destinationHistory = [1];
   final Set<int> _visitedDestinations = {1};
 
@@ -394,14 +396,49 @@ class _HomePageState extends ConsumerState<HomePage> {
         // glass bar. The Scaffold adds the bar to the body's bottom padding,
         // so a scroll view that honours MediaQuery padding stops its last
         // item above the bar.
-        child: Scaffold(
-          extendBody: true,
-          body: _DestinationFade(index: _destination, child: pageStack),
-          bottomNavigationBar: _SlidingNavigationBar(
-            selectedIndex: _destination,
-            onDestinationSelected: selectDestination,
-            destinations: destinations,
-          ),
+        child: Builder(
+          builder: (context) {
+            // Landscape saves height: the same bar stands on the start edge.
+            final side = PaperfoldLayout.of(context).sideNavigation(context);
+            // The key keeps every destination's state when the device turns.
+            final page = _DestinationFade(
+              key: _pageKey,
+              index: _destination,
+              child: pageStack,
+            );
+            return Scaffold(
+              extendBody: !side,
+              body: side
+                  ? Row(
+                      children: [
+                        SafeArea(
+                          right: false,
+                          child: _SlidingNavigationBar(
+                            vertical: true,
+                            selectedIndex: _destination,
+                            onDestinationSelected: selectDestination,
+                            destinations: destinations,
+                          ),
+                        ),
+                        Expanded(
+                          child: MediaQuery.removePadding(
+                            context: context,
+                            removeLeft: true,
+                            child: page,
+                          ),
+                        ),
+                      ],
+                    )
+                  : page,
+              bottomNavigationBar: side
+                  ? null
+                  : _SlidingNavigationBar(
+                      selectedIndex: _destination,
+                      onDestinationSelected: selectDestination,
+                      destinations: destinations,
+                    ),
+            );
+          },
         ),
       ),
     );
@@ -413,8 +450,11 @@ class _SlidingNavigationBar extends StatelessWidget {
     required this.selectedIndex,
     required this.onDestinationSelected,
     required this.destinations,
+    this.vertical = false,
   });
 
+  /// Standing on the start edge in landscape, where height is scarce.
+  final bool vertical;
   final int selectedIndex;
   final ValueChanged<int> onDestinationSelected;
   final List<({IconData icon, IconData selectedIcon, String label})>
@@ -435,26 +475,35 @@ class _SlidingNavigationBar extends StatelessWidget {
 
     return LayoutBuilder(
       builder: (context, available) {
-        final columns = largeText && available.maxWidth < 480
+        final columns = vertical
+            ? 1
+            : largeText && available.maxWidth < 480
             ? 2
             : destinations.length;
         final rows = (destinations.length / columns).ceil();
-        final barHeight = rows > 1
+        // The vertical bar is the same bar turned on its side: same slots,
+        // same curve, same indicator.
+        final slot = largeText ? 96.0 : PaperfoldSize.navigationBar;
+        final barHeight = vertical
+            ? rows * slot + (rows - 1) * (largeText ? 0 : 8) + 8
+            : rows > 1
             ? 136.0
             : (largeText ? 104.0 : PaperfoldSize.navigationBar);
         // A tablet gets the phone's bar, centred, not a stretched one.
         return Align(
-          heightFactor: 1,
+          alignment: vertical
+              ? AlignmentDirectional.centerStart
+              : Alignment.center,
+          heightFactor: vertical ? null : 1,
+          widthFactor: vertical ? 1 : null,
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 560),
             child: Padding(
-              padding: EdgeInsetsDirectional.fromSTEB(
-                12,
-                4,
-                12,
-                bottomInset + 8,
-              ),
+              padding: vertical
+                  ? const EdgeInsetsDirectional.only(start: 12, end: 12)
+                  : EdgeInsetsDirectional.fromSTEB(12, 4, 12, bottomInset + 8),
               child: SizedBox(
+                width: vertical ? (largeText ? 96 : 76) : null,
                 height: barHeight,
                 child: PaperfoldGlassSurface(
                   shadow: true,
@@ -645,7 +694,7 @@ class _JournalDestination extends StatelessWidget {
 /// The incoming page rises from 98.5% while it fades in over 200 ms. Nothing
 /// runs at rest, and Remove animations shows the page at once.
 class _DestinationFade extends StatefulWidget {
-  const _DestinationFade({required this.index, required this.child});
+  const _DestinationFade({super.key, required this.index, required this.child});
 
   final int index;
   final Widget child;

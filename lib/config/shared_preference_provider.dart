@@ -564,6 +564,15 @@ class Prefs extends ChangeNotifier {
     return prefs.getBool('eInkMode') ?? false;
   }
 
+  /// Library covers per row in portrait. 0 means Auto: 3 on a phone, 5 on a
+  /// tablet. Landscape keeps the same cover size and adds columns.
+  int get libraryCoversPerRow => prefs.getInt('libraryCoversPerRow') ?? 0;
+
+  set libraryCoversPerRow(int count) {
+    prefs.setInt('libraryCoversPerRow', count);
+    notifyListeners();
+  }
+
   set translateService(TranslateService service) {
     prefs.setString('translateService', service.name);
     notifyListeners();
