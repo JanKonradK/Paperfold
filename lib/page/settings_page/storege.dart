@@ -1,3 +1,5 @@
+import 'package:paperfold/config/paperfold_system.dart';
+
 import 'dart:io';
 import 'dart:math';
 
@@ -76,8 +78,9 @@ class _StorageSettingsState extends ConsumerState<StorageSettings>
 
     // Check write permission by creating a test file
     try {
-      final testFile =
-          File('$result${Platform.pathSeparator}.anx_permission_test');
+      final testFile = File(
+        '$result${Platform.pathSeparator}.anx_permission_test',
+      );
       await testFile.writeAsString('test');
       await testFile.delete();
     } catch (e) {
@@ -106,15 +109,17 @@ class _StorageSettingsState extends ConsumerState<StorageSettings>
       // request before the database, log, reader server, or sync can write.
       await Prefs().setPendingStoragePath(_selectedNewPath);
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(L10n.of(context).storageMigrationScheduled),
-      ));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(L10n.of(context).storageMigrationScheduled)),
+      );
     } catch (_) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(L10n.of(context).storageMigrationFailed),
-        backgroundColor: Theme.of(context).colorScheme.error,
-      ));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(L10n.of(context).storageMigrationFailed),
+          backgroundColor: Theme.of(context).colorScheme.error,
+        ),
+      );
     } finally {
       if (mounted) setState(() => _isMigrating = false);
     }
@@ -126,9 +131,9 @@ class _StorageSettingsState extends ConsumerState<StorageSettings>
 
     if (!await isStorageDestinationEmpty(defaultPath)) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(L10n.of(context).storagePathNotEmpty),
-      ));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(L10n.of(context).storagePathNotEmpty)),
+      );
       return;
     }
     if (!mounted) return;
@@ -146,10 +151,7 @@ class _StorageSettingsState extends ConsumerState<StorageSettings>
       if (size == null) {
         return const CircularProgressIndicator.adaptive();
       }
-      return Text(
-        size,
-        style: Theme.of(context).textTheme.bodyMedium,
-      );
+      return Text(size, style: Theme.of(context).textTheme.bodyMedium);
     }
 
     Widget cacheSizeTriling(String? size) {
@@ -165,139 +167,72 @@ class _StorageSettingsState extends ConsumerState<StorageSettings>
       );
     }
 
-    return settingsSections(sections: [
-      SettingsSection(
-        title: Text(L10n.of(context).storageInfo),
-        tiles: [
-          CustomSettingsTile(
-            child: Column(
-              children: [
-                ListTile(
-                  title: Text(L10n.of(context).storageTotalSize),
-                  trailing:
-                      fileSizeTriling(storageInfoAsync.value?.totalSizeStr),
-                ),
-                ListTile(
-                  title: Text(L10n.of(context).storageDatabaseFile),
-                  trailing:
-                      fileSizeTriling(storageInfoAsync.value?.databaseSizeStr),
-                ),
-                ListTile(
-                  title: Text(L10n.of(context).storageLogFile),
-                  trailing: fileSizeTriling(storageInfoAsync.value?.logSizeStr),
-                ),
-                ListTile(
-                  title: Text(L10n.of(context).storageCacheFile),
-                  trailing:
-                      cacheSizeTriling(storageInfoAsync.value?.cacheSizeStr),
-                ),
-                Column(
-                  children: [
-                    ListTile(
-                      title: Text(L10n.of(context).storageDataFile),
-                      trailing: fileSizeTriling(
-                          storageInfoAsync.value?.dataFilesSizeStr),
-                    ),
-                    Padding(
-                      padding: const EdgeInsetsDirectional.only(start: 20.0),
-                      child: Column(
-                        children: [
-                          ListTile(
-                            title: Text(L10n.of(context).storageBookFile),
-                            trailing: fileSizeTriling(
-                                storageInfoAsync.value?.booksSizeStr),
-                          ),
-                          ListTile(
-                            title: Text(L10n.of(context).storageCoverFile),
-                            trailing: fileSizeTriling(
-                                storageInfoAsync.value?.coverSizeStr),
-                          ),
-                          ListTile(
-                            title: Text(L10n.of(context).storageFontFile),
-                            trailing: fileSizeTriling(
-                                storageInfoAsync.value?.fontSizeStr),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-
-      // Custom storage location (Windows only)
-      if (AnxPlatform.isWindows)
+    return settingsSections(
+      sections: [
         SettingsSection(
-          title: Text(L10n.of(context).storageCustomLocation),
+          title: Text(L10n.of(context).storageInfo),
           tiles: [
             CustomSettingsTile(
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Current storage path
                   ListTile(
-                    title: Text(L10n.of(context).storageCurrentPath),
-                    subtitle: Text(
-                      _currentStoragePath ?? '...',
-                      style: Theme.of(context).textTheme.bodySmall,
+                    title: Text(L10n.of(context).storageTotalSize),
+                    trailing: fileSizeTriling(
+                      storageInfoAsync.value?.totalSizeStr,
                     ),
                   ),
-                  // Selected new path (if any)
-                  if (_selectedNewPath != null) ...[
-                    ListTile(
-                      title: Text(L10n.of(context).storageNewPath),
-                      subtitle: Text(
-                        _selectedNewPath!,
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: Theme.of(context).colorScheme.primary,
-                            ),
-                      ),
-                      trailing: IconButton(
-                        icon: const Icon(Icons.close),
-                        tooltip: L10n.of(context).commonCancel,
-                        onPressed: _isMigrating
-                            ? null
-                            : () async {
-                                await Prefs().setPendingStoragePath(null);
-                                if (!mounted) return;
-                                setState(() => _selectedNewPath = null);
-                              },
-                      ),
+                  ListTile(
+                    title: Text(L10n.of(context).storageDatabaseFile),
+                    trailing: fileSizeTriling(
+                      storageInfoAsync.value?.databaseSizeStr,
                     ),
-                  ],
-                  // Action buttons
-                  Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Row(
-                      children: [
-                        if (_selectedNewPath == null)
-                          Expanded(
-                            child: AnxButton(
-                              onPressed: _selectNewPath,
-                              child: Text(L10n.of(context).storageSelectPath),
-                            ),
-                          )
-                        else
-                          Expanded(
-                            child: AnxButton(
-                              onPressed: _isMigrating ? null : _startMigration,
-                              isLoading: _isMigrating,
-                              child: Text(L10n.of(context).storageMigrateData),
-                            ),
-                          ),
-                        const SizedBox(width: 8),
-                        if (Prefs().customStoragePath != null &&
-                            _selectedNewPath == null)
-                          AnxButton.outlined(
-                            onPressed:
-                                _isMigrating ? null : _resetToDefaultPath,
-                            child: Text(L10n.of(context).storageResetPath),
-                          ),
-                      ],
+                  ),
+                  ListTile(
+                    title: Text(L10n.of(context).storageLogFile),
+                    trailing: fileSizeTriling(
+                      storageInfoAsync.value?.logSizeStr,
                     ),
+                  ),
+                  ListTile(
+                    title: Text(L10n.of(context).storageCacheFile),
+                    trailing: cacheSizeTriling(
+                      storageInfoAsync.value?.cacheSizeStr,
+                    ),
+                  ),
+                  Column(
+                    children: [
+                      ListTile(
+                        title: Text(L10n.of(context).storageDataFile),
+                        trailing: fileSizeTriling(
+                          storageInfoAsync.value?.dataFilesSizeStr,
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsetsDirectional.only(start: 20.0),
+                        child: Column(
+                          children: [
+                            ListTile(
+                              title: Text(L10n.of(context).storageBookFile),
+                              trailing: fileSizeTriling(
+                                storageInfoAsync.value?.booksSizeStr,
+                              ),
+                            ),
+                            ListTile(
+                              title: Text(L10n.of(context).storageCoverFile),
+                              trailing: fileSizeTriling(
+                                storageInfoAsync.value?.coverSizeStr,
+                              ),
+                            ),
+                            ListTile(
+                              title: Text(L10n.of(context).storageFontFile),
+                              trailing: fileSizeTriling(
+                                storageInfoAsync.value?.fontSizeStr,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -305,27 +240,113 @@ class _StorageSettingsState extends ConsumerState<StorageSettings>
           ],
         ),
 
-      // Tab view for data files details
-      SettingsSection(
+        // Custom storage location (Windows only)
+        if (AnxPlatform.isWindows)
+          SettingsSection(
+            title: Text(L10n.of(context).storageCustomLocation),
+            tiles: [
+              CustomSettingsTile(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Current storage path
+                    ListTile(
+                      title: Text(L10n.of(context).storageCurrentPath),
+                      subtitle: Text(
+                        _currentStoragePath ?? '...',
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                    ),
+                    // Selected new path (if any)
+                    if (_selectedNewPath != null) ...[
+                      ListTile(
+                        title: Text(L10n.of(context).storageNewPath),
+                        subtitle: Text(
+                          _selectedNewPath!,
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
+                                color: Theme.of(context).colorScheme.primary,
+                              ),
+                        ),
+                        trailing: IconButton(
+                          icon: const Icon(Icons.close),
+                          tooltip: L10n.of(context).commonCancel,
+                          onPressed: _isMigrating
+                              ? null
+                              : () async {
+                                  await Prefs().setPendingStoragePath(null);
+                                  if (!mounted) return;
+                                  setState(() => _selectedNewPath = null);
+                                },
+                        ),
+                      ),
+                    ],
+                    // Action buttons
+                    Padding(
+                      padding: const EdgeInsets.all(PaperfoldSpace.md),
+                      child: Row(
+                        children: [
+                          if (_selectedNewPath == null)
+                            Expanded(
+                              child: AnxButton(
+                                onPressed: _selectNewPath,
+                                child: Text(L10n.of(context).storageSelectPath),
+                              ),
+                            )
+                          else
+                            Expanded(
+                              child: AnxButton(
+                                onPressed: _isMigrating
+                                    ? null
+                                    : _startMigration,
+                                isLoading: _isMigrating,
+                                child: Text(
+                                  L10n.of(context).storageMigrateData,
+                                ),
+                              ),
+                            ),
+                          const SizedBox(width: 8),
+                          if (Prefs().customStoragePath != null &&
+                              _selectedNewPath == null)
+                            AnxButton.outlined(
+                              onPressed: _isMigrating
+                                  ? null
+                                  : _resetToDefaultPath,
+                              child: Text(L10n.of(context).storageResetPath),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+
+        // Tab view for data files details
+        SettingsSection(
           title: Text(L10n.of(context).storageDataFileDetails),
           tiles: [
             CustomSettingsTile(
               child: Padding(
-                padding: const EdgeInsets.all(16.0),
+                padding: const EdgeInsets.all(PaperfoldSpace.md),
                 child: Column(
                   children: [
                     TabBar(
                       controller: _tabController,
                       tabs: [
                         Tab(
-                            text: L10n.of(context).storageBookFile,
-                            icon: const Icon(Icons.book)),
+                          text: L10n.of(context).storageBookFile,
+                          icon: const Icon(Icons.book),
+                        ),
                         Tab(
-                            text: L10n.of(context).storageCoverFile,
-                            icon: const Icon(Icons.image)),
+                          text: L10n.of(context).storageCoverFile,
+                          icon: const Icon(Icons.image),
+                        ),
                         Tab(
-                            text: L10n.of(context).storageFontFile,
-                            icon: const Icon(Icons.font_download)),
+                          text: L10n.of(context).storageFontFile,
+                          icon: const Icon(Icons.font_download),
+                        ),
                       ],
                     ),
                     SizedBox(
@@ -352,9 +373,11 @@ class _StorageSettingsState extends ConsumerState<StorageSettings>
                               ref: ref,
                             ),
                             loading: () => const Center(
-                                child: CircularProgressIndicator.adaptive()),
+                              child: CircularProgressIndicator.adaptive(),
+                            ),
                             error: (_, __) => Center(
-                                child: Text(L10n.of(context).commonError)),
+                              child: Text(L10n.of(context).commonError),
+                            ),
                           ),
                           // Covers tab
                           storageInfoAsync.when(
@@ -368,9 +391,11 @@ class _StorageSettingsState extends ConsumerState<StorageSettings>
                               ref: ref,
                             ),
                             loading: () => const Center(
-                                child: CircularProgressIndicator.adaptive()),
+                              child: CircularProgressIndicator.adaptive(),
+                            ),
                             error: (_, __) => Center(
-                                child: Text(L10n.of(context).commonError)),
+                              child: Text(L10n.of(context).commonError),
+                            ),
                           ),
                           // Fonts tab
                           storageInfoAsync.when(
@@ -384,9 +409,11 @@ class _StorageSettingsState extends ConsumerState<StorageSettings>
                               ref: ref,
                             ),
                             loading: () => const Center(
-                                child: CircularProgressIndicator.adaptive()),
+                              child: CircularProgressIndicator.adaptive(),
+                            ),
                             error: (_, __) => Center(
-                                child: Text(L10n.of(context).commonError)),
+                              child: Text(L10n.of(context).commonError),
+                            ),
                           ),
                         ],
                       ),
@@ -395,8 +422,10 @@ class _StorageSettingsState extends ConsumerState<StorageSettings>
                 ),
               ),
             ),
-          ])
-    ]);
+          ],
+        ),
+      ],
+    );
   }
 }
 
@@ -455,17 +484,17 @@ class DataFilesDetailTab extends StatelessWidget {
                       subtitle: showDelete ? fileSizeWidget(file) : null,
                       trailing: showDelete
                           ? file.path.endsWith('SourceHanSerifSC-Regular.otf')
-                              ? null
-                              : DeleteConfirm(
-                                  delete: () {
-                                    snapshot.data!.remove(file);
-                                    ref
-                                        .read(storageInfoProvider.notifier)
-                                        .deleteFile(file);
-                                  },
-                                  deleteIcon: const Icon(Icons.delete),
-                                  confirmIcon: const Icon(Icons.check),
-                                )
+                                ? null
+                                : DeleteConfirm(
+                                    delete: () {
+                                      snapshot.data!.remove(file);
+                                      ref
+                                          .read(storageInfoProvider.notifier)
+                                          .deleteFile(file);
+                                    },
+                                    deleteIcon: const Icon(Icons.delete),
+                                    confirmIcon: const Icon(Icons.check),
+                                  )
                           : fileSizeWidget(file),
                     );
                   },

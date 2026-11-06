@@ -1,3 +1,4 @@
+import 'package:paperfold/config/paperfold_system.dart';
 import 'package:paperfold/l10n/generated/L10n.dart';
 import 'package:paperfold/widgets/book_notes/book_notes_list.dart';
 import 'package:paperfold/widgets/reading_page/widget_title.dart';
@@ -17,15 +18,16 @@ class ReadingNotes extends StatelessWidget {
     // shell that holds the panel bounds it now, so it only has to fill what it
     // is given.
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+      padding: const EdgeInsets.symmetric(horizontal: PaperfoldSpace.md),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
           widgetTitle(context, L10n.of(context).navBarNotes, null),
           Flexible(
-            child:
-                ListView(children: [BookNotesList(book: book, reading: true)]),
+            child: ListView(
+              children: [BookNotesList(book: book, reading: true)],
+            ),
           ),
         ],
       ),

@@ -1,3 +1,4 @@
+import 'package:paperfold/config/paperfold_system.dart';
 import 'package:paperfold/config/shared_preference_provider.dart';
 import 'package:paperfold/l10n/generated/L10n.dart';
 import 'package:paperfold/page/reading_page.dart';
@@ -77,8 +78,8 @@ class _CustomCSSEditorState extends State<CustomCSSEditor> {
         if (!line.endsWith(';') && !line.endsWith('{')) {
           setState(() {
             _hasValidationErrors = true;
-            _validationMessage =
-                L10n.of(context).cssValidationMissingSemicolon(i + 1);
+            _validationMessage = L10n.of(context)
+                .cssValidationMissingSemicolon(i + 1);
           });
           return;
         }
@@ -135,20 +136,29 @@ class _CustomCSSEditorState extends State<CustomCSSEditor> {
           if (_hasValidationErrors)
             Container(
               margin: const EdgeInsets.only(bottom: 8),
-              padding: const EdgeInsets.all(8),
+              padding: const EdgeInsets.all(PaperfoldSpace.xs),
               decoration: BoxDecoration(
-                color: Colors.red.withAlpha(30),
-                borderRadius: BorderRadius.circular(4),
-                border: Border.all(color: Colors.red, width: 1),
+                color: Theme.of(context).colorScheme.errorContainer,
+                borderRadius: PaperfoldShape.objectRadius,
+                border: Border.all(
+                  color: Theme.of(context).colorScheme.error,
+                  width: 1,
+                ),
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.error_outline, color: Colors.red, size: 16),
+                  Icon(
+                    Icons.error_outline,
+                    color: Theme.of(context).colorScheme.onErrorContainer,
+                    size: PaperfoldSize.smallIcon,
+                  ),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       _validationMessage,
-                      style: const TextStyle(color: Colors.red, fontSize: 12),
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Theme.of(context).colorScheme.onErrorContainer,
+                      ),
                     ),
                   ),
                 ],
@@ -157,8 +167,8 @@ class _CustomCSSEditorState extends State<CustomCSSEditor> {
           Container(
             height: 200,
             decoration: BoxDecoration(
-              border: Border.all(color: Colors.grey.withAlpha(80)),
-              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Theme.of(context).colorScheme.outline),
+              borderRadius: PaperfoldShape.controlRadius,
             ),
             child: TextField(
               controller: _cssController,
@@ -172,7 +182,7 @@ class _CustomCSSEditorState extends State<CustomCSSEditor> {
               decoration: InputDecoration(
                 hintText: L10n.of(context).cssEditorHint,
                 border: InputBorder.none,
-                contentPadding: const EdgeInsets.all(12),
+                contentPadding: const EdgeInsets.all(PaperfoldSpace.sm),
               ),
               textAlignVertical: TextAlignVertical.top,
             ),
@@ -192,8 +202,10 @@ class _CustomCSSEditorState extends State<CustomCSSEditor> {
                 icon: const Icon(Icons.save, size: 16),
                 label: Text(L10n.of(context).cssSaveAndApply),
                 style: ElevatedButton.styleFrom(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: PaperfoldSpace.md,
+                    vertical: PaperfoldSpace.xs,
+                  ),
                 ),
               ),
             ],

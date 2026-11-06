@@ -1,3 +1,5 @@
+import 'package:paperfold/widgets/common/paperfold_modal_motion.dart';
+
 import 'dart:convert';
 import 'dart:io';
 
@@ -48,73 +50,82 @@ class _SyncSettingState extends ConsumerState<SyncSetting> {
           tiles: [
             webdavSwitch(context, setState, ref),
             SettingsTile.navigation(
-                title: Text(L10n.of(context).settingsSyncWebdav),
-                leading: const Icon(Icons.cloud),
-                value: Text(Prefs().getSyncInfo(SyncProtocol.webdav)['url'] ??
-                    'Not set'),
-                // enabled: Prefs().webdavStatus,
-                onPressed: (context) async {
-                  showWebdavDialog(context);
-                }),
+              title: Text(L10n.of(context).settingsSyncWebdav),
+              leading: const Icon(Icons.cloud),
+              value: Text(
+                Prefs().getSyncInfo(SyncProtocol.webdav)['url'] ?? 'Not set',
+              ),
+              // enabled: Prefs().webdavStatus,
+              onPressed: (context) async {
+                showWebdavDialog(context);
+              },
+            ),
             SettingsTile.navigation(
-                title: Text(L10n.of(context).settingsSyncWebdavSyncNow),
-                leading: const Icon(Icons.sync_alt),
-                // value: Text(Prefs().syncDirection),
-                enabled: Prefs().webdavStatus,
-                onPressed: (context) {
-                  chooseDirection(ref);
-                }),
+              title: Text(L10n.of(context).settingsSyncWebdavSyncNow),
+              leading: const Icon(Icons.sync_alt),
+              // value: Text(Prefs().syncDirection),
+              enabled: Prefs().webdavStatus,
+              onPressed: (context) {
+                chooseDirection(ref);
+              },
+            ),
             SettingsTile.switchTile(
-                title: Text(L10n.of(context).webdavOnlyWifi),
-                leading: const Icon(Icons.wifi),
-                initialValue: Prefs().onlySyncWhenWifi,
-                onToggle: (bool value) {
-                  setState(() {
-                    Prefs().onlySyncWhenWifi = value;
-                  });
-                }),
+              title: Text(L10n.of(context).webdavOnlyWifi),
+              leading: const Icon(Icons.wifi),
+              initialValue: Prefs().onlySyncWhenWifi,
+              onToggle: (bool value) {
+                setState(() {
+                  Prefs().onlySyncWhenWifi = value;
+                });
+              },
+            ),
             SettingsTile.switchTile(
-                title: Text(L10n.of(context).settingsSyncCompletedToast),
-                leading: const Icon(Icons.notifications),
-                initialValue: Prefs().syncCompletedToast,
-                onToggle: (bool value) {
-                  setState(() {
-                    Prefs().syncCompletedToast = value;
-                  });
-                }),
+              title: Text(L10n.of(context).settingsSyncCompletedToast),
+              leading: const Icon(Icons.notifications),
+              initialValue: Prefs().syncCompletedToast,
+              onToggle: (bool value) {
+                setState(() {
+                  Prefs().syncCompletedToast = value;
+                });
+              },
+            ),
             SettingsTile.switchTile(
-                title: Text(L10n.of(context).settingsSyncAutoSync),
-                leading: const Icon(Icons.sync),
-                initialValue: Prefs().autoSync,
-                enabled: Prefs().webdavStatus,
-                onToggle: (bool value) {
-                  setState(() {
-                    Prefs().autoSync = value;
-                  });
-                }),
+              title: Text(L10n.of(context).settingsSyncAutoSync),
+              leading: const Icon(Icons.sync),
+              initialValue: Prefs().autoSync,
+              enabled: Prefs().webdavStatus,
+              onToggle: (bool value) {
+                setState(() {
+                  Prefs().autoSync = value;
+                });
+              },
+            ),
             SettingsTile.navigation(
-                title: Text(L10n.of(context).restoreBackup),
-                leading: const Icon(Icons.restore),
-                onPressed: (context) {
-                  ref.read(syncProvider.notifier).showBackupManagementDialog();
-                })
+              title: Text(L10n.of(context).restoreBackup),
+              leading: const Icon(Icons.restore),
+              onPressed: (context) {
+                ref.read(syncProvider.notifier).showBackupManagementDialog();
+              },
+            ),
           ],
         ),
         SettingsSection(
           title: Text(L10n.of(context).exportAndImport),
           tiles: [
             SettingsTile.navigation(
-                title: Text(L10n.of(context).exportAndImportExport),
-                leading: const Icon(Icons.cloud_upload),
-                onPressed: (context) {
-                  exportData(context);
-                }),
+              title: Text(L10n.of(context).exportAndImportExport),
+              leading: const Icon(Icons.cloud_upload),
+              onPressed: (context) {
+                exportData(context);
+              },
+            ),
             SettingsTile.navigation(
-                title: Text(L10n.of(context).exportAndImportImport),
-                leading: const Icon(Icons.cloud_download),
-                onPressed: (context) {
-                  importData();
-                }),
+              title: Text(L10n.of(context).exportAndImportImport),
+              leading: const Icon(Icons.cloud_download),
+              onPressed: (context) {
+                importData();
+              },
+            ),
           ],
         ),
       ],
@@ -128,11 +139,7 @@ class _SyncSettingState extends ConsumerState<SyncSetting> {
         backType: SmartBackType.block,
         builder: (BuildContext context) => SimpleDialog(
           title: Center(child: Text(title)),
-          children: const [
-            Center(
-              child: CircularProgressIndicator(),
-            ),
-          ],
+          children: const [Center(child: CircularProgressIndicator())],
         ),
       );
     });
@@ -162,9 +169,10 @@ class _SyncSettingState extends ConsumerState<SyncSetting> {
           'Paperfold-Backup-${DateTime.now().year}-${DateTime.now().month}-${DateTime.now().day}-v3.zip';
 
       String? filePath = await saveFileToDownload(
-          sourceFilePath: archive.path,
-          fileName: fileName,
-          mimeType: 'application/zip');
+        sourceFilePath: archive.path,
+        fileName: fileName,
+        mimeType: 'application/zip',
+      );
 
       if (filePath != null) {
         AnxLog.info('exportData: Saved to: $filePath');
@@ -201,7 +209,8 @@ class _SyncSettingState extends ConsumerState<SyncSetting> {
     if (filePath == null) {
       AnxLog.info('importData: cannot get file path');
       AnxToast.show(
-          L10n.of(navigatorKey.currentContext!).importCannotGetFilePath);
+        L10n.of(navigatorKey.currentContext!).importCannotGetFilePath,
+      );
       return;
     }
 
@@ -209,15 +218,17 @@ class _SyncSettingState extends ConsumerState<SyncSetting> {
     if (!await zipFile.exists()) {
       AnxLog.info('importData: zip file not found');
       AnxToast.show(
-          L10n.of(navigatorKey.currentContext!).importCannotGetFilePath);
+        L10n.of(navigatorKey.currentContext!).importCannotGetFilePath,
+      );
       return;
     }
     _showDataDialog(L10n.of(navigatorKey.currentContext!).importing);
 
     Directory? extractDir;
     try {
-      extractDir =
-          await (await getAnxTempDir()).createTemp('paperfold_import_');
+      extractDir = await (await getAnxTempDir()).createTemp(
+        'paperfold_import_',
+      );
 
       await compute(extractZipFile, {
         'zipFilePath': zipFile.path,
@@ -232,11 +243,13 @@ class _SyncSettingState extends ConsumerState<SyncSetting> {
 
       AnxLog.info('importData: import success');
       AnxToast.show(
-          L10n.of(navigatorKey.currentContext!).importSuccessRestartApp);
+        L10n.of(navigatorKey.currentContext!).importSuccessRestartApp,
+      );
     } catch (e) {
       AnxLog.info('importData: error while unzipping or copying files: $e');
       AnxToast.show(
-          L10n.of(navigatorKey.currentContext!).importFailed(e.toString()));
+        L10n.of(navigatorKey.currentContext!).importFailed(e.toString()),
+      );
     } finally {
       await SmartDialog.dismiss();
       if (extractDir != null && await extractDir.exists()) {
@@ -248,7 +261,8 @@ class _SyncSettingState extends ConsumerState<SyncSetting> {
 
 Future<void> restoreBackupFiles(String extractPath) async {
   final validation = await DatabaseSyncManager.validateDatabase(
-      path.join(extractPath, 'databases', 'app_database.db'));
+    path.join(extractPath, 'databases', 'app_database.db'),
+  );
   if (!validation.isValid) {
     throw FormatException(validation.error ?? 'Invalid database');
   }
@@ -273,10 +287,14 @@ Future<void> restoreBackupFiles(String extractPath) async {
       staged.add((target: entry.value, work: work));
       final incoming = Directory(path.join(work.path, 'incoming'));
       await incoming.create();
-      await for (final entity
-          in source.list(recursive: true, followLinks: false)) {
+      await for (final entity in source.list(
+        recursive: true,
+        followLinks: false,
+      )) {
         final destination = path.join(
-            incoming.path, path.relative(entity.path, from: source.path));
+          incoming.path,
+          path.relative(entity.path, from: source.path),
+        );
         if (entity is File) {
           await File(destination).parent.create(recursive: true);
           await entity.copy(destination);
@@ -315,8 +333,9 @@ Future<void> restoreBackupFiles(String extractPath) async {
         } catch (recoveryError) {
           keepRecoveryFiles = true;
           throw StateError(
-              'Restore failed: $error. Recovery failed: $recoveryError. '
-              'Original files remain in ${staged.map((item) => item.work.path).join(', ')}');
+            'Restore failed: $error. Recovery failed: $recoveryError. '
+            'Original files remain in ${staged.map((item) => item.work.path).join(', ')}',
+          );
         }
         rethrow;
       }
@@ -357,7 +376,9 @@ Future<String> createZipFile(Map<String, dynamic> params) async {
   var complete = false;
   try {
     await encoder.addFile(
-        File(params['databaseSnapshotPath']), 'databases/app_database.db');
+      File(params['databaseSnapshotPath']),
+      'databases/app_database.db',
+    );
     for (final dir in directoryList) {
       if (dir is Directory && await dir.exists()) {
         await encoder.addDirectory(dir);
@@ -448,10 +469,12 @@ void showWebdavDialog(BuildContext context) {
   // final prefs = Prefs().saveWebdavInfo;
   final webdavInfo = Prefs().getSyncInfo(SyncProtocol.webdav);
   final webdavUrlController = TextEditingController(text: webdavInfo['url']);
-  final webdavUsernameController =
-      TextEditingController(text: webdavInfo['username']);
-  final webdavPasswordController =
-      TextEditingController(text: webdavInfo['password']);
+  final webdavUsernameController = TextEditingController(
+    text: webdavInfo['username'],
+  );
+  final webdavPasswordController = TextEditingController(
+    text: webdavInfo['password'],
+  );
   Widget buildTextField(String labelText, TextEditingController controller) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
@@ -470,17 +493,24 @@ void showWebdavDialog(BuildContext context) {
 
   showDialog(
     context: context,
+    animationStyle: paperfoldModalMotion(context),
     builder: (context) {
       return SimpleDialog(
         title: Text(title),
         contentPadding: const EdgeInsets.all(20),
         children: [
           buildTextField(
-              L10n.of(context).settingsSyncWebdavUrl, webdavUrlController),
-          buildTextField(L10n.of(context).settingsSyncWebdavUsername,
-              webdavUsernameController),
-          buildTextField(L10n.of(context).settingsSyncWebdavPassword,
-              webdavPasswordController),
+            L10n.of(context).settingsSyncWebdavUrl,
+            webdavUrlController,
+          ),
+          buildTextField(
+            L10n.of(context).settingsSyncWebdavUsername,
+            webdavUsernameController,
+          ),
+          buildTextField(
+            L10n.of(context).settingsSyncWebdavPassword,
+            webdavPasswordController,
+          ),
           Row(
             mainAxisAlignment: MainAxisAlignment.end,
             children: [

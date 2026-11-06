@@ -1,3 +1,7 @@
+import 'package:paperfold/config/paperfold_system.dart';
+import 'package:paperfold/widgets/common/paperfold_modal_motion.dart';
+import 'package:paperfold/config/paperfold_visual_policy.dart';
+import 'package:paperfold/config/paperfold_motion.dart';
 import 'package:paperfold/config/shared_preference_provider.dart';
 import 'package:paperfold/enums/lang_list.dart';
 import 'package:paperfold/l10n/generated/L10n.dart';
@@ -27,7 +31,7 @@ class _TranslateSettingState extends State<TranslateSetting> {
           tiles: [
             CustomSettingsTile(
               child: Padding(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(PaperfoldSpace.md),
                 child: Column(
                   children: [
                     TranslationConfig(setState: () => setState(() {})),
@@ -70,7 +74,7 @@ class _TranslateSettingState extends State<TranslateSetting> {
           tiles: [
             CustomSettingsTile(
               child: Padding(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(PaperfoldSpace.md),
                 child: Column(
                   children: [
                     FullTextTranslationConfig(setState: () => setState(() {})),
@@ -128,6 +132,7 @@ class TranslationConfig extends StatelessWidget {
               onPressed: () {
                 showModalBottomSheet(
                   context: context,
+                  sheetAnimationStyle: paperfoldModalMotion(context),
                   builder: (context) => const TranslateServicePicker(),
                 ).then((value) {
                   if (context.mounted) setState();
@@ -150,6 +155,7 @@ class TranslationConfig extends StatelessWidget {
                 onPressed: () {
                   showModalBottomSheet(
                     context: context,
+                    sheetAnimationStyle: paperfoldModalMotion(context),
                     builder: (context) => const TranslateLangPicker(
                       isFrom: true,
                       isWebView: false,
@@ -167,6 +173,7 @@ class TranslationConfig extends StatelessWidget {
                 onPressed: () {
                   showModalBottomSheet(
                     context: context,
+                    sheetAnimationStyle: paperfoldModalMotion(context),
                     builder: (context) => const TranslateLangPicker(
                       isFrom: false,
                       isWebView: false,
@@ -204,6 +211,7 @@ class FullTextTranslationConfig extends StatelessWidget {
               onPressed: () {
                 showModalBottomSheet(
                   context: context,
+                  sheetAnimationStyle: paperfoldModalMotion(context),
                   builder: (context) => const FullTextTranslateServicePicker(),
                 ).then((value) {
                   if (context.mounted) setState();
@@ -226,6 +234,7 @@ class FullTextTranslationConfig extends StatelessWidget {
                 onPressed: () {
                   showModalBottomSheet(
                     context: context,
+                    sheetAnimationStyle: paperfoldModalMotion(context),
                     builder: (context) => const TranslateLangPicker(
                       isFrom: true,
                       isWebView: true,
@@ -243,6 +252,7 @@ class FullTextTranslationConfig extends StatelessWidget {
                 onPressed: () {
                   showModalBottomSheet(
                     context: context,
+                    sheetAnimationStyle: paperfoldModalMotion(context),
                     builder: (context) => const TranslateLangPicker(
                       isFrom: false,
                       isWebView: true,
@@ -426,12 +436,14 @@ class _TranslateSettingItemState extends State<TranslateSettingItem> {
           },
         ),
         AnimatedSize(
-          duration: const Duration(milliseconds: 200),
+          duration: PaperfoldVisualPolicy.motionAllowed(context)
+              ? PaperfoldMotion.of(context, PaperfoldMotion.shift)
+              : Duration.zero,
           curve: Curves.easeOut,
           alignment: Alignment.topCenter,
           child: isExpanded
               ? Padding(
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.all(PaperfoldSpace.md),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [

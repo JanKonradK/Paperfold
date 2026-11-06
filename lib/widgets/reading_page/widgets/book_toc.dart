@@ -1,3 +1,4 @@
+import 'package:paperfold/config/paperfold_system.dart';
 import 'package:paperfold/l10n/generated/L10n.dart';
 import 'package:paperfold/main.dart';
 import 'package:paperfold/models/search_result_model.dart';
@@ -50,9 +51,9 @@ class _BookTocState extends ConsumerState<BookToc> {
 
   void _saveScrollPosition() {
     if (searchResultsScrollController.hasClients) {
-      ref.read(tocSearchProvider.notifier).updateScrollOffset(
-            searchResultsScrollController.offset,
-          );
+      ref
+          .read(tocSearchProvider.notifier)
+          .updateScrollOffset(searchResultsScrollController.offset);
     }
   }
 
@@ -323,7 +324,8 @@ class _BookTocState extends ConsumerState<BookToc> {
         controller: searchBarController,
         shadowColor: const WidgetStatePropertyAll<Color>(Colors.transparent),
         padding: const WidgetStatePropertyAll<EdgeInsets>(
-            EdgeInsets.symmetric(horizontal: 16.0)),
+          EdgeInsets.symmetric(horizontal: PaperfoldSpace.md),
+        ),
         leading: const Icon(Icons.search),
         trailing: [
           isSearchActive
@@ -349,31 +351,29 @@ class _BookTocState extends ConsumerState<BookToc> {
       ),
     );
     var searchResult = Expanded(
-        child: Column(
-      children: [
-        const SizedBox(height: 6.0),
-        if (showSearchProgress)
-          LinearProgressIndicator(
-            value: progressValue,
+      child: Column(
+        children: [
+          const SizedBox(height: 6.0),
+          if (showSearchProgress) LinearProgressIndicator(value: progressValue),
+          Expanded(
+            child: searchResults.isEmpty
+                ? const SizedBox()
+                : ListView.builder(
+                    controller: searchResultsScrollController,
+                    itemCount: searchResults.length,
+                    itemBuilder: (context, index) {
+                      return searchResultWidget(
+                        searchResult: searchResults[index],
+                        hideAppBarAndBottomBar: widget.hideAppBarAndBottomBar,
+                        epubPlayerKey: widget.epubPlayerKey,
+                        closeDrawer: widget.closeDrawer,
+                      );
+                    },
+                  ),
           ),
-        Expanded(
-          child: searchResults.isEmpty
-              ? const SizedBox()
-              : ListView.builder(
-                  controller: searchResultsScrollController,
-                  itemCount: searchResults.length,
-                  itemBuilder: (context, index) {
-                    return searchResultWidget(
-                      searchResult: searchResults[index],
-                      hideAppBarAndBottomBar: widget.hideAppBarAndBottomBar,
-                      epubPlayerKey: widget.epubPlayerKey,
-                      closeDrawer: widget.closeDrawer,
-                    );
-                  },
-                ),
-        ),
-      ],
-    ));
+        ],
+      ),
+    );
     final columnChildren = <Widget>[
       Row(
         children: [
@@ -469,7 +469,10 @@ Widget searchResultWidget({
               FilledContainer(
                 margin: EdgeInsets.only(bottom: 5),
                 width: double.infinity,
-                padding: EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                padding: EdgeInsets.symmetric(
+                  vertical: PaperfoldSpace.xs,
+                  horizontal: PaperfoldSpace.sm,
+                ),
                 radius: 10,
                 child: InkWell(
                   onTap: () {
@@ -516,24 +519,25 @@ class TocItemWidget extends StatelessWidget {
   final VoidCallback? onToggle;
   final VoidCallback onTap;
 
-  TextStyle _baseStyle(BuildContext context) => TextStyle(
-        fontSize: 15,
-        color: Theme.of(context).colorScheme.onSurface,
-      );
+  TextStyle _baseStyle(BuildContext context) =>
+      TextStyle(fontSize: 15, color: Theme.of(context).colorScheme.onSurface);
 
   TextStyle _selectedStyle(BuildContext context) => TextStyle(
-        fontSize: 16,
-        color: Theme.of(context).colorScheme.primary,
-        fontWeight: FontWeight.bold,
-      );
+    fontSize: 16,
+    color: Theme.of(context).colorScheme.primary,
+    fontWeight: FontWeight.bold,
+  );
 
   @override
   Widget build(BuildContext context) {
-    final labelStyle =
-        isSelected ? _selectedStyle(context) : _baseStyle(context);
+    final labelStyle = isSelected
+        ? _selectedStyle(context)
+        : _baseStyle(context);
     final percentageStyle =
-        (isSelected ? _selectedStyle(context) : _baseStyle(context))
-            .copyWith(fontSize: 14, fontWeight: FontWeight.w300);
+        (isSelected ? _selectedStyle(context) : _baseStyle(context)).copyWith(
+          fontSize: 14,
+          fontWeight: FontWeight.w300,
+        );
 
     return Column(
       children: [
@@ -543,7 +547,8 @@ class TocItemWidget extends StatelessWidget {
             // The nesting indent runs from the reading edge. Fixed to the
             // left, an Arabic table of contents indented backwards.
             padding: EdgeInsetsDirectional.only(
-                start: depth == 0 ? 0 : depth * 40.0),
+              start: depth == 0 ? 0 : depth * 40.0,
+            ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               crossAxisAlignment: CrossAxisAlignment.center,
@@ -560,9 +565,7 @@ class TocItemWidget extends StatelessWidget {
                 Expanded(
                   child: TextButton(
                     onPressed: onTap,
-                    style: const ButtonStyle(
-                      alignment: Alignment.centerLeft,
-                    ),
+                    style: const ButtonStyle(alignment: Alignment.centerLeft),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       crossAxisAlignment: CrossAxisAlignment.center,
@@ -572,18 +575,17 @@ class TocItemWidget extends StatelessWidget {
                             mainAxisAlignment: MainAxisAlignment.center,
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
-                                tocItem.label.trim(),
-                                style: labelStyle,
-                              ),
+                              Text(tocItem.label.trim(), style: labelStyle),
                               if (showProgress)
                                 Padding(
                                   padding: const EdgeInsets.symmetric(
-                                      horizontal: 10.0),
+                                    horizontal: 10.0,
+                                  ),
                                   child: Row(
                                     children: [
                                       const Icon(
-                                          Icons.keyboard_arrow_right_rounded),
+                                        Icons.keyboard_arrow_right_rounded,
+                                      ),
                                       const SizedBox(width: 10),
                                       Text(progressText),
                                     ],
@@ -592,10 +594,7 @@ class TocItemWidget extends StatelessWidget {
                             ],
                           ),
                         ),
-                        Text(
-                          tocItem.percentage,
-                          style: percentageStyle,
-                        ),
+                        Text(tocItem.percentage, style: percentageStyle),
                       ],
                     ),
                   ),

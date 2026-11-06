@@ -7,12 +7,15 @@
 - Theme selection keeps the stored theme in eInk mode.
 - Three new group names have translations in all 16 ARB files.
 - Shared settings rows use tonal icon wells and native switches.
+- Settings subpages and reader settings use system space and shape tokens.
+- Native modal routes use the shared settle timing.
+- Slider tracks are 4 dp solid surfaces without blur.
 - The new home tests and the radius test pass: 5 tests.
 - The scoped analyzer found no errors. It found 14 information messages.
 
 ## Next
 
-- Commit the subpages, radius migration, charts, and other screens.
+- Commit the radius migration, charts, and other screens.
 - Complete the full test suite.
 
 ## Known test results

@@ -1,3 +1,6 @@
+import 'package:paperfold/widgets/common/paperfold_modal_motion.dart';
+import 'package:paperfold/config/paperfold_visual_policy.dart';
+import 'package:paperfold/config/paperfold_motion.dart';
 import 'package:paperfold/l10n/generated/L10n.dart';
 import 'package:paperfold/main.dart';
 import 'package:paperfold/page/reading_page.dart';
@@ -37,6 +40,7 @@ void showMoreSettings(ReadingSettings settings) {
 
   showDialog(
     context: context,
+    animationStyle: paperfoldModalMotion(context),
     builder: (context) {
       return Dialog(
         child: PointerInterceptor(
@@ -45,10 +49,7 @@ void showMoreSettings(ReadingSettings settings) {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                TabBar(
-                  controller: tabController,
-                  tabs: tabs,
-                ),
+                TabBar(controller: tabController, tabs: tabs),
                 const Divider(height: 0),
                 ConstrainedBox(
                   constraints: BoxConstraints(
@@ -57,7 +58,10 @@ void showMoreSettings(ReadingSettings settings) {
                   ),
                   child: SingleChildScrollView(
                     child: ContentSizeTabBarView(
-                      animationDuration: const Duration(milliseconds: 600),
+                      animationDuration:
+                          PaperfoldVisualPolicy.motionAllowed(context)
+                          ? PaperfoldMotion.of(context, PaperfoldMotion.open)
+                          : Duration.zero,
                       controller: tabController,
                       children: children,
                     ),

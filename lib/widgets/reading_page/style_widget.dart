@@ -1,3 +1,6 @@
+import 'package:paperfold/widgets/common/paperfold_modal_motion.dart';
+import 'package:paperfold/config/paperfold_system.dart';
+
 import 'dart:io';
 
 import 'package:paperfold/config/shared_preference_provider.dart';
@@ -113,7 +116,9 @@ class StyleWidgetState extends State<StyleWidget> {
               OutlinedButton.icon(
                 style: OutlinedButton.styleFrom(
                   minimumSize: const Size(0, 48),
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: PaperfoldSpace.sm,
+                  ),
                 ),
                 onPressed: () {
                   widget.setCurrentPage(const BgimgSelector());
@@ -121,7 +126,7 @@ class StyleWidgetState extends State<StyleWidget> {
                 icon: const Icon(Icons.chevron_right),
                 iconAlignment: IconAlignment.end,
                 label: Text(L10n.of(context).readingPageStyleBackground),
-              )
+              ),
             ],
           ),
         ],
@@ -163,26 +168,28 @@ class StyleWidgetState extends State<StyleWidget> {
     // name = 'customFont' + index
     for (int i = 0; i < fontDir.listSync().length; i++) {
       File element = fontDir.listSync()[i] as File;
-      fontList.add(FontModel(
-        label: getFontNameFromFile(element),
-        name: 'customFont$i',
-        path:
-            'http://127.0.0.1:${Server().port}/fonts/${element.path.split(Platform.pathSeparator).last}',
-      ));
+      fontList.add(
+        FontModel(
+          label: getFontNameFromFile(element),
+          name: 'customFont$i',
+          path:
+              'http://127.0.0.1:${Server().port}/fonts/${element.path.split(Platform.pathSeparator).last}',
+        ),
+      );
     }
 
-    fontList.add(FontModel.builtIn(
-      label: L10n.of(context).addNewFont,
-      name: 'newFont',
-    ));
+    fontList.add(
+      FontModel.builtIn(label: L10n.of(context).addNewFont, name: 'newFont'),
+    );
 
     return fontList;
   }
 
   Widget fontAndPageTurn() {
     FontModel? font = fonts().firstWhere(
-        (element) => element.path == Prefs().font.path,
-        orElse: () => Prefs.defaultFont);
+      (element) => element.path == Prefs().font.path,
+      orElse: () => Prefs.defaultFont,
+    );
 
     Widget? leadingIcon(String name) {
       if (name == 'newFont') {
@@ -192,78 +199,79 @@ class StyleWidgetState extends State<StyleWidget> {
     }
 
     final turnStyle = Prefs().pageTurnStyle;
-    return Row(children: [
-      Expanded(
-        child: DropdownMenu<PageTurn>(
-          label: Text(L10n.of(context).readingPagePageTurningMethod),
-          initialSelection: turnStyle,
-          expandedInsets: const EdgeInsetsDirectional.only(end: 5),
-          // Each style costs something different, and the curl costs the most,
-          // so the reader sees what they picked without opening the list again.
-          helperText: turnStyle.getDescription(context),
-          inputDecorationTheme: InputDecorationTheme(
-            helperMaxLines: 3,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(24),
+    return Row(
+      children: [
+        Expanded(
+          child: DropdownMenu<PageTurn>(
+            label: Text(L10n.of(context).readingPagePageTurningMethod),
+            initialSelection: turnStyle,
+            expandedInsets: const EdgeInsetsDirectional.only(end: 5),
+            // Each style costs something different, and the curl costs the most,
+            // so the reader sees what they picked without opening the list again.
+            helperText: turnStyle.getDescription(context),
+            inputDecorationTheme: InputDecorationTheme(
+              helperMaxLines: 3,
+              border: OutlineInputBorder(
+                borderRadius: PaperfoldShape.paneRadius,
+              ),
             ),
+            onSelected: (PageTurn? value) {
+              if (value != null) {
+                setState(() {
+                  Prefs().pageTurnStyle = value;
+                });
+                epubPlayerKey.currentState!.changePageTurnStyle(value);
+              }
+            },
+            dropdownMenuEntries: PageTurn.values
+                .map(
+                  (e) =>
+                      DropdownMenuEntry(value: e, label: e.getLabel(context)),
+                )
+                .toList(),
           ),
-          onSelected: (PageTurn? value) {
-            if (value != null) {
-              setState(() {
-                Prefs().pageTurnStyle = value;
-              });
-              epubPlayerKey.currentState!.changePageTurnStyle(value);
-            }
-          },
-          dropdownMenuEntries: PageTurn.values
-              .map((e) => DropdownMenuEntry(
-                    value: e,
-                    label: e.getLabel(context),
-                  ))
-              .toList(),
         ),
-      ),
-      Expanded(
-        child: DropdownMenu<FontModel>(
-          label: Text(L10n.of(context).font),
-          expandedInsets: const EdgeInsetsDirectional.only(start: 5),
-          initialSelection: font,
-          inputDecorationTheme: InputDecorationTheme(
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(24),
+        Expanded(
+          child: DropdownMenu<FontModel>(
+            label: Text(L10n.of(context).font),
+            expandedInsets: const EdgeInsetsDirectional.only(start: 5),
+            initialSelection: font,
+            inputDecorationTheme: InputDecorationTheme(
+              border: OutlineInputBorder(
+                borderRadius: PaperfoldShape.paneRadius,
+              ),
             ),
-          ),
-          onSelected: (FontModel? font) async {
-            if (font == null) return;
-            if (font.name == 'newFont') {
-              widget.hideAppBarAndBottomBar(false);
-              await importFont();
-              return;
-            } else {
-              epubPlayerKey.currentState!.changeFont(font);
-              Prefs().font = font;
-            }
-          },
-          dropdownMenuEntries: fonts()
-              .map((font) => DropdownMenuEntry(
+            onSelected: (FontModel? font) async {
+              if (font == null) return;
+              if (font.name == 'newFont') {
+                widget.hideAppBarAndBottomBar(false);
+                await importFont();
+                return;
+              } else {
+                epubPlayerKey.currentState!.changeFont(font);
+                Prefs().font = font;
+              }
+            },
+            dropdownMenuEntries: fonts()
+                .map(
+                  (font) => DropdownMenuEntry(
                     value: font,
                     label: font.label,
                     leadingIcon: leadingIcon(font.name),
-                  ))
-              .toList(),
+                  ),
+                )
+                .toList(),
+          ),
         ),
-      ),
-    ]);
+      ],
+    );
   }
 
   Padding sliders() {
     return Padding(
       padding: const EdgeInsets.all(3.0),
       child: Column(
-        children: [
-          fontSizeSlider(),
-          lineHeightAndParagraphSpacingSlider(),
-        ],
+        children: [fontSizeSlider(), lineHeightAndParagraphSpacingSlider()],
       ),
     );
   }
@@ -278,22 +286,22 @@ class StyleWidgetState extends State<StyleWidget> {
         ),
         Expanded(
           child: Slider(
-              padding: const EdgeInsets.symmetric(horizontal: 8),
-              value: bookStyle.lineHeight,
-              onChanged: enabled
-                  ? (double value) {
-                      setState(() {
-                        bookStyle.lineHeight = value;
-                        widget.epubPlayerKey.currentState!
-                            .changeStyle(bookStyle);
-                        Prefs().saveBookStyleToPrefs(bookStyle);
-                      });
-                    }
-                  : null,
-              min: 0,
-              max: 3,
-              divisions: 10,
-              label: (bookStyle.lineHeight / 3 * 10).round().toString()),
+            padding: const EdgeInsets.symmetric(horizontal: PaperfoldSpace.xs),
+            value: bookStyle.lineHeight,
+            onChanged: enabled
+                ? (double value) {
+                    setState(() {
+                      bookStyle.lineHeight = value;
+                      widget.epubPlayerKey.currentState!.changeStyle(bookStyle);
+                      Prefs().saveBookStyleToPrefs(bookStyle);
+                    });
+                  }
+                : null,
+            min: 0,
+            max: 3,
+            divisions: 10,
+            label: (bookStyle.lineHeight / 3 * 10).round().toString(),
+          ),
         ),
         IconAndText(
           icon: const Icon(Icons.height),
@@ -301,7 +309,7 @@ class StyleWidgetState extends State<StyleWidget> {
         ),
         Expanded(
           child: Slider(
-            padding: const EdgeInsets.symmetric(horizontal: 8),
+            padding: const EdgeInsets.symmetric(horizontal: PaperfoldSpace.xs),
             value: bookStyle.paragraphSpacing,
             onChanged: enabled
                 ? (double value) {
@@ -368,7 +376,7 @@ class StyleWidgetState extends State<StyleWidget> {
       height: size + 8,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(vertical: 4),
+        padding: const EdgeInsets.symmetric(vertical: PaperfoldSpace.xxs),
         itemCount: widget.themes.length + 1,
         separatorBuilder: (context, index) => const SizedBox(width: 8),
         itemBuilder: (context, index) {
@@ -380,24 +388,28 @@ class StyleWidgetState extends State<StyleWidget> {
                 message: L10n.of(context).readingPageTheme,
                 child: Material(
                   color: Colors.transparent,
-                  shape: CircleBorder(
-                    side: BorderSide(color: scheme.outline),
-                  ),
+                  shape: CircleBorder(side: BorderSide(color: scheme.outline)),
                   clipBehavior: Clip.antiAlias,
                   child: InkWell(
                     onTap: () async {
-                      int currId = await themeDao.insertTheme(ReadTheme(
+                      int currId = await themeDao.insertTheme(
+                        ReadTheme(
                           backgroundColor: newThemeDark,
                           textColor: newThemeInk,
-                          backgroundImagePath: ''));
-                      widget.setCurrentPage(ThemeChangeWidget(
-                        readTheme: ReadTheme(
+                          backgroundImagePath: '',
+                        ),
+                      );
+                      widget.setCurrentPage(
+                        ThemeChangeWidget(
+                          readTheme: ReadTheme(
                             id: currId,
                             backgroundColor: newThemeDark,
                             textColor: newThemeInk,
-                            backgroundImagePath: ''),
-                        setCurrentPage: widget.setCurrentPage,
-                      ));
+                            backgroundImagePath: '',
+                          ),
+                          setCurrentPage: widget.setCurrentPage,
+                        ),
+                      );
                     },
                     child: SizedBox(
                       height: size,
@@ -413,11 +425,13 @@ class StyleWidgetState extends State<StyleWidget> {
           final theme = widget.themes[index];
           final selected = index + 1 == currentThemeId;
           void edit() => setState(() {
-                widget.setCurrentPage(ThemeChangeWidget(
-                  readTheme: theme,
-                  setCurrentPage: widget.setCurrentPage,
-                ));
-              });
+            widget.setCurrentPage(
+              ThemeChangeWidget(
+                readTheme: theme,
+                setCurrentPage: widget.setCurrentPage,
+              ),
+            );
+          });
 
           return Semantics(
             button: true,
@@ -449,8 +463,8 @@ class StyleWidgetState extends State<StyleWidget> {
                     child: Text(
                       'A',
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            color: Color(int.parse('0x${theme.textColor}')),
-                          ),
+                        color: Color(int.parse('0x${theme.textColor}')),
+                      ),
                     ),
                   ),
                 ),
@@ -488,28 +502,33 @@ class _ThemeChangeWidgetState extends State<ThemeChangeWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return Row(children: [
-      IconButton(
-        tooltip: L10n.of(context).readingPageBackgroundColour,
-        onPressed: () async {
-          String? pickingColor =
-              await showColorPickerDialog(readTheme.backgroundColor);
-          if (pickingColor != '') {
-            setState(() {
-              readTheme.backgroundColor = pickingColor!;
-            });
-            themeDao.updateTheme(readTheme);
-          }
-        },
-        icon: Icon(Icons.circle,
+    return Row(
+      children: [
+        IconButton(
+          tooltip: L10n.of(context).readingPageBackgroundColour,
+          onPressed: () async {
+            String? pickingColor = await showColorPickerDialog(
+              readTheme.backgroundColor,
+            );
+            if (pickingColor != '') {
+              setState(() {
+                readTheme.backgroundColor = pickingColor!;
+              });
+              themeDao.updateTheme(readTheme);
+            }
+          },
+          icon: Icon(
+            Icons.circle,
             size: 80,
-            color: Color(int.parse('0x${readTheme.backgroundColor}'))),
-      ),
-      IconButton(
+            color: Color(int.parse('0x${readTheme.backgroundColor}')),
+          ),
+        ),
+        IconButton(
           tooltip: L10n.of(context).readingPageTextColour,
           onPressed: () async {
-            String? pickingColor =
-                await showColorPickerDialog(readTheme.textColor);
+            String? pickingColor = await showColorPickerDialog(
+              readTheme.textColor,
+            );
             if (pickingColor != '') {
               setState(() {
                 readTheme.textColor = pickingColor!;
@@ -517,24 +536,24 @@ class _ThemeChangeWidgetState extends State<ThemeChangeWidget> {
               themeDao.updateTheme(readTheme);
             }
           },
-          icon: Icon(Icons.text_fields,
-              size: 60, color: Color(int.parse('0x${readTheme.textColor}')))),
-      const Expanded(
-        child: SizedBox(),
-      ),
-      IconButton(
-        tooltip: L10n.of(context).readingPageDeleteTheme,
-        onPressed: () {
-          themeDao.deleteTheme(readTheme.id!);
-          widget.setCurrentPage(const SizedBox(height: 1));
-          // setState(() {});
-        },
-        icon: const Icon(
-          Icons.delete,
-          size: 40,
+          icon: Icon(
+            Icons.text_fields,
+            size: 60,
+            color: Color(int.parse('0x${readTheme.textColor}')),
+          ),
         ),
-      ),
-    ]);
+        const Expanded(child: SizedBox()),
+        IconButton(
+          tooltip: L10n.of(context).readingPageDeleteTheme,
+          onPressed: () {
+            themeDao.deleteTheme(readTheme.id!);
+            widget.setCurrentPage(const SizedBox(height: 1));
+            // setState(() {});
+          },
+          icon: const Icon(Icons.delete, size: 40),
+        ),
+      ],
+    );
   }
 
   Future<String?> showColorPickerDialog(String currColor) async {
@@ -542,6 +561,9 @@ class _ThemeChangeWidgetState extends State<ThemeChangeWidget> {
 
     await showDialog<void>(
       context: navigatorKey.currentState!.overlay!.context,
+      animationStyle: paperfoldModalMotion(
+        navigatorKey.currentState!.overlay!.context,
+      ),
       builder: (BuildContext context) {
         return AlertDialog(
           content: SingleChildScrollView(
