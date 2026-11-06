@@ -19,31 +19,34 @@ void main() {
     await Prefs().initPrefs();
   });
 
-  test('resume uses the latest current reading book and skips stale entries',
-      () {
-    final older = book(1, 'Older', BookStatus.reading);
-    final latest = book(2, 'Latest', BookStatus.reading)
-      ..updateTime = DateTime.utc(2026, 9);
-    final deleted = book(3, 'Deleted', BookStatus.reading)
-      ..isDeleted = true
-      ..updateTime = DateTime.utc(2026, 10);
-    final finished = book(4, 'Finished', BookStatus.finished)
-      ..updateTime = DateTime.utc(2026, 10);
-    final unread = book(5, 'Unread', BookStatus.notStarted)
-      ..updateTime = DateTime.utc(2026, 10);
-    final noFile = book(6, 'No file', BookStatus.reading)
-      ..filePath = ' '
-      ..updateTime = DateTime.utc(2026, 10);
-    final source = [older, deleted, latest, finished, unread, noFile];
+  test(
+    'resume uses the latest current reading book and skips stale entries',
+    () {
+      final older = book(1, 'Older', BookStatus.reading);
+      final latest = book(2, 'Latest', BookStatus.reading)
+        ..updateTime = DateTime.utc(2026, 9);
+      final deleted = book(3, 'Deleted', BookStatus.reading)
+        ..isDeleted = true
+        ..updateTime = DateTime.utc(2026, 10);
+      final finished = book(4, 'Finished', BookStatus.finished)
+        ..updateTime = DateTime.utc(2026, 10);
+      final unread = book(5, 'Unread', BookStatus.notStarted)
+        ..updateTime = DateTime.utc(2026, 10);
+      final noFile = book(6, 'No file', BookStatus.reading)
+        ..filePath = ''
+        ..updateTime = DateTime.utc(2026, 10);
+      final source = [older, deleted, latest, finished, unread, noFile];
 
-    expect(continueReadingBook(source), same(latest));
-    expect(source.first, same(older));
-    expect(continueReadingBook([deleted, finished, unread, noFile]), isNull);
-    expect(continueReadingBook([]), isNull);
-  });
+      expect(continueReadingBook(source), same(noFile));
+      expect(source.first, same(older));
+      expect(continueReadingBook([deleted, finished, unread]), isNull);
+      expect(continueReadingBook([]), isNull);
+    },
+  );
 
-  testWidgets('resume is one labelled action with safe reading progress',
-      (tester) async {
+  testWidgets('resume is one labelled action with safe reading progress', (
+    tester,
+  ) async {
     final current = book(1, 'A Wizard of Earthsea', BookStatus.reading)
       ..readingPercentage = 0.42;
     var opened = 0;
@@ -51,26 +54,26 @@ void main() {
     addTearDown(() => tester.binding.setSurfaceSize(null));
 
     Widget host() => MaterialApp(
-          locale: const Locale('en'),
-          localizationsDelegates: [L10n.delegate, ...GlobalMaterialLocalizations.delegates],
-          supportedLocales: L10n.supportedLocales,
-          theme: ThemeData(
-            colorScheme: PaperfoldTokens.colorScheme(Brightness.dark),
-          ),
-          builder: (context, child) => MediaQuery(
-            data: MediaQuery.of(context)
-                .copyWith(textScaler: const TextScaler.linear(2.4)),
-            child: child!,
-          ),
-          home: Scaffold(
-            body: SingleChildScrollView(
-              child: ContinueReadingBanner(
-                book: current,
-                onOpen: () => opened++,
-              ),
-            ),
-          ),
-        );
+      locale: const Locale('en'),
+      localizationsDelegates: [
+        L10n.delegate,
+        ...GlobalMaterialLocalizations.delegates,
+      ],
+      supportedLocales: L10n.supportedLocales,
+      theme: ThemeData(
+        colorScheme: PaperfoldTokens.colorScheme(Brightness.dark),
+      ),
+      builder: (context, child) => MediaQuery(
+        data: MediaQuery.of(context)
+            .copyWith(textScaler: const TextScaler.linear(2.4)),
+        child: child!,
+      ),
+      home: Scaffold(
+        body: SingleChildScrollView(
+          child: ContinueReadingBanner(book: current, onOpen: () => opened++),
+        ),
+      ),
+    );
 
     await tester.pumpWidget(host());
     await tester.pumpAndSettle();
@@ -84,7 +87,8 @@ void main() {
       await tester.pump();
       expect(
         find.semantics.byLabel(
-            'Continue reading, A Wizard of Earthsea, Ursula Le Guin, 42% read'),
+          'Continue reading, A Wizard of Earthsea, Ursula Le Guin, 42% read',
+        ),
         findsOne,
       );
     } finally {
@@ -98,8 +102,9 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('short library keeps resume and shelves usable at large text',
-      (tester) async {
+  testWidgets('short library keeps resume and shelves usable at large text', (
+    tester,
+  ) async {
     final current = book(9, 'The Dispossessed', BookStatus.reading)
       ..readingPercentage = 0.33
       ..updateTime = DateTime.utc(2026, 10);
@@ -118,7 +123,10 @@ void main() {
         overrides: newTestOverrides(),
         child: MaterialApp(
           locale: const Locale('en'),
-          localizationsDelegates: [L10n.delegate, ...GlobalMaterialLocalizations.delegates],
+          localizationsDelegates: [
+            L10n.delegate,
+            ...GlobalMaterialLocalizations.delegates,
+          ],
           supportedLocales: L10n.supportedLocales,
           theme: ThemeData(
             colorScheme: PaperfoldTokens.colorScheme(Brightness.light),
@@ -142,9 +150,12 @@ void main() {
 
     // A very tall text-scaled banner can extend below the short header's
     // viewport. Its visible leading area must still open the book.
-    await tester.tapAt(tester.getTopLeft(
-            find.byKey(const ValueKey('library-continue-reading'))) +
-        const Offset(24, 24));
+    await tester.tapAt(
+      tester.getTopLeft(
+            find.byKey(const ValueKey('library-continue-reading')),
+          ) +
+          const Offset(24, 24),
+    );
     expect(openedId, current.id);
 
     await tester.drag(
@@ -152,8 +163,10 @@ void main() {
       const Offset(0, -300),
     );
     await tester.pumpAndSettle();
-    expect(find.byKey(const ValueKey('shelf-sort-control')).hitTestable(),
-        findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('shelf-sort-control')).hitTestable(),
+      findsOneWidget,
+    );
     expect(tester.takeException(), isNull);
 
     current.status = BookStatus.finished;

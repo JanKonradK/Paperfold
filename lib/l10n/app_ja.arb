@@ -914,5 +914,10 @@
         "type": "int"
       }
     }
-  }
+  },
+  "libraryEbooks": "電子書籍",
+  "libraryPaperBooks": "紙の本",
+  "bookStartReading": "読み始める",
+  "bookProgressThrough": "本の{percent}%を読了",
+  "bookStartedOn": "開始日：{date}"
 }

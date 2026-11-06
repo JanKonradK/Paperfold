@@ -914,5 +914,10 @@
         "type": "int"
       }
     }
-  }
+  },
+  "libraryEbooks": "كتب إلكترونية",
+  "libraryPaperBooks": "كتب ورقية",
+  "bookStartReading": "بدء القراءة",
+  "bookProgressThrough": "قرأت {percent}% من الكتاب",
+  "bookStartedOn": "بدأت في {date}"
 }

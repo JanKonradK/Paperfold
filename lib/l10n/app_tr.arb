@@ -1132,5 +1132,10 @@
         "type": "int"
       }
     }
-  }
+  },
+  "libraryEbooks": "E-kitaplar",
+  "libraryPaperBooks": "Basılı kitaplar",
+  "bookStartReading": "Okumaya başla",
+  "bookProgressThrough": "Kitabın %{percent} kadarı okundu",
+  "bookStartedOn": "Başlangıç: {date}"
 }

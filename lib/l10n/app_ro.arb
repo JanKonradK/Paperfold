@@ -1132,5 +1132,10 @@
         "type": "int"
       }
     }
-  }
+  },
+  "libraryEbooks": "Cărți electronice",
+  "libraryPaperBooks": "Cărți pe hârtie",
+  "bookStartReading": "Începe lectura",
+  "bookProgressThrough": "{percent}% din carte citit",
+  "bookStartedOn": "Începută la {date}"
 }

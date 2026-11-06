@@ -1139,5 +1139,24 @@
         "type": "int"
       }
     }
+  },
+  "libraryEbooks": "E-books",
+  "libraryPaperBooks": "Paper books",
+  "bookStartReading": "Start reading",
+  "bookProgressThrough": "{percent}% through the book",
+  "bookStartedOn": "Started {date}",
+  "@bookProgressThrough": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "@bookStartedOn": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
   }
 }

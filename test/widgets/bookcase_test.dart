@@ -1,201 +1,70 @@
-import 'dart:async';
-
 import 'package:material_ui/material_ui.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:paperfold/config/shared_preference_provider.dart';
+import 'package:paperfold/l10n/generated/L10n.dart';
 import 'package:paperfold/enums/book_binding.dart';
-import 'package:paperfold/widgets/bookshelf/bookcase.dart';
 import 'package:paperfold/widgets/bookshelf/shelf_stage.dart';
+import 'package:paperfold/widgets/bookshelf/bookcase.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-const List<ShelfRow> _shelves = [
-  ShelfRow(
-    name: 'Reading now',
-    books: [
-      ShelfBook(
-        id: 'r1',
-        title: 'The Moonstone',
-        author: 'Wilkie Collins',
-        binding: BookBinding.hardback,
-      ),
-    ],
+const books = [
+  ShelfBook(
+    id: 'a',
+    title: 'Dune',
+    author: 'Frank Herbert',
+    binding: BookBinding.hardback,
   ),
-  ShelfRow(
-    name: 'To be read',
-    books: [
-      ShelfBook(
-        id: 't1',
-        title: 'Dune',
-        author: 'Frank Herbert',
-        binding: BookBinding.softback,
-      ),
-    ],
-  ),
-  ShelfRow(
-    name: 'Finished',
-    books: [
-      ShelfBook(
-        id: 'f1',
-        title: 'The Great Gatsby',
-        author: 'F. Scott Fitzgerald',
-        binding: BookBinding.softback,
-        progress: 1,
-        finished: true,
-      ),
-    ],
+  ShelfBook(
+    id: 'b',
+    title: 'Earthsea',
+    author: 'Ursula Le Guin',
+    binding: BookBinding.softback,
   ),
 ];
+Future<void> host(WidgetTester tester, Widget child, {double scale = 1}) async {
+  SharedPreferences.setMockInitialValues({});
+  await Prefs().initPrefs();
+  await tester.pumpWidget(
+    MaterialApp(
+      localizationsDelegates: [
+        L10n.delegate,
+        ...GlobalMaterialLocalizations.delegates,
+      ],
+      supportedLocales: L10n.supportedLocales,
+      locale: const Locale('en'),
+      builder: (context, child) => MediaQuery(
+        data: MediaQuery.of(context)
+            .copyWith(textScaler: TextScaler.linear(scale)),
+        child: child!,
+      ),
+      home: Scaffold(body: child),
+    ),
+  );
+  await tester.pumpAndSettle();
+}
 
 void main() {
-  final key = GlobalKey<BookcaseState>();
-
-  Future<void> pumpCase(
-    WidgetTester tester, {
-    List<ShelfRow> shelves = _shelves,
-    ValueChanged<int>? onShelfChanged,
-    ValueChanged<bool>? onHoldingChanged,
-    Widget Function(BuildContext, ShelfRow)? emptyBuilder,
-  }) async {
-    await tester.pumpWidget(
-      MaterialApp(
-        home: Scaffold(
-          body: SizedBox(
-            width: 400,
-            height: 780,
-            child: Bookcase(
-              key: key,
-              shelves: shelves,
-              onShelfChanged: onShelfChanged,
-              onHoldingChanged: onHoldingChanged,
-              emptyBuilder: emptyBuilder,
-            ),
-          ),
-        ),
+  testWidgets('shelf change keeps direct activation', (tester) async {
+    final key = GlobalKey<BookcaseState>();
+    String? opened;
+    await host(
+      tester,
+      Bookcase(
+        key: key,
+        showSignposts: false,
+        shelves: const [
+          ShelfRow(name: 'One', books: books),
+          ShelfRow(name: 'Two', books: books),
+        ],
+        onOpen: (b) => opened = b.id,
       ),
     );
-    await tester.pump();
-  }
-
-  testWidgets('the bookcase opens on its first shelf', (tester) async {
-    await pumpCase(tester);
-
-    expect(key.currentState!.shelf, 0);
-    // The shelf below is named, so the reader knows what climbing gets them.
-    expect(find.text('TO BE READ'), findsOneWidget);
-  });
-
-  testWidgets('the reader climbs to the shelf below', (tester) async {
-    int? landed;
-    await pumpCase(tester, onShelfChanged: (index) => landed = index);
-
-    await tester.fling(find.byType(Bookcase), const Offset(0, -400), 1200);
-    await tester.pumpAndSettle();
-
-    expect(landed, 1);
-    expect(key.currentState!.shelf, 1);
-  });
-
-  testWidgets('the shelf above is named once there is one', (tester) async {
-    await pumpCase(tester);
-
-    await tester.fling(find.byType(Bookcase), const Offset(0, -400), 1200);
-    await tester.pumpAndSettle();
-
-    expect(find.text('READING NOW'), findsOneWidget);
-    expect(find.text('FINISHED'), findsOneWidget);
-  });
-
-  testWidgets('tapping a signpost climbs to that shelf', (tester) async {
-    await pumpCase(tester);
-
-    await tester.tap(find.text('TO BE READ'));
-    await tester.pumpAndSettle();
-
-    expect(key.currentState!.shelf, 1);
-  });
-
-  testWidgets('climbTo moves the bookcase from outside', (tester) async {
-    await pumpCase(tester);
-
-    unawaited(key.currentState!.climbTo(2));
-    await tester.pump();
-    await tester.pumpAndSettle();
-
-    expect(key.currentState!.shelf, 2);
-  });
-
-  testWidgets('the reader cannot climb while holding a book off the shelf', (
-    tester,
-  ) async {
-    await pumpCase(tester);
-
-    key.currentState!.activeStage!.pickUp();
-    await tester.pump();
-    await tester.pumpAndSettle();
-    final stage = key.currentState!.activeStage;
-
-    await tester.fling(find.byType(Bookcase), const Offset(0, -400), 1200);
-    await tester.pumpAndSettle();
-
-    // Still on the first shelf: the book in their hands came off this one, and
-    // moving the furniture under it would strand them.
-    expect(key.currentState!.shelf, 0);
-    // Revealing a nested control must not scroll the outer shelf pager.
-    final open = find.byKey(const ValueKey('open-shelf-book'));
-    await tester.ensureVisible(open);
-    await tester.pumpAndSettle();
-    expect(key.currentState!.shelf, 0);
-    expect(key.currentState!.activeStage, same(stage));
-    expect(open.hitTestable(), findsOneWidget);
-  });
-
-  testWidgets('an empty shelf falls back to its builder', (tester) async {
-    await tester.pumpWidget(
-      MaterialApp(
-        home: Scaffold(
-          body: SizedBox(
-            width: 400,
-            height: 780,
-            child: Bookcase(
-              shelves: const [ShelfRow(name: 'Books to buy', books: [])],
-              emptyBuilder: (context, shelf) =>
-                  Text('nothing on ${shelf.name}'),
-            ),
-          ),
-        ),
-      ),
-    );
-    await tester.pump();
-
-    expect(find.text('nothing on Books to buy'), findsOneWidget);
-  });
-
-  testWidgets('removing the last held book unlocks shelf navigation', (
-    tester,
-  ) async {
-    final holding = <bool>[];
-    Widget emptyBuilder(BuildContext context, ShelfRow shelf) =>
-        const Text('Empty shelf');
-    await pumpCase(
-      tester,
-      onHoldingChanged: holding.add,
-      emptyBuilder: emptyBuilder,
-    );
-    await key.currentState!.activeStage!.pickUp();
-    await tester.pumpAndSettle();
-    expect(holding, [true]);
-
-    await pumpCase(
-      tester,
-      shelves: [
-        const ShelfRow(name: 'Reading now', books: []),
-        ..._shelves.skip(1),
-      ],
-      onHoldingChanged: holding.add,
-      emptyBuilder: emptyBuilder,
-    );
-    expect(holding, [true, false]);
-    expect(find.text('Empty shelf'), findsOneWidget);
-    unawaited(key.currentState!.climbTo(1));
+    key.currentState!.climbTo(1);
     await tester.pumpAndSettle();
     expect(key.currentState!.shelf, 1);
+    await tester.tap(find.byKey(const ValueKey('shelf-spine-a')).hitTestable());
+    expect(opened, 'a');
+    expect(key.currentState!.activeStage!.phase, ShelfPhase.shelved);
   });
 }

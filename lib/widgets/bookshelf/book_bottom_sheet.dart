@@ -8,7 +8,7 @@ import 'package:paperfold/dao/shelf.dart';
 import 'package:paperfold/enums/hint_key.dart';
 import 'package:paperfold/l10n/generated/L10n.dart';
 import 'package:paperfold/models/book.dart';
-import 'package:paperfold/page/book_detail.dart';
+import 'package:paperfold/widgets/bookshelf/book_detail_route.dart';
 import 'package:paperfold/providers/sync.dart';
 import 'package:paperfold/providers/book_list.dart';
 import 'package:paperfold/enums/sync_direction.dart';
@@ -32,10 +32,7 @@ import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:path/path.dart' as p;
 
 class BookBottomSheet extends ConsumerWidget {
-  const BookBottomSheet({
-    super.key,
-    required this.book,
-  });
+  const BookBottomSheet({super.key, required this.book});
 
   final Book book;
 
@@ -62,12 +59,7 @@ class BookBottomSheet extends ConsumerWidget {
 
     void handleDetail(BuildContext context) {
       Navigator.pop(context);
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => BookDetail(book: book),
-        ),
-      );
+      Navigator.push(context, bookDetailRoute(context, book));
     }
 
     void handleUpload(BuildContext context) {
@@ -86,20 +78,26 @@ class BookBottomSheet extends ConsumerWidget {
                 Text(L10n.of(context).bookSyncStatusReleaseSpaceDialogContent),
                 Row(
                   children: [
-                    StatefulBuilder(builder: (context, setState) {
-                      return Checkbox(
-                          value: !Prefs()
-                              .shouldShowHint(HintKey.releaseLocalSpace),
+                    StatefulBuilder(
+                      builder: (context, setState) {
+                        return Checkbox(
+                          value: !Prefs().shouldShowHint(
+                            HintKey.releaseLocalSpace,
+                          ),
                           onChanged: (value) {
                             value = !(value ?? false);
-                            Prefs()
-                                .setShowHint(HintKey.releaseLocalSpace, value);
+                            Prefs().setShowHint(
+                              HintKey.releaseLocalSpace,
+                              value,
+                            );
                             setState(() {});
-                          });
-                    }),
+                          },
+                        );
+                      },
+                    ),
                     Text(L10n.of(context).bookSyncStatusDoNotShowAgain),
                   ],
-                )
+                ),
               ],
             ),
             actions: [
@@ -139,17 +137,18 @@ class BookBottomSheet extends ConsumerWidget {
     }
 
     Future<void> handleReplace(BuildContext context) async {
-      final result = await FilePicker.pickFile(
-        type: FileType.any,
-      );
+      final result = await FilePicker.pickFile(type: FileType.any);
 
       if (result == null) return;
       PlatformFile newFile = result;
-      String extension =
-          p.extension(newFile.name).replaceAll('.', '').toLowerCase();
+      String extension = p
+          .extension(newFile.name)
+          .replaceAll('.', '')
+          .toLowerCase();
       if (!allowBookExtensions.contains(extension)) {
         AnxToast.show(
-            L10n.of(context).bookBottomSheetUnsupportedFileFormat(extension));
+          L10n.of(context).bookBottomSheetUnsupportedFileFormat(extension),
+        );
         return;
       }
 
@@ -170,10 +169,14 @@ class BookBottomSheet extends ConsumerWidget {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(L10n.of(context)
-                  .bookBottomSheetOriginalFileSize(formatSize(oldSize))),
-              Text(L10n.of(context)
-                  .bookBottomSheetNewFileSize(formatSize(newSize))),
+              Text(
+                L10n.of(context)
+                    .bookBottomSheetOriginalFileSize(formatSize(oldSize)),
+              ),
+              Text(
+                L10n.of(context)
+                    .bookBottomSheetNewFileSize(formatSize(newSize)),
+              ),
               const SizedBox(height: 10),
               Text(
                 L10n.of(context).bookBottomSheetReplaceWarning,
@@ -228,11 +231,13 @@ class BookBottomSheet extends ConsumerWidget {
         String? newMd5 = await MD5Service.calculateFileMd5(newDestPath);
 
         // Update DB
-        await bookDao.updateBook(book.copyWith(
-          filePath: newRelativePath,
-          md5: newMd5,
-          updateTime: DateTime.now(),
-        ));
+        await bookDao.updateBook(
+          book.copyWith(
+            filePath: newRelativePath,
+            md5: newMd5,
+            updateTime: DateTime.now(),
+          ),
+        );
 
         // Delete old file if path is different
         if (book.fileFullPath != newDestPath) {
@@ -257,7 +262,8 @@ class BookBottomSheet extends ConsumerWidget {
         }
       } catch (e) {
         AnxToast.show(
-            L10n.of(context).bookBottomSheetReplaceFailed(e.toString()));
+          L10n.of(context).bookBottomSheetReplaceFailed(e.toString()),
+        );
       }
     }
 
@@ -277,30 +283,30 @@ class BookBottomSheet extends ConsumerWidget {
       {
         "icon": Icons.menu_book_outlined,
         "text": L10n.of(context).navJournal,
-        "onTap": () => handleJournal(context)
+        "onTap": () => handleJournal(context),
       },
       // A paper book has no file to share, replace, or release.
       if (!book.isPhysical) ...[
         {
           "icon": Icons.share_outlined,
           "text": L10n.of(context).shareFile,
-          "onTap": () => handleShare()
+          "onTap": () => handleShare(),
         },
         {
           "icon": Icons.refresh,
           "text": L10n.of(context).bookBottomSheetReplaceFile,
-          "onTap": () => handleReplace(context)
+          "onTap": () => handleReplace(context),
         },
         {
           "icon": Icons.cloud_upload_outlined,
           "text": L10n.of(context).bookSyncStatusReleaseSpace,
-          "onTap": () => handleUpload(context)
+          "onTap": () => handleUpload(context),
         },
       ],
       {
         "icon": Icons.more_vert,
         "text": L10n.of(context).notesPageDetail,
-        "onTap": () => handleDetail(context)
+        "onTap": () => handleDetail(context),
       },
     ];
 
@@ -315,8 +321,10 @@ class BookBottomSheet extends ConsumerWidget {
           const SizedBox(width: 10),
           Expanded(
             child: SingleChildScrollView(
-              child: Text(book.title,
-                  style: Theme.of(context).textTheme.titleMedium),
+              child: Text(
+                book.title,
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
             ),
           ),
           DeleteConfirm(
@@ -328,34 +336,33 @@ class BookBottomSheet extends ConsumerWidget {
               text: L10n.of(context).commonDelete,
             ),
             confirmIcon: IconAndText(
-              icon: const Icon(
-                Icons.check_circle,
-                color: Colors.red,
-              ),
+              icon: const Icon(Icons.check_circle, color: Colors.red),
               text: L10n.of(context).commonConfirm,
             ),
           ),
           _FavouriteButton(bookId: book.id),
           PopupMenuButton(
-              itemBuilder: (context) {
-                return actions.map((action) {
-                  return PopupMenuItem(
-                      onTap: () {
-                        (action["onTap"] as Function())();
-                      },
-                      child: Row(
-                        children: [
-                          Icon(action["icon"] as IconData),
-                          const SizedBox(width: 8),
-                          Text(action["text"] as String),
-                        ],
-                      ));
-                }).toList();
-              },
-              child: IconAndText(
-                icon: const Icon(Icons.more_vert),
-                text: L10n.of(context).more,
-              ))
+            itemBuilder: (context) {
+              return actions.map((action) {
+                return PopupMenuItem(
+                  onTap: () {
+                    (action["onTap"] as Function())();
+                  },
+                  child: Row(
+                    children: [
+                      Icon(action["icon"] as IconData),
+                      const SizedBox(width: 8),
+                      Text(action["text"] as String),
+                    ],
+                  ),
+                );
+              }).toList();
+            },
+            child: IconAndText(
+              icon: const Icon(Icons.more_vert),
+              text: L10n.of(context).more,
+            ),
+          ),
         ],
       ),
     );

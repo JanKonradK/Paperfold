@@ -1132,5 +1132,10 @@
         "type": "int"
       }
     }
-  }
+  },
+  "libraryEbooks": "Livres numériques",
+  "libraryPaperBooks": "Livres papier",
+  "bookStartReading": "Commencer la lecture",
+  "bookProgressThrough": "{percent}% du livre lu",
+  "bookStartedOn": "Commencé le {date}"
 }

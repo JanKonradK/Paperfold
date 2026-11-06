@@ -2,7 +2,7 @@ import 'package:paperfold/config/shared_preference_provider.dart';
 import 'package:paperfold/enums/book_sync_status.dart';
 import 'package:paperfold/models/book.dart';
 import 'package:paperfold/providers/sync_status.dart';
-import 'package:paperfold/service/book.dart';
+import 'package:paperfold/widgets/bookshelf/book_detail_route.dart';
 import 'package:paperfold/widgets/bookshelf/book_bottom_sheet.dart';
 import 'package:paperfold/widgets/bookshelf/book_cover.dart';
 import 'package:paperfold/widgets/bookshelf/book_sync_status_icon.dart';
@@ -10,10 +10,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class BookItem extends ConsumerWidget {
-  const BookItem({
-    super.key,
-    required this.book,
-  });
+  const BookItem({super.key, required this.book});
 
   final Book book;
 
@@ -21,35 +18,40 @@ class BookItem extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     Future<void> handleLongPress(BuildContext context) async {
       showModalBottomSheet(
-          context: context,
-          builder: (BuildContext context) {
-            return BookBottomSheet(book: book);
-          });
+        context: context,
+        builder: (BuildContext context) {
+          return BookBottomSheet(book: book);
+        },
+      );
     }
 
     BookSyncStatusEnum bookSyncStatus =
-        ref.watch(syncStatusProvider).whenOrNull(data: (data) {
-              if (data.downloading.contains(book.id)) {
-                return BookSyncStatusEnum.downloading;
-              } else if (data.uploading.contains(book.id)) {
-                return BookSyncStatusEnum.uploading;
-              } else if (data.localOnly.contains(book.id)) {
-                return BookSyncStatusEnum.localOnly;
-              } else if (data.remoteOnly.contains(book.id)) {
-                return BookSyncStatusEnum.remoteOnly;
-              } else if (data.both.contains(book.id)) {
-                return BookSyncStatusEnum.both;
-              } else if (data.nonExistent.contains(book.id)) {
-                return BookSyncStatusEnum.nonExistent;
-              } else {
-                return BookSyncStatusEnum.checking;
-              }
-            }) ??
-            BookSyncStatusEnum.checking;
+        ref
+            .watch(syncStatusProvider)
+            .whenOrNull(
+              data: (data) {
+                if (data.downloading.contains(book.id)) {
+                  return BookSyncStatusEnum.downloading;
+                } else if (data.uploading.contains(book.id)) {
+                  return BookSyncStatusEnum.uploading;
+                } else if (data.localOnly.contains(book.id)) {
+                  return BookSyncStatusEnum.localOnly;
+                } else if (data.remoteOnly.contains(book.id)) {
+                  return BookSyncStatusEnum.remoteOnly;
+                } else if (data.both.contains(book.id)) {
+                  return BookSyncStatusEnum.both;
+                } else if (data.nonExistent.contains(book.id)) {
+                  return BookSyncStatusEnum.nonExistent;
+                } else {
+                  return BookSyncStatusEnum.checking;
+                }
+              },
+            ) ??
+        BookSyncStatusEnum.checking;
 
     return GestureDetector(
       onTap: () {
-        pushToReadingPage(ref, context, book);
+        Navigator.of(context).push(bookDetailRoute(context, book));
       },
       onLongPress: () {
         handleLongPress(context);
@@ -61,8 +63,9 @@ class BookItem extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Expanded(
-            child: Hero(
-              tag: book.coverFullPath,
+            child: BookDetailHero(
+              id: 'book-${book.id}',
+              cover: BookCover(book: book),
               child: Container(
                 decoration: BoxDecoration(
                   boxShadow: [
@@ -76,11 +79,7 @@ class BookItem extends ConsumerWidget {
                   ],
                 ),
                 child: Row(
-                  children: [
-                    Expanded(
-                      child: BookCover(book: book),
-                    ),
-                  ],
+                  children: [Expanded(child: BookCover(book: book))],
                 ),
               ),
             ),
@@ -108,9 +107,7 @@ class BookItem extends ConsumerWidget {
                       SizedBox(
                         height: 20,
                         width: 20,
-                        child: BookSyncStatusIcon(
-                          syncStatus: bookSyncStatus,
-                        ),
+                        child: BookSyncStatusIcon(syncStatus: bookSyncStatus),
                       ),
                   ],
                 ),
@@ -120,17 +117,19 @@ class BookItem extends ConsumerWidget {
                       child: Text(
                         book.author,
                         style: const TextStyle(
-                            fontWeight: FontWeight.w300,
-                            fontSize: 9,
-                            overflow: TextOverflow.ellipsis),
+                          fontWeight: FontWeight.w300,
+                          fontSize: 9,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
                     ),
                     Text(
                       '${(book.readingPercentage * 100).toStringAsFixed(0)}%',
                       style: const TextStyle(
-                          fontWeight: FontWeight.w300,
-                          fontSize: 9,
-                          overflow: TextOverflow.ellipsis),
+                        fontWeight: FontWeight.w300,
+                        fontSize: 9,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
                   ],
                 ),

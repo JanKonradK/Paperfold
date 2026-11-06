@@ -914,5 +914,10 @@
         "type": "int"
       }
     }
-  }
+  },
+  "libraryEbooks": "电子书",
+  "libraryPaperBooks": "纸质书",
+  "bookStartReading": "开始阅读",
+  "bookProgressThrough": "已读全书的 {percent}%",
+  "bookStartedOn": "开始于 {date}"
 }

@@ -1132,5 +1132,10 @@
         "type": "int"
       }
     }
-  }
+  },
+  "libraryEbooks": "Электронные книги",
+  "libraryPaperBooks": "Бумажные книги",
+  "bookStartReading": "Начать чтение",
+  "bookProgressThrough": "Прочитано {percent}% книги",
+  "bookStartedOn": "Начато {date}"
 }

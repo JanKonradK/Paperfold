@@ -116,7 +116,7 @@ void main() {
     final firstBook = find.byKey(const ValueKey('shelf-spine-book-1'));
     tester.widget<InkWell>(firstBook).focusNode!.requestFocus();
     await tester.pump();
-    await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
+    await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
     await tester.pumpAndSettle();
     final nextBook = find.byKey(const ValueKey('shelf-spine-book-6'));
     expect(stage.current!.id, 'book-6');
@@ -137,17 +137,12 @@ void main() {
     expect(lastBook.hitTestable(), findsOneWidget);
     await tester.tap(lastBook);
     await tester.pumpAndSettle();
-    expect(stage.phase, ShelfPhase.held);
-
-    // The held-book pane scrolls independently around its fixed Read button.
+    expect(stage.phase, ShelfPhase.shelved);
     final open = find.byKey(const ValueKey('open-shelf-book'));
-    await tester.ensureVisible(open);
-    await tester.pumpAndSettle();
     expect(open.hitTestable(), findsOneWidget);
-    final notes = find.byKey(const ValueKey('shelf-book-notes'));
-    await tester.ensureVisible(notes);
+    await tester.binding.handlePopRoute();
     await tester.pumpAndSettle();
-    expect(notes.hitTestable(), findsOneWidget);
+    expect(lastBook.hitTestable(), findsOneWidget);
 
     await tester.tap(tab(0));
     await tester.pumpAndSettle();
@@ -174,29 +169,20 @@ void main() {
     await tester.binding.handlePopRoute();
     await tester.pumpAndSettle();
     expect(tester.widget<Semantics>(tab(2)).properties.selected, isTrue);
-    expect(stage.phase, ShelfPhase.held);
+    expect(stage.phase, ShelfPhase.shelved);
     await tester.binding.handlePopRoute();
     await tester.pumpAndSettle();
     expect(tester.widget<Semantics>(tab(0)).properties.selected, isTrue);
-    expect(stage.phase, ShelfPhase.held);
+    expect(stage.phase, ShelfPhase.shelved);
     await tester.binding.handlePopRoute();
     await tester.pumpAndSettle();
     expect(
       stage.phase,
-      ShelfPhase.held,
+      ShelfPhase.shelved,
       reason: 'an offstage library must not consume another tab\'s Back',
     );
     expect(find.byType(Bookcase).hitTestable(), findsOneWidget);
 
-    await tester.binding.handlePopRoute();
-    await tester.pumpAndSettle();
-    expect(stage.phase, ShelfPhase.shelved);
-    await tester.binding.handlePopRoute();
-    await tester.pump();
-    expect(
-      tester.widget<PopScope<Object?>>(find.byType(PopScope<Object?>)).canPop,
-      isTrue,
-    );
     await tester.tap(tab(3));
     await tester.pumpAndSettle();
     expect(

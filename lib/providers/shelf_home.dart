@@ -22,6 +22,7 @@ class ShelfHomeData {
     required this.finished,
     required this.booksToBuy,
     this.tags = const [],
+    this.customShelves = const {},
     this.bookTagIds = const {},
   });
 
@@ -31,13 +32,14 @@ class ShelfHomeData {
   final List<Book> finished;
   final List<WishlistItem> booksToBuy;
   final List<Tag> tags;
+  final Map<String, List<Book>> customShelves;
   final Map<int, List<int>> bookTagIds;
 }
 
 final shelfHomeProvider =
     AsyncNotifierProvider<ShelfHomeController, ShelfHomeData>(
-  ShelfHomeController.new,
-);
+      ShelfHomeController.new,
+    );
 
 class ShelfHomeController extends AsyncNotifier<ShelfHomeData> {
   int _loadRevision = 0;
@@ -59,6 +61,18 @@ class ShelfHomeController extends AsyncNotifier<ShelfHomeData> {
     final booksToBuyFuture = wishlistDao.listBooksToBuy();
     final tagsFuture = tagDao.fetchAllTags();
 
+    final shelfRows = await (await shelfDao.database).query(
+      'tb_shelves',
+      where: 'id != ?',
+      whereArgs: [builtInFavouritesShelfId],
+      orderBy: 'sort_order, id',
+    );
+    final customShelves = <String, List<Book>>{};
+    for (final row in shelfRows) {
+      customShelves[row['name'] as String? ?? ''] = await shelfDao.listBooks(
+        row['id'] as int,
+      );
+    }
     final allBooks = await allBooksFuture;
     final favourites = await favouritesFuture;
     final booksToBuy = await booksToBuyFuture;
@@ -69,25 +83,32 @@ class ShelfHomeController extends AsyncNotifier<ShelfHomeData> {
     final booksById = {for (final book in allBooks) book.id: book};
 
     ShelfHomeData result() => ShelfHomeData(
-          readingNow: allBooks
-              .where((book) => book.status == BookStatus.reading)
-              .toList(growable: false),
-          favourites:
-              favourites.map((book) => booksById[book.id] ?? book).toList(),
-          toBeRead: allBooks
-              .where((book) => book.status == BookStatus.notStarted)
-              .toList(growable: false),
-          finished: allBooks
-              .where((book) => book.status == BookStatus.finished)
-              .toList(growable: false),
-          booksToBuy: booksToBuy,
-          tags: tags,
-          bookTagIds: bookTagIds,
-        );
+      readingNow: allBooks
+          .where((book) => book.status == BookStatus.reading)
+          .toList(growable: false),
+      favourites: favourites.map((book) => booksById[book.id] ?? book).toList(),
+      toBeRead: allBooks
+          .where((book) => book.status == BookStatus.notStarted)
+          .toList(growable: false),
+      finished: allBooks
+          .where((book) => book.status == BookStatus.finished)
+          .toList(growable: false),
+      booksToBuy: booksToBuy,
+      tags: tags,
+      customShelves: {
+        for (final entry in customShelves.entries)
+          entry.key: [
+            for (final book in entry.value) booksById[book.id] ?? book,
+          ],
+      },
+      bookTagIds: bookTagIds,
+    );
     // Paint the library immediately. File parsing runs outside the UI isolate.
-    unawaited(loadBookSpineMetadata(allBooks).then((_) {
-      if (revision == _loadRevision) state = AsyncData(result());
-    }));
+    unawaited(
+      loadBookSpineMetadata(allBooks).then((_) {
+        if (revision == _loadRevision) state = AsyncData(result());
+      }),
+    );
     return result();
   }
 }
@@ -154,8 +175,9 @@ class ShelfHomeControls extends ChangeNotifier {
         .where((status) => storedStatuses.contains(status.name))
         .toSet();
     final rating = _prefs.prefs.getDouble(_minimumRatingKey);
-    minimumRating =
-        rating == null || rating <= 0 ? null : rating.clamp(1, 5).toDouble();
+    minimumRating = rating == null || rating <= 0
+        ? null
+        : rating.clamp(1, 5).toDouble();
     tagFilters =
         (_prefs.prefs.getStringList(_tagFiltersKey) ?? const <String>[])
             .map(int.tryParse)
@@ -192,8 +214,9 @@ class ShelfHomeControls extends ChangeNotifier {
   }
 
   void setMinimumRating(double? rating) {
-    final next =
-        rating == null || rating <= 0 ? null : rating.clamp(1, 5).toDouble();
+    final next = rating == null || rating <= 0
+        ? null
+        : rating.clamp(1, 5).toDouble();
     if (minimumRating == next) return;
     minimumRating = next;
     if (next == null) {
@@ -224,10 +247,7 @@ class ShelfHomeControls extends ChangeNotifier {
     notifyListeners();
   }
 
-  List<Book> booksForShelf(
-    List<Book> source,
-    Map<int, List<int>> bookTagIds,
-  ) {
+  List<Book> booksForShelf(List<Book> source, Map<int, List<int>> bookTagIds) {
     final indexed = source.indexed.where((entry) {
       final book = entry.$2;
       if (statusFilters.isNotEmpty && !statusFilters.contains(book.status)) {
@@ -266,8 +286,7 @@ class ShelfHomeControls extends ChangeNotifier {
         ShelfSortField.dateAdded ||
         ShelfSortField.series ||
         ShelfSortField.progress ||
-        ShelfSortField.rating =>
-          0,
+        ShelfSortField.rating => 0,
       };
       if (compared == 0) return left.$1.compareTo(right.$1);
       return sortDirection == ShelfSortDirection.ascending
@@ -278,14 +297,15 @@ class ShelfHomeControls extends ChangeNotifier {
   }
 
   int _compareBooks(Book left, Book right) => switch (sortField) {
-        ShelfSortField.title => _text(left.title, right.title),
-        ShelfSortField.author => _text(left.author, right.author),
-        ShelfSortField.series => _compareSeries(left, right),
-        ShelfSortField.dateAdded => left.createTime.compareTo(right.createTime),
-        ShelfSortField.progress =>
-          left.readingPercentage.compareTo(right.readingPercentage),
-        ShelfSortField.rating => left.rating.compareTo(right.rating),
-      };
+    ShelfSortField.title => _text(left.title, right.title),
+    ShelfSortField.author => _text(left.author, right.author),
+    ShelfSortField.series => _compareSeries(left, right),
+    ShelfSortField.dateAdded => left.createTime.compareTo(right.createTime),
+    ShelfSortField.progress => left.readingPercentage.compareTo(
+      right.readingPercentage,
+    ),
+    ShelfSortField.rating => left.rating.compareTo(right.rating),
+  };
 
   int _compareSeries(Book left, Book right) {
     final leftSeries = left.series?.trim() ?? '';
@@ -323,5 +343,6 @@ class ShelfHomeControls extends ChangeNotifier {
       left.toLowerCase().compareTo(right.toLowerCase());
 }
 
-final shelfHomeControlsProvider =
-    ChangeNotifierProvider<ShelfHomeControls>((ref) => ShelfHomeControls());
+final shelfHomeControlsProvider = ChangeNotifierProvider<ShelfHomeControls>(
+  (ref) => ShelfHomeControls(),
+);
