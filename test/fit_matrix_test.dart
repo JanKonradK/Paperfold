@@ -261,6 +261,23 @@ void main() {
       for (final preference in [0, 1, 2, 3, 5, 8, 99]) {
         expect(layout.covers(preference).coverWidth, greaterThanOrEqualTo(72));
       }
+      // Exercise either side of the 72 dp column boundary at local widths.
+      for (final content in [72.0, 155.9, 156.0, 239.9, 240.0]) {
+        final narrow = PaperfoldLayout.of(
+          context,
+          constraints: BoxConstraints.tightFor(
+            width: content + 2 * layout.gutter,
+          ),
+        );
+        for (final preference in [0, 2, 8, 99]) {
+          final result = narrow.covers(preference);
+          expect(result.coverWidth, greaterThanOrEqualTo(72));
+          expect(
+            result.coverWidth * result.columns + 12 * (result.columns - 1),
+            closeTo(content, .001),
+          );
+        }
+      }
       expect(tester.takeException(), isNull);
     });
   }
