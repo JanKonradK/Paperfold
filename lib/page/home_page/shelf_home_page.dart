@@ -494,11 +494,25 @@ class _ShelfHomePageState extends ConsumerState<ShelfHomePage>
               builder: (context, constraints) {
                 final largeText =
                     MediaQuery.textScalerOf(context).scale(16) >= 24;
+                final narrowTools = constraints.maxWidth < 400 || largeText;
+                final heading = Text(
+                  rows.isEmpty
+                      ? l10n.shelfHomeTitle
+                      : l10n.notesBooks(rows[activeIndex].books.length),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.headlineSmall,
+                );
                 final header = Column(
                   children: [
                     if (resumeBook != null)
                       Padding(
-                        padding: const EdgeInsets.fromLTRB(20, 4, 20, 8),
+                        padding: EdgeInsets.fromLTRB(
+                          PaperfoldLayout.of(context).gutter,
+                          4,
+                          PaperfoldLayout.of(context).gutter,
+                          8,
+                        ),
                         child: ContinueReadingBanner(
                           key: const ValueKey('library-continue-reading'),
                           book: resumeBook,
@@ -515,47 +529,47 @@ class _ShelfHomePageState extends ConsumerState<ShelfHomePage>
                         12,
                         4,
                       ),
-                      child: Row(
+                      child: Flex(
+                        direction: narrowTools
+                            ? Axis.vertical
+                            : Axis.horizontal,
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Expanded(
-                            child: Text(
-                              rows.isEmpty
-                                  ? l10n.shelfHomeTitle
-                                  : l10n.notesBooks(
-                                      rows[activeIndex].books.length,
-                                    ),
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                              style: largeText
-                                  ? Theme.of(context).textTheme.titleMedium
-                                  : Theme.of(context).textTheme.headlineSmall,
-                            ),
-                          ),
-                          ShelfViewSwitch(
-                            showCovers: Prefs().shelfCoverView,
-                            onChanged: (value) =>
-                                Prefs().shelfCoverView = value,
-                          ),
-                          IconButton(
-                            key: const ValueKey('shelf-sort-control'),
-                            tooltip: l10n.shelfSortControl,
-                            onPressed: () =>
-                                showShelfSortSheet(context, controls),
-                            icon: const Icon(Icons.sort_rounded),
-                          ),
-                          Badge.count(
-                            count: controls.filterCount,
-                            isLabelVisible: controls.hasFilters,
-                            child: IconButton(
-                              key: const ValueKey('shelf-filter-control'),
-                              tooltip: l10n.shelfFilterControl,
-                              onPressed: () => showShelfFilterSheet(
-                                context,
-                                controls,
-                                data.tags,
+                          if (narrowTools)
+                            heading
+                          else
+                            Expanded(child: heading),
+                          Wrap(
+                            spacing: 8,
+                            crossAxisAlignment: WrapCrossAlignment.center,
+                            children: [
+                              ShelfViewSwitch(
+                                showCovers: Prefs().shelfCoverView,
+                                onChanged: (value) =>
+                                    Prefs().shelfCoverView = value,
                               ),
-                              icon: const Icon(Icons.filter_alt_outlined),
-                            ),
+                              IconButton(
+                                key: const ValueKey('shelf-sort-control'),
+                                tooltip: l10n.shelfSortControl,
+                                onPressed: () =>
+                                    showShelfSortSheet(context, controls),
+                                icon: const Icon(Icons.sort_rounded),
+                              ),
+                              Badge.count(
+                                count: controls.filterCount,
+                                isLabelVisible: controls.hasFilters,
+                                child: IconButton(
+                                  key: const ValueKey('shelf-filter-control'),
+                                  tooltip: l10n.shelfFilterControl,
+                                  onPressed: () => showShelfFilterSheet(
+                                    context,
+                                    controls,
+                                    data.tags,
+                                  ),
+                                  icon: const Icon(Icons.filter_alt_outlined),
+                                ),
+                              ),
+                            ],
                           ),
                         ],
                       ),

@@ -48,9 +48,10 @@ class ContinueReadingBanner extends StatelessWidget {
     final progress = book.readingPercentage.isFinite
         ? book.readingPercentage.clamp(0.0, 1.0)
         : 0.0;
-    final progressLabel = l10n.notesReadPercentage(
-      '${(progress * 100).round()}%',
-    );
+    final progressLabel = book.isPhysical
+        ? '${l10n.physicalBookCurrentPage}: ${book.currentPage}'
+              '${book.totalPages == null ? '' : ' ${l10n.physicalBookOfPages(book.totalPages!)}'}'
+        : l10n.notesReadPercentage('${(progress * 100).round()}%');
 
     final layout = PaperfoldLayout.of(context);
     final landscape = compact || layout.landscape;

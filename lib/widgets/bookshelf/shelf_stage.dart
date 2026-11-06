@@ -266,14 +266,30 @@ class ShelfStageState extends State<ShelfStage>
       final spineRects = <Rect>[];
       final coverRects = <Rect>[];
       final labels = <(double, String)>[];
-      double x = 0, y = 36;
+      var groupLead = 36.0;
+      for (final label in [
+        L10n.of(context).libraryEbooks,
+        L10n.of(context).libraryPaperBooks,
+      ]) {
+        final painter = TextPainter(
+          text: TextSpan(
+            text: '$label · ${widget.books.length}',
+            style: Theme.of(context).textTheme.labelLarge,
+          ),
+          textDirection: Directionality.of(context),
+          textScaler: MediaQuery.textScalerOf(context),
+        )..layout(maxWidth: width);
+        groupLead = math.max(groupLead, painter.height + 12);
+        painter.dispose();
+      }
+      double x = 0, y = groupLead;
       bool? physical;
       var groupStart = 0;
       for (var i = 0; i < widget.books.length; i++) {
         final book = widget.books[i];
         if (physical != book.isPhysical && !book.isWishlist) {
           if (physical != null) {
-            y += spineHeight + 32;
+            y += spineHeight + 16 + groupLead;
           }
           x = 0;
           groupStart = i;
@@ -282,7 +298,7 @@ class ShelfStageState extends State<ShelfStage>
               .where((b) => b.isPhysical == physical)
               .length;
           labels.add((
-            y - 28,
+            y - groupLead,
             '${book.isPhysical ? L10n.of(context).libraryPaperBooks : L10n.of(context).libraryEbooks} · $count',
           ));
         }
@@ -313,7 +329,7 @@ class ShelfStageState extends State<ShelfStage>
         );
         x += spineWidth + 4;
       }
-      double gridY = 36;
+      double gridY = groupLead;
       physical = null;
       groupStart = 0;
       final gridLabels = <double>[];
@@ -324,11 +340,11 @@ class ShelfStageState extends State<ShelfStage>
             gridY +=
                 ((i - groupStart + columns - 1) ~/ columns) *
                     (coverHeight + 16) +
-                36;
+                groupLead;
           }
           groupStart = i;
           physical = book.isPhysical;
-          gridLabels.add(gridY - 28);
+          gridLabels.add(gridY - groupLead);
         }
         coverRects[i] = coverRects[i].shift(
           Offset(0, gridY + ((i - groupStart) ~/ columns) * (coverHeight + 16)),
@@ -382,7 +398,7 @@ class ShelfStageState extends State<ShelfStage>
                       : -1;
                   _index = (_index + step).clamp(0, widget.books.length - 1);
                   _scroll.jumpTo(
-                    (_headerHeight + rects[_index].top - 36).clamp(
+                    (_headerHeight + rects[_index].top - groupLead).clamp(
                       0,
                       _scroll.position.maxScrollExtent,
                     ),
@@ -433,8 +449,9 @@ class ShelfStageState extends State<ShelfStage>
                             ),
                         for (var j = 0; j < labels.length; j++)
                           PositionedDirectional(
-                            start: 16,
+                            start: layout.gutter,
                             top: labels[j].$1 * (1 - t) + gridLabels[j] * t,
+                            width: width,
                             child: Text(
                               labels[j].$2,
                               style: Theme.of(context).textTheme.labelLarge,
