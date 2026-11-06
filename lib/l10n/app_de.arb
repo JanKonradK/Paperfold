@@ -1104,5 +1104,22 @@
   "reminderPermissionDenied": "Benachrichtigungen für Paperfold sind aus. Schalte sie in den Systemeinstellungen ein.",
   "reminderChannelName": "Leseerinnerungen",
   "onlineWikisourceDescription": "Gemeinfreie Bücher aus dem englischen Wikisource. Lade EPUB-Dateien hier herunter.",
-  "onlineInternetArchiveDescription": "Eine große Bibliothek mit gemeinfreien Büchern und Leihbüchern. Manche Bücher brauchen ein Konto."
+  "onlineInternetArchiveDescription": "Eine große Bibliothek mit gemeinfreien Büchern und Leihbüchern. Manche Bücher brauchen ein Konto.",
+  "newEntry": "Neuer Eintrag",
+  "recentEntries": "Letzte Einträge",
+  "entryNote": "Notiz",
+  "entryQuote": "Zitat",
+  "entryPhoto": "Foto der Seite",
+  "entryUnassigned": "Ohne Buch",
+  "facingPage": "Gegenüberliegende Seite",
+  "showLaterEntries": "Spätere Einträge anzeigen",
+  "pagesToday": "{count} Seiten heute",
+  "entryLocation": "Seite / Kapitel",
+  "@pagesToday": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

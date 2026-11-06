@@ -1104,5 +1104,22 @@
   "reminderPermissionDenied": "Le notifiche di Paperfold sono disattivate. Attivale nelle impostazioni di sistema.",
   "reminderChannelName": "Promemoria di lettura",
   "onlineWikisourceDescription": "Libri di pubblico dominio da Wikisource in inglese. Scarica qui i file EPUB.",
-  "onlineInternetArchiveDescription": "Una grande biblioteca di libri di pubblico dominio e in prestito. Alcuni libri richiedono un account."
+  "onlineInternetArchiveDescription": "Una grande biblioteca di libri di pubblico dominio e in prestito. Alcuni libri richiedono un account.",
+  "newEntry": "Nuova voce",
+  "recentEntries": "Voci recenti",
+  "entryNote": "Nota",
+  "entryQuote": "Citazione",
+  "entryPhoto": "Foto della pagina",
+  "entryUnassigned": "Nessun libro",
+  "facingPage": "Pagina a fronte",
+  "showLaterEntries": "Mostra voci successive",
+  "pagesToday": "{count} pagine oggi",
+  "entryLocation": "Pagina / capitolo",
+  "@pagesToday": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

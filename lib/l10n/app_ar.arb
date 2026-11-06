@@ -886,5 +886,22 @@
   "reminderPermissionDenied": "إشعارات Paperfold متوقفة. شغّلها من إعدادات النظام.",
   "reminderChannelName": "تذكيرات القراءة",
   "onlineWikisourceDescription": "كتب في الملك العام من ويكي مصدر الإنجليزية. نزّل ملفات EPUB من هنا.",
-  "onlineInternetArchiveDescription": "مكتبة كبيرة من كتب الملك العام وكتب الإعارة. بعض الكتب تحتاج إلى حساب."
+  "onlineInternetArchiveDescription": "مكتبة كبيرة من كتب الملك العام وكتب الإعارة. بعض الكتب تحتاج إلى حساب.",
+  "newEntry": "إدخال جديد",
+  "recentEntries": "الإدخالات الأخيرة",
+  "entryNote": "ملاحظة",
+  "entryQuote": "اقتباس",
+  "entryPhoto": "صورة الصفحة",
+  "entryUnassigned": "بلا كتاب",
+  "facingPage": "الصفحة المقابلة",
+  "showLaterEntries": "عرض الإدخالات اللاحقة",
+  "pagesToday": "{count} صفحات اليوم",
+  "entryLocation": "الصفحة / الفصل",
+  "@pagesToday": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

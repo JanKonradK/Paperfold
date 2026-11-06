@@ -1034,7 +1034,13 @@
   "searchLibraryHint": "Search books, notes, and journal",
   "searchJournalReview": "Review",
   "searchJournalPage": "Journal page {number}",
-  "@searchJournalPage": {"placeholders": {"number": {"type": "int"}}},
+  "@searchJournalPage": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
   "journalBooks": "Book journals",
   "journalHighlightsOverview": "Revisit passages and notes from your library.",
   "challengeSaveFailed": "Your target could not be saved. Try again.",
@@ -1105,5 +1111,22 @@
   "reminderPermissionDenied": "Notifications are off for Paperfold. Turn them on in the system settings.",
   "reminderChannelName": "Reading reminders",
   "onlineWikisourceDescription": "Public domain books from English Wikisource. Download EPUB files here.",
-  "onlineInternetArchiveDescription": "A large library of public domain and lending books. Some books need an account."
+  "onlineInternetArchiveDescription": "A large library of public domain and lending books. Some books need an account.",
+  "newEntry": "New entry",
+  "recentEntries": "Recent entries",
+  "entryNote": "Note",
+  "entryQuote": "Quote",
+  "entryPhoto": "Photo of the page",
+  "entryUnassigned": "No book",
+  "facingPage": "Facing page",
+  "showLaterEntries": "Show later entries",
+  "pagesToday": "{count} pages today",
+  "entryLocation": "Page / chapter",
+  "@pagesToday": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

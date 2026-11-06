@@ -1104,5 +1104,22 @@
   "reminderPermissionDenied": "Notificările Paperfold sunt dezactivate. Activează-le din setările sistemului.",
   "reminderChannelName": "Mementouri de lectură",
   "onlineWikisourceDescription": "Cărți din domeniul public de pe Wikisource în engleză. Descarcă fișiere EPUB aici.",
-  "onlineInternetArchiveDescription": "O bibliotecă mare de cărți din domeniul public și de împrumut. Unele cărți cer un cont."
+  "onlineInternetArchiveDescription": "O bibliotecă mare de cărți din domeniul public și de împrumut. Unele cărți cer un cont.",
+  "newEntry": "Înregistrare nouă",
+  "recentEntries": "Înregistrări recente",
+  "entryNote": "Notă",
+  "entryQuote": "Citat",
+  "entryPhoto": "Fotografia paginii",
+  "entryUnassigned": "Fără carte",
+  "facingPage": "Pagina alăturată",
+  "showLaterEntries": "Arată înregistrările ulterioare",
+  "pagesToday": "{count} pagini astăzi",
+  "entryLocation": "Pagină / capitol",
+  "@pagesToday": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

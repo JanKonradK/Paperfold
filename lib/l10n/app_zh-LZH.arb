@@ -886,5 +886,22 @@
   "reminderPermissionDenied": "Paperfold 之通知已閉。請於系統設定啟之。",
   "reminderChannelName": "讀書提醒",
   "onlineWikisourceDescription": "英文維基文庫公有之書。可於此下載 EPUB。",
-  "onlineInternetArchiveDescription": "藏公有之書與借閱之書之大館。部分之書須帳號。"
+  "onlineInternetArchiveDescription": "藏公有之書與借閱之書之大館。部分之書須帳號。",
+  "newEntry": "新增札記",
+  "recentEntries": "近記",
+  "entryNote": "札記",
+  "entryQuote": "摘句",
+  "entryPhoto": "書頁攝影",
+  "entryUnassigned": "無書",
+  "facingPage": "對頁",
+  "showLaterEntries": "示後記",
+  "pagesToday": "今日讀 {count} 頁",
+  "entryLocation": "頁 / 章",
+  "@pagesToday": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

@@ -886,5 +886,22 @@
   "reminderPermissionDenied": "Paperfold 的通知已关闭。请在系统设置中开启。",
   "reminderChannelName": "阅读提醒",
   "onlineWikisourceDescription": "来自英文维基文库的公有领域图书。可在此下载 EPUB 文件。",
-  "onlineInternetArchiveDescription": "收藏公有领域图书和借阅图书的大型图书馆。部分图书需要账户。"
+  "onlineInternetArchiveDescription": "收藏公有领域图书和借阅图书的大型图书馆。部分图书需要账户。",
+  "newEntry": "新建记录",
+  "recentEntries": "最近记录",
+  "entryNote": "笔记",
+  "entryQuote": "摘录",
+  "entryPhoto": "书页照片",
+  "entryUnassigned": "不关联书籍",
+  "facingPage": "对页",
+  "showLaterEntries": "显示后续记录",
+  "pagesToday": "今日阅读 {count} 页",
+  "entryLocation": "页码 / 章节",
+  "@pagesToday": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

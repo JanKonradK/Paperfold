@@ -8,3 +8,5 @@
 - OCR: upstream google_mlkit_text_recognition Android build.gradle uses bundled `com.google.mlkit:text-recognition:16.0.1`, not Play-services. Ship attachment only. No OCR dependency added. APK delta has not been measured.
 - Photos: stored as relative paths under journal_photos/. Existing WebDAV sync and ZIP backup enumerate folders and exclude this folder. Lead must add journal_photos to sync, backup, restore and storage migration (outside assigned files).
 - Hardware profile, TalkBack, eInk and visual screenshot QA have not been run.
+
+- Committed data layer: 1fb4fb53. Home/composer/photo are committed together because the home opens the composer and renders its attachments. Facing-page integration follows in the next commit.

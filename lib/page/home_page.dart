@@ -1,3 +1,4 @@
+import 'package:paperfold/page/journal/journal_home_page.dart';
 import 'dart:async';
 import 'dart:math' as math;
 
@@ -620,128 +621,10 @@ class _SlidingNavigationItem extends StatelessWidget {
 }
 
 /// Reading tools and the book journals, in the same visual system as the library.
-class _JournalDestination extends ConsumerWidget {
+class _JournalDestination extends StatelessWidget {
   const _JournalDestination();
-
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = L10n.of(context);
-    final entries = ref.watch(journalHomeProvider);
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(l10n.navJournal),
-        actions: [
-          IconButton(
-            tooltip: l10n.searchLibraryHint,
-            icon: const Icon(Icons.search),
-            onPressed: () => Navigator.of(context).push(
-              MaterialPageRoute<void>(builder: (_) => const SearchPage()),
-            ),
-          ),
-        ],
-      ),
-      body: Align(
-        alignment: Alignment.topCenter,
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 760),
-          child: RefreshIndicator(
-            onRefresh: () async {
-              await Future.wait([
-                ref.read(journalHomeProvider.notifier).refresh(),
-                ref.read(readingChallengeProvider.notifier).refresh(),
-                ref.read(monthTrackerProvider.notifier).refresh(),
-              ]);
-            },
-            child: CustomScrollView(
-              physics: const AlwaysScrollableScrollPhysics(),
-              slivers: [
-                SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
-                  sliver: SliverList.list(children: [
-                    const _JournalTools(),
-                    const SizedBox(height: 28),
-                    Text(l10n.journalBooks,
-                        style: Theme.of(context).textTheme.titleLarge),
-                  ]),
-                ),
-                ...entries.when(
-                  loading: () => const [
-                    SliverFillRemaining(
-                      hasScrollBody: false,
-                      child: Center(child: CircularProgressIndicator()),
-                    ),
-                  ],
-                  error: (error, stackTrace) => [
-                    SliverFillRemaining(
-                      hasScrollBody: false,
-                      child: LoadFailure.page(
-                        title: l10n.journalLoadFailed,
-                        error: error,
-                        onRetry: () =>
-                            ref.read(journalHomeProvider.notifier).refresh(),
-                      ),
-                    ),
-                  ],
-                  data: (data) {
-                    if (data.isEmpty) {
-                      return [
-                        SliverFillRemaining(
-                          hasScrollBody: false,
-                          child: _DestinationEmptyState(
-                            title: l10n.journalPlaceholderTitle,
-                            body: l10n.journalPlaceholderBody,
-                          ),
-                        ),
-                      ];
-                    }
-                    return [
-                      SliverList.builder(
-                        itemCount: data.length,
-                        itemBuilder: (context, index) {
-                          final entry = data[index];
-                          final details = <String>[
-                            if (entry.review != null) l10n.journalReviewed,
-                            if (entry.pageCount > 0)
-                              l10n.journalPagesCount(entry.pageCount),
-                          ];
-                          return ListTile(
-                            contentPadding:
-                                const EdgeInsets.symmetric(horizontal: 20),
-                            minTileHeight: 64,
-                            leading: const Icon(Icons.menu_book_outlined),
-                            title: Text(entry.book.title,
-                                maxLines: 2, overflow: TextOverflow.ellipsis),
-                            subtitle: details.isEmpty
-                                ? null
-                                : Text(details.join(' · ')),
-                            trailing: const Icon(Icons.chevron_right),
-                            onTap: () async {
-                              await Navigator.of(context).push(
-                                MaterialPageRoute<void>(
-                                  builder: (_) =>
-                                      BookJournalPage(book: entry.book),
-                                ),
-                              );
-                              if (context.mounted) {
-                                await ref
-                                    .read(journalHomeProvider.notifier)
-                                    .refresh();
-                              }
-                            },
-                          );
-                        },
-                      ),
-                    ];
-                  },
-                ),
-                const SliverToBoxAdapter(child: SizedBox(height: 24)),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
+  Widget build(BuildContext context) => const JournalHomePage();
 }
 
 class _JournalTools extends ConsumerWidget {
