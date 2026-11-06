@@ -1,6 +1,6 @@
 import 'dart:math' as math;
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:paperfold/config/paperfold_system.dart';
 import 'package:paperfold/config/paperfold_visual_policy.dart';
 import 'package:paperfold/config/shared_preference_provider.dart';
