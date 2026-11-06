@@ -436,7 +436,13 @@ class ReadingPageState extends ConsumerState<ReadingPage>
           final label = player?.chapterTitle;
           hideBottomBar();
           showFacingPage(context, book: _book, locator: locator,
-            progress: progress, label: label);
+            progress: progress, label: label,
+            onOpenEntry: (entry) async {
+              final target = entry.sourceLocator ?? entry.sourceCfi;
+              if (target == null || player == null) return;
+              try { await player.previewPassage(target); }
+              catch (_) { if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(L10n.of(context).journalPassageOpenFailed))); }
+            });
         },
         onProgress: progressHandler,
         onStyle: styleHandler,

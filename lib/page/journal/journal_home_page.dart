@@ -2,10 +2,13 @@ import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:paperfold/config/paperfold_system.dart';
+import 'package:paperfold/config/paperfold_motion.dart';
+import 'package:paperfold/widgets/common/paperfold_transition.dart';
 import 'package:paperfold/dao/book.dart';
 import 'package:paperfold/dao/journal.dart';
 import 'package:paperfold/l10n/generated/L10n.dart';
 import 'package:paperfold/models/book.dart';
+import 'package:paperfold/enums/book_status.dart';
 import 'package:paperfold/models/journal_page.dart';
 import 'package:paperfold/page/journal/book_journal_page.dart';
 import 'package:paperfold/page/journal/month_tracker_page.dart';
@@ -62,14 +65,14 @@ class _JournalHomePageState extends ConsumerState<JournalHomePage> {
   }
 
   Future<void> _compose([QuickCaptureRequest? request]) async {
-    _composing = true;
+    setState(() => _composing = true);
     final box = _fab.currentContext?.findRenderObject() as RenderBox?;
     final origin = box == null
         ? null
         : box.localToGlobal(Offset.zero) & box.size;
     await showNewEntrySheet(context, request: request, origin: origin);
-    _composing = false;
     if (!mounted) return;
+    setState(() => _composing = false);
     ref.invalidate(journalHomeProvider);
     ref.invalidate(monthTrackerProvider);
     await _load(reset: true);
@@ -111,17 +114,27 @@ class _JournalHomePageState extends ConsumerState<JournalHomePage> {
         ?.value
         .pagesFor(now.day);
     final bottom = MediaQuery.paddingOf(context).bottom;
+    final currentBook = _books.values
+        .where((book) => book.status == BookStatus.reading)
+        .firstOrNull;
+    final featured = currentBook == null
+        ? -1
+        : _pages.indexWhere((page) => page.bookId == currentBook.id);
     return Scaffold(
       appBar: AppBar(title: Text(l.navJournal)),
       floatingActionButton: Padding(
         padding: EdgeInsets.only(bottom: bottom),
-        child: SizedBox(
-          height: PaperfoldSize.fab,
-          child: FloatingActionButton.extended(
-            key: _fab,
-            onPressed: () => _compose(),
-            icon: const Icon(Icons.edit_outlined),
-            label: Text(l.newEntry),
+        child: AnimatedOpacity(
+          opacity: _composing ? 0 : 1,
+          duration: paperfoldTransitionDuration(context, PaperfoldMotion.tick),
+          child: SizedBox(
+            height: PaperfoldSize.fab,
+            child: FloatingActionButton.extended(
+              key: _fab,
+              onPressed: () => _compose(),
+              icon: const Icon(Icons.edit_outlined),
+              label: Text(l.newEntry),
+            ),
           ),
         ),
       ),
@@ -171,7 +184,7 @@ class _JournalHomePageState extends ConsumerState<JournalHomePage> {
               for (var i = 0; i < _pages.length; i++)
                 Padding(
                   padding: const EdgeInsets.only(bottom: PaperfoldSpace.sm),
-                  child: i == 0 && _books[_pages[i].bookId] != null
+                  child: i == featured && _books[_pages[i].bookId] != null
                       ? BookLight(
                           coverPath: _books[_pages[i].bookId]!.coverFullPath,
                           fallback: Theme.of(context).colorScheme.primary,
@@ -208,33 +221,57 @@ class _JournalHomePageState extends ConsumerState<JournalHomePage> {
                 ),
             ],
             const SizedBox(height: PaperfoldSpace.lg),
-            for (final record in [
-              (
-                Icons.local_library_outlined,
-                l.challengeTitle,
-                const ReadingChallengePage(),
+            LayoutBuilder(
+              builder: (context, constraints) => Wrap(
+                children: [
+                  for (final record in [
+                    (
+                      Icons.local_library_outlined,
+                      l.challengeTitle,
+                      const ReadingChallengePage(),
+                    ),
+                    (
+                      Icons.calendar_month_outlined,
+                      l.monthTrackerTitle,
+                      const MonthTrackerPage(),
+                    ),
+                    (
+                      Icons.format_quote_outlined,
+                      l.tileNotesTotalTitle,
+                      Scaffold(
+                        appBar: AppBar(title: Text(l.tileNotesTotalTitle)),
+                        body: const NotesPage(),
+                      ),
+                    ),
+                  ])
+                    SizedBox(
+                      width:
+                          constraints.maxWidth /
+                          (MediaQuery.textScalerOf(context).scale(1) > 1.5
+                              ? 1
+                              : 3),
+                      child: TextButton(
+                        onPressed: () => Navigator.of(context).push(
+                          MaterialPageRoute<void>(builder: (_) => record.$3),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            vertical: PaperfoldSpace.xs,
+                          ),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(record.$1),
+                              const SizedBox(height: PaperfoldSpace.xs),
+                              Text(record.$2, textAlign: TextAlign.center),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
               ),
-              (
-                Icons.calendar_month_outlined,
-                l.monthTrackerTitle,
-                const MonthTrackerPage(),
-              ),
-              (
-                Icons.format_quote_outlined,
-                l.tileNotesTotalTitle,
-                Scaffold(
-                  appBar: AppBar(title: Text(l.tileNotesTotalTitle)),
-                  body: const NotesPage(),
-                ),
-              ),
-            ])
-              ListTile(
-                leading: Icon(record.$1),
-                title: Text(record.$2),
-                trailing: const Icon(Icons.chevron_right),
-                onTap: () => Navigator.of(context)
-                    .push(MaterialPageRoute<void>(builder: (_) => record.$3)),
-              ),
+            ),
           ],
         ),
       ),

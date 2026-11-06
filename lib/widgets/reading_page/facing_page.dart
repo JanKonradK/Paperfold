@@ -1,3 +1,4 @@
+import 'package:paperfold/page/journal/journal_photo.dart';
 import 'package:paperfold/config/paperfold_visual_policy.dart';
 import 'package:paperfold/widgets/common/paperfold_transition.dart';
 import 'package:material_ui/material_ui.dart';
@@ -17,6 +18,7 @@ Future<void> showFacingPage(
   double? progress,
   int? page,
   String? label,
+  Future<void> Function(JournalPage)? onOpenEntry,
 }) => showGeneralDialog<void>(
   context: context,
   barrierDismissible: true,
@@ -38,6 +40,7 @@ Future<void> showFacingPage(
         progress: progress,
         page: page,
         label: label,
+        onOpenEntry: onOpenEntry,
       ),
     ),
   ),
@@ -70,6 +73,7 @@ class FacingPage extends StatefulWidget {
     this.label,
     this.dao,
     this.draft,
+    this.onOpenEntry,
   });
   final Book book;
   final String? locator;
@@ -78,6 +82,7 @@ class FacingPage extends StatefulWidget {
   final String? label;
   final JournalDao? dao;
   final EntryDraft? draft;
+  final Future<void> Function(JournalPage)? onOpenEntry;
   @override
   State<FacingPage> createState() => _FacingPageState();
 }
@@ -249,6 +254,25 @@ class _FacingPageState extends State<FacingPage> {
                                     ),
                                   ),
                                 if (entry.body.isNotEmpty) Text(entry.body),
+                                if (entry.photoPath != null)
+                                  JournalPhoto(path: entry.photoPath!),
+                                if (entry.hasSource &&
+                                    widget.onOpenEntry != null)
+                                  TextButton.icon(
+                                    icon: const Icon(
+                                      Icons.menu_book_outlined,
+                                      size: PaperfoldSize.smallIcon,
+                                    ),
+                                    label: Text(
+                                      entry.sourceLabel ??
+                                          entry.sourceChapter ??
+                                          l.journalOpenPassage,
+                                    ),
+                                    onPressed: () async {
+                                      Navigator.of(context).pop();
+                                      await widget.onOpenEntry!(entry);
+                                    },
+                                  ),
                               ],
                             ),
                           ),

@@ -193,6 +193,8 @@ class _NewEntrySheetState extends State<NewEntrySheet> {
         }
 
         route?.animation?.addStatusListener(listener);
+      } else {
+        _focus.requestFocus();
       }
     } catch (_) {
       if (mounted) setState(() => _failed = true);
@@ -375,7 +377,11 @@ class _NewEntrySheetState extends State<NewEntrySheet> {
                               onChanged: _busy
                                   ? null
                                   : (id) {
-                                      setState(() => _bookId = id ?? 0);
+                                      setState(() {
+                                        _bookId = id ?? 0;
+                                        _locator = null;
+                                        _progress = null;
+                                      });
                                       _persist();
                                     },
                             ),

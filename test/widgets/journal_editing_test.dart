@@ -1,3 +1,4 @@
+import 'package:paperfold/page/journal/journal_photo.dart';
 import 'dart:async';
 
 import 'package:material_ui/material_ui.dart';
@@ -142,6 +143,14 @@ Finder _genre() => find.byWidgetPredicate(
     (widget) => widget is TextField && widget.decoration?.labelText == 'Genre');
 
 void main() {
+  testWidgets('photo-only writing remains visible in a book journal', (tester) async {
+    final dao = _JournalDao();
+    dao.pages[1] = const JournalPage(id: 1, bookId: 7, pageIndex: 0, photoPath: 'missing-photo.jpg', entryKind: 'photo');
+    await _open(tester, DotPagesPage(book: _book, dao: dao));
+    expect(find.byType(JournalPhoto), findsOneWidget);
+    expect(tester.takeException(), null);
+  });
+
   testWidgets('review saves before leaving and retains drafts after failure',
       (tester) async {
     final dao = _JournalDao()..failSave = true;

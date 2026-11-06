@@ -1,3 +1,4 @@
+import 'package:paperfold/page/journal/journal_photo.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:paperfold/dao/journal.dart';
@@ -240,6 +241,7 @@ class _DotPagesPageState extends ConsumerState<DotPagesPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            if (page.photoPath != null) JournalPhoto(path: page.photoPath!),
             if (page.hasSource)
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
