@@ -5,7 +5,6 @@ import 'package:paperfold/providers/font_list.dart';
 import 'package:paperfold/utils/get_path/databases_path.dart';
 import 'package:paperfold/utils/get_path/get_base_path.dart';
 import 'package:paperfold/utils/get_path/get_cache_dir.dart';
-import 'package:paperfold/utils/get_path/log_file.dart';
 import 'package:paperfold/utils/log/common.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -23,7 +22,6 @@ class StorageInfo extends _$StorageInfo {
         await getAnxCacheDir(),
         recursive: true,
       ),
-      logSize: await calsulateFileSize(await getLogFile()),
       coverSize: await calculatePathSize(getCoverDir()),
     );
   }
@@ -69,10 +67,6 @@ class StorageInfo extends _$StorageInfo {
     }
 
     return totalSize;
-  }
-
-  Future<int> calsulateFileSize(File file) async {
-    return await file.length();
   }
 
   Future<List<File>> listBookFiles() async {

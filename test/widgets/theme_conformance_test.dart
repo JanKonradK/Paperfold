@@ -35,17 +35,14 @@ double _contrast(Color a, Color b) {
   return (hi + 0.05) / (lo + 0.05);
 }
 
-/// Shipped source only: the dev harnesses under `lib/page/dev/` and
-/// `lib/dev_*.dart` are not part of the application.
+/// Shipped source only.
 Iterable<File> _shippedDartFiles() sync* {
   for (final entity in Directory('lib').listSync(recursive: true)) {
     if (entity is! File) continue;
     final String path = entity.path.replaceAll(r'\', '/');
     if (!path.endsWith('.dart')) continue;
     if (path.contains('/l10n/generated/')) continue;
-    if (path.contains('/page/dev/')) continue;
     if (path.contains('/gen/')) continue;
-    if (RegExp(r'lib/dev_[a-z_]+\.dart$').hasMatch(path)) continue;
     yield entity;
   }
 }

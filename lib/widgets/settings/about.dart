@@ -3,10 +3,8 @@ import 'package:paperfold/widgets/settings/settings_tile.dart';
 
 import 'dart:async';
 
-import 'package:paperfold/config/shared_preference_provider.dart';
 import 'package:paperfold/l10n/generated/L10n.dart';
 import 'package:paperfold/main.dart';
-import 'package:paperfold/page/settings_page/developer/developer_options_page.dart';
 import 'package:paperfold/utils/env_var.dart';
 import 'package:paperfold/utils/toast/common.dart';
 import 'package:paperfold/widgets/paperfold_logo_mark.dart';
@@ -34,47 +32,6 @@ class _AboutState extends State<About> {
       onPressed: (_) => openAboutDialog(),
     );
   }
-}
-
-const int _developerUnlockTapThreshold = 7;
-int _developerUnlockTapCount = 0;
-Timer? _developerUnlockResetTimer;
-
-void _handleDeveloperUnlockTap(BuildContext context) {
-  _developerUnlockTapCount++;
-  _developerUnlockResetTimer?.cancel();
-  _developerUnlockResetTimer = Timer(
-    const Duration(seconds: 2),
-    () => _developerUnlockTapCount = 0,
-  );
-
-  final alreadyEnabled = Prefs().developerOptionsEnabled;
-  if (_developerUnlockTapCount < _developerUnlockTapThreshold) {
-    return;
-  }
-
-  _developerUnlockTapCount = 0;
-  if (!alreadyEnabled) {
-    Prefs().developerOptionsEnabled = true;
-    AnxToast.show(L10n.of(context).settingsDeveloperOptionsEnabledToast);
-  }
-
-  final navigator = Navigator.of(context, rootNavigator: true);
-  if (navigator.canPop()) {
-    navigator.pop();
-  }
-  Future.microtask(_openDeveloperOptionsPage);
-}
-
-void _openDeveloperOptionsPage() {
-  final BuildContext? navContext = navigatorKey.currentContext;
-  if (navContext == null) return;
-  Navigator.of(navContext).push(
-    CupertinoPageRoute(
-      fullscreenDialog: false,
-      builder: (context) => const DeveloperOptionsPage(),
-    ),
-  );
 }
 
 Future<void> openAboutDialog() async {
@@ -124,7 +81,6 @@ Future<void> openAboutDialog() async {
                     onTap: () {
                       Clipboard.setData(ClipboardData(text: version));
                       AnxToast.show(L10n.of(context).notesPageCopied);
-                      _handleDeveloperUnlockTap(context);
                     },
                   ),
                   if (EnvVar.enableCheckUpdate)

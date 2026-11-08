@@ -5,9 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:paperfold/config/shared_preference_provider.dart';
 import 'package:paperfold/dao/book.dart';
 import 'package:paperfold/dao/database.dart';
-import 'package:paperfold/page/settings_page/sync.dart';
-import 'package:paperfold/service/database_sync_manager.dart';
-import 'package:paperfold/service/sync/sync_client_base.dart';
+import 'package:paperfold/page/settings_page/backup.dart';
 import 'package:paperfold/utils/get_path/get_base_path.dart';
 // Test the platform plugin without writing to the user's application folders.
 // ignore: depend_on_referenced_packages
@@ -25,20 +23,6 @@ class _Paths extends PathProviderPlatform {
   Future<String> getApplicationDocumentsPath() async => path;
   @override
   Future<String> getApplicationSupportPath() async => path;
-}
-
-class _DownloadClient implements SyncClientBase {
-  _DownloadClient(this.source);
-  final File source;
-
-  @override
-  Future<void> downloadFile(String remotePath, String localPath,
-      {void Function(int, int)? onProgress}) async {
-    await source.copy(localPath);
-  }
-
-  @override
-  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
 void main() {
@@ -110,47 +94,18 @@ void main() {
       expect(await read, ['new database']);
     });
 
-    test('a valid empty library can replace the database', () async {
-      final remoteFile = File('${temporary.path}/remote.db');
-      final remote = await databaseFactory.openDatabase(remoteFile.path);
-      await DBHelper().onUpgradeDatabase(remote, 0, currentDbVersion);
-      await remote.setVersion(currentDbVersion);
-      await remote.close();
-
-      final result = await DatabaseSyncManager.safeDownloadDatabase(
-        client: _DownloadClient(remoteFile),
-        remoteDbFileName: 'database9.db',
+    test('a backup without a usable library is refused', () async {
+      final empty = File('${temporary.path}/empty.db')..writeAsStringSync('x');
+      await expectLater(
+        validateBackupDatabase(empty.path),
+        throwsFormatException,
       );
-
-      expect(result.isSuccess, isTrue, reason: result.message);
-      expect(await (await DBHelper().database).query('tb_books'), isEmpty);
-      expect(await DatabaseSyncManager.getAvailableBackups(), hasLength(1));
-    });
-
-    test('a failed migration restores and reopens the local database',
-        () async {
-      final remoteFile = File('${temporary.path}/remote.db');
-      final remote = await databaseFactory.openDatabase(remoteFile.path);
-      // This file passes the initial integrity check, but its incomplete v8
-      // schema cannot be migrated to v9 because tb_shelves is missing.
-      await remote.execute(createBookSQL);
-      await remote.execute(createThemeSQL);
-      await remote.execute(createStyleSQL);
-      await remote.setVersion(8);
-      await remote.close();
-
-      final result = await DatabaseSyncManager.safeDownloadDatabase(
-        client: _DownloadClient(remoteFile),
-        remoteDbFileName: 'database9.db',
-      );
-
-      expect(result.isSuccess, isFalse);
-      expect(result.failureType, DatabaseSyncFailureType.replacementFailed);
-      final local = await DBHelper().database;
-      expect(await local.query('preservation_test'), [
-        {'value': 'keep local data'},
-      ]);
-      expect(await local.getVersion(), currentDbVersion);
+      final newer = '${temporary.path}/newer.db';
+      final db = await databaseFactory.openDatabase(newer);
+      await DBHelper().onUpgradeDatabase(db, 0, currentDbVersion);
+      await db.setVersion(currentDbVersion + 1);
+      await db.close();
+      await expectLater(validateBackupDatabase(newer), throwsFormatException);
     });
 
     test('failed backup restore preserves both the database and book files',

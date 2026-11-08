@@ -5,7 +5,6 @@ class StorageInfoModel {
   late int booksSize;
   late int fontSize;
   late int cacheSize;
-  late int logSize;
   late int coverSize;
 
   StorageInfoModel({
@@ -13,7 +12,6 @@ class StorageInfoModel {
     required this.booksSize,
     required this.fontSize,
     required this.cacheSize,
-    required this.logSize,
     required this.coverSize,
   });
 
@@ -21,11 +19,10 @@ class StorageInfoModel {
   String get booksSizeStr => formatSize(booksSize);
   String get fontSizeStr => formatSize(fontSize);
   String get cacheSizeStr => formatSize(cacheSize);
-  String get logSizeStr => formatSize(logSize);
   String get coverSizeStr => formatSize(coverSize);
 
   String get totalSizeStr => formatSize(
-      databaseSize + booksSize + fontSize + cacheSize + logSize + coverSize);
+      databaseSize + booksSize + fontSize + cacheSize + coverSize);
   String get dataFilesSizeStr => formatSize(booksSize + fontSize + coverSize);
 
   String formatSize(int bytes) {

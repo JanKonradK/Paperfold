@@ -1,9 +1,6 @@
 import 'package:paperfold/config/paperfold_system.dart';
 import 'package:paperfold/config/shared_preference_provider.dart';
-import 'package:paperfold/enums/convert_chinese_mode.dart';
 import 'package:paperfold/enums/reading_info.dart';
-import 'package:paperfold/enums/translation_mode.dart';
-import 'package:paperfold/enums/writing_mode.dart';
 import 'package:paperfold/enums/code_highlight_theme.dart';
 import 'package:paperfold/l10n/generated/L10n.dart';
 import 'package:paperfold/models/reading_info.dart';
@@ -24,74 +21,6 @@ class _ReadingMoreSettingsState extends State<ReadingMoreSettings> {
 
   @override
   Widget build(BuildContext context) {
-    Widget convertChinese() {
-      const iconStyle = TextStyle(fontSize: 16, fontWeight: FontWeight.bold);
-      return StatefulBuilder(
-        builder: (context, setState) {
-          return Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                L10n.of(context).readingPageConvertChinese,
-                style: Theme.of(context).textTheme.titleMedium,
-              ),
-              Row(
-                children: [
-                  Expanded(
-                    child: AnxSegmentedButton<ConvertChineseMode>(
-                      segments: [
-                        SegmentButtonItem(
-                          label: L10n.of(context).readingPageOriginal,
-                          value: ConvertChineseMode.none,
-                          icon: const Text("原", style: iconStyle),
-                        ),
-                        SegmentButtonItem(
-                          label: L10n.of(context).readingPageSimplified,
-                          value: ConvertChineseMode.t2s,
-                          icon: const Text("简", style: iconStyle),
-                        ),
-                        SegmentButtonItem(
-                          label: L10n.of(context).readingPageTraditional,
-                          value: ConvertChineseMode.s2t,
-                          icon: const Text("繁", style: iconStyle),
-                        ),
-                      ],
-                      selected: {Prefs().readingRules.convertChineseMode},
-                      onSelectionChanged: (value) {
-                        setState(() {
-                          // Prefs().readingRules.convertChineseMode =
-                          //     ConvertChineseMode.values.byName(value.first);
-                          Prefs().readingRules = Prefs().readingRules.copyWith(
-                            convertChineseMode: value.first,
-                          );
-                          epubPlayerKey.currentState?.changeReadingRules(
-                            Prefs().readingRules,
-                          );
-                        });
-                      },
-                    ),
-                  ),
-                ],
-              ),
-              Row(
-                children: [
-                  const Icon(Icons.error_outline),
-                  Expanded(
-                    child: Text(
-                      L10n.of(context).readingPageConvertChineseTips,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          );
-        },
-      );
-    }
-
     Widget columnCount() {
       return StatefulBuilder(
         builder: (context, setState) => Column(
@@ -185,125 +114,6 @@ class _ReadingMoreSettingsState extends State<ReadingMoreSettings> {
                       });
                     }
                   : null,
-            ),
-          ],
-        ),
-      );
-    }
-
-    Widget writingMode() {
-      return StatefulBuilder(
-        builder: (context, setState) => Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              L10n.of(context).readingPageWritingDirection,
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
-            Row(
-              children: [
-                Expanded(
-                  child: AnxSegmentedButton<WritingModeEnum>(
-                    segments: [
-                      SegmentButtonItem(
-                        label: L10n.of(context).readingPageWritingDirectionAuto,
-                        value: WritingModeEnum.auto,
-                        icon: const Icon(Icons.auto_awesome),
-                      ),
-                      SegmentButtonItem(
-                        label: L10n.of(context)
-                            .readingPageWritingDirectionVertical,
-                        value: WritingModeEnum.verticalRl,
-                        icon: const Icon(Icons.swap_vert),
-                      ),
-                      SegmentButtonItem(
-                        label: L10n.of(context)
-                            .readingPageWritingDirectionHorizontal,
-                        value: WritingModeEnum.horizontalTb,
-                        icon: const Icon(Icons.swap_horiz),
-                      ),
-                    ],
-                    selected: {Prefs().writingMode},
-                    onSelectionChanged: (value) {
-                      setState(() {
-                        final newBookStyle = Prefs().bookStyle.copyWith(
-                          maxColumnCount: 1,
-                        );
-                        Prefs().saveBookStyleToPrefs(newBookStyle);
-                        Prefs().writingMode = value.first;
-                        epubPlayerKey.currentState?.changeStyle(newBookStyle);
-                      });
-                    },
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      );
-    }
-
-    Widget translationMode() {
-      return StatefulBuilder(
-        builder: (context, setState) => Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              L10n.of(context).translationMode,
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
-            if (!isReading)
-              Text(
-                L10n.of(context).readingPageTranslationModeTip,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
-              ),
-            Row(
-              children: [
-                Expanded(
-                  child: AnxSegmentedButton<TranslationModeEnum>(
-                    enabled: isReading,
-                    segments: [
-                      SegmentButtonItem(
-                        label: L10n.of(context).readingPageOriginal,
-                        value: TranslationModeEnum.off,
-                        icon: const Icon(Icons.translate_outlined),
-                      ),
-                      SegmentButtonItem(
-                        label: L10n.of(context).translationOnly,
-                        value: TranslationModeEnum.translationOnly,
-                        icon: const Icon(Icons.g_translate),
-                      ),
-                      SegmentButtonItem(
-                        label: L10n.of(context).bilingual,
-                        value: TranslationModeEnum.bilingual,
-                        icon: const Icon(Icons.compare),
-                      ),
-                    ],
-                    selected: {
-                      epubPlayerKey.currentState != null
-                          ? Prefs().getBookTranslationMode(
-                              epubPlayerKey.currentState!.widget.book.id,
-                            )
-                          : TranslationModeEnum.off,
-                    },
-                    onSelectionChanged: (value) {
-                      setState(() {
-                        final currentBookId =
-                            epubPlayerKey.currentState!.widget.book.id;
-                        final newMode = value.first;
-
-                        Prefs().setBookTranslationMode(currentBookId, newMode);
-
-                        epubPlayerKey.currentState?.setTranslationMode(newMode);
-                      });
-                    },
-                  ),
-                ),
-              ],
             ),
           ],
         ),
@@ -650,14 +460,6 @@ class _ReadingMoreSettingsState extends State<ReadingMoreSettings> {
       padding: const EdgeInsets.all(18.0),
       child: Column(
         children: [
-          ExpansionTile(
-            title: Text(L10n.of(context).readerLanguageDirection),
-            children: [writingMode(), convertChinese()],
-          ),
-          ExpansionTile(
-            title: Text(L10n.of(context).translationMode),
-            children: [translationMode()],
-          ),
           ExpansionTile(
             title: Text(L10n.of(context).readingPageColumnCount),
             children: [columnCount(), columnThreshold()],

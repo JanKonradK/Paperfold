@@ -3,7 +3,7 @@ import 'dart:typed_data';
 
 import 'package:archive/archive_io.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:paperfold/page/settings_page/sync.dart';
+import 'package:paperfold/page/settings_page/backup.dart';
 import 'package:path/path.dart' as path;
 
 void main() {

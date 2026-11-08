@@ -1,5 +1,4 @@
 enum HintKey {
-  releaseLocalSpace('release_local_space'),
   statisticsSwipeToDelete('statistics_swipe_to_delete'),
   bookNotesOperations('book_notes_operations'),
   statisticsDashboardRearrange('statistics_dashboard_rearrange'),

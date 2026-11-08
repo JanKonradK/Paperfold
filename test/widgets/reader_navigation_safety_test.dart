@@ -14,24 +14,13 @@ import 'package:paperfold/dao/book.dart';
 import 'package:paperfold/dao/database.dart';
 import 'package:paperfold/l10n/generated/L10n.dart';
 import 'package:paperfold/models/book.dart';
-import 'package:paperfold/models/sync_status.dart';
 import 'package:paperfold/page/book_player/epub_player.dart';
-import 'package:paperfold/providers/sync_status.dart';
-import 'package:paperfold/service/book.dart';
 import 'package:paperfold/service/book_player/book_player_server.dart';
 import 'package:paperfold/utils/get_path/get_base_path.dart';
 // Keep the real database inside the test directory.
 // ignore: depend_on_referenced_packages
 import 'package:path_provider_platform_interface/path_provider_platform_interface.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
-class _WaitingStatus extends SyncStatus {
-  _WaitingStatus(this.wait);
-  final Future<SyncStatusModel> Function() wait;
-
-  @override
-  Future<SyncStatusModel> build() => wait();
-}
 
 class _Paths extends PathProviderPlatform {
   _Paths(this.path);
@@ -168,61 +157,6 @@ void main() {
     await Prefs().saveThemeModeToPrefs('dark');
     Prefs().eInkMode = true;
     expect(player.isDarkMode, isFalse);
-  });
-
-  testWidgets('opening awaits failed downloads and tolerates a removed caller',
-      (tester) async {
-    var status = Completer<SyncStatusModel>();
-    var showSource = true;
-    late StateSetter changeSource;
-    late WidgetRef sourceRef;
-    late Future<void> opening;
-    var completed = false;
-    final book = Book.mock()..filePath = 'file/missing-navigation-test.epub';
-    await tester.pumpWidget(ProviderScope(
-      overrides: [
-        syncStatusProvider
-            .overrideWith(() => _WaitingStatus(() => status.future)),
-      ],
-      child: _app(StatefulBuilder(builder: (context, setState) {
-        changeSource = setState;
-        return showSource
-            ? Consumer(builder: (context, ref, _) {
-                sourceRef = ref;
-                return TextButton(
-                  onPressed: () {
-                    completed = false;
-                    opening = pushToReadingPage(ref, context, book)
-                      ..then((_) => completed = true);
-                  },
-                  child: const Text('Open'),
-                );
-              })
-            : const SizedBox();
-      })),
-    ));
-    // MaterialApp waits for its localization delegates before building home.
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Open'));
-    await tester.pump();
-    expect(completed, isFalse);
-    status.completeError(StateError('Remote status unavailable'));
-    await tester.pumpAndSettle();
-    await opening;
-    expect(find.text('Failed'), findsOneWidget);
-    expect(tester.takeException(), isNull);
-
-    status = Completer<SyncStatusModel>();
-    sourceRef.invalidate(syncStatusProvider);
-    await tester.tap(find.text('Open'));
-    await tester.pump();
-    expect(completed, isFalse);
-    changeSource(() => showSource = false);
-    await tester.pump();
-    status.completeError(StateError('Remote status unavailable'));
-    await tester.pumpAndSettle();
-    await opening;
-    expect(tester.takeException(), isNull);
   });
 
   testWidgets(

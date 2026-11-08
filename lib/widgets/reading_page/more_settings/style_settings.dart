@@ -1,7 +1,6 @@
 import 'package:paperfold/config/paperfold_system.dart';
 import 'package:paperfold/config/shared_preference_provider.dart';
 import 'package:paperfold/enums/text_alignment.dart';
-import 'package:paperfold/enums/writing_mode.dart';
 import 'package:paperfold/l10n/generated/L10n.dart';
 import 'package:paperfold/models/book_style.dart';
 import 'package:paperfold/page/reading_page.dart';
@@ -108,12 +107,8 @@ class _StyleSettingsState extends State<StyleSettings> {
 
     Widget sideMarginSlider(BookStyle bookStyle, StateSetter setState) {
       return StyleSlider(
-        icon: Prefs().writingMode == WritingModeEnum.verticalRl
-            ? Icons.swap_vert
-            : Icons.swap_horiz,
-        label: Prefs().writingMode == WritingModeEnum.verticalRl
-            ? L10n.of(context).readingPageVerticleMargin
-            : L10n.of(context).readingPageSideMargin,
+        icon: Icons.swap_horiz,
+        label: L10n.of(context).readingPageSideMargin,
         value: bookStyle.sideMargin,
         onChanged: (double value) {
           setState(() {
@@ -154,15 +149,10 @@ class _StyleSettingsState extends State<StyleSettings> {
     Row topBottomMarginSlider(BookStyle bookStyle, StateSetter setState) {
       return Row(
         children: [
-          Prefs().writingMode == WritingModeEnum.verticalRl
-              ? IconAndText(
-                  icon: const Icon(Icons.last_page),
-                  text: L10n.of(context).readingPageRightMargin,
-                )
-              : IconAndText(
-                  icon: const Icon(Icons.vertical_align_top),
-                  text: L10n.of(context).readingPageTopMargin,
-                ),
+          IconAndText(
+            icon: const Icon(Icons.vertical_align_top),
+            text: L10n.of(context).readingPageTopMargin,
+          ),
           Expanded(
             child: Slider(
               padding: const EdgeInsets.symmetric(
@@ -182,15 +172,10 @@ class _StyleSettingsState extends State<StyleSettings> {
               label: (bookStyle.topMargin / 20).toStringAsFixed(0),
             ),
           ),
-          Prefs().writingMode == WritingModeEnum.verticalRl
-              ? IconAndText(
-                  icon: const Icon(Icons.first_page),
-                  text: L10n.of(context).readingPageLeftMargin,
-                )
-              : IconAndText(
-                  icon: const Icon(Icons.vertical_align_bottom),
-                  text: L10n.of(context).readingPageBottomMargin,
-                ),
+          IconAndText(
+            icon: const Icon(Icons.vertical_align_bottom),
+            text: L10n.of(context).readingPageBottomMargin,
+          ),
           Expanded(
             child: Slider(
               padding: const EdgeInsets.symmetric(

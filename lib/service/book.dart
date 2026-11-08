@@ -4,15 +4,12 @@ import 'dart:io';
 import 'package:paperfold/dao/book.dart';
 import 'package:paperfold/dao/theme.dart';
 import 'package:paperfold/enums/book_status.dart';
-import 'package:paperfold/enums/sync_direction.dart';
-import 'package:paperfold/enums/sync_trigger.dart';
 import 'package:paperfold/l10n/generated/L10n.dart';
 import 'package:paperfold/main.dart';
 import 'package:paperfold/models/book.dart';
 import 'package:paperfold/models/current_reading_state.dart';
 import 'package:paperfold/providers/chapter_content_bridge.dart';
 import 'package:paperfold/providers/current_reading.dart';
-import 'package:paperfold/providers/sync.dart';
 import 'package:paperfold/providers/book_list.dart';
 import 'package:paperfold/providers/toc_search.dart';
 import 'package:paperfold/service/convert_to_epub/txt/convert_from_txt.dart';
@@ -416,10 +413,6 @@ void _showImportDialog(
                                   }
                                 }
 
-                                ref.read(syncProvider.notifier).syncData(
-                                    SyncDirection.upload, ref,
-                                    trigger: SyncTrigger.auto);
-
                                 arrived = [
                                   for (final book
                                       in await bookDao.selectAllBooks())
@@ -498,9 +491,8 @@ Future<void> pushToReadingPage(
     }
 
     if (!File(book.fileFullPath).existsSync()) {
-      await ref.read(syncProvider.notifier).downloadBook(book);
-      if (!context.mounted || !ref.context.mounted) return;
-      if (!File(book.fileFullPath).existsSync()) return;
+      AnxToast.show(L10n.of(context).bookFileMissing);
+      return;
     }
 
     final initialThemes = await themeDao.selectThemes();

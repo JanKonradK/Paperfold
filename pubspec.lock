@@ -153,14 +153,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.0.4"
-  chinese_font_library:
-    dependency: "direct main"
-    description:
-      name: chinese_font_library
-      sha256: "4f98fc0d193e2aaed02b891e03dd28eae96672d949c0e6599261c58d1f9df7da"
-      url: "https://pub.dev"
-    source: hosted
-    version: "1.3.0"
   cli_util:
     dependency: transitive
     description:
@@ -201,22 +193,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.19.1"
-  connectivity_plus:
-    dependency: "direct main"
-    description:
-      name: connectivity_plus
-      sha256: "762c99f890ca8bf87f7337236f99edd42793843bc6c3631da294a76653a54bd0"
-      url: "https://pub.dev"
-    source: hosted
-    version: "7.3.1"
-  connectivity_plus_platform_interface:
-    dependency: transitive
-    description:
-      name: connectivity_plus_platform_interface
-      sha256: "3c09627c536d22fd24691a905cdd8b14520de69da52c7a97499c8be5284a32ed"
-      url: "https://pub.dev"
-    source: hosted
-    version: "2.1.0"
   convert:
     dependency: transitive
     description:
@@ -781,14 +757,6 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
-  fluttertoast:
-    dependency: "direct main"
-    description:
-      name: fluttertoast
-      sha256: a5c39007e19fff5eeb7810d5be651c02bb5a1c06104bdd203b037bbfe49bd827
-      url: "https://pub.dev"
-    source: hosted
-    version: "10.0.2"
   freezed:
     dependency: "direct dev"
     description:
@@ -1053,14 +1021,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.3.0"
-  lpinyin:
-    dependency: "direct main"
-    description:
-      name: lpinyin
-      sha256: "0bb843363f1f65170efd09fbdfc760c7ec34fc6354f9fcb2f89e74866a0d814a"
-      url: "https://pub.dev"
-    source: hosted
-    version: "2.0.3"
   matcher:
     dependency: transitive
     description:
@@ -1109,14 +1069,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "5.8.1"
-  mongol:
-    dependency: "direct main"
-    description:
-      name: mongol
-      sha256: b6615bb521e4f668d87d48ce23933bcd30484af37edcab29db13c13515dd8743
-      url: "https://pub.dev"
-    source: hosted
-    version: "11.1.0"
   motor:
     dependency: transitive
     description:
@@ -1133,22 +1085,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.19.5"
-  nested:
-    dependency: transitive
-    description:
-      name: nested
-      sha256: "03bac4c528c64c95c722ec99280375a6f2fc708eec17c7b3f07253b626cd2a20"
-      url: "https://pub.dev"
-    source: hosted
-    version: "1.0.0"
-  nm:
-    dependency: transitive
-    description:
-      name: nm
-      sha256: "2c9aae4127bdc8993206464fcc063611e0e36e72018696cd9631023a31b24254"
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.5.0"
   objective_c:
     dependency: transitive
     description:
@@ -1349,14 +1285,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "5.0.6"
-  provider:
-    dependency: "direct main"
-    description:
-      name: provider
-      sha256: "4e82183fa20e5ca25703ead7e05de9e4cceed1fbd1eadc1ac3cb6f565a09f272"
-      url: "https://pub.dev"
-    source: hosted
-    version: "6.1.5+1"
   pub_semver:
     dependency: transitive
     description:
@@ -1947,15 +1875,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.0.3"
-  webdav_client:
-    dependency: "direct main"
-    description:
-      path: "."
-      ref: "3c6d0eb21baf593d8a0a10ba039b0b73ce891ad6"
-      resolved-ref: "3c6d0eb21baf593d8a0a10ba039b0b73ce891ad6"
-      url: "https://github.com/Anxcye/webdav_client.git"
-    source: git
-    version: "1.2.2"
   win32:
     dependency: transitive
     description:

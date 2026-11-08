@@ -7,7 +7,6 @@ import 'package:paperfold/page/reading_page.dart';
 import 'package:paperfold/widgets/common/axis_flex.dart';
 import 'package:paperfold/widgets/context_menu/excerpt_menu.dart';
 import 'package:paperfold/widgets/context_menu/reader_note_menu.dart';
-import 'package:paperfold/widgets/context_menu/translation_menu.dart';
 import 'package:material_ui/material_ui.dart';
 
 import 'package:paperfold/dao/book_note.dart';
@@ -23,12 +22,10 @@ Future<void> showContextMenu(
   String annoCfi,
   int? annoId,
   bool footnote,
-  Axis axis, {
-  String? contextText,
-}) async {
+  Axis axis,
+) async {
   final playerKey = epubPlayerKey.currentState;
   if (playerKey == null) return;
-  bool isNewNote = false;
 
   if (Prefs().autoMarkSelection && annoId == null) {
     // Auto-highlight logic
@@ -50,7 +47,6 @@ Future<void> showContextMenu(
     bookNote.setId(id);
     playerKey.addAnnotation(bookNote);
     annoId = id;
-    isNewNote = true;
   }
 
   final renderBox =
@@ -149,12 +145,10 @@ Future<void> showContextMenu(
         annoCfi: annoCfi,
         annoId: annoId,
         footnote: footnote,
-        contextText: contextText,
         decoration: decoration,
         onClose: onClose,
         menuConstraints: menuConstraints,
         initialPlacement: initialPlacement,
-        showTranslationDefault: !isNewNote && Prefs().autoTranslateSelection,
         horizontalMargin: horizontalMargin,
         verticalMargin: verticalMargin,
         gap: gap,
@@ -254,12 +248,10 @@ class _ContextMenuOverlay extends StatefulWidget {
     required this.annoCfi,
     required this.annoId,
     required this.footnote,
-    this.contextText,
     required this.decoration,
     required this.onClose,
     required this.menuConstraints,
     required this.initialPlacement,
-    required this.showTranslationDefault,
     required this.horizontalMargin,
     required this.verticalMargin,
     required this.gap,
@@ -273,12 +265,10 @@ class _ContextMenuOverlay extends StatefulWidget {
   final String annoCfi;
   final int? annoId;
   final bool footnote;
-  final String? contextText;
   final BoxDecoration decoration;
   final VoidCallback onClose;
   final BoxConstraints menuConstraints;
   final _MenuPlacement initialPlacement;
-  final bool showTranslationDefault;
   final double horizontalMargin;
   final double verticalMargin;
   final double gap;
@@ -296,7 +286,6 @@ class _ContextMenuOverlayState extends State<_ContextMenuOverlay>
 
   late Offset _position;
   late bool _reverse;
-  late bool _showTranslationMenu;
   bool _showReaderNoteMenu = false;
   bool _waitingForFirstMeasurement = true;
   late BoxConstraints _menuConstraints;
@@ -309,7 +298,6 @@ class _ContextMenuOverlayState extends State<_ContextMenuOverlay>
     WidgetsBinding.instance.addObserver(this);
     _position = widget.initialPlacement.offset;
     _reverse = widget.initialPlacement.shouldReverse;
-    _showTranslationMenu = widget.showTranslationDefault;
     _noteId = widget.annoId;
     _bottomInset = widget.initialBottomInset;
     _menuConstraints = _buildConstraints(widget.initialBottomInset);
@@ -427,13 +415,6 @@ class _ContextMenuOverlayState extends State<_ContextMenuOverlay>
     }
   }
 
-  void _toggleTranslationMenu() {
-    setState(() {
-      _showTranslationMenu = !_showTranslationMenu;
-    });
-    _scheduleRecalculate();
-  }
-
   void _toggleReaderNoteMenu({bool? show}) {
     final target = show ?? !_showReaderNoteMenu;
     epubPlayerKey.currentState?.setSelectionClearLocked(target);
@@ -518,7 +499,6 @@ class _ContextMenuOverlayState extends State<_ContextMenuOverlay>
                                 onClose: widget.onClose,
                                 footnote: widget.footnote,
                                 decoration: widget.decoration,
-                                toggleTranslationMenu: _toggleTranslationMenu,
                                 toggleReaderNoteMenu: _toggleReaderNoteMenu,
                                 openReaderNoteMenu: _openReaderNoteMenu,
                                 onNoteCreated: _handleNoteCreated,
@@ -542,20 +522,6 @@ class _ContextMenuOverlayState extends State<_ContextMenuOverlay>
                               onVisibilityChange:
                                   _handleReaderNoteVisibilityChange,
                               onSizeChanged: _handleReaderNoteSizeChanged,
-                            ),
-                          ],
-                        ),
-                      ],
-                      if (_showTranslationMenu) ...[
-                        const SizedBox.square(dimension: 10),
-                        AxisFlex(
-                          axis: widget.axis,
-                          children: [
-                            TranslationMenu(
-                              content: widget.annoContent,
-                              decoration: widget.decoration,
-                              axis: widget.axis,
-                              contextText: widget.contextText,
                             ),
                           ],
                         ),

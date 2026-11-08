@@ -2,7 +2,6 @@ import 'package:paperfold/dao/tag.dart';
 import 'package:paperfold/models/tag.dart';
 import 'package:paperfold/utils/color/rgb.dart';
 import 'package:material_ui/material_ui.dart';
-import 'package:lpinyin/lpinyin.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'tags.g.dart';
@@ -11,17 +10,7 @@ part 'tags.g.dart';
 const int kNoTagFilterId = -1;
 
 int _compareTagName(Tag a, Tag b) {
-  String toPinyin(String value) {
-    try {
-      return PinyinHelper.getPinyin(value, format: PinyinFormat.WITHOUT_TONE);
-    } catch (_) {
-      return value;
-    }
-  }
-
-  final pa = toPinyin(a.name);
-  final pb = toPinyin(b.name);
-  return pa.compareTo(pb);
+  return a.name.toLowerCase().compareTo(b.name.toLowerCase());
 }
 
 List<Tag> _sortedTags(List<Tag> tags) {

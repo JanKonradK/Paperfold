@@ -88,14 +88,14 @@ Anxcye. The author of Anx Reader does not endorse Paperfold.
 
 ### Other functions
 
-- Sync the books and the notes through WebDAV.
-- Translate text with bingWeb, googleWeb, microsoftApi, googleApi, or deepl.
-- Use the application in 16 languages.
+- Back up the library to one file, and restore it.
+- Use the application in 15 languages.
 
 ## What Paperfold does not have
 
 - Artificial intelligence functions
 - Text-to-speech
+- Text translation. Use Circle to Search or Google Lens.
 - In-app purchases
 
 ## Platforms
@@ -178,14 +178,6 @@ Copy an APK that you want to keep out of `build/`. Then run `flutter clean`.
 This removes generated build files. The next build creates them again.
 Run the package and code generation steps again before the next build.
 Keep `android/key.properties` and the signing keystore outside version control.
-
-### One-screen entry points
-
-Each `lib/dev_*_main.dart` file starts one screen alone. Example:
-
-```sh
-flutter run -t lib/dev_shelf_main.dart
-```
 
 ## License
 

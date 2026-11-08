@@ -40,7 +40,7 @@ Paperfold does both, and treats a printed book as a first-class book.
 - Formats: EPUB, MOBI, AZW3, FB2, TXT, CBZ, PDF. Paper books have no file and use Log progress.
 - Library: shelves, upright spines (default view) and a cover grid, filters, sort, series bindings.
 - Journal: book journals, reviews, journal pages, highlights, reading challenge, month tracker, statistics.
-- Online catalogs (OPDS, Wikisource, Gutenberg), WebDAV sync, daily reading reminder.
+- Online catalogs (OPDS, Wikisource, Gutenberg), backup to a file, daily reading reminder.
 - 16 locale files, including right-to-left languages.
 - The reader keeps its own page themes, separate from the app theme. eInk mode stays.
 - Live background blur is allowed only on a few floating layers (navigation, sheets, reader bars).

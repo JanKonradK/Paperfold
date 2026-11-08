@@ -3,8 +3,8 @@
 // The load-bearing test here is the one that reads every column of every
 // catalog row and looks for the password. plan.md Section 9.2 calls the
 // credential store the one place in the project where a shortcut creates a
-// real security problem: the database is copied by the export path and by
-// WebDAV sync, and these are the reader's own server passwords.
+// real security problem: the database is copied into every backup file, and
+// these are the reader's own server passwords.
 //
 //   flutter test test/service/opds_client_test.dart
 

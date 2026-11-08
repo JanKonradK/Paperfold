@@ -1,113 +1,41 @@
-import 'package:paperfold/widgets/common/paperfold_modal_motion.dart';
-
 import 'dart:convert';
 import 'dart:io';
 
 import 'package:paperfold/dao/database.dart';
-import 'package:paperfold/enums/sync_protocol.dart';
 import 'package:paperfold/l10n/generated/L10n.dart';
 import 'package:paperfold/main.dart';
-import 'package:paperfold/providers/sync.dart';
-import 'package:paperfold/service/database_sync_manager.dart';
-import 'package:paperfold/service/sync/sync_client_factory.dart';
 import 'package:paperfold/utils/save_file_to_download.dart';
 import 'package:paperfold/utils/get_path/get_temp_dir.dart';
 import 'package:paperfold/utils/get_path/databases_path.dart';
 import 'package:paperfold/utils/get_path/get_base_path.dart';
 import 'package:paperfold/utils/log/common.dart';
-import 'package:paperfold/utils/sync_test_helper.dart';
 import 'package:paperfold/utils/toast/common.dart';
 import 'package:paperfold/config/shared_preference_provider.dart';
-import 'package:paperfold/utils/webdav/test_webdav.dart';
 import 'package:paperfold/widgets/settings/settings_title.dart';
 import 'package:archive/archive_io.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:material_ui/material_ui.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:path/path.dart' as path;
 import 'package:paperfold/widgets/settings/settings_section.dart';
+import 'package:sqflite/sqflite.dart';
 import 'package:paperfold/widgets/settings/settings_tile.dart';
 
 const String _prefsBackupFileName = 'anx_shared_prefs.json';
 
-class SyncSetting extends ConsumerStatefulWidget {
-  const SyncSetting({super.key});
+class BackupSetting extends StatefulWidget {
+  const BackupSetting({super.key});
 
   @override
-  ConsumerState<SyncSetting> createState() => _SyncSettingState();
+  State<BackupSetting> createState() => _BackupSettingState();
 }
 
-class _SyncSettingState extends ConsumerState<SyncSetting> {
+class _BackupSettingState extends State<BackupSetting> {
   @override
   Widget build(BuildContext context) {
     return settingsSections(
       sections: [
-        SettingsSection(
-          title: Text(L10n.of(context).settingsSyncWebdav),
-          tiles: [
-            _webdavSwitch(context, setState, ref),
-            SettingsTile.navigation(
-              title: Text(L10n.of(context).settingsSyncWebdav),
-              leading: const Icon(Icons.cloud),
-              value: Text(
-                Prefs().getSyncInfo(SyncProtocol.webdav)['url'] ?? 'Not set',
-              ),
-              // enabled: Prefs().webdavStatus,
-              onPressed: (context) async {
-                showWebdavDialog(context);
-              },
-            ),
-            SettingsTile.navigation(
-              title: Text(L10n.of(context).settingsSyncWebdavSyncNow),
-              leading: const Icon(Icons.sync_alt),
-              // value: Text(Prefs().syncDirection),
-              enabled: Prefs().webdavStatus,
-              onPressed: (context) {
-                chooseDirection(ref);
-              },
-            ),
-            SettingsTile.switchTile(
-              title: Text(L10n.of(context).webdavOnlyWifi),
-              leading: const Icon(Icons.wifi),
-              initialValue: Prefs().onlySyncWhenWifi,
-              onToggle: (bool value) {
-                setState(() {
-                  Prefs().onlySyncWhenWifi = value;
-                });
-              },
-            ),
-            SettingsTile.switchTile(
-              title: Text(L10n.of(context).settingsSyncCompletedToast),
-              leading: const Icon(Icons.notifications),
-              initialValue: Prefs().syncCompletedToast,
-              onToggle: (bool value) {
-                setState(() {
-                  Prefs().syncCompletedToast = value;
-                });
-              },
-            ),
-            SettingsTile.switchTile(
-              title: Text(L10n.of(context).settingsSyncAutoSync),
-              leading: const Icon(Icons.sync),
-              initialValue: Prefs().autoSync,
-              enabled: Prefs().webdavStatus,
-              onToggle: (bool value) {
-                setState(() {
-                  Prefs().autoSync = value;
-                });
-              },
-            ),
-            SettingsTile.navigation(
-              title: Text(L10n.of(context).restoreBackup),
-              leading: const Icon(Icons.restore),
-              onPressed: (context) {
-                ref.read(syncProvider.notifier).showBackupManagementDialog();
-              },
-            ),
-          ],
-        ),
         SettingsSection(
           title: Text(L10n.of(context).exportAndImport),
           tiles: [
@@ -235,10 +163,8 @@ class _SyncSettingState extends ConsumerState<SyncSetting> {
       });
 
       final extractedPath = extractDir.path;
-      await ref.read(syncProvider.notifier).runBackupOperation(() async {
-        await restoreBackupFiles(extractedPath);
-        await _restorePrefsFromBackup(extractedPath);
-      });
+      await restoreBackupFiles(extractedPath);
+      await _restorePrefsFromBackup(extractedPath);
 
       AnxLog.info('importData: import success');
       AnxToast.show(
@@ -259,12 +185,9 @@ class _SyncSettingState extends ConsumerState<SyncSetting> {
 }
 
 Future<void> restoreBackupFiles(String extractPath) async {
-  final validation = await DatabaseSyncManager.validateDatabase(
+  await validateBackupDatabase(
     path.join(extractPath, 'databases', 'app_database.db'),
   );
-  if (!validation.isValid) {
-    throw FormatException(validation.error ?? 'Invalid database');
-  }
 
   final documentsPath = await getAnxDocumentsPath();
   final targets = {
@@ -464,112 +387,35 @@ Future<bool> _restorePrefsFromBackup(String extractPath) async {
   return false;
 }
 
-void showWebdavDialog(BuildContext context) {
-  final title = L10n.of(context).settingsSyncWebdav;
-  // final prefs = Prefs().saveWebdavInfo;
-  final webdavInfo = Prefs().getSyncInfo(SyncProtocol.webdav);
-  final webdavUrlController = TextEditingController(text: webdavInfo['url']);
-  final webdavUsernameController = TextEditingController(
-    text: webdavInfo['username'],
-  );
-  final webdavPasswordController = TextEditingController(
-    text: webdavInfo['password'],
-  );
-  Widget buildTextField(String labelText, TextEditingController controller) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
-      child: TextField(
-        obscureText: labelText == L10n.of(context).settingsSyncWebdavPassword
-            ? true
-            : false,
-        controller: controller,
-        decoration: InputDecoration(
-          border: const OutlineInputBorder(),
-          labelText: labelText,
-        ),
-      ),
-    );
+/// Throws a [FormatException] unless [dbPath] is a Paperfold library this
+/// version can open. A backup file comes from outside the app.
+Future<void> validateBackupDatabase(String dbPath) async {
+  final dbFile = File(dbPath);
+  if (!dbFile.existsSync() || dbFile.lengthSync() < 1024) {
+    throw const FormatException('The backup has no library database');
   }
-
-  showDialog(
-    context: context,
-    animationStyle: paperfoldModalMotion(context),
-    builder: (context) {
-      return SimpleDialog(
-        title: Text(title),
-        contentPadding: const EdgeInsets.all(20),
-        children: [
-          buildTextField(
-            L10n.of(context).settingsSyncWebdavUrl,
-            webdavUrlController,
-          ),
-          buildTextField(
-            L10n.of(context).settingsSyncWebdavUsername,
-            webdavUsernameController,
-          ),
-          buildTextField(
-            L10n.of(context).settingsSyncWebdavPassword,
-            webdavPasswordController,
-          ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              TextButton.icon(
-                onPressed: () => SyncTestHelper.handleFullTestConnection(
-                  context,
-                  protocol: SyncProtocol.webdav,
-                  config: {
-                    'url': webdavUrlController.text.trim(),
-                    'username': webdavUsernameController.text,
-                    'password': webdavPasswordController.text,
-                  },
-                ),
-                icon: const Icon(Icons.wifi_find),
-                label: Text(L10n.of(context).settingsSyncWebdavTestConnection),
-              ),
-              TextButton(
-                onPressed: () {
-                  webdavInfo['url'] = webdavUrlController.text.trim();
-                  webdavInfo['username'] = webdavUsernameController.text;
-                  webdavInfo['password'] = webdavPasswordController.text;
-                  Prefs().setSyncInfo(SyncProtocol.webdav, webdavInfo);
-                  SyncClientFactory.initializeCurrentClient();
-                  Navigator.pop(context);
-                },
-                child: Text(L10n.of(context).commonSave),
-              ),
-            ],
-          ),
-        ],
+  final db = await openDatabase(dbPath, singleInstance: false);
+  try {
+    final integrity = await db.rawQuery('PRAGMA integrity_check');
+    if (integrity.isEmpty || integrity.first.values.first != 'ok') {
+      throw const FormatException('The backup database is damaged');
+    }
+    final tables = await db.rawQuery(
+      "SELECT name FROM sqlite_master WHERE type='table' "
+      "AND name IN ('tb_books', 'tb_themes', 'tb_styles')",
+    );
+    if (tables.length < 3) {
+      throw const FormatException('The backup database is missing tables');
+    }
+    final version = await db.getVersion();
+    if (version > currentDbVersion) {
+      throw FormatException(
+        'The backup is from a newer Paperfold (database $version)',
       );
-    },
-  );
-}
-
-AbstractSettingsTile _webdavSwitch(
-  BuildContext context,
-  Function setState,
-  WidgetRef ref,
-) {
-  return SettingsTile.switchTile(
-    leading: const Icon(Icons.cached),
-    initialValue: Prefs().webdavStatus,
-    onToggle: (bool value) async {
-      setState(() {
-        Prefs().saveWebdavStatus(value);
-      });
-      if (value) {
-        bool result = await testEnableWebdav();
-        if (!result) {
-          setState(() {
-            Prefs().saveWebdavStatus(!value);
-          });
-        } else {
-          Sync().init();
-          chooseDirection(ref);
-        }
-      }
-    },
-    title: Text(L10n.of(context).settingsSyncEnableWebdav),
-  );
+    }
+    // Let SQLite checkpoint any bundled WAL before the database is copied.
+    await db.rawQuery('PRAGMA journal_mode = DELETE');
+  } finally {
+    await db.close();
+  }
 }

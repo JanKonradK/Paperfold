@@ -210,19 +210,6 @@ class _OtherSettingsState extends State<OtherSettings> {
       );
     }
 
-    Widget autoTranslateSelection() {
-      return ListTile(
-        contentPadding: EdgeInsets.zero,
-        trailing: Switch(
-          value: Prefs().autoTranslateSelection,
-          onChanged: (bool value) => setState(() {
-            Prefs().autoTranslateSelection = value;
-          }),
-        ),
-        title: Text(L10n.of(context).readingPageAutoTranslateSelection),
-      );
-    }
-
     Widget autoMarkSelection() {
       return ListTile(
         contentPadding: EdgeInsets.zero,
@@ -326,7 +313,7 @@ class _OtherSettingsState extends State<OtherSettings> {
           ),
           ExpansionTile(
             title: Text(L10n.of(context).readerSelectionActions),
-            children: [autoTranslateSelection(), autoMarkSelection()],
+            children: [autoMarkSelection()],
           ),
           ExpansionTile(
             title: Text(L10n.of(context).readingPageTheme),

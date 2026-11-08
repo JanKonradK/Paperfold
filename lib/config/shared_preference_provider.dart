@@ -5,16 +5,11 @@ import 'package:paperfold/enums/bgimg_alignment.dart';
 import 'package:paperfold/enums/bgimg_type.dart';
 import 'package:paperfold/enums/book_binding.dart';
 import 'package:paperfold/enums/bookshelf_folder_style.dart';
-import 'package:paperfold/enums/convert_chinese_mode.dart';
 import 'package:paperfold/enums/excerpt_share_template.dart';
 import 'package:paperfold/enums/hint_key.dart';
-import 'package:paperfold/enums/lang_list.dart';
 import 'package:paperfold/enums/reading_info.dart';
 import 'package:paperfold/enums/sort_field.dart';
 import 'package:paperfold/enums/sort_order.dart';
-import 'package:paperfold/enums/sync_protocol.dart';
-import 'package:paperfold/enums/translation_mode.dart';
-import 'package:paperfold/enums/writing_mode.dart';
 import 'package:paperfold/enums/text_alignment.dart';
 import 'package:paperfold/enums/bgimg_fit.dart';
 import 'package:paperfold/enums/code_highlight_theme.dart';
@@ -28,10 +23,7 @@ import 'package:paperfold/models/font_model.dart';
 import 'package:paperfold/models/book_notes_state.dart';
 import 'package:paperfold/models/read_theme.dart';
 import 'package:paperfold/models/reading_info.dart';
-import 'package:paperfold/models/reading_rules.dart';
 import 'package:paperfold/widgets/statistic/dashboard_tiles/dashboard_tile_registry.dart';
-import 'package:paperfold/service/translate/index.dart';
-import 'package:paperfold/utils/get_current_language_code.dart';
 import 'package:paperfold/utils/log/common.dart';
 import 'package:paperfold/widgets/reading_page/style_widget.dart';
 import 'package:material_ui/material_ui.dart';
@@ -328,77 +320,12 @@ class Prefs extends ChangeNotifier {
     return DateTime.parse(beginDateStr);
   }
 
-  // void saveWebdavInfo(Map webdavInfo) {
-  //   prefs.setString('webdavInfo', jsonEncode(webdavInfo));
-  //   notifyListeners();
-  // }
-
-  // Map get webdavInfo {
-  //   String? webdavInfoJson = prefs.getString('webdavInfo');
-  //   if (webdavInfoJson == null) {
-  //     return {};
-  //   }
-  //   return jsonDecode(webdavInfoJson);
-  // }
-
-  // Sync protocol selection
-  String? get syncProtocol {
-    return prefs.getString('syncProtocol');
-  }
-
-  set syncProtocol(String? protocol) {
-    if (protocol != null) {
-      prefs.setString('syncProtocol', protocol);
-    } else {
-      prefs.remove('syncProtocol');
-    }
-    notifyListeners();
-  }
-
-  Map<String, dynamic> getSyncInfo(SyncProtocol protocol) {
-    String? syncInfoJson = prefs.getString('${protocol.name}Info');
-    if (syncInfoJson == null) return {};
-    return Map<String, dynamic>.from(jsonDecode(syncInfoJson));
-  }
-
-  setSyncInfo(SyncProtocol protocol, Map<String, dynamic>? info) {
-    if (info != null) {
-      prefs.setString('${protocol.name}Info', jsonEncode(info));
-    } else {
-      prefs.remove('${protocol.name}Info');
-    }
-    notifyListeners();
-  }
-
-  void saveWebdavStatus(bool status) {
-    prefs.setBool('webdavStatus', status);
-    notifyListeners();
-  }
-
-  bool get webdavStatus {
-    return prefs.getBool('webdavStatus') ?? false;
-  }
-
-  void saveClearLogWhenStart(bool status) {
-    prefs.setBool('clearLogWhenStart', status);
-    notifyListeners();
-  }
-
   bool get reduceVibrationFeedback {
     return prefs.getBool('reduceVibrationFeedback') ?? false;
   }
 
   set reduceVibrationFeedback(bool value) {
     prefs.setBool('reduceVibrationFeedback', value);
-    notifyListeners();
-  }
-
-  bool get developerOptionsEnabled {
-    return prefs.getBool("developerOptionsEnabled") ?? false;
-  }
-
-  set developerOptionsEnabled(bool value) {
-    prefs.setBool("developerOptionsEnabled", value);
     notifyListeners();
   }
 
@@ -437,10 +364,6 @@ class Prefs extends ChangeNotifier {
     } catch (_) {
       return null;
     }
-  }
-
-  bool get clearLogWhenStart {
-    return prefs.getBool('clearLogWhenStart') ?? true;
   }
 
   void saveHideStatusBar(bool status) {
@@ -579,44 +502,6 @@ class Prefs extends ChangeNotifier {
     notifyListeners();
   }
 
-  set translateService(TranslateService service) {
-    prefs.setString('translateService', service.name);
-    notifyListeners();
-  }
-
-  TranslateService get translateService {
-    return getTranslateService(
-      prefs.getString('translateService') ?? 'googleWeb',
-    );
-  }
-
-  set translateFrom(LangListEnum from) {
-    prefs.setString('translateFrom', from.code);
-    notifyListeners();
-  }
-
-  LangListEnum get translateFrom {
-    return getLang(prefs.getString('translateFrom') ?? 'auto');
-  }
-
-  set translateTo(LangListEnum to) {
-    prefs.setString('translateTo', to.code);
-    notifyListeners();
-  }
-
-  LangListEnum get translateTo {
-    return getLang(prefs.getString('translateTo') ?? getCurrentLanguageCode());
-  }
-
-  set autoTranslateSelection(bool status) {
-    prefs.setBool('autoTranslateSelection', status);
-    notifyListeners();
-  }
-
-  bool get autoTranslateSelection {
-    return prefs.getBool('autoTranslateSelection') ?? false;
-  }
-
   set autoMarkSelection(bool status) {
     prefs.setBool('autoMarkSelection', status);
     notifyListeners();
@@ -624,64 +509,6 @@ class Prefs extends ChangeNotifier {
 
   bool get autoMarkSelection {
     return prefs.getBool('autoMarkSelection') ?? false;
-  }
-
-  set fullTextTranslateService(TranslateService service) {
-    prefs.setString('fullTextTranslateService', service.name);
-    notifyListeners();
-  }
-
-  TranslateService get fullTextTranslateService {
-    final serviceName =
-        prefs.getString('fullTextTranslateService') ?? 'googleWeb';
-    if (serviceName == 'microsoft') {
-      prefs.setString('fullTextTranslateService', 'microsoftApi');
-      return TranslateService.microsoftApi;
-    }
-    return getTranslateService(serviceName);
-  }
-
-  set fullTextTranslateFrom(LangListEnum from) {
-    prefs.setString('fullTextTranslateFrom', from.code);
-    notifyListeners();
-  }
-
-  LangListEnum get fullTextTranslateFrom {
-    return getLang(prefs.getString('fullTextTranslateFrom') ?? 'auto');
-  }
-
-  set fullTextTranslateTo(LangListEnum to) {
-    prefs.setString('fullTextTranslateTo', to.code);
-    notifyListeners();
-  }
-
-  LangListEnum get fullTextTranslateTo {
-    return getLang(
-      prefs.getString('fullTextTranslateTo') ?? getCurrentLanguageCode(),
-    );
-  }
-
-  // set convertChineseMode(ConvertChineseMode mode) {
-  //   prefs.setString('convertChineseMode', mode.name);
-  //   notifyListeners();
-  // }
-
-  // ConvertChineseMode get convertChineseMode {
-  //   return getConvertChineseMode(
-  //       prefs.getString('convertChineseMode') ?? 'none');
-  // }
-
-  set readingRules(ReadingRules rules) {
-    prefs.setString('readingRules', rules.toJson().toString());
-    notifyListeners();
-  }
-
-  ReadingRules get readingRules {
-    String? rulesJson = prefs.getString('readingRules');
-    if (rulesJson == null) {
-      return ReadingRules(convertChineseMode: ConvertChineseMode.none);
-    }
-    return ReadingRules.fromJson(rulesJson);
   }
 
   List<ChapterSplitRule> get chapterSplitCustomRules {
@@ -994,15 +821,6 @@ class Prefs extends ChangeNotifier {
     return prefs.getBool('openBookAnimation') ?? true;
   }
 
-  set onlySyncWhenWifi(bool status) {
-    prefs.setBool('onlySyncWhenWifi', status);
-    notifyListeners();
-  }
-
-  bool get onlySyncWhenWifi {
-    return prefs.getBool('onlySyncWhenWifi') ?? false;
-  }
-
   set useBookStyles(bool status) {
     prefs.setBool('useBookStyles', status);
     notifyListeners();
@@ -1010,24 +828,6 @@ class Prefs extends ChangeNotifier {
 
   bool get useBookStyles {
     return prefs.getBool('useBookStyles') ?? false;
-  }
-
-  set syncCompletedToast(bool status) {
-    prefs.setBool('syncCompletedToast', status);
-    notifyListeners();
-  }
-
-  bool get syncCompletedToast {
-    return prefs.getBool('syncCompletedToast') ?? true;
-  }
-
-  set autoSync(bool status) {
-    prefs.setBool('autoSync', status);
-    notifyListeners();
-  }
-
-  bool get autoSync {
-    return prefs.getBool('autoSync') ?? true;
   }
 
   set readingInfo(ReadingInfoModel info) {
@@ -1247,47 +1047,6 @@ class Prefs extends ChangeNotifier {
     notifyListeners();
   }
 
-  void saveTranslateServiceConfig(
-    TranslateService service,
-    Map<String, dynamic> config,
-  ) {
-    prefs.setString(
-      'translateServiceConfig_${service.name}',
-      jsonEncode(config),
-    );
-    notifyListeners();
-  }
-
-  Map<String, dynamic>? getTranslateServiceConfig(TranslateService service) {
-    String? configJson = prefs.getString(
-      'translateServiceConfig_${service.name}',
-    );
-    if (configJson == null) {
-      return null;
-    }
-    return jsonDecode(configJson) as Map<String, dynamic>;
-  }
-
-  WritingModeEnum get writingMode {
-    return WritingModeEnum.fromCode(prefs.getString('writingMode') ?? 'auto');
-  }
-
-  set writingMode(WritingModeEnum mode) {
-    prefs.setString('writingMode', mode.code);
-    notifyListeners();
-  }
-
-  TranslationModeEnum get translationMode {
-    return TranslationModeEnum.fromCode(
-      prefs.getString('translationMode') ?? 'off',
-    );
-  }
-
-  set translationMode(TranslationModeEnum mode) {
-    prefs.setString('translationMode', mode.code);
-    notifyListeners();
-  }
-
   BgimgModel get bgimg {
     String? bgimgJson = prefs.getString('bgimg');
     if (bgimgJson == null) {
@@ -1314,42 +1073,6 @@ class Prefs extends ChangeNotifier {
     notifyListeners();
   }
 
-  bool get httpProxyEnabled {
-    return prefs.getBool('httpProxyEnabled') ?? false;
-  }
-
-  set httpProxyEnabled(bool enabled) {
-    prefs.setBool('httpProxyEnabled', enabled);
-    notifyListeners();
-  }
-
-  String get httpProxyHost {
-    return prefs.getString('httpProxyHost') ?? '';
-  }
-
-  set httpProxyHost(String host) {
-    prefs.setString('httpProxyHost', host);
-    notifyListeners();
-  }
-
-  int get httpProxyPort {
-    return prefs.getInt('httpProxyPort') ?? 7890;
-  }
-
-  set httpProxyPort(int port) {
-    prefs.setInt('httpProxyPort', port);
-    notifyListeners();
-  }
-
-  String get httpProxyTestUrl {
-    return prefs.getString('httpProxyTestUrl') ?? 'https://google.com';
-  }
-
-  set httpProxyTestUrl(String url) {
-    prefs.setString('httpProxyTestUrl', url);
-    notifyListeners();
-  }
-
   String? get lastAppVersion {
     return prefs.getString('lastAppVersion');
   }
@@ -1361,41 +1084,6 @@ class Prefs extends ChangeNotifier {
       prefs.remove('lastAppVersion');
     }
     notifyListeners();
-  }
-
-  Map<String, TranslationModeEnum> get bookTranslationModes {
-    String? modesJson = prefs.getString('bookTranslationModes');
-    if (modesJson == null) return {};
-
-    Map<String, dynamic> decoded = jsonDecode(modesJson);
-    return decoded.map(
-      (key, value) =>
-          MapEntry(key, TranslationModeEnum.fromCode(value as String)),
-    );
-  }
-
-  set bookTranslationModes(Map<String, TranslationModeEnum> modes) {
-    Map<String, String> encoded = modes.map(
-      (key, value) => MapEntry(key, value.code),
-    );
-    prefs.setString('bookTranslationModes', jsonEncode(encoded));
-    notifyListeners();
-  }
-
-  TranslationModeEnum getBookTranslationMode(int bookId) {
-    return bookTranslationModes[bookId.toString()] ?? TranslationModeEnum.off;
-  }
-
-  void setBookTranslationMode(int bookId, TranslationModeEnum mode) {
-    Map<String, TranslationModeEnum> modes = bookTranslationModes;
-    String bookIdStr = bookId.toString();
-
-    if (mode == TranslationModeEnum.off) {
-      modes.remove(bookIdStr); // 默认状态不保存，节省空间
-    } else {
-      modes[bookIdStr] = mode;
-    }
-    bookTranslationModes = modes;
   }
 
   TextAlignmentEnum get textAlignment {

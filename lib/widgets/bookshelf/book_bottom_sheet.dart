@@ -1,18 +1,13 @@
 import 'dart:io';
 import 'dart:math';
 
-import 'package:paperfold/config/shared_preference_provider.dart';
 import 'package:paperfold/dao/book.dart';
 import 'package:paperfold/dao/database.dart';
 import 'package:paperfold/dao/shelf.dart';
-import 'package:paperfold/enums/hint_key.dart';
 import 'package:paperfold/l10n/generated/L10n.dart';
 import 'package:paperfold/models/book.dart';
 import 'package:paperfold/widgets/bookshelf/book_detail_route.dart';
-import 'package:paperfold/providers/sync.dart';
 import 'package:paperfold/providers/book_list.dart';
-import 'package:paperfold/enums/sync_direction.dart';
-import 'package:paperfold/providers/sync_status.dart';
 import 'package:paperfold/providers/shelf_home.dart';
 import 'package:paperfold/service/convert_to_epub/txt/convert_from_txt.dart';
 import 'package:paperfold/page/journal/book_journal_page.dart';
@@ -60,66 +55,6 @@ class BookBottomSheet extends ConsumerWidget {
     void handleDetail(BuildContext context) {
       Navigator.pop(context);
       Navigator.push(context, bookDetailRoute(context, book));
-    }
-
-    void handleUpload(BuildContext context) {
-      Future<void> core() async {
-        await ref.read(syncProvider.notifier).releaseBook(book);
-        ref.read(syncStatusProvider.notifier).refresh();
-      }
-
-      if (Prefs().shouldShowHint(HintKey.releaseLocalSpace)) {
-        SmartDialog.show(
-          builder: (context) => AlertDialog(
-            title: Text(L10n.of(context).bookSyncStatusReleaseSpaceDialogTitle),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(L10n.of(context).bookSyncStatusReleaseSpaceDialogContent),
-                Row(
-                  children: [
-                    StatefulBuilder(
-                      builder: (context, setState) {
-                        return Checkbox(
-                          value: !Prefs().shouldShowHint(
-                            HintKey.releaseLocalSpace,
-                          ),
-                          onChanged: (value) {
-                            value = !(value ?? false);
-                            Prefs().setShowHint(
-                              HintKey.releaseLocalSpace,
-                              value,
-                            );
-                            setState(() {});
-                          },
-                        );
-                      },
-                    ),
-                    Text(L10n.of(context).bookSyncStatusDoNotShowAgain),
-                  ],
-                ),
-              ],
-            ),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  SmartDialog.dismiss();
-                },
-                child: Text(L10n.of(context).commonCancel),
-              ),
-              TextButton(
-                onPressed: () {
-                  SmartDialog.dismiss();
-                  core();
-                },
-                child: Text(L10n.of(context).commonConfirm),
-              ),
-            ],
-          ),
-        );
-      } else {
-        ref.read(syncProvider.notifier).releaseBook(book);
-      }
     }
 
     Future<void> handleShare() async {
@@ -256,10 +191,6 @@ class BookBottomSheet extends ConsumerWidget {
 
         ref.read(bookListProvider.notifier).refresh();
         if (context.mounted) Navigator.pop(context);
-
-        if (Prefs().webdavStatus) {
-          ref.read(syncProvider.notifier).syncData(SyncDirection.upload, ref);
-        }
       } catch (e) {
         AnxToast.show(
           L10n.of(context).bookBottomSheetReplaceFailed(e.toString()),
@@ -296,11 +227,6 @@ class BookBottomSheet extends ConsumerWidget {
           "icon": Icons.refresh,
           "text": L10n.of(context).bookBottomSheetReplaceFile,
           "onTap": () => handleReplace(context),
-        },
-        {
-          "icon": Icons.cloud_upload_outlined,
-          "text": L10n.of(context).bookSyncStatusReleaseSpace,
-          "onTap": () => handleUpload(context),
         },
       ],
       {

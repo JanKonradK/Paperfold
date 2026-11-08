@@ -1,11 +1,8 @@
 import 'package:paperfold/config/paperfold_system.dart';
 
-import 'dart:math';
-
 import 'package:paperfold/enums/excerpt_share_template.dart';
 import 'package:paperfold/models/font_model.dart';
 import 'package:material_ui/material_ui.dart';
-import 'package:mongol/mongol.dart';
 
 class ExcerptShareCard extends StatelessWidget {
   final String bookTitle;
@@ -36,7 +33,6 @@ class ExcerptShareCard extends StatelessWidget {
     Widget child = switch (template) {
       ExcerptShareTemplateEnum.simpleTemplate => _buildSimpleTemplate(),
       ExcerptShareTemplateEnum.elegantTemplate => _buildElegantTemplate(),
-      ExcerptShareTemplateEnum.verticalTemplate => _buildModernTemplate(),
       ExcerptShareTemplateEnum.defaultTemplate => _buildDefaultTemplate(),
     };
 
@@ -97,131 +93,58 @@ class ExcerptShareCard extends StatelessWidget {
     );
   }
 
-  Widget _getContent({bool verticle = false}) {
-    if (verticle) {
-      return LayoutBuilder(
-        builder: (context, constraints) {
-          final textPainter = TextPainter(
-            text: TextSpan(
-              text: excerpt,
-              style: _getTextStyle().copyWith(
-                fontSize: 18,
-                height: 1.1,
-                letterSpacing: 5,
-              ),
-            ),
-            textDirection: TextDirection.ltr,
-            textAlign: TextAlign.start,
-          );
-          textPainter.layout(maxWidth: 300);
-          final square = textPainter.size.width * textPainter.size.height * 5;
-          final maxHeight = sqrt(square);
-
-          return SizedBox(
-            height: maxHeight,
-            child: MongolText(
-              excerpt,
-              style: _getTextStyle().copyWith(
-                fontSize: 18,
-                height: 1.1,
-                letterSpacing: 5,
-              ),
-            ),
-          );
-        },
-      );
-    } else {
-      return Text(
-        excerpt,
-        style: _getTextStyle().copyWith(fontSize: 18, height: 2),
-      );
-    }
+  Widget _getContent() {
+    return Text(
+      excerpt,
+      style: _getTextStyle().copyWith(fontSize: 18, height: 2),
+    );
   }
 
   Widget _getTitleText({
     TextAlign textAlign = TextAlign.start,
     TextDirection textDirection = TextDirection.ltr,
-    bool verticle = false,
     double fontSize = 20,
     Color? color,
   }) {
     color ??= textColor;
-    if (verticle) {
-      return ConstrainedBox(
-        constraints: BoxConstraints(maxHeight: 350),
-        child: MongolText(
-          bookTitle,
-          style: _getTextStyle().copyWith(
-            fontSize: fontSize,
-            fontWeight: FontWeight.bold,
-            color: color,
-            height: 1.3,
-            letterSpacing: 5,
-          ),
-        ),
-      );
-    } else {
-      return Text(
-        bookTitle,
-        textAlign: textAlign,
-        textDirection: textDirection,
-        style: _getTextStyle().copyWith(
-          fontSize: fontSize,
-          fontWeight: FontWeight.bold,
-          color: color,
-        ),
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-      );
-    }
+    return Text(
+      bookTitle,
+      textAlign: textAlign,
+      textDirection: textDirection,
+      style: _getTextStyle().copyWith(
+        fontSize: fontSize,
+        fontWeight: FontWeight.bold,
+        color: color,
+      ),
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+    );
   }
 
   Widget _getChapterText({
     String leading = '—— ',
-    bool verticle = false,
     double textSize = 14,
   }) {
     if (chapter == null || chapter!.isEmpty) {
       return const SizedBox.shrink();
     }
-    if (verticle) {
-      return ConstrainedBox(
-        constraints: const BoxConstraints(maxHeight: 350),
-        child: MongolText(
-          '$leading$chapter',
-          style: _getTextStyle().copyWith(fontSize: textSize),
-        ),
-      );
-    } else {
-      return Text(
-        '$leading$chapter',
-        style: _getTextStyle().copyWith(fontSize: textSize),
-      );
-    }
+    return Text(
+      '$leading$chapter',
+      style: _getTextStyle().copyWith(fontSize: textSize),
+    );
   }
 
   Widget _getAuthorText({
-    bool verticle = false,
     double textSize = 14,
     Color? color,
   }) {
     color ??= textColor;
-    if (verticle) {
-      return ConstrainedBox(
-        constraints: const BoxConstraints(maxHeight: 350),
-        child: MongolText(
-          author,
-          style: _getTextStyle().copyWith(fontSize: textSize, color: color),
-        ),
-      );
-    } else {
-      return Text(
-        author,
-        style: _getTextStyle().copyWith(fontSize: textSize, color: color),
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-      );
-    }
+    return Text(
+      author,
+      style: _getTextStyle().copyWith(fontSize: textSize, color: color),
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+    );
   }
 
   Widget _buildDefaultTemplate() {
@@ -354,17 +277,15 @@ class ExcerptShareCard extends StatelessWidget {
           ),
           child: Column(
             children: [
-              Row(
+              Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _getTitleText(
-                    verticle: true,
                     fontSize: 38,
                     color: backgroundImage != null ? Colors.white : null,
                   ),
-                  const SizedBox(width: 16),
+                  const SizedBox(height: 8),
                   _getAuthorText(
-                    verticle: true,
                     textSize: 25,
                     color: backgroundImage != null ? Colors.white : null,
                   ),
@@ -397,46 +318,4 @@ class ExcerptShareCard extends StatelessWidget {
     );
   }
 
-  Widget _buildModernTemplate() {
-    return Container(
-      decoration: BoxDecoration(
-        image: backgroundImage != null
-            ? DecorationImage(
-                image: AssetImage(backgroundImage!),
-                fit: BoxFit.cover,
-                colorFilter: ColorFilter.mode(
-                  backgroundColor.withAlpha(100),
-                  BlendMode.dstATop,
-                ),
-              )
-            : null,
-      ),
-      padding: const EdgeInsets.all(24.0),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          _getContent(verticle: true),
-          const SizedBox(height: 24),
-          _getChapterText(verticle: true, leading: ''),
-          Spacer(),
-          Column(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            mainAxisSize: MainAxisSize.max,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.start,
-                children: [
-                  _getAuthorText(verticle: true),
-                  const SizedBox(width: 16),
-                  _getTitleText(verticle: true),
-                ],
-              ),
-              const SizedBox(height: 16),
-              _getPaperfoldLogo(),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
 }

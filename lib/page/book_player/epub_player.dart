@@ -11,7 +11,6 @@ import 'package:paperfold/dao/book.dart';
 import 'package:paperfold/dao/book_note.dart';
 import 'package:paperfold/enums/book_status.dart';
 import 'package:paperfold/enums/reading_info.dart';
-import 'package:paperfold/enums/translation_mode.dart';
 import 'package:paperfold/enums/writing_mode.dart';
 import 'package:paperfold/l10n/generated/L10n.dart';
 import 'package:paperfold/models/book.dart';
@@ -19,7 +18,6 @@ import 'package:paperfold/models/book_style.dart';
 import 'package:paperfold/models/bookmark.dart';
 import 'package:paperfold/models/font_model.dart';
 import 'package:paperfold/models/read_theme.dart';
-import 'package:paperfold/models/reading_rules.dart';
 import 'package:paperfold/models/search_result_model.dart';
 import 'package:paperfold/models/toc_item.dart';
 import 'package:paperfold/page/book_player/image_viewer.dart';
@@ -124,7 +122,6 @@ class EpubPlayerState extends ConsumerState<EpubPlayer>
   String bookmarkCfi = '';
   bool bookmarkExists = false;
   WritingModeEnum writingMode = WritingModeEnum.horizontalTb;
-  String? _lastSelectionContextText;
   bool _selectionClearLocked = false;
   bool _selectionClearPending = false;
 
@@ -205,17 +202,6 @@ class EpubPlayerState extends ConsumerState<EpubPlayer>
     );
   }
 
-  void setTranslationMode(TranslationModeEnum mode) {
-    webViewController.evaluateJavascript(
-      source:
-          '''
-      if (typeof reader.view !== 'undefined' && reader.view.setTranslationMode) {
-        reader.view.setTranslationMode('${mode.code}');
-      }
-      ''',
-    );
-  }
-
   Future<void> goToPercentage(double value) async {
     await webViewController.evaluateJavascript(
       source:
@@ -229,7 +215,6 @@ class EpubPlayerState extends ConsumerState<EpubPlayer>
     _selectionClearLocked = locked;
     if (!locked && _selectionClearPending) {
       _selectionClearPending = false;
-      _lastSelectionContextText = null;
       removeOverlay();
     }
   }
@@ -277,7 +262,6 @@ class EpubPlayerState extends ConsumerState<EpubPlayer>
         textIndent: ${style.indent},
         maxColumnCount: ${style.maxColumnCount},
         columnThreshold: ${style.columnThreshold},
-        writingMode: '${Prefs().writingMode.code}',
         textAlign: '${Prefs().textAlignment.code}',
         backgroundImage: '$bgimgUrl',
         bgimgBlur: ${Prefs().bgimg.blur},
@@ -307,17 +291,6 @@ class EpubPlayerState extends ConsumerState<EpubPlayer>
         bgimgBlur: ${bgimg.blur},
         bgimgOpacity: ${bgimg.opacity},
         bgimgFit: '${Prefs().bgimgFit.code}',
-      })
-    ''',
-    );
-  }
-
-  void changeReadingRules(ReadingRules readingRules) {
-    webViewController.evaluateJavascript(
-      source:
-          '''
-      readingFeatures({
-        convertChineseMode: '${readingRules.convertChineseMode.name}',
       })
     ''',
     );
@@ -857,10 +830,6 @@ class EpubPlayerState extends ConsumerState<EpubPlayer>
         String cfi = location['cfi'];
         String text = location['text'];
         bool footnote = location['footnote'];
-        final rawContextText = location['contextText']?.toString();
-        _lastSelectionContextText = (rawContextText?.trim().isEmpty ?? true)
-            ? null
-            : rawContextText;
         double left = (location['pos']['left'] as num).toDouble();
         double top = (location['pos']['top'] as num).toDouble();
         double right = (location['pos']['right'] as num).toDouble();
@@ -876,7 +845,6 @@ class EpubPlayerState extends ConsumerState<EpubPlayer>
           null,
           footnote,
           writingMode.isVertical ? Axis.vertical : Axis.horizontal,
-          contextText: _lastSelectionContextText,
         );
       },
     );
@@ -887,7 +855,6 @@ class EpubPlayerState extends ConsumerState<EpubPlayer>
           _selectionClearPending = true;
           return;
         }
-        _lastSelectionContextText = null;
         removeOverlay();
       },
     );
@@ -904,10 +871,6 @@ class EpubPlayerState extends ConsumerState<EpubPlayer>
         int id = annotation['annotation']['id'];
         String cfi = annotation['annotation']['value'];
         String note = annotation['annotation']['note'];
-        final rawContextText = annotation['contextText']?.toString();
-        _lastSelectionContextText = (rawContextText?.trim().isEmpty ?? true)
-            ? null
-            : rawContextText;
         double left = (annotation['pos']['left'] as num).toDouble();
         double top = (annotation['pos']['top'] as num).toDouble();
         double right = (annotation['pos']['right'] as num).toDouble();
@@ -923,7 +886,6 @@ class EpubPlayerState extends ConsumerState<EpubPlayer>
           id,
           false,
           writingMode.isVertical ? Axis.vertical : Axis.horizontal,
-          contextText: _lastSelectionContextText,
         );
       },
     );
@@ -1022,27 +984,6 @@ class EpubPlayerState extends ConsumerState<EpubPlayer>
         setState(() {});
       },
     );
-    controller.addJavaScriptHandler(
-      handlerName: 'translateText',
-      callback: (args) async {
-        try {
-          String text = args[0];
-          final service = Prefs().fullTextTranslateService;
-          final from = Prefs().fullTextTranslateFrom;
-          final to = Prefs().fullTextTranslateTo;
-
-          return await service.provider.translateTextOnly(
-            text,
-            from,
-            to,
-            isFullText: true,
-          );
-        } catch (e) {
-          AnxLog.severe('Translation error: $e');
-          return 'Translation error: $e';
-        }
-      },
-    );
   }
 
   Future<void> onWebViewCreated(InAppWebViewController controller) async {
@@ -1062,11 +1003,6 @@ class EpubPlayerState extends ConsumerState<EpubPlayer>
     webViewController = controller;
     setHandler(controller);
     _registerChapterContentBridge();
-
-    // Initialize translation mode based on book-specific settings
-    Future.delayed(const Duration(milliseconds: 300), () {
-      setTranslationMode(Prefs().getBookTranslationMode(widget.book.id));
-    });
   }
 
   void removeOverlay() {

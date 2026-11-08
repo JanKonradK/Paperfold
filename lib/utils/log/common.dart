@@ -1,76 +1,32 @@
 import 'dart:io';
 
-import 'package:paperfold/config/shared_preference_provider.dart';
-import 'package:paperfold/utils/log/string_to_level.dart';
-import 'package:paperfold/utils/get_path/log_file.dart';
+import 'package:paperfold/utils/get_path/get_base_path.dart';
 import 'package:flutter/foundation.dart';
-import 'package:material_ui/material_ui.dart';
 import 'package:logging/logging.dart';
 
+/// Log messages go to the debug console only. Release builds keep no log.
 class AnxLog {
   static final log = Logger('Paperfold');
-  static late File? logFile;
 
-  Level level;
-  DateTime time;
-  String message;
-
-  AnxLog(this.level, this.time, this.message);
-
-  get color => level == Level.SEVERE
-      ? Colors.red
-      : level == Level.WARNING
-          ? Colors.orange
-          : Colors.grey;
-
-  static AnxLog parse(String log) {
-    try {
-      final logParts = log.split('^*^');
-      final level = stringToLevel(logParts[0]);
-      final time = DateTime.parse(logParts[1].trim());
-      final message = logParts[2];
-      return AnxLog(level, time, message);
-    } catch (e) {
-      return AnxLog(Level.SEVERE, DateTime.now(), 'Parse log error: $e');
-    }
-  }
-
-  static init() async {
-    logFile = await getLogFile();
-
-    Logger.root.level = Level.ALL;
+  static Future<void> init() async {
+    Logger.root.level = kDebugMode ? Level.ALL : Level.OFF;
     Logger.root.onRecord.listen((record) {
-      if (kDebugMode) {
-        String colorCode = '';
-        if (record.level == Level.SEVERE) {
-          colorCode = '\x1B[31m';
-        } else if (record.level == Level.WARNING) {
-          colorCode = '\x1B[33m';
-        } else if (record.level == Level.INFO) {
-          colorCode = '\x1B[34m';
-        }
-        print(
-            '$colorCode${record.level.name}: ${record.time}: ${record.message} \x1B[0m');
-        if (record.error != null) {
-          print('$colorCode${record.error} \x1B[0m');
-        }
-        if (record.stackTrace != null) {
-          print('$colorCode${record.stackTrace} \x1B[0m');
-        }
+      final colorCode = switch (record.level) {
+        Level.SEVERE => '[31m',
+        Level.WARNING => '[33m',
+        Level.INFO => '[34m',
+        _ => '',
+      };
+      debugPrint(
+          '$colorCode${record.level.name}: ${record.time}: ${record.message} [0m');
+      if (record.error != null) debugPrint('$colorCode${record.error} [0m');
+      if (record.stackTrace != null) {
+        debugPrint('$colorCode${record.stackTrace} [0m');
       }
-      String error = record.error == null ? '' : ' : ${record.error}';
-      logFile!.writeAsStringSync(
-          '${'${record.level.name}^*^ ${record.time}^*^ [${record.message}]$error,${record.stackTrace}'.replaceAll('\n', ' ')}\n',
-          mode: FileMode.append);
     });
-    if (Prefs().clearLogWhenStart) {
-      clear();
-    }
-    info('Log file: ${logFile!.path}');
-  }
-
-  static void clear() {
-    logFile!.writeAsStringSync('');
+    // Earlier versions kept a log file. Nothing reads it now.
+    final oldLog = File('${await getAnxDocumentsPath()}/paperfold.log');
+    if (await oldLog.exists()) await oldLog.delete();
   }
 
   static info(String message, [Object? error, StackTrace? stackTrace]) {

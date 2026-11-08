@@ -7,7 +7,6 @@ import 'package:paperfold/models/book.dart';
 import 'package:paperfold/providers/book_filters.dart';
 import 'package:paperfold/providers/tags.dart'
     show kNoTagFilterId, tagSelectionProvider;
-import 'package:lpinyin/lpinyin.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'book_list.g.dart';
@@ -32,22 +31,10 @@ class BookList extends _$BookList {
     return groupedBooks;
   }
 
-  String _sortText(String value) {
-    try {
-      return PinyinHelper.getPinyin(value, format: PinyinFormat.WITHOUT_TONE);
-    } catch (_) {
-      return value;
-    }
-  }
-
   List<Book> sortBooks(List<Book> books) {
     final sortField = Prefs().sortField;
     final ascending = Prefs().sortOrder == SortOrderEnum.ascending;
-    // Keep keys only for this sort; editing a title or author cannot leave a
-    // stale key in the next refresh.
-    final textKeys = <String, String>{};
-    String textKey(String value) =>
-        textKeys.putIfAbsent(value, () => _sortText(value));
+    String textKey(String value) => value.toLowerCase();
 
     books.sort((a, b) {
       int compareResult;

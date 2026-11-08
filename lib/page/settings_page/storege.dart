@@ -81,12 +81,6 @@ class _StorageSettingsState extends ConsumerState<StorageSettings>
                     ),
                   ),
                   ListTile(
-                    title: Text(L10n.of(context).storageLogFile),
-                    trailing: fileSizeTriling(
-                      storageInfoAsync.value?.logSizeStr,
-                    ),
-                  ),
-                  ListTile(
                     title: Text(L10n.of(context).storageCacheFile),
                     trailing: cacheSizeTriling(
                       storageInfoAsync.value?.cacheSizeStr,

@@ -4,8 +4,8 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 ///
 /// Not in SQLite. plan.md Section 9.2 calls this the one place in the project
 /// where a shortcut creates a real security problem, because these are the
-/// reader's own server passwords, and the database is copied by the export
-/// path and by WebDAV sync.
+/// reader's own server passwords, and the database is copied into every
+/// backup file.
 ///
 /// The store is behind an interface so that a test can prove the contract
 /// without a platform keystore, and so that no other layer can reach the

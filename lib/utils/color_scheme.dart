@@ -2,7 +2,6 @@ import 'package:paperfold/config/shared_preference_provider.dart';
 import 'package:paperfold/config/paperfold_tokens.dart';
 import 'package:paperfold/config/paperfold_motion.dart';
 import 'package:paperfold/config/paperfold_system.dart';
-import 'package:chinese_font_library/chinese_font_library.dart';
 import 'package:flex_color_scheme/flex_color_scheme.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -58,8 +57,7 @@ TextTheme _paperfoldTextTheme(TextTheme base) {
           fontWeight: FontWeight.w600,
           letterSpacing: 0.1,
         ),
-      )
-      .apply(fontFamilyFallback: SystemChineseFont.fontFamilyFallback);
+      );
 }
 
 ThemeData colorSchema(

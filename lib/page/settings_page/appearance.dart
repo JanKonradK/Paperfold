@@ -7,7 +7,6 @@ import 'package:paperfold/widgets/settings/settings_title.dart';
 import 'package:paperfold/widgets/settings/theme_mode.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
-import 'package:provider/provider.dart';
 import 'package:paperfold/widgets/settings/settings_section.dart';
 import 'package:paperfold/widgets/settings/settings_tile.dart';
 import 'package:paperfold/enums/book_binding.dart';
@@ -22,7 +21,6 @@ const List<Map<String, String>> languageOptions = [
   {'English': 'en'},
   {'简体中文': 'zh-CN'},
   {'繁體中文': 'zh-TW'},
-  {'文言文': 'zh-LZH'},
   {'Türkçe': 'tr'},
   {'Deutsch': 'de'},
   {'العربية': 'ar'},
@@ -413,8 +411,7 @@ Future<void> showLanguagePickerDialog(BuildContext context) {
 }
 
 Future<void> showColorPickerDialog(BuildContext context) async {
-  final prefsProvider = Provider.of<Prefs>(context, listen: false);
-  final currentColor = prefsProvider.themeColor;
+  final currentColor = Prefs().themeColor;
 
   Color pickedColor = currentColor;
 
@@ -440,7 +437,7 @@ Future<void> showColorPickerDialog(BuildContext context) async {
             icon: const Icon(Icons.auto_stories_outlined),
             label: Text(L10n.of(context).settingsAppearanceUsePaperfoldTheme),
             onPressed: () {
-              prefsProvider.useBrandTheme = true;
+              Prefs().useBrandTheme = true;
               Navigator.of(context).pop();
             },
           ),
@@ -453,7 +450,7 @@ Future<void> showColorPickerDialog(BuildContext context) async {
           TextButton(
             child: Text(L10n.of(context).commonOk),
             onPressed: () {
-              prefsProvider.saveThemeToPrefs(pickedColor.toARGB32());
+              Prefs().saveThemeToPrefs(pickedColor.toARGB32());
               Navigator.of(context).pop();
             },
           ),

@@ -1,10 +1,7 @@
 import 'package:paperfold/dao/base_dao.dart';
 import 'package:paperfold/dao/book.dart';
-import 'package:paperfold/enums/sync_direction.dart';
-import 'package:paperfold/enums/sync_trigger.dart';
 import 'package:paperfold/models/book.dart';
 import 'package:paperfold/models/reading_time.dart';
-import 'package:paperfold/providers/sync.dart';
 
 class ReadingTimeDao extends BaseDao {
   ReadingTimeDao();
@@ -308,8 +305,6 @@ class ReadingTimeDao extends BaseDao {
       where: 'book_id IN ($placeholders)',
       whereArgs: bookIds,
     );
-
-    Sync().syncData(SyncDirection.both, null, trigger: SyncTrigger.auto);
   }
 
   Future<List<Map<String, dynamic>>> _aggregateByBook({

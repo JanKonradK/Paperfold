@@ -273,7 +273,6 @@ class DBHelper {
   static Database? _database;
   static Future<Database>? _databaseFuture;
   static Future<void>? _replacement;
-  static bool updatedDB = false;
 
   factory DBHelper() {
     return _instance;
@@ -738,10 +737,6 @@ class DBHelper {
           );
         }
       }
-    }
-
-    if (oldVersion != 0 && Prefs().webdavStatus) {
-      updatedDB = true;
     }
   }
 }

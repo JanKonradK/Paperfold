@@ -44,7 +44,6 @@ import 'package:paperfold/widgets/bookshelf/shelf_controls/shelf_book_actions.da
 import 'package:paperfold/widgets/bookshelf/shelf_controls/shelf_controls.dart';
 import 'package:paperfold/widgets/bookshelf/shelf_controls/shelf_view_switch.dart';
 import 'package:paperfold/widgets/bookshelf/shelf_stage.dart';
-import 'package:paperfold/widgets/bookshelf/sync_button.dart';
 import 'package:paperfold/widgets/ornament.dart';
 import 'package:paperfold/widgets/paperfold_wordmark.dart';
 import 'package:paperfold/widgets/paperfold_library_theme.dart';
@@ -393,11 +392,6 @@ class _ShelfHomePageState extends ConsumerState<ShelfHomePage>
             ).push(MaterialPageRoute(builder: (context) => const SearchPage())),
             icon: const Icon(Icons.search_rounded),
           ),
-          // Keyed so the framework matches this button by identity rather than
-          // by its position among the actions. Matched positionally, it gets
-          // its State handed to a different element as the bar rebuilds, and
-          // the Riverpod subscription inside it throws on the second read.
-          const SyncButton(key: ValueKey('shelf-sync-button')),
           PopupMenuButton<_ShelfHomeAction>(
             tooltip: l10n.more,
             onSelected: (action) {

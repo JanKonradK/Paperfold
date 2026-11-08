@@ -5,14 +5,11 @@ import 'package:paperfold/dao/reading_time.dart';
 import 'package:paperfold/config/shared_preference_provider.dart';
 import 'package:paperfold/enums/book_binding.dart';
 import 'package:paperfold/enums/hint_key.dart';
-import 'package:paperfold/enums/sync_direction.dart';
-import 'package:paperfold/enums/sync_trigger.dart';
 import 'package:paperfold/l10n/generated/L10n.dart';
 import 'package:paperfold/models/book.dart';
 import 'package:paperfold/models/reading_time.dart';
 import 'package:paperfold/models/tag.dart';
 import 'package:paperfold/page/book_edit_page.dart';
-import 'package:paperfold/providers/sync.dart';
 import 'package:paperfold/providers/book_list.dart';
 import 'package:paperfold/providers/tags.dart';
 import 'package:paperfold/service/book.dart';
@@ -718,11 +715,6 @@ class _BookDetailState extends ConsumerState<BookDetail> {
                     label: Text(L10n.of(context).bookDetailSave),
                     onPressed: () {
                       setState(() => isEditing = false);
-                      Sync().syncData(
-                        SyncDirection.upload,
-                        ref,
-                        trigger: SyncTrigger.manual,
-                      );
                     },
                   ),
                 ),

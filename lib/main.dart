@@ -1,7 +1,6 @@
 import 'package:paperfold/config/paperfold_motion.dart';
 
 import 'dart:async';
-import 'dart:io';
 
 import 'package:paperfold/service/capture_launch.dart';
 
@@ -9,24 +8,19 @@ import 'package:paperfold/config/paperfold_visual_policy.dart';
 
 import 'package:paperfold/config/shared_preference_provider.dart';
 import 'package:paperfold/dao/database.dart';
-import 'package:paperfold/enums/sync_direction.dart';
-import 'package:paperfold/enums/sync_trigger.dart';
 import 'package:paperfold/l10n/generated/L10n.dart';
 import 'package:paperfold/page/home_page.dart';
 import 'package:paperfold/page/opening/opening_sequence.dart';
 import 'package:paperfold/service/book_player/book_player_server.dart';
-import 'package:paperfold/service/network/http_proxy_overrides.dart';
 import 'package:paperfold/utils/color_scheme.dart';
 import 'package:paperfold/widgets/paperfold_library_theme.dart';
 import 'package:paperfold/utils/error/common.dart';
 import 'package:paperfold/utils/get_path/get_base_path.dart';
 import 'package:paperfold/utils/log/common.dart';
-import 'package:paperfold/providers/sync.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:heroine/heroine.dart';
-import 'package:provider/provider.dart' as provider;
 
 final navigatorKey = GlobalKey<NavigatorState>();
 final heroineController = HeroineController();
@@ -64,7 +58,6 @@ Future<void> main() async {
   await Prefs().initPrefs();
   unawaited(CaptureLaunch.initialize());
   PaperfoldVisualPolicy.init();
-  HttpOverrides.global = AnxHttpProxyOverrides();
 
   // Start storage, the database, and the local reader server without waiting
   // for them before runApp. HomePage and all DAOs join databaseReady.
@@ -96,8 +89,7 @@ class MyApp extends ConsumerStatefulWidget {
   ConsumerState<ConsumerStatefulWidget> createState() => _MyAppState();
 }
 
-class _MyAppState extends ConsumerState<MyApp>
-    with WidgetsBindingObserver {
+class _MyAppState extends ConsumerState<MyApp> {
   static const Locale _englishFallbackLocale = Locale('en');
   late final bool _playColdStartOpening;
   late final Completer<void> _openingFinished;
@@ -111,30 +103,11 @@ class _MyAppState extends ConsumerState<MyApp>
     if (!_playColdStartOpening) {
       _openingFinished.complete();
     }
-    WidgetsBinding.instance.addObserver(this);
-  }
-
-  @override
-  void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
-    super.dispose();
   }
 
   void _handleOpeningFinished() {
     if (!_openingFinished.isCompleted) {
       _openingFinished.complete();
-    }
-  }
-
-  @override
-  Future<void> didChangeAppLifecycleState(AppLifecycleState state) async {
-    if (state == AppLifecycleState.paused ||
-        state == AppLifecycleState.hidden) {
-      if (Prefs().webdavStatus) {
-        ref
-            .read(syncProvider.notifier)
-            .syncData(SyncDirection.both, ref, trigger: SyncTrigger.auto);
-      }
     }
   }
 
@@ -148,55 +121,52 @@ class _MyAppState extends ConsumerState<MyApp>
         ? OpeningSequence(onFinished: _handleOpeningFinished, child: homePage)
         : homePage;
 
-    return provider.MultiProvider(
-      providers: [provider.ChangeNotifierProvider(create: (_) => Prefs())],
-      child: provider.Consumer<Prefs>(
-        builder: (context, prefsNotifier, child) {
-          return MaterialApp(
-            debugShowCheckedModeBanner: false,
-            themeAnimationDuration:
-                prefsNotifier.eInkMode ||
-                    WidgetsBinding
-                        .instance
-                        .platformDispatcher
-                        .accessibilityFeatures
-                        .disableAnimations
-                ? Duration.zero
-                : PaperfoldMotion.move,
-            themeAnimationCurve: PaperfoldMotion.settle,
-            scrollBehavior: ScrollConfiguration.of(context).copyWith(
-              physics: const BouncingScrollPhysics(),
-              // dragDevices: {
-              //   PointerDeviceKind.touch,
-              //   PointerDeviceKind.mouse,
-              // },
-            ),
-            navigatorObservers: [
-              FlutterSmartDialog.observer,
-              heroineController,
-            ],
-            builder: FlutterSmartDialog.init(
-              builder: (context, child) =>
-                  MaterialUiCompatibilityBridge(child: child!),
-            ),
-            navigatorKey: navigatorKey,
-            locale: prefsNotifier.locale,
-            localeListResolutionCallback: _resolveLocale,
-            localizationsDelegates: [
-              L10n.delegate,
-              ...GlobalMaterialLocalizations.delegates,
-            ],
-            supportedLocales: L10n.supportedLocales,
-            title: 'Paperfold',
-            themeMode: prefsNotifier.themeMode,
-            theme: paperfoldLibraryTheme(
-              colorSchema(prefsNotifier, context, Brightness.light),
-            ),
-            darkTheme: colorSchema(prefsNotifier, context, Brightness.dark),
-            home: home,
-          );
-        },
-      ),
+    // Prefs notifies when any setting changes, so the theme follows it.
+    return ListenableBuilder(
+      listenable: Prefs(),
+      builder: (context, child) {
+        final prefsNotifier = Prefs();
+        return MaterialApp(
+          debugShowCheckedModeBanner: false,
+          themeAnimationDuration:
+              prefsNotifier.eInkMode ||
+                  WidgetsBinding
+                      .instance
+                      .platformDispatcher
+                      .accessibilityFeatures
+                      .disableAnimations
+              ? Duration.zero
+              : PaperfoldMotion.move,
+          themeAnimationCurve: PaperfoldMotion.settle,
+          scrollBehavior: ScrollConfiguration.of(context).copyWith(
+            physics: const BouncingScrollPhysics(),
+            // dragDevices: {
+            //   PointerDeviceKind.touch,
+            //   PointerDeviceKind.mouse,
+            // },
+          ),
+          navigatorObservers: [FlutterSmartDialog.observer, heroineController],
+          builder: FlutterSmartDialog.init(
+            builder: (context, child) =>
+                MaterialUiCompatibilityBridge(child: child!),
+          ),
+          navigatorKey: navigatorKey,
+          locale: prefsNotifier.locale,
+          localeListResolutionCallback: _resolveLocale,
+          localizationsDelegates: [
+            L10n.delegate,
+            ...GlobalMaterialLocalizations.delegates,
+          ],
+          supportedLocales: L10n.supportedLocales,
+          title: 'Paperfold',
+          themeMode: prefsNotifier.themeMode,
+          theme: paperfoldLibraryTheme(
+            colorSchema(prefsNotifier, context, Brightness.light),
+          ),
+          darkTheme: colorSchema(prefsNotifier, context, Brightness.dark),
+          home: home,
+        );
+      },
     );
   }
 

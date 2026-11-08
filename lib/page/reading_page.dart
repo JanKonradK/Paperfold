@@ -8,14 +8,11 @@ import 'dart:async';
 import 'package:paperfold/config/shared_preference_provider.dart';
 import 'package:paperfold/dao/reading_time.dart';
 import 'package:paperfold/dao/theme.dart';
-import 'package:paperfold/enums/sync_direction.dart';
-import 'package:paperfold/enums/sync_trigger.dart';
 import 'package:paperfold/l10n/generated/L10n.dart';
 import 'package:paperfold/models/book.dart';
 import 'package:paperfold/models/read_theme.dart';
 import 'package:paperfold/page/book_detail.dart';
 import 'package:paperfold/page/book_player/epub_player.dart';
-import 'package:paperfold/providers/sync.dart';
 import 'package:paperfold/utils/toast/common.dart';
 import 'package:paperfold/utils/ui/status_bar.dart';
 import 'package:paperfold/widgets/reading_page/reader_chrome.dart';
@@ -131,7 +128,6 @@ class ReadingPageState extends ConsumerState<ReadingPage>
 
   @override
   void dispose() {
-    Sync().syncData(SyncDirection.upload, ref, trigger: SyncTrigger.auto);
     _readTimeWatch.stop();
     _awakeTimer?.cancel();
     WakelockPlus.disable();

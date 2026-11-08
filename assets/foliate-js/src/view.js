@@ -2,8 +2,6 @@ import * as CFI from './epubcfi.js'
 import { TOCProgress, SectionProgress } from './progress.js'
 import { Overlayer } from './overlayer.js'
 import { textWalker } from './text-walker.js'
-import { Translator, TranslationMode } from './translator.js'
-const { TTS } = await import('./tts.js')
 
 const SEARCH_PREFIX = 'foliate-search:'
 
@@ -75,7 +73,6 @@ export class View extends HTMLElement {
   lastLocation
   history = new History()
   #lastCfi = null
-  #translator = new Translator()
   constructor() {
     super()
     this.history.addEventListener('popstate', ({ detail }) => {
@@ -121,27 +118,6 @@ export class View extends HTMLElement {
       e.detail.attach(this.#createOverlayer(e.detail)))
     this.renderer.open(book)
     this.#root.append(this.renderer)
-
-    if (book.sections.some(section => section.mediaOverlay)) {
-      book.media.activeClass ||= '-epub-media-overlay-active'
-      const activeClass = book.media.activeClass
-      this.mediaOverlay = book.getMediaOverlay()
-      let lastActive
-      this.mediaOverlay.addEventListener('highlight', e => {
-        const resolved = this.resolveNavigation(e.detail.text)
-        this.renderer.goTo(resolved)
-          .then(() => {
-            const { doc } = this.renderer.getContents()
-              .find(x => x.index = resolved.index)
-            const el = resolved.anchor(doc)
-            el.classList.add(activeClass)
-            lastActive = new WeakRef(el)
-          })
-      })
-      this.mediaOverlay.addEventListener('unhighlight', () => {
-        lastActive?.deref()?.classList?.remove(activeClass)
-      })
-    }
   }
   close() {
     this.renderer?.destroy()
@@ -152,9 +128,6 @@ export class View extends HTMLElement {
     this.#searchResults = new Map()
     this.lastLocation = null
     this.history.clear()
-    this.tts = null
-    this.mediaOverlay = null
-    this.#translator?.destroy()
   }
   goToTextStart() {
     return this.goTo(this.book.landmarks
@@ -208,10 +181,6 @@ export class View extends HTMLElement {
     this.#handleLinks(doc, index)
     this.#handleClick(doc)
     this.#handleImage(doc)
-    
-    // Start translation observation for this document. A PDF page's text
-    // layer is invisible, so observing its every span only cost each turn.
-    if (!this.book.isPDF) this.#translator.observeDocument(doc)
     
     this.#emit('load', { doc, index })
   }
@@ -557,51 +526,6 @@ export class View extends HTMLElement {
     for (const list of this.#searchResults.values())
       for (const item of list) this.deleteAnnotation(item)
     this.#searchResults.clear()
-  }
-  oldValue = null
-  initTTS(stop) {
-    if (stop)
-      return this.#getOverlayer(this.#index)?.overlayer.remove(this.oldValue)
-
-    const doc = this.renderer.getContents()[0].doc;
-    if (this.tts && this.tts.doc === doc) return;
-    this.tts = new TTS(
-      doc,
-      textWalker,
-      (range) => {
-        const obj = this.#getOverlayer(this.#index);
-        let value = null;
-        if (obj) {
-          const { overlayer } = obj;
-          if (this.oldValue) {
-            overlayer.remove(this.oldValue);
-          }
-          value = this.getCFI(this.#index, range);
-          overlayer.add(value, range, Overlayer.highlight, { color: '#39c5bc83' });
-          this.oldValue = value;
-        }
-        this.renderer.scrollToAnchor(range);
-        return value;
-      },
-      (range) => this.getCFI(this.#index, range),
-    );
-  }
-  startMediaOverlay() {
-    const { index } = this.renderer.getContents()[0]
-    return this.mediaOverlay.start(index)
-  }
-  
-  // Translation control methods
-  setTranslationMode(mode) {
-    this.#translator.setTranslationMode(mode)
-  }
-  
-  getTranslationMode() {
-    return this.#translator.getTranslationMode()
-  }
-  
-  clearTranslations() {
-    this.#translator.clearTranslations()
   }
 }
 

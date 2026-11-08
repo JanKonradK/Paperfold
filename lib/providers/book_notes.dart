@@ -218,11 +218,6 @@ class BookNotesController extends _$BookNotesController {
     final current = state.value;
     if (current == null) return;
     await bookNoteDao.updateBookNoteById(note);
-    // await Sync().syncData(
-    //   SyncDirection.upload,
-    //   null,
-    //   trigger: SyncTrigger.manual,
-    // );
     await refresh();
   }
 
@@ -235,12 +230,6 @@ class BookNotesController extends _$BookNotesController {
         await bookNoteDao.deleteBookNoteById(note.id!);
       }
     }
-
-    // await Sync().syncData(
-    //   SyncDirection.upload,
-    //   null,
-    //   trigger: SyncTrigger.auto,
-    // );
 
     ref.read(bookmarkProvider(book.id).notifier).refreshBookmarks();
 

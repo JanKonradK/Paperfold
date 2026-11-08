@@ -5,7 +5,6 @@ import 'package:introduction_screen/introduction_screen.dart';
 import 'package:paperfold/config/paperfold_tokens.dart';
 import 'package:paperfold/l10n/generated/L10n.dart';
 import 'package:paperfold/config/shared_preference_provider.dart';
-import 'package:provider/provider.dart';
 
 /// Onboarding screen for first-time users
 /// Shows introduction pages covering key features and settings
@@ -370,8 +369,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       );
     }
 
-    return Consumer<Prefs>(
-      builder: (context, prefs, child) {
+    return ListenableBuilder(
+      listenable: Prefs(),
+      builder: (context, child) {
+        final prefs = Prefs();
         return SingleChildScrollView(
           child: Column(
             children: [

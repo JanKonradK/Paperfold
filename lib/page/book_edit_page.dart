@@ -5,12 +5,9 @@ import 'dart:io';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:paperfold/dao/book.dart';
-import 'package:paperfold/enums/sync_direction.dart';
-import 'package:paperfold/enums/sync_trigger.dart';
 import 'package:paperfold/l10n/generated/L10n.dart';
 import 'package:paperfold/models/book.dart';
 import 'package:paperfold/providers/book_list.dart';
-import 'package:paperfold/providers/sync.dart';
 import 'package:paperfold/service/cover_image.dart';
 import 'package:paperfold/service/open_library.dart';
 import 'package:paperfold/utils/get_path/get_base_path.dart';
@@ -184,7 +181,6 @@ class _BookEditPageState extends ConsumerState<BookEditPage> {
         final old = File(getBasePath(previous.coverPath));
         if (await old.exists()) await old.delete();
       }
-      Sync().syncData(SyncDirection.upload, ref, trigger: SyncTrigger.manual);
       ref.read(bookListProvider.notifier).refresh();
       if (mounted) Navigator.of(context).pop(true);
     } catch (e) {

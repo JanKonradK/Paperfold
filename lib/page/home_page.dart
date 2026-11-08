@@ -8,9 +8,6 @@ import 'package:paperfold/page/journal/journal_home_page.dart';
 import 'dart:async';
 import 'dart:math' as math;
 
-import 'package:paperfold/dao/database.dart';
-import 'package:paperfold/enums/sync_direction.dart';
-import 'package:paperfold/enums/sync_trigger.dart';
 import 'package:paperfold/l10n/generated/L10n.dart';
 import 'package:paperfold/service/initialization_check.dart';
 import 'package:paperfold/page/home_page/shelf_home_page.dart';
@@ -25,9 +22,7 @@ import 'package:paperfold/utils/log/common.dart';
 import 'package:paperfold/providers/journal_home.dart';
 import 'package:paperfold/providers/month_tracker.dart';
 import 'package:paperfold/providers/reading_challenge.dart';
-import 'package:paperfold/providers/sync.dart';
 import 'package:paperfold/config/shared_preference_provider.dart';
-import 'package:paperfold/utils/toast/common.dart';
 import 'package:paperfold/widgets/common/load_failure.dart';
 import 'package:paperfold/widgets/paperfold_glass_surface.dart';
 import 'package:paperfold/widgets/paperfold_library_theme.dart';
@@ -36,7 +31,6 @@ import 'package:paperfold/config/paperfold_motion.dart';
 import 'package:paperfold/config/paperfold_system.dart';
 import 'package:flutter/semantics.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 
 
 class HomePage extends ConsumerStatefulWidget {
@@ -167,24 +161,6 @@ class _HomePageState extends ConsumerState<HomePage> {
       );
   }
 
-  void _showDbUpdatedDialog() {
-    SmartDialog.show(
-      clickMaskDismiss: false,
-      builder: (context) => AlertDialog(
-        title: Text(L10n.of(context).commonAttention),
-        content: Text(L10n.of(context).dbUpdatedTip),
-        actions: [
-          TextButton(
-            onPressed: () {
-              SmartDialog.dismiss();
-            },
-            child: Text(L10n.of(context).commonOk),
-          ),
-        ],
-      ),
-    );
-  }
-
   Future<void> initAnx() async {
     try {
       await Future.wait([
@@ -201,23 +177,12 @@ class _HomePageState extends ConsumerState<HomePage> {
       return;
     }
 
-    AnxToast.init(context);
     checkUpdate(false);
     InitializationCheck.check();
-    if (Prefs().webdavStatus) {
-      await Sync().init();
-      if (!mounted) return;
-      await Sync().syncData(SyncDirection.both, ref, trigger: SyncTrigger.auto);
-      if (!mounted) return;
-    }
     loadDefaultFont();
 
     receiveShareIntent(ref);
     unawaited(ReadingReminder.restore(L10n.of(context)));
-
-    if (DBHelper.updatedDB) {
-      _showDbUpdatedDialog();
-    }
   }
 
   @override

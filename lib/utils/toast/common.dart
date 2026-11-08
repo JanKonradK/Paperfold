@@ -1,17 +1,9 @@
 import 'package:paperfold/main.dart';
 import 'package:paperfold/widgets/common/container/filled_container.dart';
 import 'package:material_ui/material_ui.dart';
-import 'package:fluttertoast/fluttertoast.dart';
+import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 
 class AnxToast {
-  static FToast fToast = FToast();
-
-  static void init(BuildContext context) {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      fToast.init(context);
-    });
-  }
-
   static void show(String message, {Icon? icon, int duration = 2000}) {
     Widget toast = FilledContainer(
       padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
@@ -37,13 +29,19 @@ class AnxToast {
       ),
     );
 
-    // close previous toast
-    fToast.removeQueuedCustomToasts();
-
-    fToast.showToast(
-      child: toast,
-      gravity: ToastGravity.BOTTOM,
-      toastDuration: Duration(milliseconds: duration),
+    // A new toast replaces the one on screen.
+    SmartDialog.showToast(
+      message,
+      // fluttertoast's old bottom gap, clear of the navigation bar.
+      builder: (_) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(24, 0, 24, 50),
+          child: toast,
+        ),
+      ),
+      alignment: Alignment.bottomCenter,
+      displayType: SmartToastType.last,
+      displayTime: Duration(milliseconds: duration),
     );
   }
 }

@@ -57,7 +57,7 @@ void main() {
     for (final group in [
       'Library & books',
       'Journal',
-      'Sync & backup',
+      'Export/Import',
       'Catalogs',
       'About Paperfold',
     ]) {

@@ -8,12 +8,10 @@ import 'package:paperfold/config/shared_preference_provider.dart';
 import 'package:paperfold/l10n/generated/L10n.dart';
 import 'package:paperfold/page/settings_page/advanced.dart';
 import 'package:paperfold/page/settings_page/appearance.dart';
-import 'package:paperfold/page/settings_page/developer/developer_options_page.dart';
 import 'package:paperfold/page/settings_page/reading.dart';
 import 'package:paperfold/page/settings_page/settings_page.dart';
 import 'package:paperfold/page/settings_page/storege.dart';
-import 'package:paperfold/page/settings_page/sync.dart';
-import 'package:paperfold/page/settings_page/translate.dart';
+import 'package:paperfold/page/settings_page/backup.dart';
 import 'package:paperfold/widgets/settings/about.dart';
 import 'package:paperfold/widgets/settings/settings_section.dart';
 import 'package:paperfold/widgets/settings/settings_tile.dart';
@@ -62,7 +60,6 @@ class _SettingsHomePageState extends ConsumerState<SettingsHomePage> {
       animation: Prefs(),
       builder: (context, _) {
         final l10n = L10n.of(context);
-        final showDeveloperEntry = Prefs().developerOptionsEnabled;
 
         final categories = <_SettingsCategory>[
           _SettingsCategory(
@@ -102,10 +99,10 @@ class _SettingsHomePageState extends ConsumerState<SettingsHomePage> {
             subtitles: [l10n.navBarNotes, l10n.journalBooks],
           ),
           _SettingsCategory(
-            title: l10n.settingsSyncBackup,
-            icon: Icons.sync_outlined,
-            sections: (_) => const SyncSetting(),
-            subtitles: [l10n.settingsSyncWebdav, l10n.exportAndImport],
+            title: l10n.exportAndImport,
+            icon: Icons.settings_backup_restore_outlined,
+            sections: (_) => const BackupSetting(),
+            subtitles: [l10n.exportAndImportExport, l10n.exportAndImportImport],
           ),
           _SettingsCategory(
             title: l10n.settingsCatalogs,
@@ -114,16 +111,10 @@ class _SettingsHomePageState extends ConsumerState<SettingsHomePage> {
             subtitles: [l10n.opdsFindBooksOnline],
           ),
           _SettingsCategory(
-            title: l10n.settingsTranslate,
-            icon: Icons.translate_outlined,
-            sections: (_) => const TranslateSetting(),
-            subtitles: [l10n.settingsTranslate],
-          ),
-          _SettingsCategory(
             title: l10n.settingsAdvanced,
             icon: Icons.shield_outlined,
             sections: (_) => const AdvancedSetting(),
-            subtitles: [l10n.chapterSplitting, l10n.settingsAdvancedLog],
+            subtitles: [l10n.chapterSplitting, l10n.md5Management],
           ),
         ];
 
@@ -206,16 +197,6 @@ class _SettingsHomePageState extends ConsumerState<SettingsHomePage> {
                   ),
                   SettingsSection(
                     tiles: [
-                      if (showDeveloperEntry)
-                        SettingsTile.navigation(
-                          leading: const Icon(Icons.developer_mode),
-                          title: Text(l10n.settingsDeveloperOptions),
-                          onPressed: (context) => Navigator.of(context).push(
-                            MaterialPageRoute<void>(
-                              builder: (_) => const DeveloperOptionsPage(),
-                            ),
-                          ),
-                        ),
                       const CustomSettingsTile(
                         child: About(),
                       ),

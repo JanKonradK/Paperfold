@@ -19,7 +19,6 @@ class ExcerptMenu extends StatefulWidget {
   final Function() onClose;
   final bool footnote;
   final BoxDecoration decoration;
-  final Function() toggleTranslationMenu;
   final void Function({bool? show}) toggleReaderNoteMenu;
   final Future<void> Function(int noteId) openReaderNoteMenu;
   final void Function(int noteId) onNoteCreated;
@@ -34,7 +33,6 @@ class ExcerptMenu extends StatefulWidget {
     required this.onClose,
     required this.footnote,
     required this.decoration,
-    required this.toggleTranslationMenu,
     required this.toggleReaderNoteMenu,
     required this.openReaderNoteMenu,
     required this.onNoteCreated,
@@ -284,13 +282,6 @@ class ExcerptMenuState extends State<ExcerptMenu> {
             },
             icon: const Icon(Icons.public),
             text: L10n.of(context).contextMenuSearch,
-          ),
-          // toggle translation menu
-          IconAndText(
-            compact: true,
-            onTap: widget.toggleTranslationMenu,
-            icon: const Icon(Icons.translate),
-            text: L10n.of(context).contextMenuTranslate,
           ),
           // edit note
           if (!widget.footnote)

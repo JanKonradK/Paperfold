@@ -60,10 +60,6 @@ String generateUrl(
   //     maxColumnCount: ${bookStyle.maxColumnCount},
   // }
 
-  // let readingRules = {
-  //   convertChineseMode: '${Prefs().readingRules.convertChineseMode.name}',
-  // }
-
   Map<String, dynamic> style = {
     'fontSize': bookStyle.fontSize,
     'fontName': fontName,
@@ -83,7 +79,6 @@ String generateUrl(
     'pageTurnStyle': Prefs().pageTurnStyle.name,
     'maxColumnCount': bookStyle.maxColumnCount,
     'columnThreshold': bookStyle.columnThreshold,
-    'writingMode': Prefs().writingMode.code,
     'textAlign': Prefs().textAlignment.code,
     'backgroundImage': bgimgUrl,
     'bgimgBlur': Prefs().bgimg.blur,
@@ -95,16 +90,11 @@ String generateUrl(
     'codeHighlightTheme': Prefs().codeHighlightTheme.code,
   };
 
-  Map<String, dynamic> readingRules = {
-    'convertChineseMode': Prefs().readingRules.convertChineseMode.name,
-  };
-
   Map<String, dynamic> params = {
     'importing': importing,
     'url': url,
     'initialCfi': cfi,
     'style': style,
-    'readingRules': readingRules,
   };
 
   String query = '';
@@ -119,9 +109,6 @@ String generateUrl(
   // query += '&url=$url';
   // query += '&initialCfi=$cfi';
   // query += '&style=$style';
-  // query += '&readingRules=$readingRules';
-  // query += '&style=$style';
-  // query += '&readingRules=$readingRules';
 
   final uri = '$indexHtmlPath?$query';
 

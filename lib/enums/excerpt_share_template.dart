@@ -5,7 +5,6 @@ enum ExcerptShareTemplateEnum {
   defaultTemplate,
   simpleTemplate,
   elegantTemplate,
-  verticalTemplate,
 }
 
 extension ExcerptShareTemplateEnumExtension on ExcerptShareTemplateEnum {
@@ -17,8 +16,6 @@ extension ExcerptShareTemplateEnumExtension on ExcerptShareTemplateEnum {
         return L10n.of(context).readingPageShareTemplateSimple;
       case ExcerptShareTemplateEnum.elegantTemplate:
         return L10n.of(context).readingPageShareTemplateElegant;
-      case ExcerptShareTemplateEnum.verticalTemplate:
-        return L10n.of(context).readingPageShareTemplateModern;
     }
   }
 }

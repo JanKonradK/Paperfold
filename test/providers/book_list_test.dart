@@ -53,8 +53,8 @@ void main() {
     final books = [
       Book.mock().copyWith(
         id: 1,
-        title: '世界',
-        author: '张伟',
+        title: 'zoo',
+        author: 'dave',
         updateTime: DateTime.utc(2026, 1, 4),
         createTime: DateTime.utc(2026, 1, 3),
         readingPercentage: .25,
@@ -62,14 +62,14 @@ void main() {
       Book.mock().copyWith(
         id: 2,
         title: 'Alpha',
-        author: '王伟',
+        author: 'Carol',
         updateTime: DateTime.utc(2026, 1, 2),
         createTime: DateTime.utc(2026, 1, 4),
         readingPercentage: 1,
       ),
       Book.mock().copyWith(
         id: 3,
-        title: '你好',
+        title: 'Zen',
         author: 'Alice',
         updateTime: DateTime.utc(2026, 1, 1),
         createTime: DateTime.utc(2026, 1, 2),
@@ -78,7 +78,7 @@ void main() {
       Book.mock().copyWith(
         id: 4,
         title: 'Zebra',
-        author: '李伟',
+        author: 'bob',
         updateTime: DateTime.utc(2026, 1, 3),
         createTime: DateTime.utc(2026, 1, 1),
         readingPercentage: .5,

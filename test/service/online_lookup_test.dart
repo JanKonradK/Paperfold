@@ -1,22 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:paperfold/page/opds/book_web_page.dart';
 import 'package:paperfold/service/open_library.dart';
-import 'package:paperfold/service/translate/google_web.dart';
-import 'package:paperfold/service/translate/index.dart';
 
 void main() {
-  test('Google translation reads detected and given source responses', () {
-    expect(parseGoogleWebResponse('[["Dzień dobry","en"]]'), 'Dzień dobry');
-    expect(parseGoogleWebResponse('["Guten Tag"]'), 'Guten Tag');
-    expect(() => parseGoogleWebResponse('[""]'), throwsFormatException);
-  });
-
-  test('the retired Bing web page falls back to Google', () {
-    expect(getTranslateService('bingWeb'), TranslateService.googleWeb);
-    expect(getTranslateService('microsoft'), TranslateService.microsoftApi);
-    expect(getTranslateService('deepl'), TranslateService.deepl);
-  });
-
   test('Open Library search keeps usable matches', () {
     final matches = parseOpenLibrarySearch({
       'docs': [
