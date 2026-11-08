@@ -6,6 +6,8 @@ import android.view.WindowManager
 import android.content.res.Configuration
 import android.content.Intent
 import android.os.Build
+import android.view.KeyEvent
+import android.view.MotionEvent
 import androidx.core.content.FileProvider
 import io.flutter.embedding.android.FlutterFragmentActivity
 import io.flutter.embedding.engine.FlutterEngine
@@ -34,6 +36,52 @@ class MainActivity : FlutterFragmentActivity() {
     private fun restoreReaderOrientation() {
         readerOrientation?.let { requestedOrientation = it }
         readerOrientation = null
+    }
+
+    // A still page needs no fast refresh. While the reader is open, the window
+    // asks for the slowest mode at full resolution once input stops, and gives
+    // the choice back to the system on the next touch or key.
+    private var lowRefresh = false
+    private val idleRefresh = Runnable { setDisplayMode(slowestModeId()) }
+
+    private fun slowestModeId(): Int {
+        @Suppress("DEPRECATION")
+        val display = windowManager.defaultDisplay
+        val current = display.mode
+        return display.supportedModes
+            .filter { it.physicalWidth == current.physicalWidth && it.physicalHeight == current.physicalHeight }
+            .minByOrNull { it.refreshRate }?.modeId ?: 0
+    }
+
+    private fun setDisplayMode(id: Int) {
+        if (window.attributes.preferredDisplayModeId != id) {
+            window.attributes = window.attributes.apply { preferredDisplayModeId = id }
+        }
+    }
+
+    private fun onReaderInput(down: Boolean) {
+        if (!lowRefresh) return
+        window.decorView.removeCallbacks(idleRefresh)
+        if (down) setDisplayMode(0) else window.decorView.postDelayed(idleRefresh, 2000)
+    }
+
+    private fun stopLowRefresh() {
+        lowRefresh = false
+        window.decorView.removeCallbacks(idleRefresh)
+        setDisplayMode(0)
+    }
+
+    override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
+        when (ev.actionMasked) {
+            MotionEvent.ACTION_DOWN -> onReaderInput(true)
+            MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> onReaderInput(false)
+        }
+        return super.dispatchTouchEvent(ev)
+    }
+
+    override fun dispatchKeyEvent(event: KeyEvent): Boolean {
+        onReaderInput(event.action == KeyEvent.ACTION_DOWN)
+        return super.dispatchKeyEvent(event)
     }
 
     private var captureChannel: MethodChannel? = null
@@ -91,11 +139,17 @@ class MainActivity : FlutterFragmentActivity() {
                             "locked" to (readerOrientation != null)
                         ))
                         "restoreOrientation" -> { restoreReaderOrientation(); result.success(null) }
+                        "lowRefresh" -> {
+                            lowRefresh = true
+                            onReaderInput(false)
+                            result.success(null)
+                        }
                         "restore" -> {
                             window.attributes = window.attributes.apply {
                                 screenBrightness = WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_NONE
                             }
                             restoreReaderOrientation()
+                            stopLowRefresh()
                             result.success(null)
                         }
                         else -> result.notImplemented()
@@ -105,6 +159,7 @@ class MainActivity : FlutterFragmentActivity() {
                         screenBrightness = WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_NONE
                     }
                     restoreReaderOrientation()
+                    stopLowRefresh()
                     result.error("READER_WINDOW", error.message, null)
                 }
             }

@@ -104,6 +104,7 @@ class ReadingPageState extends ConsumerState<ReadingPage>
     _readTimeWatch.start();
     _sessionStart = DateTime.now();
     setAwakeTimer(Prefs().awakeTime);
+    unawaited(_readerWindow.lowRefresh());
 
     _book = widget.book;
     heroTag = widget.heroTag ?? 'preventHeroWhenStart';

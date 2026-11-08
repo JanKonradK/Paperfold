@@ -61,6 +61,19 @@ class ReaderWindow extends ChangeNotifier {
     notifyListeners();
   });
 
+  /// Lets the screen drop to its slowest refresh rate while the page is still.
+  /// [restore] ends it.
+  Future<void> lowRefresh() async {
+    if (!supported || _closed) return;
+    try {
+      await channel.invokeMethod<void>('lowRefresh');
+    } on PlatformException catch (error) {
+      debugPrint('Reader low refresh failed: $error');
+    } on MissingPluginException {
+      // No Android host in widget tests.
+    }
+  }
+
   Future<void> refresh() => _run(() async {
     try {
       final state = await channel.invokeMapMethod<String, dynamic>('state');
