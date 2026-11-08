@@ -106,7 +106,7 @@ dependencies:
   image: ^4.10.1
   image_picker: ^1.2.1
   # The daily reading reminder. Version 21 needs Flutter 3.38 and compileSdk 36.
-  flutter_local_notifications: ^21.0.0
+  flutter_local_notifications: ^22.3.3
   timezone: ^0.11.0
   flutter_timezone: ^5.0.1
 
