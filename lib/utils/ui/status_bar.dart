@@ -20,11 +20,3 @@ void showStatusBarWithoutResize() {
   );
 }
 
-void onlyStatusBar() {
-  SystemChrome.setEnabledSystemUIMode(
-    SystemUiMode.manual,
-    overlays: [
-      SystemUiOverlay.top,
-    ],
-  );
-}

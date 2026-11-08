@@ -20,13 +20,9 @@ class BookNotesPage extends ConsumerStatefulWidget {
   const BookNotesPage({
     super.key,
     required this.book,
-    required this.numberOfNotes,
-    required this.isMobile,
   });
 
   final Book book;
-  final int numberOfNotes;
-  final bool isMobile;
 
   @override
   ConsumerState<BookNotesPage> createState() => _BookNotesPageState();
@@ -349,7 +345,7 @@ class _BookNotesPageState extends ConsumerState<BookNotesPage> {
   Widget build(BuildContext context) {
     final notes = ref.watch(bookNotesControllerProvider(widget.book));
     return Scaffold(
-      appBar: widget.isMobile ? AppBar(title: Text(widget.book.title)) : null,
+      appBar: AppBar(title: Text(widget.book.title)),
       body: SafeArea(
         child: Align(
           alignment: Alignment.topCenter,

@@ -25,7 +25,6 @@ class ShelfBook {
     required this.title,
     required this.author,
     required this.binding,
-    this.blurb,
     this.coverPath,
     this.progress = 0,
     this.finished = false,
@@ -39,7 +38,6 @@ class ShelfBook {
   final String id;
   final String title;
   final String author;
-  final String? blurb;
   final String? coverPath;
   final BookBinding binding;
   final double progress;
@@ -79,41 +77,29 @@ class ShelfRow {
 }
 
 // Kept for callers migrating from the old stage. Books always stay shelved.
-enum ShelfPhase { shelved, held, opening }
+enum ShelfPhase { shelved }
 
 class ShelfStage extends StatefulWidget {
   const ShelfStage({
     super.key,
     required this.books,
-    this.shelfName,
     this.initialIndex = 0,
     this.onOpen,
     this.onIndexChanged,
-    this.onPickedUp,
-    this.onReturned,
-    this.onPhaseChanged,
     this.optionsBuilder,
     this.onOptions,
-    this.pickUpHint,
-    this.openHint,
     this.showCovers = false,
     this.headerBuilder,
     this.emptyBuilder,
   });
   final List<ShelfBook> books;
-  final String? shelfName;
   final int initialIndex;
-  final ValueChanged<ShelfBook>? onOpen, onPickedUp, onReturned, onOptions;
+  final ValueChanged<ShelfBook>? onOpen, onOptions;
   final ValueChanged<int>? onIndexChanged;
-  final ValueChanged<ShelfPhase>? onPhaseChanged;
   final Widget Function(BuildContext, ShelfBook)? optionsBuilder;
-  final String? pickUpHint, openHint;
   final bool showCovers;
   final WidgetBuilder? headerBuilder, emptyBuilder;
-  static const headBand = 64.0, footBand = 96.0;
-  static const runDuration = PaperfoldMotion.move;
   static const liftDuration = PaperfoldMotion.move;
-  static const returnDuration = PaperfoldMotion.move;
   static const openDuration = PaperfoldMotion.move;
   @override
   State<ShelfStage> createState() => ShelfStageState();
@@ -198,7 +184,6 @@ class ShelfStageState extends State<ShelfStage>
 
   Future<void> pickUp() => pickUpAt(_index);
   Future<void> openBook() => pickUp();
-  Future<void> putBack() async {}
   void reset() {
     if (current != null) _focus[current!.id]?.requestFocus();
   }

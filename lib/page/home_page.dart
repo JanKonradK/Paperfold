@@ -18,12 +18,10 @@ import 'package:paperfold/page/settings_page/settings_home_page.dart';
 import 'package:paperfold/page/home_page/statistics_page.dart';
 import 'package:paperfold/service/receive_file/receive_share.dart';
 import 'package:paperfold/service/reading_reminder.dart';
-import 'package:paperfold/service/vibration_service.dart';
+import 'package:flutter/services.dart';
 import 'package:paperfold/utils/check_update.dart';
-import 'package:paperfold/utils/get_path/get_temp_dir.dart';
 import 'package:paperfold/utils/load_default_font.dart';
 import 'package:paperfold/utils/log/common.dart';
-import 'package:paperfold/utils/platform_utils.dart';
 import 'package:paperfold/providers/journal_home.dart';
 import 'package:paperfold/providers/month_tracker.dart';
 import 'package:paperfold/providers/reading_challenge.dart';
@@ -37,12 +35,9 @@ import 'package:material_ui/material_ui.dart';
 import 'package:paperfold/config/paperfold_motion.dart';
 import 'package:paperfold/config/paperfold_system.dart';
 import 'package:flutter/semantics.dart';
-import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
-import 'package:url_launcher/url_launcher.dart';
 
-WebViewEnvironment? webViewEnvironment;
 
 class HomePage extends ConsumerStatefulWidget {
   const HomePage({
@@ -67,9 +62,6 @@ class _HomePageState extends ConsumerState<HomePage> {
   List<int> _destinationHistory = [1];
   final Set<int> _visitedDestinations = {1};
 
-  /// The Library's claim on the back gesture, so a held book goes back on its
-  /// shelf before back starts walking the tab history.
-  final LibraryBackHandle _libraryBack = LibraryBackHandle();
   final GlobalKey _pageStackKey = GlobalKey();
 
   /// True for the few seconds after the reader has been asked whether they
@@ -153,7 +145,6 @@ class _HomePageState extends ConsumerState<HomePage> {
     QuickCapture.pending.removeListener(_onCaptureRequest);
     CaptureLaunch.openBook.removeListener(_onOpenBookRequest);
     _leavingTimer?.cancel();
-    _libraryBack.dispose();
     super.dispose();
   }
 
@@ -174,40 +165,6 @@ class _HomePageState extends ConsumerState<HomePage> {
           duration: _leavingWindow,
         ),
       );
-  }
-
-  Future<void> _checkWindowsWebview() async {
-    final availableVersion = await WebViewEnvironment.getAvailableVersion();
-    if (!mounted) return;
-    AnxLog.info('WebView2 version: $availableVersion');
-
-    if (availableVersion == null) {
-      SmartDialog.show(
-        builder: (context) => AlertDialog(
-          title: const Icon(Icons.error),
-          content: Text(L10n.of(context).webview2NotInstalled),
-          actions: [
-            TextButton(
-              onPressed: () => {
-                launchUrl(
-                  Uri.parse(
-                    'https://developer.microsoft.com/en-us/microsoft-edge/webview2',
-                  ),
-                  mode: LaunchMode.externalApplication,
-                ),
-              },
-              child: Text(L10n.of(context).webview2Install),
-            ),
-          ],
-        ),
-      );
-    } else {
-      webViewEnvironment = await WebViewEnvironment.create(
-        settings: WebViewEnvironmentSettings(
-          userDataFolder: (await getAnxTempDir()).path,
-        ),
-      );
-    }
   }
 
   void _showDbUpdatedDialog() {
@@ -255,14 +212,7 @@ class _HomePageState extends ConsumerState<HomePage> {
     }
     loadDefaultFont();
 
-    if (AnxPlatform.isWindows) {
-      await _checkWindowsWebview();
-      if (!mounted) return;
-    }
-
-    if (AnxPlatform.isAndroid || AnxPlatform.isIOS || AnxPlatform.isOhos) {
-      receiveShareIntent(ref);
-    }
+    receiveShareIntent(ref);
     unawaited(ReadingReminder.restore(L10n.of(context)));
 
     if (DBHelper.updatedDB) {
@@ -307,7 +257,7 @@ class _HomePageState extends ConsumerState<HomePage> {
     ];
     final pages = [
       const _JournalDestination(),
-      ShelfHomePage(backHandle: _libraryBack),
+      const ShelfHomePage(),
       StatisticPage(active: _destination == 2),
       const SettingsHomePage(),
     ];
@@ -320,7 +270,7 @@ class _HomePageState extends ConsumerState<HomePage> {
     }
 
     void selectDestination(int index) {
-      VibrationService.heavy();
+      if (!Prefs().reduceVibrationFeedback) HapticFeedback.heavyImpact();
       if (index == _destination) {
         return;
       }
@@ -365,33 +315,21 @@ class _HomePageState extends ConsumerState<HomePage> {
       ],
     );
 
-    // Rebuilt whenever the Library takes or releases its claim, because
-    // `canPop` is read at build time and a book leaves the shelf without this
-    // page rebuilding for any other reason.
     return Theme(
       data: paperfoldLibraryTheme(Theme.of(context)),
-      child: ListenableBuilder(
-        listenable: _libraryBack,
-        builder: (context, child) => PopScope<Object?>(
-          // Only the armed second press leaves. Everything else is ours to
-          // answer, so that the last back on the shelf asks before it closes the
-          // application rather than closing it.
-          canPop:
-              _leaving &&
-              _destinationHistory.length <= 1 &&
-              !(_destination == 1 && _libraryBack.canTakeBack),
-          onPopInvokedWithResult: (didPop, result) {
-            if (didPop) return;
-            // The Library first. Only one of the three may act on one press.
-            if (_destination == 1 && _libraryBack.takeBack()) return;
-            if (_destinationHistory.length > 1) {
-              handleBack(didPop, result);
-              return;
-            }
-            _armLeaving(context);
-          },
-          child: child!,
-        ),
+      child: PopScope<Object?>(
+        // Only the armed second press leaves. Everything else is ours to
+        // answer, so that the last back on the shelf asks before it closes the
+        // application rather than closing it.
+        canPop: _leaving && _destinationHistory.length <= 1,
+        onPopInvokedWithResult: (didPop, result) {
+          if (didPop) return;
+          if (_destinationHistory.length > 1) {
+            handleBack(didPop, result);
+            return;
+          }
+          _armLeaving(context);
+        },
         // One design on every width: the page runs on behind the floating
         // glass bar. The Scaffold adds the bar to the body's bottom padding,
         // so a scroll view that honours MediaQuery padding stops its last

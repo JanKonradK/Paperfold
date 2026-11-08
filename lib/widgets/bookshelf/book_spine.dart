@@ -25,13 +25,6 @@ class BookSpineVisual {
 
 /// Stable bookcloth colours shared by flat spines and cover fallbacks.
 abstract final class BookSpine {
-  /// One bay of the bookcase, and how much of that bay is book.
-  ///
-  /// Only the loading skeleton reads this now. It has to stand as tall as the
-  /// shelf it stands in for, or the screen jumps when the books arrive.
-  static const double _bayHeight = 318;
-  static const double _bookHeight = 280;
-
   static final List<Color> _bookclothBackgrounds = List<Color>.unmodifiable([
     PaperfoldTokens.darkSienna,
     PaperfoldTokens.softDove,
@@ -124,12 +117,5 @@ abstract final class BookSpine {
         contrastRatio: bestContrast,
       );
     });
-  }
-
-  /// One bay of the bookcase, grown for accessibility text so a large system
-  /// font does not clip the books standing in it.
-  static double shelfStageHeight(TextScaler textScaler) {
-    final scale = math.max(1, textScaler.scale(16) / 16);
-    return (_bayHeight - _bookHeight) + _bookHeight * scale;
   }
 }

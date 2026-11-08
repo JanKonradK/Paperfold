@@ -18,7 +18,6 @@ import 'package:paperfold/page/book_player/epub_player.dart';
 import 'package:paperfold/providers/sync.dart';
 import 'package:paperfold/utils/toast/common.dart';
 import 'package:paperfold/utils/ui/status_bar.dart';
-import 'package:paperfold/widgets/reading_page/notes_widget.dart';
 import 'package:paperfold/widgets/reading_page/reader_chrome.dart';
 import 'package:paperfold/models/reading_time.dart';
 import 'package:paperfold/widgets/reading_page/progress_widget.dart';
@@ -31,8 +30,10 @@ import 'package:flutter/services.dart';
 // import 'package:flutter/foundation.dart'
 // show debugPrint, defaultTargetPlatform, TargetPlatform;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:pointer_interceptor/pointer_interceptor.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
+import 'package:paperfold/config/paperfold_system.dart';
+import 'package:paperfold/widgets/book_notes/book_notes_list.dart';
+import 'package:paperfold/widgets/reading_page/widget_title.dart';
 
 class ReadingPage extends ConsumerStatefulWidget {
   const ReadingPage({
@@ -221,29 +222,6 @@ class ReadingPageState extends ConsumerState<ReadingPage>
       return KeyEventResult.handled;
     }
 
-    // Handle Ctrl+[ and Ctrl+] for page turning when keyboard shortcut is enabled
-    if (Prefs().keyboardShortcutTurnPage) {
-      final isControlPressed = HardwareKeyboard.instance.isControlPressed;
-      if (isControlPressed && logicalKey == LogicalKeyboardKey.bracketLeft) {
-        epubPlayerKey.currentState?.prevPage();
-        return KeyEventResult.handled;
-      }
-      if (isControlPressed && logicalKey == LogicalKeyboardKey.bracketRight) {
-        epubPlayerKey.currentState?.nextPage();
-        return KeyEventResult.handled;
-      }
-      final bool isSimulatedCtrlLeft = event.character == '\u001b';
-      final bool isSimulatedCtrlRight = event.character == '\u001d';
-      if (isSimulatedCtrlLeft) {
-        epubPlayerKey.currentState?.prevPage();
-        return KeyEventResult.handled;
-      }
-      if (isSimulatedCtrlRight) {
-        epubPlayerKey.currentState?.nextPage();
-        return KeyEventResult.handled;
-      }
-    }
-
     if (Prefs().volumeKeyTurnPage) {
       if (event.physicalKey == PhysicalKeyboardKey.audioVolumeUp) {
         epubPlayerKey.currentState?.prevPage();
@@ -411,7 +389,7 @@ class ReadingPageState extends ConsumerState<ReadingPage>
   void noteHandler() {
     _showTool(
       ReaderTool.notes,
-      ReadingNotes(book: _book, onFacingPage: _facingPage),
+      _ReadingNotes(book: _book, onFacingPage: _facingPage),
     );
   }
 
@@ -420,7 +398,6 @@ class ReadingPageState extends ConsumerState<ReadingPage>
       ReaderTool.progress,
       ProgressWidget(
         epubPlayerKey: epubPlayerKey,
-        showOrHideAppBarAndBottomBar: showOrHideAppBarAndBottomBar,
       ),
     );
   }
@@ -512,34 +489,29 @@ class ReadingPageState extends ConsumerState<ReadingPage>
   @override
   Widget build(BuildContext context) {
     final hasPanel = !identical(_currentPage, empty);
-    final controller = PointerInterceptor(
-      intercepting: !bottomBarOffstage,
-      child: ReaderChrome(
-        visible: !bottomBarOffstage,
-        title: _book.title,
-        bookmarkExists: bookmarkExists,
-        activeTool: _activeTool,
-        panel: hasPanel ? _currentPage : null,
-        onDismiss: () => showOrHideAppBarAndBottomBar(false),
-        onBack: _back,
-        chapter: epubPlayerKey.currentState?.chapterTitle ?? '',
-        percentage: epubPlayerKey.currentState?.percentage ?? 0,
-        onAdvanced: () => showMoreSettings(ReadingSettings.theme),
-        onBookmark: _toggleBookmark,
-        onCopyChapter: _copyChapter,
-        onBookDetails: () => Navigator.push(
-          context,
-          CupertinoPageRoute(
-            builder: (context) => BookDetail(book: widget.book),
-          ),
-        ),
-        onContents: tocHandler,
-        onSearch: _searchHandler,
-        onBookmarks: _bookmarksHandler,
-        onNotes: noteHandler,
-        onProgress: progressHandler,
-        onStyle: styleHandler,
+    final controller = ReaderChrome(
+      visible: !bottomBarOffstage,
+      title: _book.title,
+      bookmarkExists: bookmarkExists,
+      activeTool: _activeTool,
+      panel: hasPanel ? _currentPage : null,
+      onDismiss: () => showOrHideAppBarAndBottomBar(false),
+      onBack: _back,
+      chapter: epubPlayerKey.currentState?.chapterTitle ?? '',
+      percentage: epubPlayerKey.currentState?.percentage ?? 0,
+      onAdvanced: () => showMoreSettings(ReadingSettings.theme),
+      onBookmark: _toggleBookmark,
+      onCopyChapter: _copyChapter,
+      onBookDetails: () => Navigator.push(
+        context,
+        CupertinoPageRoute(builder: (context) => BookDetail(book: widget.book)),
       ),
+      onContents: tocHandler,
+      onSearch: _searchHandler,
+      onBookmarks: _bookmarksHandler,
+      onNotes: noteHandler,
+      onProgress: progressHandler,
+      onStyle: styleHandler,
     );
 
     return PopScope(
@@ -580,7 +552,6 @@ class ReadingPageState extends ConsumerState<ReadingPage>
                       Positioned.fill(
                         child: MouseRegion(
                           onHover: (PointerHoverEvent detail) {
-                            if (!Prefs().showMenuOnHover) return;
                             var y = detail.position.dy;
                             if (y < 30 ||
                                 y > MediaQuery.of(context).size.height - 30) {
@@ -615,6 +586,41 @@ class ReadingPageState extends ConsumerState<ReadingPage>
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _ReadingNotes extends StatelessWidget {
+  const _ReadingNotes({required this.book, required this.onFacingPage});
+
+  final Book book;
+  final VoidCallback onFacingPage;
+
+  @override
+  Widget build(BuildContext context) {
+    // The panel used to reserve screen height minus a constant, which left it
+    // either clipped or floating on a screen the constant did not match. The
+    // shell that holds the panel bounds it now, so it only has to fill what it
+    // is given.
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: PaperfoldSpace.md),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          widgetTitle(context, L10n.of(context).navBarNotes, null),
+          TextButton.icon(
+            onPressed: onFacingPage,
+            icon: const Icon(Icons.auto_stories_outlined),
+            label: Text(L10n.of(context).facingPage),
+          ),
+          Flexible(
+            child: ListView(
+              children: [BookNotesList(book: book, reading: true)],
+            ),
+          ),
+        ],
       ),
     );
   }

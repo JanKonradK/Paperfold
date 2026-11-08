@@ -1,5 +1,4 @@
 import 'package:paperfold/enums/book_sync_status.dart';
-import 'package:paperfold/widgets/bookshelf/spining_sync_icon.dart';
 import 'package:material_ui/material_ui.dart';
 
 class BookSyncStatusIcon extends StatelessWidget {
@@ -83,7 +82,7 @@ class BookSyncStatusIcon extends StatelessWidget {
       BookSyncStatusEnum.downloading => Stack(
           children: [
             Center(
-              child: SpiningSyncIcon(
+              child: _SpinningSyncIcon(
                 size: iconSize,
                 color: color,
               ),
@@ -100,7 +99,7 @@ class BookSyncStatusIcon extends StatelessWidget {
       BookSyncStatusEnum.uploading => Stack(
           children: [
             Center(
-              child: SpiningSyncIcon(
+              child: _SpinningSyncIcon(
                 size: iconSize,
                 color: color,
               ),
@@ -122,6 +121,53 @@ class BookSyncStatusIcon extends StatelessWidget {
       width: iconSize,
       height: iconSize,
       child: child,
+    );
+  }
+}
+
+class _SpinningSyncIcon extends StatefulWidget {
+  const _SpinningSyncIcon({
+    this.size = 16,
+    this.color = Colors.grey,
+  });
+
+  final double size;
+  final Color color;
+
+  @override
+  State<_SpinningSyncIcon> createState() => _SpinningSyncIconState();
+}
+
+class _SpinningSyncIconState extends State<_SpinningSyncIcon>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: const Duration(seconds: 2),
+      vsync: this,
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return RotationTransition(
+      turns: Tween(begin: 0.0, end: -1.0).animate(_controller),
+      child: Center(
+        child: Icon(
+          Icons.sync,
+          color: widget.color,
+          size: widget.size,
+        ),
+      ),
     );
   }
 }

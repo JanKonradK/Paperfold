@@ -47,19 +47,6 @@ class ThemeDao extends BaseDao {
     );
   }
 
-  Future<ReadTheme> selectReadThemeById(int id) async {
-    final theme = await querySingle(
-      table,
-      mapper: ReadTheme.fromDb,
-      where: 'id = ?',
-      whereArgs: [id],
-    );
-
-    if (theme == null) {
-      throw StateError('Theme with id $id not found');
-    }
-    return theme;
-  }
 }
 
 final themeDao = ThemeDao();

@@ -23,7 +23,6 @@ import 'package:paperfold/models/reading_rules.dart';
 import 'package:paperfold/models/search_result_model.dart';
 import 'package:paperfold/models/toc_item.dart';
 import 'package:paperfold/page/book_player/image_viewer.dart';
-import 'package:paperfold/page/home_page.dart';
 import 'package:paperfold/page/reading_page.dart';
 import 'package:paperfold/providers/book_list.dart';
 import 'package:paperfold/providers/book_toc.dart';
@@ -34,7 +33,6 @@ import 'package:paperfold/service/book_player/book_player_server.dart';
 import 'package:paperfold/providers/toc_search.dart';
 import 'package:paperfold/utils/coordinates_to_part.dart';
 import 'package:paperfold/utils/js/convert_dart_color_to_js.dart';
-import 'package:paperfold/utils/platform_utils.dart';
 import 'package:paperfold/models/book_note.dart';
 import 'package:paperfold/utils/log/common.dart';
 import 'package:paperfold/utils/webView/gererate_url.dart';
@@ -51,7 +49,6 @@ import 'package:flutter/gestures.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:pointer_interceptor/pointer_interceptor.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'minute_clock.dart';
@@ -176,10 +173,6 @@ class EpubPlayerState extends ConsumerState<EpubPlayer>
   int? _batteryLevel;
   Timer? _batteryTimer;
 
-  // to know anytime if we are on top of navigation stack
-  bool get _isTopOfNavigationStack =>
-      ModalRoute.of(context)?.isCurrent ?? false;
-
   void prevPage() {
     if (Prefs().pageTurnStyle.isShaderCurl) {
       unawaited(_turnWithCurl(forward: false));
@@ -290,8 +283,6 @@ class EpubPlayerState extends ConsumerState<EpubPlayer>
         bgimgBlur: ${Prefs().bgimg.blur},
         bgimgOpacity: ${Prefs().bgimg.opacity},
         bgimgFit: '${Prefs().bgimgFit.code}',
-        customCSS: `${Prefs().customCSS.replaceAll('`', '\\`')}`,
-        customCSSEnabled: ${Prefs().customCSSEnabled},
         useBookStyles: ${Prefs().useBookStyles},
         headingFontSize: ${style.headingFontSize},
         codeHighlightTheme: '${Prefs().codeHighlightTheme.code}',
@@ -551,9 +542,6 @@ class EpubPlayerState extends ConsumerState<EpubPlayer>
 
   Future<String> theChapterContent() async =>
       await webViewController.evaluateJavascript(source: "theChapterContent()");
-
-  Future<String> previousContent(int count) async => await webViewController
-      .evaluateJavascript(source: "previousContent($count)");
 
   Future<String> _getCurrentChapterContent({int? maxCharacters}) async {
     final raw = await theChapterContent();
@@ -1058,7 +1046,8 @@ class EpubPlayerState extends ConsumerState<EpubPlayer>
   }
 
   Future<void> onWebViewCreated(InAppWebViewController controller) async {
-    if (AnxPlatform.isAndroid) {
+    // Chrome DevTools may attach to debug and profile builds only.
+    if (!kReleaseMode) {
       await InAppWebViewController.setWebContentsDebuggingEnabled(true);
     }
     // The document is up. The reader still has to lay the text out and say so,
@@ -1090,10 +1079,6 @@ class EpubPlayerState extends ConsumerState<EpubPlayer>
 
   Future<void> _handlePointerEvents(PointerEvent event) async {
     if (await isFootNoteOpen() || Prefs().pageTurnStyle == PageTurn.scroll) {
-      return;
-    }
-    // Disable scroll wheel page turning when keyboard shortcuts are enabled
-    if (Prefs().keyboardShortcutTurnPage) {
       return;
     }
     if (event is PointerScrollEvent) {
@@ -1778,32 +1763,14 @@ class EpubPlayerState extends ConsumerState<EpubPlayer>
     );
   }
 
-  Widget buildWebviewWithIOSWorkaround(BuildContext context) {
-    final webView = InAppWebView(
-      webViewEnvironment: webViewEnvironment,
-      initialUrlRequest: URLRequest(url: WebUri(_readerUrl)),
-      initialSettings: initialSettings,
-      contextMenu: contextMenu,
-      onLoadStop: (controller, uri) => onWebViewCreated(controller),
-      onConsoleMessage: webviewConsoleMessage,
-    );
-
-    if (!AnxPlatform.isIOS) {
-      return SizedBox.expand(child: webView);
-    }
-
+  Widget buildWebview(BuildContext context) {
     return SizedBox.expand(
-      child: Stack(
-        children: [
-          webView,
-          Positioned.fill(
-            child: PointerInterceptor(
-              intercepting: !_isTopOfNavigationStack,
-              debug: false,
-              child: const SizedBox.expand(),
-            ),
-          ),
-        ],
+      child: InAppWebView(
+        initialUrlRequest: URLRequest(url: WebUri(_readerUrl)),
+        initialSettings: initialSettings,
+        contextMenu: contextMenu,
+        onLoadStop: (controller, uri) => onWebViewCreated(controller),
+        onConsoleMessage: webviewConsoleMessage,
       ),
     );
   }
@@ -1818,7 +1785,7 @@ class EpubPlayerState extends ConsumerState<EpubPlayer>
         resizeToAvoidBottomInset: false,
         body: Stack(
           children: [
-            buildWebviewWithIOSWorkaround(context),
+            buildWebview(context),
             if (_showCurl && _curlFront != null && _curlVerso != null)
               Positioned.fill(
                 child: IgnorePointer(

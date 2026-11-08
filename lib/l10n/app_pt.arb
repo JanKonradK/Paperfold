@@ -98,8 +98,6 @@
   "importSupportTypes": "Tipos suportados: {types}",
   "importNBooksNotSupport": "{count, plural, =1{1 livro ainda não suportado} other{{count} livros ainda não suportados}}",
   "importImportNBooks": "{count, plural, =1{Importar 1 livro} other{Importar {count} livros}}",
-  "bookshelfTips_1": "Não há livros.",
-  "bookshelfTips_2": "Clique no botão adicionar para adicionar um livro!",
   "statisticsTips_1": "Nenhuma leitura no período selecionado.",
   "statisticsTips_2": "Um livro é um sonho que você segura nas mãos.",
   "notesTips_1": "Não há notas.",
@@ -125,8 +123,6 @@
   "readingPageFontWeight": "Peso da Fonte",
   "headingFontSize": "Tamanho do Título",
   "readingPageLetterSpacing": "Espaçamento de Letras",
-  "readingPageKeyboardShortcutTurnPage": "Atalho de Teclado para Virar Página",
-  "readingPageKeyboardShortcutTurnPageTips": "Use Ctrl+[ e Ctrl+] para virar páginas",
   "bookDetailSave": "Salvar",
   "bookDetailEdit": "Editar",
   "bookDetailNthBook": "{count, plural, =1{1º livro que você leu} =2{2º livro que você leu} few{3º livro que você leu} other{{count}º livro que você leu}}",
@@ -192,7 +188,6 @@
   "storageFontFile": "Arquivo da Fonte",
   "storageDataFileDetails": "Detalhes do Arquivo de Dados",
   "storageClearCache": "Limpar Cache",
-  "serviceImportSuccess": "Importação bem-sucedida",
   "webdavSyncing": "Sincronizando",
   "webdavSyncingFiles": "Sincronizando arquivos",
   "webdavSyncComplete": "Sincronização concluída",
@@ -205,7 +200,6 @@
   "webdavSyncAborted": "Sincronização cancelada",
   "webdavSyncAbortedContent": "Falha ao obter dados do WebDAV, dados remotos estão vazios. Verifique o seguinte:\n1. Conexão de rede\n2. Certifique-se de que dados de leitura válidos foram enviados para o WebDAV em outros dispositivos\n\nEm seguida, tente enviar dados para o WebDAV",
   "webdavSyncDirection": "Os dados do WebDAV podem ter sido modificados por outros dispositivos, escolha como lidar com os dados",
-  "settingsSync": "Sincronização",
   "settingsSyncWebdav": "WebDAV",
   "settingsSyncEnableWebdav": "Habilitar WebDAV",
   "settingsSyncWebdavUrl": "URL do WebDAV",
@@ -229,15 +223,12 @@
   "settingsTranslateAuto": "Automático",
   "settingsReading": "Leitura",
   "settingsBookshelf": "Estante",
-  "settingsBookshelfCover": "Capa do livro",
-  "settingsBookshelfCoverWidth": "Largura da capa do livro",
   "settingsBookshelfFolderStyle": "Estilo da pasta da estante",
   "settingsBookshelfFolderStyleOverlap": "Sobreposição",
   "settingsBookshelfFolderStyleGrid": "Grade 2x2",
   "settingsBookshelfDefaultCoverShowTitle": "Mostrar título na capa padrão",
   "settingsBookshelfDefaultCoverShowAuthor": "Mostrar autor na capa padrão",
   "storagePermissionDenied": "Permissão de armazenamento negada",
-  "galleryPermissionDenied": "Permissão de galeria negada",
   "gotoAuthorize": "Ir para autorizar",
   "settingsAdvanced": "Avançado",
   "settingsAdvancedLog": "Log",
@@ -259,8 +250,6 @@
   "webviewUnsupportedVersion": "Versão do Webview Não Suportada",
   "webviewUnsupportedMessage": "Sua versão do Webview pode não ser suportada. A versão atual é {version}, a versão mínima necessária é {minVersion}, atualize seu Webview",
   "webviewCancel": "Eu sei",
-  "webview2NotInstalled": "Falha ao encontrar um WebView2 Runtime instalado ou instalação do Microsoft Edge não estável.",
-  "webview2Install": "Ir para download",
   "bookSyncStatusNotSyncing": "Não sincronizando",
   "bookSyncStatusUploadingTitle": "Enviando",
   "bookSyncStatusDownloadingTitle": "Baixando",
@@ -360,12 +349,6 @@
   "whatsNew": "O que há de novo",
   "databaseBackupManagement": "Gerenciamento de Backup do Banco de Dados",
   "restoreBackup": "Restaurar Backup",
-  "customCssEnabled": "Habilitar CSS Personalizado",
-  "cssValidationUnmatchedBraces": "Chaves não correspondentes",
-  "cssValidationMissingSemicolon": "Ponto e vírgula ausente na linha {lineNumber}",
-  "cssSaveAndApply": "Salvar e Aplicar",
-  "cssRestoreDefault": "Restaurar Padrão",
-  "cssEditorHint": "Seu CSS personalizado aqui...",
   "md5Management": "Desduplicação de Arquivos",
   "md5Statistics": "Estatísticas MD5",
   "md5TotalBooks": "Total de livros: {count}",
@@ -391,8 +374,6 @@
   "skipDuplicateFiles": "Pular Arquivos Duplicados",
   "readingPageSwapPageTurnArea": "Trocar Área de Virar Página",
   "readingPageSwapPageTurnAreaTips": "Transformar a área anterior em área seguinte",
-  "readingPageShowMenuOnHover": "Mostrar Menu ao Passar o Mouse",
-  "readingPageShowMenuOnHoverTips": "Mostrar automaticamente o menu ao passar o mouse sobre a borda superior ou inferior da janela para facilitar o acesso",
   "readingPageShowActionLabels": "Mostrar Rótulos de Ação",
   "readingPageShowActionLabelsTips": "Mostrar texto abaixo de botões de ação com estilo de ícone, como o menu de contexto de seleção",
   "pageTurnModeSimple": "Simples",
@@ -432,7 +413,6 @@
   "close": "Fechar",
   "statisticsSwipeToDeleteHint": "Deslize para a esquerda para excluir registros de leitura. Você pode desfazer nesta página, mas as alterações são permanentes depois de sair.",
   "bookNotesOperationsHint": "Pressione e segure para seleção múltipla para excluir ou exportar, deslize para a esquerda para editar ou compartilhar notas",
-  "searchBooksOrNotes": "Pesquisar livros ou notas",
   "startTypingToSearch": "Comece a digitar para pesquisar",
   "nothingHere": "Nada aqui",
   "books": "Livros",
@@ -535,7 +515,6 @@
   "bookshelfFilterReading": "Lendo",
   "bookshelfFilterNotStarted": "Não iniciado",
   "settingsNarrateClickForHelp": "Clique aqui para ajuda",
-  "translateBingWeb": "Tradução Web Bing",
   "translateGoogleWeb": "Tradução Web Google",
   "translateMicrosoftAzure": "Microsoft Azure API",
   "translateGoogleCloud": "Google Cloud API",
@@ -547,22 +526,6 @@
   "translateAzureApiKeyDescription": "Chave API Azure Cognitive Services",
   "translateGoogleApiKeyDescription": "Chave API Google Cloud Translation",
   "translateAzureRegionDescription": "Região Azure (ex: global, westus)",
-  "migrationInProgress": "Migrando dados...",
-  "migrationComplete": "Migração concluída",
-  "migrationFailed": "Migração falhou",
-  "migrationDoNotClose": "Por favor, não feche o aplicativo durante a migração",
-  "migrationCurrentItem": "Migrando",
-  "migrationPreparing": "Preparando...",
-  "storageCustomLocation": "Local de armazenamento personalizado",
-  "storageCurrentPath": "Caminho atual",
-  "storageNewPath": "Novo caminho",
-  "storageSelectPath": "Selecionar novo local",
-  "storageMigrateData": "Iniciar migração",
-  "storageResetPath": "Redefinir para o padrão",
-  "storagePathNotEmpty": "Por favor, selecione uma pasta vazia",
-  "storageMigrationSuccess": "Migração concluída. Reinicie o aplicativo.",
-  "storageMigrationFailed": "Falha na migração. Os dados permanecem no local original.",
-  "storagePathNoPermission": "Sem permissão de gravação para a pasta selecionada",
   "bookBottomSheetReplaceFile": "Substituir arquivo",
   "bookBottomSheetOriginalFileSize": "Tamanho do arquivo original: {size}",
   "bookBottomSheetNewFileSize": "Tamanho do novo arquivo: {size}",
@@ -603,7 +566,6 @@
   "settingsAdvancedHttpProxyTestFailed": "Falha na conexão",
   "navLibrary": "Biblioteca",
   "navJournal": "Diário",
-  "navMore": "Mais",
   "shelfHomeTitle": "Minhas estantes",
   "shelfReadingNow": "Lendo agora",
   "shelfAllTimeFavourites": "Favoritos de todos os tempos",
@@ -628,7 +590,6 @@
   "bookCoverSemanticLabel": "Abrir {title}",
   "bookOptionsSemanticHint": "Pressione e segure para ver as opções do livro",
   "journalPlaceholderTitle": "Guarde suas reflexões aqui",
-  "journalPlaceholderBody": "Abra o diário de um livro na biblioteca para adicionar uma resenha ou suas reflexões.",
   "journalPagesCount": "{count, plural, =1{1 página} other{{count} páginas}}",
   "@journalPagesCount": {
     "placeholders": {
@@ -689,42 +650,8 @@
   },
   "challengeLegendFinished": "Lido",
   "challengeLegendReading": "Lendo",
-  "challengeLegendEmpty": "Quero ler",
   "challengeSetTarget": "Alterar a meta",
   "challengeTargetLabel": "Livros neste ano",
-  "challengeShelfSemanticLabel": "Estante do desafio de leitura. {finished} de {target} livros lidos, {reading} em leitura.",
-  "@challengeShelfSemanticLabel": {
-    "placeholders": {
-      "finished": {
-        "type": "int"
-      },
-      "target": {
-        "type": "int"
-      },
-      "reading": {
-        "type": "int"
-      }
-    }
-  },
-  "challengeSlotFilled": "Lombada {slot}: {title}",
-  "@challengeSlotFilled": {
-    "placeholders": {
-      "slot": {
-        "type": "int"
-      },
-      "title": {
-        "type": "String"
-      }
-    }
-  },
-  "challengeSlotEmpty": "A lombada {slot} está vazia.",
-  "@challengeSlotEmpty": {
-    "placeholders": {
-      "slot": {
-        "type": "int"
-      }
-    }
-  },
   "monthTrackerTitle": "Acompanhamento mensal",
   "monthTrackerPagesTotal": "{count, plural, =0{Nenhuma página neste mês} =1{1 página neste mês} other{{count} páginas neste mês}}",
   "@monthTrackerPagesTotal": {
@@ -784,9 +711,7 @@
       }
     }
   },
-  "opdsCatalogs": "Catálogos",
   "opdsFindBooksOnline": "Encontrar livros online",
-  "opdsCatalogsEmpty": "Ainda não há catálogos.",
   "opdsAddCatalog": "Adicionar um catálogo",
   "opdsCatalogName": "Nome",
   "opdsCatalogUrl": "Endereço",
@@ -873,25 +798,6 @@
   },
   "bookBindingWhyPublicDomain": "Uma transcrição em domínio público de um livro antigo.",
   "bookBindingWhyDefault": "Este livro não informa a encadernação, então será usado o padrão da biblioteca.",
-  "bookModelSemanticLabel": "{title}, de {author}. Toque para abrir o livro.",
-  "@bookModelSemanticLabel": {
-    "placeholders": {
-      "title": {
-        "type": "String"
-      },
-      "author": {
-        "type": "String"
-      }
-    }
-  },
-  "bookModelSemanticLabelNoAuthor": "{title}. Toque para abrir o livro.",
-  "@bookModelSemanticLabelNoAuthor": {
-    "placeholders": {
-      "title": {
-        "type": "String"
-      }
-    }
-  },
   "settingsDefaultBinding": "Encadernação padrão",
   "settingsDefaultBindingDescription": "Encadernação para livros sem informação de formato. Mangás, light novels e romances modernos continuam com capa flexível; livros antigos, com capa dura.",
   "settingsBookshelfUniformSpines": "Lombadas uniformes",
@@ -991,13 +897,10 @@
     }
   },
   "bookBindingAskDecide": "Decidir por mim",
-  "shelfPickUpHint": "Escolher este livro",
-  "shelfOpenHint": "Abrir este livro",
   "shelfBookOptions": "Opções do livro",
   "shelfBookOptionDetails": "Detalhes",
   "shelfBookOptionShelves": "Estantes",
   "shelfBookOptionCustomise": "Personalizar",
-  "shelfBookOptionNotes": "Notas",
   "shelfBookShelvesTitle": "Mover ou adicionar a uma estante",
   "shelfBookCustomiseTitle": "Personalizar este livro",
   "shelfBookCoverArt": "Imagem da capa",
@@ -1011,9 +914,6 @@
   "settingsDeveloperOptionsEnable": "Ativar opções do desenvolvedor",
   "settingsDeveloperOptionsEnableDescription": "Desative para ocultar a opção de desenvolvedor nas configurações.",
   "settingsDeveloperOptionsEnabledToast": "Opções do desenvolvedor ativadas",
-  "settingsDeveloperVibrationTest": "Teste de vibração",
-  "settingsDeveloperVibrationTestDescription": "Verifique o que o dispositivo suporta e teste cada padrão.",
-  "settingsQuickSettings": "Configurações rápidas",
   "commonLoadFailedTitle": "Não foi possível carregar este item.",
   "commonLoadFailedBody": "Ocorreu um erro ao ler seus livros. Tente novamente.",
   "notesLoadFailed": "Não foi possível carregar suas notas.",
@@ -1028,7 +928,6 @@
   "readingPageDeleteTheme": "Excluir este tema",
   "journalSaveFailed": "Não foi possível salvar suas alterações. Permaneça nesta página e tente novamente.",
   "journalLoadFailed": "Não foi possível carregar seu diário.",
-  "storageMigrationScheduled": "Reinicie o aplicativo para mover sua biblioteca para a pasta selecionada.",
   "appStartupFailed": "Não foi possível iniciar o Paperfold.",
   "appStartupFailedBody": "Feche o aplicativo e abra-o novamente. Se o problema continuar, verifique se a pasta da biblioteca está disponível.",
   "searchLibraryHint": "Buscar em livros, notas e diário",
@@ -1042,7 +941,6 @@
     }
   },
   "journalBooks": "Diários dos livros",
-  "journalHighlightsOverview": "Releia trechos e notas da sua biblioteca.",
   "challengeSaveFailed": "Não foi possível salvar sua meta. Tente novamente.",
   "monthTrackerSaveFailed": "Não foi possível salvar o total de páginas. Tente novamente.",
   "monthTrackerInvalidPages": "Insira um número inteiro de páginas, igual ou maior que 0.",
@@ -1051,7 +949,6 @@
   "monthTrackerManualEntryHint": "Registre o total de páginas de cada dia. O tempo de leitura é acompanhado separadamente.",
   "journalAddPassage": "Adicionar ao diário",
   "journalOpenPassage": "Abrir trecho",
-  "journalPassageAdded": "Trecho adicionado ao diário.",
   "journalPassageSaveFailed": "Não foi possível adicionar o trecho. Tente novamente.",
   "journalThoughtsHint": "Escreva suas reflexões sobre este trecho…",
   "journalBookOverview": "Seu diário de leitura",
@@ -1062,7 +959,6 @@
   "journalExportEmpty": "Adicione uma resenha ou uma página antes de exportar seu diário.",
   "journalExportFailed": "Não foi possível exportar seu diário. Tente novamente.",
   "journalExportSaved": "Seu diário foi exportado.",
-  "journalNoReview": "Ainda não há resenha",
   "journalReadBook": "Ler livro",
   "journalDeletePage": "Excluir página",
   "journalDeletePageConfirm": "Excluir esta página e o trecho salvo? Esta ação não pode ser desfeita.",
@@ -1110,12 +1006,6 @@
   "settingsCatalogs": "Catálogos",
   "captureLogPages": "Registar páginas",
   "captureWriteNote": "Escrever uma nota",
-  "widgetContinue": "Continuar a ler",
-  "widgetQuickCapture": "Registo rápido",
-  "captureNote": "Nota",
-  "captureQuote": "Citação",
-  "widgetContinueDescription": "Continue o livro atual ou registe páginas.",
-  "widgetCaptureDescription": "Guarde uma nota, uma citação ou o progresso de leitura.",
   "newEntry": "Nova entrada",
   "recentEntries": "Entradas recentes",
   "entryNote": "Nota",

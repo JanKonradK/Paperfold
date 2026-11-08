@@ -1,6 +1,6 @@
 import 'package:material_ui/material_ui.dart';
 
-enum AnxButtonType { filled, outlined, text }
+enum AnxButtonType { filled, outlined }
 
 class AnxButton extends StatelessWidget {
   const AnxButton({
@@ -27,7 +27,6 @@ class AnxButton extends StatelessWidget {
     required this.label,
     this.disabled = false,
     this.isLoading = false,
-    this.type = AnxButtonType.filled,
     this.style,
     this.onLongPress,
     this.onHover,
@@ -35,24 +34,8 @@ class AnxButton extends StatelessWidget {
     this.focusNode,
     this.autofocus = false,
     this.clipBehavior = Clip.none,
-  }) : child = null;
-
-  const AnxButton.text({
-    super.key,
-    required this.onPressed,
-    required this.child,
-    this.disabled = false,
-    this.isLoading = false,
-    this.style,
-    this.onLongPress,
-    this.onHover,
-    this.onFocusChange,
-    this.focusNode,
-    this.autofocus = false,
-    this.clipBehavior = Clip.none,
-  })  : icon = null,
-        label = null,
-        type = AnxButtonType.text;
+  })  : child = null,
+        type = AnxButtonType.filled;
 
   const AnxButton.outlined({
     super.key,
@@ -140,18 +123,6 @@ class AnxButton extends StatelessWidget {
             clipBehavior: clipBehavior,
             child: child,
           );
-        case AnxButtonType.text:
-          return TextButton(
-            onPressed: effectiveOnPressed,
-            onLongPress: effectiveOnLongPress,
-            onHover: onHover,
-            onFocusChange: onFocusChange,
-            style: style,
-            focusNode: focusNode,
-            autofocus: autofocus,
-            clipBehavior: clipBehavior,
-            child: child,
-          );
       }
     }
 
@@ -170,47 +141,18 @@ class AnxButton extends StatelessWidget {
             )
           : icon!;
 
-      switch (type) {
-        case AnxButtonType.filled:
-          return FilledButton.icon(
-            onPressed: effectiveOnPressed,
-            onLongPress: effectiveOnLongPress,
-            onHover: onHover,
-            onFocusChange: onFocusChange,
-            style: style,
-            focusNode: focusNode,
-            autofocus: autofocus,
-            clipBehavior: clipBehavior,
-            icon: iconToUse,
-            label: label!,
-          );
-        case AnxButtonType.outlined:
-          return OutlinedButton.icon(
-            onPressed: effectiveOnPressed,
-            onLongPress: effectiveOnLongPress,
-            onHover: onHover,
-            onFocusChange: onFocusChange,
-            style: style,
-            focusNode: focusNode,
-            autofocus: autofocus,
-            clipBehavior: clipBehavior,
-            icon: iconToUse,
-            label: label!,
-          );
-        case AnxButtonType.text:
-          return TextButton.icon(
-            onPressed: effectiveOnPressed,
-            onLongPress: effectiveOnLongPress,
-            onHover: onHover,
-            onFocusChange: onFocusChange,
-            style: style,
-            focusNode: focusNode,
-            autofocus: autofocus,
-            clipBehavior: clipBehavior,
-            icon: iconToUse,
-            label: label!,
-          );
-      }
+      return FilledButton.icon(
+        onPressed: effectiveOnPressed,
+        onLongPress: effectiveOnLongPress,
+        onHover: onHover,
+        onFocusChange: onFocusChange,
+        style: style,
+        focusNode: focusNode,
+        autofocus: autofocus,
+        clipBehavior: clipBehavior,
+        icon: iconToUse,
+        label: label!,
+      );
     }
 
     // Non-icon constructors

@@ -5,7 +5,6 @@ import 'package:paperfold/dao/book.dart';
 import 'package:paperfold/l10n/generated/L10n.dart';
 import 'package:paperfold/models/md5_statistics.dart';
 import 'package:paperfold/page/settings_page/subpage/chapter_split_rules_page.dart';
-import 'package:paperfold/page/settings_page/subpage/log_page.dart';
 import 'package:paperfold/page/changelog_screen.dart';
 import 'package:paperfold/page/onboarding_screen.dart';
 import 'package:paperfold/service/md5_service.dart';
@@ -83,25 +82,6 @@ class _AdvancedSettingState extends State<AdvancedSetting> {
                   ),
                 );
               },
-            ),
-          ],
-        ),
-        SettingsSection(
-          title: Text(L10n.of(context).settingsAdvancedLog),
-          tiles: [
-            SettingsTile.switchTile(
-              title: Text(L10n.of(context).settingsAdvancedClearLogWhenStart),
-              leading: const Icon(Icons.delete_forever_outlined),
-              initialValue: Prefs().clearLogWhenStart,
-              onToggle: (value) {
-                Prefs().saveClearLogWhenStart(value);
-                setState(() {});
-              },
-            ),
-            SettingsTile.navigation(
-              leading: const Icon(Icons.bug_report),
-              title: Text(L10n.of(context).settingsAdvancedLog),
-              onPressed: onLogPressed,
             ),
           ],
         ),
@@ -612,12 +592,5 @@ Future<void> _showOnboarding(BuildContext context) async {
         },
       ),
     ),
-  );
-}
-
-void onLogPressed(BuildContext context) {
-  Navigator.push(
-    context,
-    CupertinoPageRoute(builder: (context) => const LogPage()),
   );
 }

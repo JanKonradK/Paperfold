@@ -1,6 +1,5 @@
 import 'package:paperfold/widgets/reading_page/style_widget.dart';
 import 'package:paperfold/config/paperfold_system.dart';
-import 'package:paperfold/utils/platform_utils.dart';
 
 import 'package:paperfold/config/shared_preference_provider.dart';
 import 'package:paperfold/enums/page_turn_mode.dart';
@@ -279,35 +278,7 @@ class _OtherSettingsState extends State<OtherSettings> {
       );
     }
 
-    ListTile showMenuOnHover() {
-      return ListTile(
-        contentPadding: EdgeInsets.zero,
-        title: Text(L10n.of(context).readingPageShowMenuOnHover),
-        subtitle: Text(L10n.of(context).readingPageShowMenuOnHoverTips),
-        trailing: Switch(
-          value: Prefs().showMenuOnHover,
-          onChanged: (bool value) => setState(() {
-            Prefs().showMenuOnHover = value;
-          }),
-        ),
-      );
-    }
 
-    ListTile keyboardShortcutTurnPage() {
-      return ListTile(
-        contentPadding: EdgeInsets.zero,
-        title: Text(L10n.of(context).readingPageKeyboardShortcutTurnPage),
-        subtitle: Text(
-          L10n.of(context).readingPageKeyboardShortcutTurnPageTips,
-        ),
-        trailing: Switch(
-          value: Prefs().keyboardShortcutTurnPage,
-          onChanged: (bool value) => setState(() {
-            Prefs().keyboardShortcutTurnPage = value;
-          }),
-        ),
-      );
-    }
 
     return Container(
       padding: const EdgeInsets.all(PaperfoldSpace.xs),
@@ -339,10 +310,8 @@ class _OtherSettingsState extends State<OtherSettings> {
                   epubPlayerKey.currentState?.changePageTurnStyle(turn);
                 },
               ),
-              if (AnxPlatform.isAndroid) keyboardTurnPage(),
+              keyboardTurnPage(),
               swapPageTurnArea(),
-              if (AnxPlatform.isDesktop) showMenuOnHover(),
-              if (AnxPlatform.isDesktop) keyboardShortcutTurnPage(),
               pageTurningControl(),
               ListTile(
                 contentPadding: EdgeInsets.zero,

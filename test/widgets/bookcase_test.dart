@@ -1,5 +1,4 @@
 import 'package:material_ui/material_ui.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:paperfold/config/shared_preference_provider.dart';
 import 'package:paperfold/l10n/generated/L10n.dart';
@@ -52,7 +51,6 @@ void main() {
       tester,
       Bookcase(
         key: key,
-        showSignposts: false,
         shelves: const [
           ShelfRow(name: 'One', books: books),
           ShelfRow(name: 'Two', books: books),

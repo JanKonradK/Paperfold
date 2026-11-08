@@ -36,8 +36,6 @@ const List<ShelfBook> _shelf = [
     id: 'demo-willows',
     title: 'The Wind in the Willows',
     author: 'Kenneth Grahame',
-    blurb: 'Mole, Rat, Badger and the incorrigible Toad of Toad Hall take to '
-        'the river bank, the open road and the Wild Wood.',
     binding: BookBinding.hardback,
   ),
   ShelfBook(
@@ -58,8 +56,6 @@ const List<ShelfBook> _shelf = [
     id: 'demo-dune',
     title: 'Dune',
     author: 'Frank Herbert',
-    blurb: 'A desert planet, a spice worth more than empires, and a boy who '
-        'is told he is the one who was promised.',
     binding: BookBinding.softback,
     progress: 0.78,
   ),
@@ -110,14 +106,8 @@ class _ShelfStageDemoPageState extends State<ShelfStageDemoPage> {
                 child: ShelfStage(
                   key: _stage,
                   books: _shelf,
-                  pickUpHint: 'Take it down',
-                  openHint: 'Open it',
                   onIndexChanged: (index) =>
                       setState(() => _log = 'shelf: ${_shelf[index].title}'),
-                  onPickedUp: (book) =>
-                      setState(() => _log = 'held: ${book.title}'),
-                  onReturned: (book) =>
-                      setState(() => _log = 'back on the shelf: ${book.title}'),
                   onOpen: _handleOpen,
                   optionsBuilder: _options,
                 ),
@@ -215,10 +205,6 @@ class _ShelfStageDemoPageState extends State<ShelfStageDemoPage> {
               TextButton(
                 onPressed: () => _stage.currentState?.pickUp(),
                 child: const Text('Take'),
-              ),
-              TextButton(
-                onPressed: () => _stage.currentState?.putBack(),
-                child: const Text('Put back'),
               ),
               TextButton(
                 onPressed: () => _stage.currentState?.openBook(),

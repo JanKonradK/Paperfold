@@ -1,58 +1,12 @@
 import 'dart:io';
-import 'package:paperfold/config/shared_preference_provider.dart';
-import 'package:paperfold/utils/log/common.dart';
-import 'package:paperfold/utils/platform_utils.dart';
 
 import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 
 String documentPath = '';
 
-/// Check if a path is accessible (can read and write)
-Future<bool> _isPathAccessible(String path) async {
-  try {
-    final dir = Directory(path);
-    if (!dir.existsSync()) return false;
-
-    // Try to create and delete a test file to verify write permission
-    final testFile = File('$path${Platform.pathSeparator}.anx_permission_test');
-    await testFile.writeAsString('test');
-    await testFile.delete();
-    return true;
-  } catch (e) {
-    AnxLog.warning('Path not accessible: $path, error: $e');
-    return false;
-  }
-}
-
 Future<String> getAnxDocumentsPath() async {
-  // Windows only: Check for custom storage path first
-  if (AnxPlatform.isWindows) {
-    final customPath = Prefs().customStoragePath;
-    if (customPath != null) {
-      // Verify the path is still accessible (permission may have been revoked)
-      if (await _isPathAccessible(customPath)) {
-        return customPath;
-      } else {
-        // A disconnected drive must not silently become an empty library.
-        throw FileSystemException(
-            'The library folder is not accessible', customPath);
-      }
-    }
-  }
-
-  final directory = await getApplicationDocumentsDirectory();
-  switch (AnxPlatform.type) {
-    case AnxPlatformEnum.android:
-    case AnxPlatformEnum.ohos:
-      return directory.path;
-    case AnxPlatformEnum.windows:
-      return (await getApplicationSupportDirectory()).path;
-    case AnxPlatformEnum.macos:
-      return (await getApplicationSupportDirectory()).path;
-    case AnxPlatformEnum.ios:
-      return (await getApplicationSupportDirectory()).path;
-  }
+  return (await getApplicationDocumentsDirectory()).path;
 }
 
 Future<Directory> getAnxDocumentDir() async {

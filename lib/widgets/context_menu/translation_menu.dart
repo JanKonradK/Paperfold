@@ -7,7 +7,6 @@ import 'package:paperfold/l10n/generated/L10n.dart';
 import 'package:paperfold/service/translate/index.dart';
 import 'package:paperfold/widgets/common/axis_flex.dart';
 import 'package:material_ui/material_ui.dart';
-import 'package:pointer_interceptor/pointer_interceptor.dart';
 
 import 'dart:async';
 import 'dart:math' as math;
@@ -80,67 +79,63 @@ class _TranslationMenuState extends State<TranslationMenu> {
         ? Prefs().translateFrom.getNative(context)
         : Prefs().translateTo.getNative(context);
 
-    return PointerInterceptor(
-      child: MenuAnchor(
-        style: MenuStyle(
-          backgroundColor: WidgetStateProperty.all(
-            Theme.of(context).colorScheme.secondaryContainer,
-          ),
-          maximumSize: WidgetStateProperty.all(const Size(300, 300)),
+    return MenuAnchor(
+      style: MenuStyle(
+        backgroundColor: WidgetStateProperty.all(
+          Theme.of(context).colorScheme.secondaryContainer,
         ),
-        controller: menuController,
-        menuChildren: [
-          for (var lang in LangListEnum.values)
-            // Auto-detect is a source, never a target.
-            if (isFrom || lang != LangListEnum.auto)
-              PointerInterceptor(
-                child: MenuItemButton(
-                  onPressed: () {
-                    if (isFrom) {
-                      Prefs().translateFrom = lang;
-                    } else {
-                      Prefs().translateTo = lang;
-                    }
-                    // The choice was saved but the popup kept the old label
-                    // and the old translation, so it looked ignored.
-                    _translate();
-                  },
-                  child: Text(lang.getNative(context)),
-                ),
-              ),
-        ],
-        builder: (context, controller, child) {
-          // A bare Text in a GestureDetector: no button semantics, no visible
-          // affordance, and a target as small as the word it showed. A reader
-          // could not tell it opened anything.
-          return Tooltip(
-            // The visible label is the language alone, so the direction has to
-            // come from somewhere. A tooltip carries it into semantics too.
-            message: isFrom
-                ? l10n.translateFromLanguage(language)
-                : l10n.translateToLanguage(language),
-            child: TextButton.icon(
-              onPressed: () {
-                if (controller.isOpen) {
-                  controller.close();
-                } else {
-                  controller.open();
-                }
-              },
-              icon: const Icon(Icons.arrow_drop_down, size: 18),
-              iconAlignment: IconAlignment.end,
-              style: TextButton.styleFrom(
-                minimumSize: const Size(48, 48),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: PaperfoldSpace.xs,
-                ),
-                visualDensity: VisualDensity.standard,
-              ),
-              label: Text(language, overflow: TextOverflow.ellipsis),
-            ),
-          );
-        },
+        maximumSize: WidgetStateProperty.all(const Size(300, 300)),
       ),
+      controller: menuController,
+      menuChildren: [
+        for (var lang in LangListEnum.values)
+          // Auto-detect is a source, never a target.
+          if (isFrom || lang != LangListEnum.auto)
+            MenuItemButton(
+              onPressed: () {
+                if (isFrom) {
+                  Prefs().translateFrom = lang;
+                } else {
+                  Prefs().translateTo = lang;
+                }
+                // The choice was saved but the popup kept the old label
+                // and the old translation, so it looked ignored.
+                _translate();
+              },
+              child: Text(lang.getNative(context)),
+            ),
+      ],
+      builder: (context, controller, child) {
+        // A bare Text in a GestureDetector: no button semantics, no visible
+        // affordance, and a target as small as the word it showed. A reader
+        // could not tell it opened anything.
+        return Tooltip(
+          // The visible label is the language alone, so the direction has to
+          // come from somewhere. A tooltip carries it into semantics too.
+          message: isFrom
+              ? l10n.translateFromLanguage(language)
+              : l10n.translateToLanguage(language),
+          child: TextButton.icon(
+            onPressed: () {
+              if (controller.isOpen) {
+                controller.close();
+              } else {
+                controller.open();
+              }
+            },
+            icon: const Icon(Icons.arrow_drop_down, size: 18),
+            iconAlignment: IconAlignment.end,
+            style: TextButton.styleFrom(
+              minimumSize: const Size(48, 48),
+              padding: const EdgeInsets.symmetric(
+                horizontal: PaperfoldSpace.xs,
+              ),
+              visualDensity: VisualDensity.standard,
+            ),
+            label: Text(language, overflow: TextOverflow.ellipsis),
+          ),
+        );
+      },
     );
   }
 

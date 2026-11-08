@@ -1,3 +1,4 @@
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:paperfold/widgets/reading_page/facing_page.dart';
 import 'package:paperfold/dao/journal.dart';
 import 'package:paperfold/models/journal_page.dart';
@@ -109,6 +110,28 @@ class _FacingDao extends JournalDao {
   Future<List<JournalPage>> entriesAt(int bookId, {double? progress, int? page, bool includeLater = false}) async => [];
 }
 
+/// The reader builds an Android WebView; the test drives [_WebView] instead.
+class _NoWebViewPlatform extends InAppWebViewPlatform {
+  @override
+  PlatformInAppWebViewWidget createPlatformInAppWebViewWidget(
+    PlatformInAppWebViewWidgetCreationParams params,
+  ) => _NoWebView(params);
+}
+
+class _NoWebView extends PlatformInAppWebViewWidget {
+  _NoWebView(super.params) : super.implementation();
+
+  @override
+  Widget build(BuildContext context) => const SizedBox.expand();
+
+  @override
+  T controllerFromPlatform<T>(PlatformInAppWebViewController controller) =>
+      throw UnimplementedError();
+
+  @override
+  void dispose() {}
+}
+
 void main() {
   testWidgets('Back closes Facing page before its reader route', (tester) async {
     SharedPreferences.setMockInitialValues({});
@@ -205,6 +228,7 @@ void main() {
   testWidgets(
       'passage previews preserve progress until the return is confirmed',
       (tester) async {
+    InAppWebViewPlatform.instance = _NoWebViewPlatform();
     SharedPreferences.setMockInitialValues({});
     await Prefs().initPrefs();
     final directory = (await tester.runAsync(
@@ -215,6 +239,9 @@ void main() {
     PathProviderPlatform.instance = _Paths(directory.path);
     documentPath = directory.path;
     await tester.runAsync(() async {
+      sqfliteFfiInit();
+      databaseFactory = databaseFactoryFfi;
+      await databaseFactory.setDatabasesPath('${directory.path}/databases');
       await DBHelper.close();
       await DBHelper().database;
       await Server().start();
@@ -275,8 +302,5 @@ void main() {
     expect(book.lastReadPosition, 'final-reading-location');
     await tester.pumpWidget(const SizedBox());
     expect(tester.takeException(), isNull);
-    // This integration test uses the app's native Windows database bootstrap.
-    // Linux CI still runs the portable DAO and migration tests; the app does
-    // not yet implement a native Linux database platform.
-  }, skip: !Platform.isWindows);
+  });
 }

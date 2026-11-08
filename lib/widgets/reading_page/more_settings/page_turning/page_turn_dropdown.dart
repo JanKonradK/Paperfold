@@ -1,5 +1,4 @@
 import 'package:paperfold/l10n/generated/L10n.dart';
-import 'package:paperfold/widgets/common/anx_dropdown_button.dart';
 import 'package:paperfold/widgets/reading_page/more_settings/page_turning/diagram.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -28,14 +27,21 @@ class PageTurnDropdown extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AnxDropdownButton<PageTurningType>(
+    return DropdownButton<PageTurningType>(
+      isDense: true,
+      isExpanded: true,
+      underline: const SizedBox.shrink(),
       value: value,
-      items: PageTurningType.values
-          .map((type) => DropdownItem<PageTurningType>(
-                value: type,
-                label: _getLabel(context, type),
-              ))
-          .toList(),
+      items: [
+        for (final type in PageTurningType.values)
+          DropdownMenuItem(
+            value: type,
+            child: Text(
+              _getLabel(context, type),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+      ],
       onChanged: onChanged,
     );
   }

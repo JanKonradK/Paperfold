@@ -3,9 +3,6 @@ import 'package:material_ui/material_ui.dart';
 /// Ensure value is RGB (strips any alpha component).
 int sanitizeRgb(int value) => value & 0x00FFFFFF;
 
-/// Convert RGB int to Color with full alpha.
-Color colorFromRgb(int rgb) => Color(0xFF000000 | sanitizeRgb(rgb));
-
 /// Extract RGB component from a Color.
 int rgbFromColor(Color color) => color.toARGB32() & 0x00FFFFFF;
 
@@ -31,7 +28,3 @@ int? parseRgb(dynamic value) {
   return null;
 }
 
-String rgbString(dynamic value) {
-  final rgb = parseRgb(value) ?? 0;
-  return '0x${rgb.toRadixString(16).padLeft(6, '0')}';
-}

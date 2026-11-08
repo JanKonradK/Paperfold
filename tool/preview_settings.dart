@@ -20,7 +20,6 @@ import 'package:paperfold/config/shared_preference_provider.dart';
 import 'package:paperfold/l10n/generated/L10n.dart';
 import 'package:paperfold/page/settings_page/appearance.dart';
 import 'package:paperfold/page/settings_page/settings_home_page.dart';
-import 'package:paperfold/widgets/tips/bookshelf_tips.dart';
 import 'package:paperfold/widgets/tips/notes_tips.dart';
 import 'package:paperfold/widgets/tips/statistic_tips.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -128,8 +127,6 @@ void main() {
       const Scaffold(
         body: Column(
           children: [
-            Expanded(child: BookshelfTips()),
-            Divider(),
             Expanded(child: NotesTips()),
             Divider(),
             Expanded(child: StatisticsTips()),

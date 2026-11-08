@@ -42,14 +42,6 @@ class ShelfDao extends BaseDao {
     );
   }
 
-  Future<void> removeBookFromAllShelves(int bookId) async {
-    await delete(
-      membershipTable,
-      where: 'book_id = ?',
-      whereArgs: [bookId],
-    );
-  }
-
   Future<bool> containsBook({
     required int shelfId,
     required int bookId,

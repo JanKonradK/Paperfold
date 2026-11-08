@@ -1,9 +1,7 @@
 import 'package:material_ui/material_ui.dart';
-import 'package:flutter/semantics.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:paperfold/config/paperfold_tokens.dart';
-import 'package:paperfold/widgets/paperfold_glass_slider.dart';
 import 'package:paperfold/widgets/paperfold_glass_surface.dart';
 
 void main() {
@@ -95,73 +93,6 @@ void main() {
 
       await pumpSurface(disableAnimations: true);
       expect(find.byType(BackdropFilter), findsNothing);
-    },
-  );
-
-  testWidgets(
-    'glass slider has slider semantics, keyboard input, a 48 dp target, and RTL',
-    (tester) async {
-      double value = 170;
-      var direction = TextDirection.ltr;
-
-      Future<void> pumpSlider() {
-        return tester.pumpWidget(
-          MaterialApp(
-            home: Directionality(
-              textDirection: direction,
-              child: Scaffold(
-                body: Center(
-                  child: StatefulBuilder(
-                    builder: (context, setState) => SizedBox(
-                      width: 300,
-                      child: PaperfoldGlassSlider(
-                        value: value,
-                        min: 80,
-                        max: 260,
-                        divisions: 18,
-                        semanticLabel: 'Book cover width',
-                        semanticFormatterCallback: (value) =>
-                            value.toStringAsFixed(0),
-                        onChanged: (nextValue) {
-                          setState(() => value = nextValue);
-                        },
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        );
-      }
-
-      await pumpSlider();
-      expect(
-        tester.getSize(find.byType(PaperfoldGlassSlider)).height,
-        greaterThanOrEqualTo(48),
-      );
-
-      final semantics = tester.ensureSemantics();
-      final node = tester.getSemantics(find.byType(PaperfoldGlassSlider));
-      final data = node.getSemanticsData();
-      expect(data.label, 'Book cover width');
-      expect(data.value, '170');
-      expect(data.hasAction(SemanticsAction.increase), isTrue);
-      expect(data.hasAction(SemanticsAction.decrease), isTrue);
-
-      await tester.sendKeyEvent(LogicalKeyboardKey.tab);
-      await tester.pump();
-      await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
-      await tester.pump();
-      expect(value, 180);
-
-      direction = TextDirection.rtl;
-      value = 170;
-      await pumpSlider();
-      await tester.drag(find.byType(Slider), const Offset(80, 0));
-      await tester.pump();
-      expect(value, lessThan(170));
-      semantics.dispose();
     },
   );
 }

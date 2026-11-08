@@ -1,5 +1,4 @@
 import 'dart:io' as io;
-import 'package:paperfold/utils/platform_utils.dart';
 import 'package:paperfold/dao/database.dart';
 import 'package:paperfold/service/sync/sync_client_base.dart';
 import 'package:paperfold/utils/get_path/get_cache_dir.dart';
@@ -10,7 +9,7 @@ import 'package:paperfold/main.dart';
 import 'package:path/path.dart';
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:material_ui/material_ui.dart';
-import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import 'package:sqflite/sqflite.dart';
 
 /// Database safe sync manager
 /// Provides safe database download, validation and recovery mechanisms
@@ -32,9 +31,7 @@ class DatabaseSyncManager {
     required String remoteDbFileName,
     void Function(int received, int total)? onProgress,
   }) async {
-    final cacheDir = AnxPlatform.isOhos
-        ? '${await getAnxDataBasesPath()}/cache'
-        : (await getAnxCacheDir()).path;
+    final cacheDir = (await getAnxCacheDir()).path;
 
     // Generate temp file name (use timestamp to ensure uniqueness)
     final timestamp = DateTime.now().millisecondsSinceEpoch;
@@ -143,27 +140,13 @@ class DatabaseSyncManager {
             'Database file too small: ${fileSize}B');
       }
 
-      // Initialize FFI for desktop platforms
       Database? db;
       try {
-        // Platform-specific database opening
-        if (AnxPlatform.isWindows) {
-          sqfliteFfiInit();
-          db = await databaseFactoryFfi.openDatabase(
-            dbPath,
-            options: OpenDatabaseOptions(
-              readOnly: false,
-              singleInstance: false,
-            ),
-          );
-        } else {
-          // Android/iOS
-          db = await openDatabase(
-            dbPath,
-            readOnly: false,
-            singleInstance: false,
-          );
-        }
+        db = await openDatabase(
+          dbPath,
+          readOnly: false,
+          singleInstance: false,
+        );
 
         // Basic integrity check
         final integrityResult = await db.rawQuery('PRAGMA integrity_check');

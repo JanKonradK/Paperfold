@@ -43,7 +43,6 @@ class ReaderChrome extends StatelessWidget {
     this.chapter = '',
     this.percentage = 0,
     this.panel,
-    this.onFacingPage,
   });
 
   final VoidCallback? onSearch;
@@ -65,7 +64,6 @@ class ReaderChrome extends StatelessWidget {
   final VoidCallback onProgress;
   final VoidCallback onStyle;
   final Widget? panel;
-  final VoidCallback? onFacingPage;
 
   static const Curve _curve = PaperfoldMotion.settle;
 

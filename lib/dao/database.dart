@@ -3,14 +3,13 @@ import 'dart:io';
 
 import 'package:paperfold/enums/book_status.dart';
 import 'package:paperfold/utils/get_path/get_cache_dir.dart';
-import 'package:paperfold/utils/platform_utils.dart';
 
 import 'package:paperfold/config/shared_preference_provider.dart';
 import 'package:paperfold/utils/get_path/get_base_path.dart';
 import 'package:paperfold/utils/get_path/databases_path.dart';
 import 'package:paperfold/utils/log/common.dart';
 import 'package:path/path.dart';
-import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import 'package:sqflite/sqflite.dart';
 
 export 'package:paperfold/enums/book_status.dart';
 
@@ -340,42 +339,20 @@ class DBHelper {
 
   Future<Database> _openDatabase() async {
     int dbVersion = currentDbVersion;
-    switch (AnxPlatform.type) {
-      case AnxPlatformEnum.macos:
-      case AnxPlatformEnum.android:
-      case AnxPlatformEnum.ohos:
-        final databasePath = await getAnxDataBasesPath();
-        final path = join(databasePath, 'app_database.db');
-        return await openDatabase(
-          path,
-          version: dbVersion,
-          // Awaited. Without the await, `onCreate` returns as soon as the
-          // migration has started, sqflite reports the schema ready, and the
-          // first screen queries tables the migration is still creating. On a
-          // fresh install that is every table added after version 0, so the
-          // Library opened on "The shelves could not be opened" and only came
-          // right if the reader happened to press Retry.
-          onCreate: (db, version) => onUpgradeDatabase(db, 0, version),
-          onUpgrade: onUpgradeDatabase,
-        );
-      case AnxPlatformEnum.ios:
-      case AnxPlatformEnum.windows:
-        sqfliteFfiInit();
-        databaseFactory = databaseFactoryFfi;
-
-        final databasePath = await getAnxDataBasesPath();
-        AnxLog.info('Database: database path: $databasePath');
-        final path = join(databasePath, 'app_database.db');
-
-        return await databaseFactory.openDatabase(
-          path,
-          options: OpenDatabaseOptions(
-            version: dbVersion,
-            onCreate: (db, version) => onUpgradeDatabase(db, 0, version),
-            onUpgrade: onUpgradeDatabase,
-          ),
-        );
-    }
+    final databasePath = await getAnxDataBasesPath();
+    final path = join(databasePath, 'app_database.db');
+    return await openDatabase(
+      path,
+      version: dbVersion,
+      // Awaited. Without the await, `onCreate` returns as soon as the
+      // migration has started, sqflite reports the schema ready, and the
+      // first screen queries tables the migration is still creating. On a
+      // fresh install that is every table added after version 0, so the
+      // Library opened on "The shelves could not be opened" and only came
+      // right if the reader happened to press Retry.
+      onCreate: (db, version) => onUpgradeDatabase(db, 0, version),
+      onUpgrade: onUpgradeDatabase,
+    );
   }
 
   static Future<void> close() async {
@@ -393,33 +370,11 @@ class DBHelper {
     _databaseFuture = null;
   }
 
-  /// Checkpoint WAL to merge data into main database file
-  /// Returns true if checkpoint was successful or not needed
-  static Future<bool> checkpointWal() async {
-    try {
-      final db = await DBHelper().database;
-      // Use rawQuery instead of execute for PRAGMA wal_checkpoint
-      // because it returns a result row which can cause issues with execute()
-      await db.rawQuery('PRAGMA wal_checkpoint(TRUNCATE)');
-      AnxLog.info('Database: WAL checkpoint completed');
-      return true;
-    } catch (e) {
-      AnxLog.warning('Database: WAL checkpoint failed: $e');
-      return false;
-    }
-  }
-
   /// Get the path to the WAL file for a database
   static String getWalPath(String dbPath) => '$dbPath-wal';
 
   /// Get the path to the SHM file for a database
   static String getShmPath(String dbPath) => '$dbPath-shm';
-
-  /// Check if WAL files exist for a database and have content
-  static bool hasWalFiles(String dbPath) {
-    final walFile = File(getWalPath(dbPath));
-    return walFile.existsSync() && walFile.lengthSync() > 0;
-  }
 
   /// Delete WAL auxiliary files
   static Future<void> cleanupWalFiles(String dbPath) async {

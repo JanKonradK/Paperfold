@@ -4,19 +4,11 @@ import 'package:paperfold/widgets/settings/settings_title.dart';
 class SettingsPageBuilder extends StatelessWidget {
   const SettingsPageBuilder(
       {super.key,
-      required this.isMobile,
-      required this.id,
-      required this.selectedIndex,
-      required this.setDetail,
       required this.icon,
       required this.title,
       required this.sections,
       required this.subTitles});
 
-  final bool isMobile;
-  final int id;
-  final int selectedIndex;
-  final void Function(WidgetBuilder detail, int id) setDetail;
   final Icon icon;
   final String title;
 
@@ -34,13 +26,8 @@ class SettingsPageBuilder extends StatelessWidget {
     return settingsTitle(
       icon: icon,
       title: title,
-      isMobile: isMobile,
-      id: id,
-      selectedIndex: selectedIndex,
-      setDetail: setDetail,
       subPage: (BuildContext context) => SettingsPageBody(
         title: title,
-        isMobile: isMobile,
         sections: sections,
       ),
       subtitle: subTitles,
@@ -52,12 +39,10 @@ class SettingsPageBody extends StatelessWidget {
   const SettingsPageBody({
     super.key,
     required this.title,
-    required this.isMobile,
     required this.sections,
   });
 
   final String title;
-  final bool isMobile;
   final WidgetBuilder sections;
 
   @override
@@ -67,9 +52,6 @@ class SettingsPageBody extends StatelessWidget {
     // Material application is neither. Behaviour that came free with
     // CupertinoSliverNavigationBar, the large collapsing title, comes free
     // from SliverAppBar.large as well.
-    if (!isMobile) {
-      return Scaffold(body: Builder(builder: sections));
-    }
 
     // No `SliverOverlapAbsorber` around the app bar.
     //

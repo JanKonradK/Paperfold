@@ -9,7 +9,6 @@ import 'package:paperfold/page/book_detail.dart';
 import 'package:paperfold/page/book_notes_page.dart';
 import 'package:paperfold/page/journal/book_review_page.dart';
 import 'package:paperfold/page/journal/dot_pages_page.dart';
-import 'package:paperfold/providers/book_notes.dart';
 import 'package:paperfold/service/book.dart';
 import 'package:paperfold/service/journal/export_journal.dart';
 import 'package:paperfold/utils/log/common.dart';
@@ -258,13 +257,6 @@ class _BookJournalPageState extends ConsumerState<BookJournalPage> {
                   trailing: const Icon(Icons.chevron_right),
                   onTap: () => _open(BookNotesPage(
                     book: book,
-                    numberOfNotes: ref
-                            .read(bookNotesControllerProvider(book))
-                            .value
-                            ?.allNotes
-                            .length ??
-                        0,
-                    isMobile: true,
                   )),
                 ),
               ],

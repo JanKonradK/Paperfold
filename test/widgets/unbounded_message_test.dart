@@ -18,7 +18,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:paperfold/config/paperfold_tokens.dart';
 import 'package:paperfold/l10n/generated/L10n.dart';
 import 'package:paperfold/widgets/common/load_failure.dart';
-import 'package:paperfold/widgets/tips/bookshelf_tips.dart';
 import 'package:paperfold/widgets/tips/notes_tips.dart';
 import 'package:paperfold/widgets/tips/statistic_tips.dart';
 
@@ -37,7 +36,6 @@ Widget _host(Widget child) {
 
 const List<(String, Widget)> _blocks = <(String, Widget)>[
   ('NotesTips', NotesTips()),
-  ('BookshelfTips', BookshelfTips()),
   ('StatisticsTips', StatisticsTips()),
   ('LoadFailure.page', LoadFailure.page()),
 ];

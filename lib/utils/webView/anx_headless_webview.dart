@@ -1,4 +1,3 @@
-import 'dart:io';
 
 import 'package:paperfold/main.dart';
 import 'package:paperfold/utils/log/common.dart';
@@ -20,7 +19,6 @@ class AnxHeadlessWebView {
       String message)? onLoadError;
   final void Function(InAppWebViewController controller, Uri? url,
       int statusCode, String description)? onLoadHttpError;
-  final WebViewEnvironment? webViewEnvironment;
 
   AnxHeadlessWebView({
     required this.initialUrlRequest,
@@ -30,31 +28,11 @@ class AnxHeadlessWebView {
     this.onConsoleMessage,
     this.onLoadError,
     this.onLoadHttpError,
-    this.webViewEnvironment,
   });
 
   Future<void> run() async {
-    bool useOverlay = false;
-    try {
-      if (Platform.operatingSystem == 'ohos') {
-        useOverlay = true;
-      }
-    } catch (e) {
-      // ignore
-    }
-
-    if (Platform.isWindows && webViewEnvironment == null) {
-      AnxLog.severe(
-          'AnxHeadlessWebView: webViewEnvironment is null on Windows, falling back to Overlay');
-      _runOverlay();
-      return;
-    }
-
-    if (useOverlay) {
-      _runOverlay();
-    } else {
+    {
       _headlessWebView = HeadlessInAppWebView(
-        webViewEnvironment: webViewEnvironment,
         initialUrlRequest: initialUrlRequest,
         initialSettings: initialSettings,
         onWebViewCreated: onWebViewCreated,

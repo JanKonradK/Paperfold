@@ -94,10 +94,6 @@ List<PageTurningType> currentPageTurningActions() {
         action = PageTurningType.prev;
       }
     }
-    if (prefs.keyboardShortcutTurnPage &&
-        (action == PageTurningType.prev || action == PageTurningType.next)) {
-      return PageTurningType.none;
-    }
     return action;
   });
 }

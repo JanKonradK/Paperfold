@@ -1,5 +1,4 @@
 import 'package:paperfold/l10n/generated/L10n.dart';
-import 'package:paperfold/utils/platform_utils.dart';
 import 'package:paperfold/utils/log/common.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
@@ -39,13 +38,7 @@ void handleWebviewVersion(String message) {
   try {
     int webviewVersion =
         int.tryParse(message.split('Chrome/')[1].split('.')[0]) ?? -1;
-    int appleWebkitVersion =
-        int.tryParse(message.split('AppleWebKit/')[1].split('.')[0]) ?? -1;
-
-    bool isApple = AnxPlatform.isIOS || AnxPlatform.isMacOS;
-
-    if ((!isApple && (webviewVersion < minWebviewVersion)) ||
-        (isApple && (appleWebkitVersion < 605))) {
+    if (webviewVersion < minWebviewVersion) {
       showUnsupportedWebviewDialog(webviewVersion);
     }
   } catch (e) {

@@ -30,7 +30,6 @@ import 'package:paperfold/models/read_theme.dart';
 import 'package:paperfold/models/reading_info.dart';
 import 'package:paperfold/models/reading_rules.dart';
 import 'package:paperfold/widgets/statistic/dashboard_tiles/dashboard_tile_registry.dart';
-import 'package:paperfold/models/window_info.dart';
 import 'package:paperfold/service/translate/index.dart';
 import 'package:paperfold/utils/get_current_language_code.dart';
 import 'package:paperfold/utils/log/common.dart';
@@ -794,41 +793,6 @@ class Prefs extends ChangeNotifier {
     }
   }
 
-  set windowInfo(WindowInfo info) {
-    prefs.setString('windowInfo', jsonEncode(info.toJson()));
-    notifyListeners();
-  }
-
-  WindowInfo get windowInfo {
-    String? windowInfoJson = prefs.getString('windowInfo');
-    if (windowInfoJson == null) {
-      return const WindowInfo(x: 0, y: 0, width: 0, height: 0);
-    }
-    return WindowInfo.fromJson(jsonDecode(windowInfoJson));
-  }
-
-  /// Custom storage path for Windows/macOS
-  String? get customStoragePath => prefs.getString('customStoragePath');
-
-  set customStoragePath(String? value) {
-    if (value == null) {
-      prefs.remove('customStoragePath');
-    } else {
-      prefs.setString('customStoragePath', value);
-    }
-    notifyListeners();
-  }
-
-  String? get pendingStoragePath => prefs.getString('pendingStoragePath');
-
-  Future<void> setPendingStoragePath(String? value) async {
-    final saved = value == null
-        ? await prefs.remove('pendingStoragePath')
-        : await prefs.setString('pendingStoragePath', value);
-    if (!saved) throw StateError('Could not save the storage location');
-    notifyListeners();
-  }
-
   bool shouldShowHint(HintKey key) {
     return prefs.getBool('hint_${key.code}') ?? true;
   }
@@ -863,30 +827,12 @@ class Prefs extends ChangeNotifier {
     return prefs.getBool('volumeKeyTurnPage') ?? false;
   }
 
-  set keyboardShortcutTurnPage(bool status) {
-    prefs.setBool('keyboardShortcutTurnPage', status);
-    notifyListeners();
-  }
-
-  bool get keyboardShortcutTurnPage {
-    return prefs.getBool('keyboardShortcutTurnPage') ?? false;
-  }
-
   set swapPageTurnArea(bool status) {
     prefs.setBool('swapPageTurnArea', status);
   }
 
   bool get swapPageTurnArea {
     return prefs.getBool('swapPageTurnArea') ?? false;
-  }
-
-  set showMenuOnHover(bool status) {
-    prefs.setBool('showMenuOnHover', status);
-    notifyListeners();
-  }
-
-  bool get showMenuOnHover {
-    return prefs.getBool('showMenuOnHover') ?? true;
   }
 
   set showActionLabels(bool status) {
@@ -1415,24 +1361,6 @@ class Prefs extends ChangeNotifier {
       prefs.remove('lastAppVersion');
     }
     notifyListeners();
-  }
-
-  set customCSSEnabled(bool enabled) {
-    prefs.setBool('customCSSEnabled', enabled);
-    notifyListeners();
-  }
-
-  bool get customCSSEnabled {
-    return prefs.getBool('customCSSEnabled') ?? false;
-  }
-
-  set customCSS(String css) {
-    prefs.setString('customCSS', css);
-    notifyListeners();
-  }
-
-  String get customCSS {
-    return prefs.getString('customCSS') ?? '';
   }
 
   Map<String, TranslationModeEnum> get bookTranslationModes {

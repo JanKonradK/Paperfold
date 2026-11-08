@@ -38,13 +38,6 @@ class TagList extends _$TagList {
     return _sortedTags(tags);
   }
 
-  Future<int> createTag(String name, {Color? color}) async {
-    final rgb = color == null ? null : rgbFromColor(color);
-    final id = await tagDao.insertTag(name, color: rgb);
-    await _refresh();
-    return id;
-  }
-
   Future<void> updateTag(int id, {String? newName, Color? color}) async {
     final rgb = color == null ? null : rgbFromColor(color);
     await tagDao.updateTag(id, newName: newName, color: rgb);
@@ -73,10 +66,6 @@ class BookTagState {
 
   bool isAttached(int tagId) => attachedIds.contains(tagId);
 
-  Tag resolveWithColor(Tag tag, Color Function(String) fallback) {
-    if (tag.color != null) return tag;
-    return tag.copyWith(color: fallback(tag.name));
-  }
 }
 
 @riverpod
@@ -133,10 +122,6 @@ class TagSelection extends _$TagSelection {
       next.add(tagId);
     }
     state = next;
-  }
-
-  void setSelection(Set<int> tagIds) {
-    state = {...tagIds};
   }
 
   void clear() {

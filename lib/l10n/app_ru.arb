@@ -98,8 +98,6 @@
   "importSupportTypes": "Доступные типы книг: {types}",
   "importNBooksNotSupport": "{count, plural, =1{1 книга пока не поддерживается} other{{count} книг пока не поддерживаются}}",
   "importImportNBooks": "{count, plural, =1{Импортировать 1 книгу} other{Импортировать {count} книг}}",
-  "bookshelfTips_1": "Книг пока нет.",
-  "bookshelfTips_2": "Нажмите кнопку «+» для добавления книги!",
   "statisticsTips_1": "В выбранный период чтения не было.",
   "statisticsTips_2": "Книга дарит знания и эмоции.",
   "notesTips_1": "Заметок нет.",
@@ -125,8 +123,6 @@
   "readingPageFontWeight": "Толщина шрифта",
   "headingFontSize": "Размер заголовка",
   "readingPageLetterSpacing": "Межбуквенный интервал",
-  "readingPageKeyboardShortcutTurnPage": "Клавиши перелистывания страниц",
-  "readingPageKeyboardShortcutTurnPageTips": "Используйте Ctrl+[ и Ctrl+] для перелистывания страниц",
   "bookDetailSave": "Сохранить",
   "bookDetailEdit": "Изменить",
   "bookDetailNthBook": "{count, plural, =1{1-я прочитанная книга} =2{2-я прочитанная книга} few{3-я прочитанная книга} other{прочитано {count}-я книга}}",
@@ -192,7 +188,6 @@
   "storageFontFile": "Файлы шрифтов",
   "storageDataFileDetails": "Детали файлов данных",
   "storageClearCache": "Очистить кеш",
-  "serviceImportSuccess": "Импорт успешен",
   "webdavSyncing": "Синхронизация",
   "webdavSyncingFiles": "Синхронизация файлов",
   "webdavSyncComplete": "Синхронизация завершена",
@@ -205,7 +200,6 @@
   "webdavSyncAborted": "Синхронизация прервана",
   "webdavSyncAbortedContent": "Не удалось получить данные с WebDAV, удалённые данные пусты. Пожалуйста, проверьте:\n1. Подключение к сети\n2. Убедитесь, что на других устройствах загружены корректные данные для чтения\n\nПопробуйте загрузить данные на WebDAV снова.",
   "webdavSyncDirection": "Данные WebDAV могли быть изменены другими устройствами, выберите способ обработки данных",
-  "settingsSync": "Синхронизация",
   "settingsSyncWebdav": "WebDAV",
   "settingsSyncEnableWebdav": "Разрешить WebDAV",
   "settingsSyncWebdavUrl": "WebDAV-адрес",
@@ -229,15 +223,12 @@
   "settingsTranslateAuto": "Авто",
   "settingsReading": "Чтение",
   "settingsBookshelf": "Полка с книгами",
-  "settingsBookshelfCover": "Обложка книги",
-  "settingsBookshelfCoverWidth": "Ширина обложки",
   "settingsBookshelfFolderStyle": "Стиль папки на полке",
   "settingsBookshelfFolderStyleOverlap": "Колода",
   "settingsBookshelfFolderStyleGrid": "Сетка 2x2",
   "settingsBookshelfDefaultCoverShowTitle": "Показывать название на обложке",
   "settingsBookshelfDefaultCoverShowAuthor": "Показывать автора на обложке",
   "storagePermissionDenied": "Доступ к хранилищу запрещён",
-  "galleryPermissionDenied": "Доступ к галерее запрещён",
   "gotoAuthorize": "Перейти к авторизации",
   "settingsAdvanced": "Расширенные",
   "settingsAdvancedLog": "Логи",
@@ -259,8 +250,6 @@
   "webviewUnsupportedVersion": "Версия Webview не поддерживается",
   "webviewUnsupportedMessage": "Ваша версия Webview может быть не поддерживается. Текущая версия {version}, минимально необходимая версия {minVersion}, пожалуйста, обновите Webview",
   "webviewCancel": "Понятно",
-  "webview2NotInstalled": "Не найден установленный WebView2 Runtime или нестабильная установка Microsoft Edge.",
-  "webview2Install": "Перейти к загрузке",
   "bookSyncStatusNotSyncing": "Не синхронизируется",
   "bookSyncStatusUploadingTitle": "Загрузка",
   "bookSyncStatusDownloadingTitle": "Скачивание",
@@ -360,12 +349,6 @@
   "whatsNew": "Что нового",
   "databaseBackupManagement": "Управление резервными копиями базы данных",
   "restoreBackup": "Восстановить резервную копию",
-  "customCssEnabled": "Включить пользовательский CSS",
-  "cssValidationUnmatchedBraces": "Несовпадающие скобки",
-  "cssValidationMissingSemicolon": "Отсутствует точка с запятой в строке {lineNumber}",
-  "cssSaveAndApply": "Сохранить и применить",
-  "cssRestoreDefault": "Очистить CSS",
-  "cssEditorHint": "Ваш пользовательский CSS здесь...",
   "md5Management": "Управление дубликатами файлов",
   "md5Statistics": "Статистика MD5",
   "md5TotalBooks": "Всего книг: {count}",
@@ -391,8 +374,6 @@
   "skipDuplicateFiles": "Пропустить дублирующие файлы",
   "readingPageSwapPageTurnArea": "Поменять область перелистывания",
   "readingPageSwapPageTurnAreaTips": "Сделать область 'назад' областью 'вперед'",
-  "readingPageShowMenuOnHover": "Показывать меню при наведении мыши",
-  "readingPageShowMenuOnHoverTips": "Автопоказ меню при наведении на верх/низ окна для удобства.",
   "readingPageShowActionLabels": "Подписи к кнопкам",
   "readingPageShowActionLabelsTips": "Показывать текст под иконками кнопок (выделение, контекстное меню)",
   "pageTurnModeSimple": "Простое",
@@ -432,7 +413,6 @@
   "close": "Закрыть",
   "statisticsSwipeToDeleteHint": "Смахните влево, чтобы удалить записи чтения. Можно отменить на этой странице, изменения окончательны после выхода.",
   "bookNotesOperationsHint": "Долгое нажатие для множественного выбора, удаление или экспорт, смахивание влево для редактирования или обмена заметками",
-  "searchBooksOrNotes": "Поиск книг/заметок",
   "startTypingToSearch": "Начните вводить для поиска",
   "nothingHere": "Здесь ничего нет",
   "books": "Книги",
@@ -535,7 +515,6 @@
   "bookshelfFilterReading": "Читаю",
   "bookshelfFilterNotStarted": "Не начато",
   "settingsNarrateClickForHelp": "Нажмите для справки",
-  "translateBingWeb": "Веб-перевод Bing",
   "translateGoogleWeb": "Веб-перевод Google",
   "translateMicrosoftAzure": "Microsoft Azure API",
   "translateGoogleCloud": "Google Cloud API",
@@ -547,22 +526,6 @@
   "translateAzureApiKeyDescription": "Ключ API Azure Cognitive Services",
   "translateGoogleApiKeyDescription": "Ключ API Google Cloud Translation",
   "translateAzureRegionDescription": "Регион Azure (напр. global, westus)",
-  "migrationInProgress": "Миграция данных...",
-  "migrationComplete": "Миграция завершена",
-  "migrationFailed": "Ошибка миграции",
-  "migrationDoNotClose": "Пожалуйста, не закрывайте приложение во время миграции",
-  "migrationCurrentItem": "Миграция",
-  "migrationPreparing": "Подготовка...",
-  "storageCustomLocation": "Пользовательское место хранения",
-  "storageCurrentPath": "Текущий путь",
-  "storageNewPath": "Новый путь",
-  "storageSelectPath": "Выбрать новое место",
-  "storageMigrateData": "Начать миграцию",
-  "storageResetPath": "Сброс по умолчанию",
-  "storagePathNotEmpty": "Пожалуйста, выберите пустую папку",
-  "storageMigrationSuccess": "Миграция завершена. Пожалуйста, перезапустите приложение.",
-  "storageMigrationFailed": "Миграция не удалась. Данные остаются в исходном месте.",
-  "storagePathNoPermission": "Нет разрешения на запись в выбранную папку",
   "bookBottomSheetReplaceFile": "Заменить файл",
   "bookBottomSheetOriginalFileSize": "Размер исходного файла: {size}",
   "bookBottomSheetNewFileSize": "Размер нового файла: {size}",
@@ -603,7 +566,6 @@
   "settingsAdvancedHttpProxyTestFailed": "Ошибка соединения",
   "navLibrary": "Библиотека",
   "navJournal": "Дневник",
-  "navMore": "Ещё",
   "shelfHomeTitle": "Мои полки",
   "shelfReadingNow": "Читаю сейчас",
   "shelfAllTimeFavourites": "Любимые книги",
@@ -628,7 +590,6 @@
   "bookCoverSemanticLabel": "Открыть «{title}»",
   "bookOptionsSemanticHint": "Нажмите и удерживайте, чтобы открыть действия с книгой",
   "journalPlaceholderTitle": "Сохраняйте свои мысли здесь",
-  "journalPlaceholderBody": "Откройте дневник книги из библиотеки, чтобы добавить отзыв или свои мысли.",
   "journalPagesCount": "{count, plural, one{{count} страница} few{{count} страницы} many{{count} страниц} other{{count} страницы}}",
   "@journalPagesCount": {
     "placeholders": {
@@ -689,42 +650,8 @@
   },
   "challengeLegendFinished": "Прочитано",
   "challengeLegendReading": "Читаю",
-  "challengeLegendEmpty": "Хочу прочитать",
   "challengeSetTarget": "Изменить цель",
   "challengeTargetLabel": "Книг за этот год",
-  "challengeShelfSemanticLabel": "Полка читательского вызова. Прочитано {finished} из {target} книг, сейчас читаются {reading}.",
-  "@challengeShelfSemanticLabel": {
-    "placeholders": {
-      "finished": {
-        "type": "int"
-      },
-      "target": {
-        "type": "int"
-      },
-      "reading": {
-        "type": "int"
-      }
-    }
-  },
-  "challengeSlotFilled": "Корешок {slot}: {title}",
-  "@challengeSlotFilled": {
-    "placeholders": {
-      "slot": {
-        "type": "int"
-      },
-      "title": {
-        "type": "String"
-      }
-    }
-  },
-  "challengeSlotEmpty": "Корешок {slot} пуст.",
-  "@challengeSlotEmpty": {
-    "placeholders": {
-      "slot": {
-        "type": "int"
-      }
-    }
-  },
   "monthTrackerTitle": "Календарь чтения",
   "monthTrackerPagesTotal": "{count, plural, =0{Нет страниц за этот месяц} one{{count} страница за этот месяц} few{{count} страницы за этот месяц} many{{count} страниц за этот месяц} other{{count} страницы за этот месяц}}",
   "@monthTrackerPagesTotal": {
@@ -784,9 +711,7 @@
       }
     }
   },
-  "opdsCatalogs": "Каталоги",
   "opdsFindBooksOnline": "Найти книги в интернете",
-  "opdsCatalogsEmpty": "Пока нет каталогов.",
   "opdsAddCatalog": "Добавить каталог",
   "opdsCatalogName": "Название",
   "opdsCatalogUrl": "Адрес",
@@ -873,25 +798,6 @@
   },
   "bookBindingWhyPublicDomain": "Текст старой книги, находящийся в общественном достоянии.",
   "bookBindingWhyDefault": "В книге нет сведений о переплёте, поэтому используется настройка библиотеки по умолчанию.",
-  "bookModelSemanticLabel": "{title}, автор: {author}. Нажмите, чтобы открыть книгу.",
-  "@bookModelSemanticLabel": {
-    "placeholders": {
-      "title": {
-        "type": "String"
-      },
-      "author": {
-        "type": "String"
-      }
-    }
-  },
-  "bookModelSemanticLabelNoAuthor": "{title}. Нажмите, чтобы открыть книгу.",
-  "@bookModelSemanticLabelNoAuthor": {
-    "placeholders": {
-      "title": {
-        "type": "String"
-      }
-    }
-  },
   "settingsDefaultBinding": "Переплёт по умолчанию",
   "settingsDefaultBindingDescription": "Переплёт для книг без сведений о формате. Манга, ранобэ и современные романы по-прежнему получают мягкий переплёт, а старые книги — твёрдый.",
   "settingsBookshelfUniformSpines": "Одинаковые корешки",
@@ -991,13 +897,10 @@
     }
   },
   "bookBindingAskDecide": "Решить за меня",
-  "shelfPickUpHint": "Выбрать эту книгу",
-  "shelfOpenHint": "Открыть эту книгу",
   "shelfBookOptions": "Действия с книгой",
   "shelfBookOptionDetails": "Сведения",
   "shelfBookOptionShelves": "Полки",
   "shelfBookOptionCustomise": "Оформление",
-  "shelfBookOptionNotes": "Заметки",
   "shelfBookShelvesTitle": "Переместить или добавить на полку",
   "shelfBookCustomiseTitle": "Оформить эту книгу",
   "shelfBookCoverArt": "Изображение обложки",
@@ -1011,9 +914,6 @@
   "settingsDeveloperOptionsEnable": "Включить параметры разработчика",
   "settingsDeveloperOptionsEnableDescription": "Отключите, чтобы скрыть раздел разработчика в настройках.",
   "settingsDeveloperOptionsEnabledToast": "Параметры разработчика включены",
-  "settingsDeveloperVibrationTest": "Проверка вибрации",
-  "settingsDeveloperVibrationTestDescription": "Проверьте возможности устройства и воспроизведите каждый вариант вибрации.",
-  "settingsQuickSettings": "Быстрые настройки",
   "commonLoadFailedTitle": "Не удалось загрузить.",
   "commonLoadFailedBody": "При чтении данных книг произошла ошибка. Попробуйте ещё раз.",
   "notesLoadFailed": "Не удалось загрузить заметки.",
@@ -1028,7 +928,6 @@
   "readingPageDeleteTheme": "Удалить эту тему",
   "journalSaveFailed": "Не удалось сохранить изменения. Останьтесь на этой странице и попробуйте ещё раз.",
   "journalLoadFailed": "Не удалось загрузить дневник.",
-  "storageMigrationScheduled": "Перезапустите приложение, чтобы переместить библиотеку в выбранную папку.",
   "appStartupFailed": "Не удалось запустить Paperfold.",
   "appStartupFailedBody": "Закройте приложение и откройте его снова. Если проблема остаётся, проверьте доступность папки библиотеки.",
   "searchLibraryHint": "Поиск по книгам, заметкам и дневнику",
@@ -1042,7 +941,6 @@
     }
   },
   "journalBooks": "Дневники книг",
-  "journalHighlightsOverview": "Вернитесь к отрывкам и заметкам из своей библиотеки.",
   "challengeSaveFailed": "Не удалось сохранить цель. Попробуйте ещё раз.",
   "monthTrackerSaveFailed": "Не удалось сохранить количество страниц. Попробуйте ещё раз.",
   "monthTrackerInvalidPages": "Введите целое число страниц от 0 и выше.",
@@ -1051,7 +949,6 @@
   "monthTrackerManualEntryHint": "Записывайте количество страниц за каждый день. Время чтения учитывается отдельно.",
   "journalAddPassage": "Добавить в дневник",
   "journalOpenPassage": "Открыть отрывок",
-  "journalPassageAdded": "Отрывок добавлен в дневник.",
   "journalPassageSaveFailed": "Не удалось добавить отрывок. Попробуйте ещё раз.",
   "journalThoughtsHint": "Запишите свои мысли об этом отрывке…",
   "journalBookOverview": "Ваш читательский дневник",
@@ -1062,7 +959,6 @@
   "journalExportEmpty": "Перед экспортом дневника добавьте отзыв или страницу.",
   "journalExportFailed": "Не удалось экспортировать дневник. Попробуйте ещё раз.",
   "journalExportSaved": "Дневник экспортирован.",
-  "journalNoReview": "Пока нет отзыва",
   "journalReadBook": "Читать книгу",
   "journalDeletePage": "Удалить страницу",
   "journalDeletePageConfirm": "Удалить эту страницу и сохранённый отрывок? Это действие нельзя отменить.",
@@ -1110,12 +1006,6 @@
   "settingsCatalogs": "Каталоги",
   "captureLogPages": "Записать страницы",
   "captureWriteNote": "Написать заметку",
-  "widgetContinue": "Продолжить чтение",
-  "widgetQuickCapture": "Быстрая запись",
-  "captureNote": "Заметка",
-  "captureQuote": "Цитата",
-  "widgetContinueDescription": "Продолжите текущую книгу или запишите страницы.",
-  "widgetCaptureDescription": "Сохраните заметку, цитату или прогресс чтения.",
   "newEntry": "Новая запись",
   "recentEntries": "Последние записи",
   "entryNote": "Заметка",

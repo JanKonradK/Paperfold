@@ -7,12 +7,10 @@ import 'package:material_ui/material_ui.dart';
 
 class ProgressWidget extends StatefulWidget {
   final GlobalKey<EpubPlayerState> epubPlayerKey;
-  final Function(bool) showOrHideAppBarAndBottomBar;
 
   const ProgressWidget({
     super.key,
     required this.epubPlayerKey,
-    required this.showOrHideAppBarAndBottomBar,
   });
 
   @override

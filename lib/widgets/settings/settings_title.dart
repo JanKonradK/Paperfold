@@ -6,10 +6,6 @@ import 'package:paperfold/widgets/common/paperfold_pane.dart';
 Widget settingsTitle({
   required Icon icon,
   required String title,
-  required bool isMobile,
-  required int id,
-  required int selectedIndex,
-  required Function setDetail,
 
   /// A builder, so the settings screen behind this row is built when the
   /// reader opens it and not when the list draws. plan.md Section 11.2.
@@ -22,17 +18,12 @@ Widget settingsTitle({
         leading: SettingsIcon(child: icon),
         title: Text(title),
         trailing: const Icon(Icons.chevron_right),
-        selected: !isMobile && selectedIndex == id,
         subtitle: Text(
           subtitle.join(' · '),
           maxLines: MediaQuery.textScalerOf(context).scale(16) > 24 ? null : 1,
           overflow: TextOverflow.ellipsis,
         ),
         onTap: () {
-          if (!isMobile) {
-            setDetail(subPage, id);
-            return;
-          }
           // The route comes from the tapped row's own context, not from a
           // global navigator key. A settings row opened from a dialog or a
           // second navigator used to push onto the root one instead.

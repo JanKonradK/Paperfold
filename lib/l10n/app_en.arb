@@ -110,8 +110,6 @@
   "importSupportTypes": "Support types: {types}",
   "importNBooksNotSupport": "{count, plural, one{1 book not support yet} other{{count} books not support yet}}",
   "importImportNBooks": "{count, plural, one{Import 1 book} other{Import {count} books}}",
-  "bookshelfTips_1": "There are no books.",
-  "bookshelfTips_2": "Click the add button to add a book!",
   "statisticsTips_1": "No reading in the selected time period.",
   "statisticsTips_2": "A book is a dream that you hold in your hands.",
   "notesTips_1": "There are no notes.",
@@ -126,8 +124,6 @@
   "readingPageAutoAdjustReadingTheme": "Auto Adjust Reading Theme",
   "readingPageAutoAdjustReadingThemeTips": "Use the 1st and 2nd colors in the color table as the day and night modes respectively",
   "readingPageVolumeKeyTurnPage": "Volume Key Turn Page",
-  "readingPageKeyboardShortcutTurnPage": "Keyboard Shortcut Turn Page",
-  "readingPageKeyboardShortcutTurnPageTips": "Use Ctrl+[ and Ctrl+] to turn pages",
   "readingPageFontSize": "Font Size",
   "readingPageLineSpacing": "Line Spacing",
   "readingPageParagraphSpacing": "Paragraph Spacing",
@@ -204,7 +200,6 @@
   "storageFontFile": "Font File",
   "storageDataFileDetails": "Data File Details",
   "storageClearCache": "Clear Cache",
-  "serviceImportSuccess": "Import success",
   "webdavSyncing": "Syncing",
   "webdavSyncingFiles": "Syncing files",
   "webdavSyncComplete": "Sync complete",
@@ -217,7 +212,6 @@
   "webdavSyncAborted": "Sync aborted",
   "webdavSyncAbortedContent": "Failed to get data from WebDAV, remote data is empty. Please check the following: \n1. Network connection \n2. Ensure that valid reading data has been uploaded to WebDAV on other devices\n\nNext, please try to upload data to WebDAV",
   "webdavSyncDirection": "WebDAV data may be modified by other devices, please choose how to handle the data",
-  "settingsSync": "Sync",
   "settingsSyncWebdav": "WebDAV",
   "settingsSyncEnableWebdav": "Enable WebDAV",
   "settingsSyncWebdavUrl": "WebDAV URL",
@@ -241,15 +235,12 @@
   "settingsTranslateAuto": "Auto",
   "settingsReading": "Reading",
   "settingsBookshelf": "Bookshelf",
-  "settingsBookshelfCover": "Book cover",
-  "settingsBookshelfCoverWidth": "Book cover width",
   "settingsBookshelfFolderStyle": "Bookshelf folder style",
   "settingsBookshelfFolderStyleOverlap": "Overlap",
   "settingsBookshelfFolderStyleGrid": "2x2 Grid",
   "settingsBookshelfDefaultCoverShowTitle": "Show title on default cover",
   "settingsBookshelfDefaultCoverShowAuthor": "Show author on default cover",
   "storagePermissionDenied": "Storage permission denied",
-  "galleryPermissionDenied": "Gallery permission denied",
   "gotoAuthorize": "Go to authorize",
   "settingsAdvanced": "Advanced",
   "settingsAdvancedNetwork": "Network",
@@ -285,8 +276,6 @@
   "webviewUnsupportedVersion": "Unsupported Webview Version",
   "webviewUnsupportedMessage": "Your Webview version may be not supported. Current version is {version}, required minimum version is {minVersion}, please update your Webview",
   "webviewCancel": "I know",
-  "webview2NotInstalled": "Failed to find an installed WebView2 Runtime or non-stable Microsoft Edge installation.",
-  "webview2Install": "Go to diownload",
   "bookSyncStatusNotSyncing": "Not syncing",
   "bookSyncStatusUploadingTitle": "Uploading",
   "bookSyncStatusDownloadingTitle": "Downloading",
@@ -386,12 +375,6 @@
   "whatsNew": "What's New",
   "databaseBackupManagement": "Database Backup Management",
   "restoreBackup": "Restore Backup",
-  "customCssEnabled": "Enable Custom CSS",
-  "cssValidationUnmatchedBraces": "Unmatched braces",
-  "cssValidationMissingSemicolon": "Missing semicolon on line {lineNumber}",
-  "cssSaveAndApply": "Save & Apply",
-  "cssRestoreDefault": "Restore Default",
-  "cssEditorHint": "Your custom CSS here...",
   "md5Management": "File Deduplication",
   "md5Statistics": "MD5 Statistics",
   "md5TotalBooks": "Total books: {count}",
@@ -417,8 +400,6 @@
   "skipDuplicateFiles": "Skip Duplicate Files",
   "readingPageSwapPageTurnArea": "Swap Page Turn Area",
   "readingPageSwapPageTurnAreaTips": "Turn the previous area into next area",
-  "readingPageShowMenuOnHover": "Mouse Hover to Show Menu",
-  "readingPageShowMenuOnHoverTips": "Automatically show menu when hovering over the top or bottom edge of the window for easy access",
   "readingPageShowActionLabels": "Show Action Labels",
   "readingPageShowActionLabelsTips": "Show text below icon-style action buttons such as the selection context menu",
   "pageTurnModeSimple": "Simple",
@@ -458,7 +439,6 @@
   "close": "Close",
   "statisticsSwipeToDeleteHint": "Swipe left to delete reading records. You can undo within this page, but changes are permanent once you leave.",
   "bookNotesOperationsHint": "Long press to multi-select for delete or export, swipe left to edit or share notes",
-  "searchBooksOrNotes": "Search books or notes",
   "startTypingToSearch": "Start typing to search",
   "nothingHere": "Nothing here",
   "books": "Books",
@@ -561,7 +541,6 @@
   "bookshelfFilterReading": "Reading",
   "bookshelfFilterNotStarted": "Not started",
   "settingsNarrateClickForHelp": "Click here for help",
-  "translateBingWeb": "Bing Web Translate",
   "translateGoogleWeb": "Google Web Translate",
   "translateMicrosoftAzure": "Microsoft Azure API",
   "translateGoogleCloud": "Google Cloud API",
@@ -573,22 +552,6 @@
   "translateAzureApiKeyDescription": "Azure Cognitive Services API Key",
   "translateGoogleApiKeyDescription": "Google Cloud Translation API Key",
   "translateAzureRegionDescription": "Azure Region (e.g. global, westus)",
-  "migrationInProgress": "Migrating Data...",
-  "migrationComplete": "Migration Complete",
-  "migrationFailed": "Migration Failed",
-  "migrationDoNotClose": "Please do not close the app during migration",
-  "migrationCurrentItem": "Migrating",
-  "migrationPreparing": "Preparing...",
-  "storageCustomLocation": "Custom Storage Location",
-  "storageCurrentPath": "Current Path",
-  "storageNewPath": "New Path",
-  "storageSelectPath": "Select New Location",
-  "storageMigrateData": "Start Migration",
-  "storageResetPath": "Reset to Default",
-  "storagePathNotEmpty": "Please select an empty folder",
-  "storageMigrationSuccess": "Migration completed. Please restart the app.",
-  "storageMigrationFailed": "Migration failed. Data remains in the original location.",
-  "storagePathNoPermission": "No write permission for the selected folder",
   "bookBottomSheetReplaceFile": "Replace File",
   "bookBottomSheetOriginalFileSize": "Original file size: {size}",
   "bookBottomSheetNewFileSize": "New file size: {size}",
@@ -603,7 +566,6 @@
   "commonInputCannotBeEmpty": "Input cannot be empty",
   "navLibrary": "Library",
   "navJournal": "Journal",
-  "navMore": "More",
   "shelfHomeTitle": "My shelves",
   "shelfReadingNow": "Reading now",
   "shelfAllTimeFavourites": "All time favourites",
@@ -628,7 +590,6 @@
   "bookCoverSemanticLabel": "Open {title}",
   "bookOptionsSemanticHint": "Long press for book options",
   "journalPlaceholderTitle": "Keep your thoughts here",
-  "journalPlaceholderBody": "Open a book's Journal from your library to add a review or your thoughts.",
   "journalPagesCount": "{count, plural, =1{1 page} other{{count} pages}}",
   "@journalPagesCount": {
     "placeholders": {
@@ -689,42 +650,8 @@
   },
   "challengeLegendFinished": "Read",
   "challengeLegendReading": "Reading",
-  "challengeLegendEmpty": "Want to read",
   "challengeSetTarget": "Change the target",
   "challengeTargetLabel": "Books this year",
-  "challengeShelfSemanticLabel": "Reading challenge shelf. {finished} of {target} books read, {reading} being read now.",
-  "@challengeShelfSemanticLabel": {
-    "placeholders": {
-      "finished": {
-        "type": "int"
-      },
-      "target": {
-        "type": "int"
-      },
-      "reading": {
-        "type": "int"
-      }
-    }
-  },
-  "challengeSlotFilled": "Spine {slot}: {title}",
-  "@challengeSlotFilled": {
-    "placeholders": {
-      "slot": {
-        "type": "int"
-      },
-      "title": {
-        "type": "String"
-      }
-    }
-  },
-  "challengeSlotEmpty": "Spine {slot} is empty.",
-  "@challengeSlotEmpty": {
-    "placeholders": {
-      "slot": {
-        "type": "int"
-      }
-    }
-  },
   "monthTrackerTitle": "Month tracker",
   "monthTrackerPagesTotal": "{count, plural, =0{No pages this month} =1{1 page this month} other{{count} pages this month}}",
   "@monthTrackerPagesTotal": {
@@ -784,9 +711,7 @@
       }
     }
   },
-  "opdsCatalogs": "Catalogs",
   "opdsFindBooksOnline": "Find books online",
-  "opdsCatalogsEmpty": "No catalogs yet.",
   "opdsAddCatalog": "Add a catalog",
   "opdsCatalogName": "Name",
   "opdsCatalogUrl": "Address",
@@ -873,25 +798,6 @@
   },
   "bookBindingWhyPublicDomain": "A public-domain transcription of an older book.",
   "bookBindingWhyDefault": "Nothing in this book says how it was bound, so the library default applies.",
-  "bookModelSemanticLabel": "{title} by {author}. Tap to open the book.",
-  "@bookModelSemanticLabel": {
-    "placeholders": {
-      "title": {
-        "type": "String"
-      },
-      "author": {
-        "type": "String"
-      }
-    }
-  },
-  "bookModelSemanticLabelNoAuthor": "{title}. Tap to open the book.",
-  "@bookModelSemanticLabelNoAuthor": {
-    "placeholders": {
-      "title": {
-        "type": "String"
-      }
-    }
-  },
   "settingsDefaultBinding": "Default binding",
   "settingsDefaultBindingDescription": "The binding for a book whose details do not say how it was bound. Manga, light novels and modern novels still become softbacks, and older books hardbacks.",
   "settingsBookshelfUniformSpines": "Uniform spines",
@@ -991,13 +897,10 @@
     }
   },
   "bookBindingAskDecide": "Decide for me",
-  "shelfPickUpHint": "Pick up this book",
-  "shelfOpenHint": "Open this book",
   "shelfBookOptions": "Book options",
   "shelfBookOptionDetails": "Details",
   "shelfBookOptionShelves": "Shelves",
   "shelfBookOptionCustomise": "Customise",
-  "shelfBookOptionNotes": "Notes",
   "shelfBookShelvesTitle": "Move or add to a shelf",
   "shelfBookCustomiseTitle": "Customise this book",
   "shelfBookCoverArt": "Cover art",
@@ -1011,9 +914,6 @@
   "settingsDeveloperOptionsEnable": "Enable developer options",
   "settingsDeveloperOptionsEnableDescription": "Turn this off to hide the developer entry in settings.",
   "settingsDeveloperOptionsEnabledToast": "Developer options are on",
-  "settingsDeveloperVibrationTest": "Vibration test",
-  "settingsDeveloperVibrationTestDescription": "Check what the device supports and play each pattern.",
-  "settingsQuickSettings": "Quick settings",
   "commonLoadFailedTitle": "This could not be loaded.",
   "commonLoadFailedBody": "Something went wrong while reading your books. Try again.",
   "notesLoadFailed": "Your notes could not be loaded.",
@@ -1028,7 +928,6 @@
   "readingPageDeleteTheme": "Delete this theme",
   "journalSaveFailed": "Your changes could not be saved. Stay on this page and try again.",
   "journalLoadFailed": "Your journal could not be loaded.",
-  "storageMigrationScheduled": "Restart the app to move your library to the selected folder.",
   "appStartupFailed": "Paperfold could not start.",
   "appStartupFailedBody": "Close the app and open it again. If the problem continues, check that the library folder is available.",
   "searchLibraryHint": "Search books, notes, and journal",
@@ -1042,7 +941,6 @@
     }
   },
   "journalBooks": "Book journals",
-  "journalHighlightsOverview": "Revisit passages and notes from your library.",
   "challengeSaveFailed": "Your target could not be saved. Try again.",
   "monthTrackerSaveFailed": "Your page total could not be saved. Try again.",
   "monthTrackerInvalidPages": "Enter a whole number of pages, 0 or more.",
@@ -1051,7 +949,6 @@
   "monthTrackerManualEntryHint": "Record page totals for each day. Reading time is tracked separately.",
   "journalAddPassage": "Add to journal",
   "journalOpenPassage": "Open passage",
-  "journalPassageAdded": "Passage added to journal.",
   "journalPassageSaveFailed": "The passage could not be added. Try again.",
   "journalThoughtsHint": "Write your thoughts about this passage…",
   "journalBookOverview": "Your reading journal",
@@ -1062,7 +959,6 @@
   "journalExportEmpty": "Add a review or a page before exporting your journal.",
   "journalExportFailed": "Your journal could not be exported. Try again.",
   "journalExportSaved": "Your journal was exported.",
-  "journalNoReview": "No review yet",
   "journalReadBook": "Read book",
   "journalDeletePage": "Delete page",
   "journalDeletePageConfirm": "Delete this page and its saved passage? This cannot be undone.",
@@ -1117,12 +1013,6 @@
   "settingsCatalogs": "Catalogs",
   "captureLogPages": "Log pages",
   "captureWriteNote": "Write a note",
-  "widgetContinue": "Continue reading",
-  "widgetQuickCapture": "Quick capture",
-  "captureNote": "Note",
-  "captureQuote": "Quote",
-  "widgetContinueDescription": "Continue your current book or log pages.",
-  "widgetCaptureDescription": "Save a note, a quote, or reading progress.",
   "newEntry": "New entry",
   "recentEntries": "Recent entries",
   "entryNote": "Note",

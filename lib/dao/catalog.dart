@@ -58,15 +58,6 @@ class CatalogDao extends BaseDao {
     });
   }
 
-  Future<void> updateCatalog(OpdsCatalog catalog) async {
-    await update(
-      table,
-      catalog.toDb(),
-      where: 'id = ?',
-      whereArgs: [catalog.id],
-    );
-  }
-
   /// Removes a catalog.
   ///
   /// The caller must clear the stored password as well. The keystore is a

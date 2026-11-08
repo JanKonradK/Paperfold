@@ -4,7 +4,6 @@ import 'package:paperfold/models/remote_file.dart';
 import 'package:paperfold/service/sync/sync_client_base.dart';
 import 'package:paperfold/utils/get_path/get_temp_dir.dart';
 import 'package:paperfold/utils/log/common.dart';
-import 'package:paperfold/utils/platform_utils.dart';
 import 'package:dio/dio.dart';
 import 'package:webdav_client/webdav_client.dart';
 
@@ -74,7 +73,6 @@ class WebdavClient extends SyncClientBase {
 
       final testContent = 'Paperfold WebDAV Test\n'
           'Test Time: ${DateTime.now()}\n'
-          'Platform: ${AnxPlatform.type.name}\n'
           'Timestamp: $timestamp\n';
 
       await localTestFile.writeAsString(testContent);

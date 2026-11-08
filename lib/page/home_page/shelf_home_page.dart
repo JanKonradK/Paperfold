@@ -35,7 +35,6 @@ import 'package:paperfold/service/book.dart';
 import 'package:paperfold/service/book_binding_settings.dart';
 import 'package:paperfold/utils/get_path/get_temp_dir.dart';
 import 'package:paperfold/utils/log/common.dart';
-import 'package:paperfold/utils/platform_utils.dart';
 import 'package:paperfold/widgets/bookshelf/book_bottom_sheet.dart';
 import 'package:paperfold/widgets/bookshelf/book_cover.dart';
 import 'package:paperfold/widgets/bookshelf/book_spine.dart';
@@ -71,24 +70,14 @@ class ShelfHomeBookActions {
   final ValueChanged<Book>? notes;
 }
 
-/// Compatibility handle for the shell. Book detail now owns its Back route.
-class LibraryBackHandle extends ChangeNotifier {
-  bool get canTakeBack => false;
-  bool takeBack() => false;
-}
-
 class ShelfHomePage extends ConsumerStatefulWidget {
   const ShelfHomePage({
     super.key,
     this.controller,
-    this.backHandle,
     this.bookActions = const ShelfHomeBookActions(),
   });
 
   final ScrollController? controller;
-
-  /// Where this page registers its claim on the back gesture.
-  final LibraryBackHandle? backHandle;
 
   final ShelfHomeBookActions bookActions;
 
@@ -122,14 +111,7 @@ class _ShelfHomePageState extends ConsumerState<ShelfHomePage>
     }
 
     AnxLog.info('importBook files: $result');
-    final files = AnxPlatform.isAndroid
-        ? result.map((file) => File(file.path!)).toList()
-        : await Future.wait(
-            result.map(
-              (file) =>
-                  _copyToTempFile(sourcePath: file.path!, fileName: file.name),
-            ),
-          );
+    final files = result.map((file) => File(file.path!)).toList();
     if (!context.mounted) {
       return;
     }
@@ -615,7 +597,6 @@ class _ShelfHomePageState extends ConsumerState<ShelfHomePage>
                           key: _bookcaseKey,
                           headerBuilder: (_) => header,
                           showCovers: Prefs().shelfCoverView,
-                          showSignposts: false,
                           shelves: rows,
                           initialShelf: activeIndex,
                           onOptions: (shelfBook) {
@@ -700,8 +681,6 @@ class _ShelfHomePageState extends ConsumerState<ShelfHomePage>
                                   : null,
                             );
                           },
-                          pickUpHint: l10n.shelfOpenHint,
-                          openHint: l10n.shelfOpenHint,
                         ),
                       ),
                     ),
@@ -848,7 +827,6 @@ ShelfBook shelfBookFromBook(Book book) => ShelfBook(
   title: book.title,
   author: book.author,
   binding: book.binding(),
-  blurb: book.description,
   coverPath: book.coverPath.isEmpty ? null : book.coverFullPath,
   progress: normaliseShelfProgress(book.readingPercentage),
   finished: book.status == BookStatus.finished,

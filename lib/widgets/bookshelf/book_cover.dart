@@ -146,7 +146,7 @@ class _BookCoverImageState extends State<BookCoverImage> {
   @override
   Widget build(BuildContext context) {
     final path = widget.path;
-    if (kIsWeb || path == null || path.isEmpty) return widget.fallback;
+    if (path == null || path.isEmpty) return widget.fallback;
     return LayoutBuilder(builder: (context, constraints) {
       final width = constraints.hasBoundedWidth ? constraints.maxWidth : 400.0;
       final pixels = (width * MediaQuery.devicePixelRatioOf(context))

@@ -3,19 +3,13 @@ import 'package:paperfold/config/paperfold_system.dart';
 import 'dart:io';
 import 'dart:math';
 
-import 'package:paperfold/config/shared_preference_provider.dart';
 import 'package:paperfold/l10n/generated/L10n.dart';
 import 'package:paperfold/providers/storage_info.dart';
 
-import 'package:paperfold/utils/get_path/get_base_path.dart';
-import 'package:paperfold/utils/get_path/storage_migration.dart';
-import 'package:paperfold/utils/platform_utils.dart';
-import 'package:paperfold/widgets/common/anx_button.dart';
 import 'package:paperfold/widgets/delete_confirm.dart';
 import 'package:paperfold/widgets/settings/settings_section.dart';
 import 'package:paperfold/widgets/settings/settings_tile.dart';
 import 'package:paperfold/widgets/settings/settings_title.dart';
-import 'package:file_picker/file_picker.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -30,117 +24,16 @@ class _StorageSettingsState extends ConsumerState<StorageSettings>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
-  // Custom storage location state
-  String? _selectedNewPath;
-  bool _isMigrating = false;
-  String? _currentStoragePath;
-
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
-    _loadCurrentPath();
-  }
-
-  Future<void> _loadCurrentPath() async {
-    final path = await getAnxDocumentsPath();
-    if (mounted) {
-      setState(() {
-        _currentStoragePath = path;
-        _selectedNewPath = Prefs().pendingStoragePath;
-      });
-    }
   }
 
   @override
   void dispose() {
     _tabController.dispose();
     super.dispose();
-  }
-
-  Future<void> _selectNewPath() async {
-    final result = await FilePicker.getDirectoryPath();
-    if (result == null || !mounted) return;
-
-    // Check if directory is empty
-    final isEmpty = await isDirectoryEmpty(result);
-    if (!isEmpty) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(L10n.of(context).storagePathNotEmpty),
-            backgroundColor: Theme.of(context).colorScheme.error,
-          ),
-        );
-      }
-      return;
-    }
-
-    // Check write permission by creating a test file
-    try {
-      final testFile = File(
-        '$result${Platform.pathSeparator}.anx_permission_test',
-      );
-      await testFile.writeAsString('test');
-      await testFile.delete();
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(L10n.of(context).storagePathNoPermission),
-            backgroundColor: Theme.of(context).colorScheme.error,
-          ),
-        );
-      }
-      return;
-    }
-
-    if (!mounted) return;
-    setState(() {
-      _selectedNewPath = result;
-    });
-  }
-
-  Future<void> _startMigration() async {
-    if (_selectedNewPath == null || _isMigrating) return;
-    setState(() => _isMigrating = true);
-    try {
-      // A live SQLite database must never be moved. Startup applies this
-      // request before the database, log, reader server, or sync can write.
-      await Prefs().setPendingStoragePath(_selectedNewPath);
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(L10n.of(context).storageMigrationScheduled)),
-      );
-    } catch (_) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(L10n.of(context).storageMigrationFailed),
-          backgroundColor: Theme.of(context).colorScheme.error,
-        ),
-      );
-    } finally {
-      if (mounted) setState(() => _isMigrating = false);
-    }
-  }
-
-  Future<void> _resetToDefaultPath() async {
-    final defaultPath = await getDefaultStoragePath();
-    if (!mounted || _currentStoragePath == defaultPath) return;
-
-    if (!await isStorageDestinationEmpty(defaultPath)) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(L10n.of(context).storagePathNotEmpty)),
-      );
-      return;
-    }
-    if (!mounted) return;
-
-    setState(() {
-      _selectedNewPath = defaultPath;
-    });
   }
 
   @override
@@ -239,89 +132,6 @@ class _StorageSettingsState extends ConsumerState<StorageSettings>
             ),
           ],
         ),
-
-        // Custom storage location (Windows only)
-        if (AnxPlatform.isWindows)
-          SettingsSection(
-            title: Text(L10n.of(context).storageCustomLocation),
-            tiles: [
-              CustomSettingsTile(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Current storage path
-                    ListTile(
-                      title: Text(L10n.of(context).storageCurrentPath),
-                      subtitle: Text(
-                        _currentStoragePath ?? '...',
-                        style: Theme.of(context).textTheme.bodySmall,
-                      ),
-                    ),
-                    // Selected new path (if any)
-                    if (_selectedNewPath != null) ...[
-                      ListTile(
-                        title: Text(L10n.of(context).storageNewPath),
-                        subtitle: Text(
-                          _selectedNewPath!,
-                          style: Theme.of(context).textTheme.bodySmall
-                              ?.copyWith(
-                                color: Theme.of(context).colorScheme.primary,
-                              ),
-                        ),
-                        trailing: IconButton(
-                          icon: const Icon(Icons.close),
-                          tooltip: L10n.of(context).commonCancel,
-                          onPressed: _isMigrating
-                              ? null
-                              : () async {
-                                  await Prefs().setPendingStoragePath(null);
-                                  if (!mounted) return;
-                                  setState(() => _selectedNewPath = null);
-                                },
-                        ),
-                      ),
-                    ],
-                    // Action buttons
-                    Padding(
-                      padding: const EdgeInsets.all(PaperfoldSpace.md),
-                      child: Row(
-                        children: [
-                          if (_selectedNewPath == null)
-                            Expanded(
-                              child: AnxButton(
-                                onPressed: _selectNewPath,
-                                child: Text(L10n.of(context).storageSelectPath),
-                              ),
-                            )
-                          else
-                            Expanded(
-                              child: AnxButton(
-                                onPressed: _isMigrating
-                                    ? null
-                                    : _startMigration,
-                                isLoading: _isMigrating,
-                                child: Text(
-                                  L10n.of(context).storageMigrateData,
-                                ),
-                              ),
-                            ),
-                          const SizedBox(width: 8),
-                          if (Prefs().customStoragePath != null &&
-                              _selectedNewPath == null)
-                            AnxButton.outlined(
-                              onPressed: _isMigrating
-                                  ? null
-                                  : _resetToDefaultPath,
-                              child: Text(L10n.of(context).storageResetPath),
-                            ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
 
         // Tab view for data files details
         SettingsSection(

@@ -110,14 +110,6 @@ class BookNoteDao extends BaseDao {
     );
   }
 
-  Future<List<BookNote>> searchBookNotes(String keyword) {
-    final query = keyword.trim();
-    if (query.isEmpty) {
-      return Future.value(const []);
-    }
-    return searchBookNotesAdvanced(keyword: query, types: annotationTypes);
-  }
-
   Future<List<BookNote>> searchBookNotesAdvanced({
     String? keyword,
     int? bookId,

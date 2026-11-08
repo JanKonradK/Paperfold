@@ -11,12 +11,10 @@ class SettingsSection extends AbstractSettingsSection {
   const SettingsSection({
     super.key,
     required this.tiles,
-    this.margin,
     this.title,
   });
 
   final List<AbstractSettingsTile> tiles;
-  final EdgeInsetsDirectional? margin;
   final Widget? title;
 
   @override
@@ -75,16 +73,5 @@ class SettingsSection extends AbstractSettingsSection {
 
   Widget buildTileList() {
     return Column(children: tiles);
-  }
-}
-
-class CustomSettingsSection extends AbstractSettingsSection {
-  const CustomSettingsSection({required this.child, super.key});
-
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    return child;
   }
 }

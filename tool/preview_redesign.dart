@@ -135,7 +135,6 @@ void main() {
         tester.state<BookcaseState>(find.byType(Bookcase)).activeStage!;
     unawaited(stage.pickUp());
     await capture('book-phone');
-    unawaited(stage.putBack());
     await tester.pumpAndSettle();
     await captureOtherDestinations('phone');
     await selectDestination(1);

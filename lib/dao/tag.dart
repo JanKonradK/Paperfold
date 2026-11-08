@@ -16,27 +16,6 @@ class TagDao extends BaseDao {
     );
   }
 
-  Future<Tag?> getTagById(int id) {
-    return querySingle(
-      _stylesTable,
-      mapper: Tag.fromDb,
-      where: 'id = ? AND ABS(font_size - ?) < 0.0001',
-      whereArgs: [id, _tagSentinel],
-    );
-  }
-
-  Future<Tag?> getTagByName(String name) {
-    return rawQuerySingle(
-      '''
-      SELECT * FROM $_stylesTable 
-      WHERE ABS(font_size - ?) < 0.0001 AND LOWER(font_family) = LOWER(?) 
-      LIMIT 1
-      ''',
-      arguments: [_tagSentinel, name],
-      mapper: Tag.fromDb,
-    );
-  }
-
   Future<int> insertTag(String name, {int? color}) async {
     final sanitizedColor = color == null ? null : (color & 0x00FFFFFF);
     final db = await database;
@@ -101,32 +80,9 @@ class BookTagDao extends BaseDao {
     );
   }
 
-  Future<List<int>> fetchBookIdsForTag(int tagId) async {
-    final rows = await rawQueryList(
-      'SELECT line_height FROM $_stylesTable WHERE ABS(font_size - ?) < 0.0001 AND CAST(letter_spacing AS INTEGER) = ?',
-      arguments: [_relationSentinel, tagId],
-      mapper: (row) => (row['line_height'] as num? ?? 0).toInt(),
-    );
-    return rows;
-  }
-
   Future<List<int>> fetchTagIdsForBook(int bookId) async {
     final relations = await fetchRelationsForBook(bookId);
     return relations.map((r) => r.tagId).toList(growable: false);
-  }
-
-  Future<List<Tag>> fetchTagsForBook(int bookId) async {
-    final tagIds = await fetchTagIdsForBook(bookId);
-    if (tagIds.isEmpty) return const [];
-    final placeholders = List.filled(tagIds.length, '?').join(',');
-    return rawQueryList(
-      '''
-      SELECT * FROM $_stylesTable 
-      WHERE ABS(font_size - ?) < 0.0001 AND id IN ($placeholders)
-      ''',
-      arguments: [_tagSentinel, ...tagIds],
-      mapper: Tag.fromDb,
-    );
   }
 
   Future<void> addRelation({required int bookId, required int tagId}) async {

@@ -20,7 +20,6 @@ import 'package:paperfold/utils/toast/common.dart';
 import 'package:paperfold/config/shared_preference_provider.dart';
 import 'package:paperfold/utils/webdav/test_webdav.dart';
 import 'package:paperfold/widgets/settings/settings_title.dart';
-import 'package:paperfold/widgets/settings/webdav_switch.dart';
 import 'package:archive/archive_io.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
@@ -48,7 +47,7 @@ class _SyncSettingState extends ConsumerState<SyncSetting> {
         SettingsSection(
           title: Text(L10n.of(context).settingsSyncWebdav),
           tiles: [
-            webdavSwitch(context, setState, ref),
+            _webdavSwitch(context, setState, ref),
             SettingsTile.navigation(
               title: Text(L10n.of(context).settingsSyncWebdav),
               leading: const Icon(Icons.cloud),
@@ -544,5 +543,33 @@ void showWebdavDialog(BuildContext context) {
         ],
       );
     },
+  );
+}
+
+AbstractSettingsTile _webdavSwitch(
+  BuildContext context,
+  Function setState,
+  WidgetRef ref,
+) {
+  return SettingsTile.switchTile(
+    leading: const Icon(Icons.cached),
+    initialValue: Prefs().webdavStatus,
+    onToggle: (bool value) async {
+      setState(() {
+        Prefs().saveWebdavStatus(value);
+      });
+      if (value) {
+        bool result = await testEnableWebdav();
+        if (!result) {
+          setState(() {
+            Prefs().saveWebdavStatus(!value);
+          });
+        } else {
+          Sync().init();
+          chooseDirection(ref);
+        }
+      }
+    },
+    title: Text(L10n.of(context).settingsSyncEnableWebdav),
   );
 }

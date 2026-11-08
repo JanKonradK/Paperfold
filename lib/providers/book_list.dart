@@ -4,7 +4,6 @@ import 'package:paperfold/dao/tag.dart';
 import 'package:paperfold/enums/sort_field.dart';
 import 'package:paperfold/enums/sort_order.dart';
 import 'package:paperfold/models/book.dart';
-import 'package:paperfold/providers/tb_groups.dart';
 import 'package:paperfold/providers/book_filters.dart';
 import 'package:paperfold/providers/tags.dart'
     show kNoTagFilterId, tagSelectionProvider;
@@ -140,51 +139,13 @@ class BookList extends _$BookList {
     state = AsyncData(await _buildWithFilters());
   }
 
-  void moveBook(Book data, int groupId) {
-    updateBook(data.copyWith(groupId: groupId));
-    // insert a new group if not exists
-    ref.read(groupDaoProvider.notifier).insertGroup(groupId);
-    refresh();
-  }
-
   void updateBook(Book book) {
     bookDao.updateBook(book);
     refresh();
   }
 
-  void dissolveGroup(List<Book> books) {
-    for (var book in books) {
-      updateBook(book.copyWith(groupId: 0));
-    }
-    // delete the group
-    ref.read(groupDaoProvider.notifier).hardDeleteGroup(books.first.groupId);
-    refresh();
-  }
-
-  void removeFromGroup(Book book) {
-    updateBook(book.copyWith(groupId: 0));
-    refresh();
-  }
-
   void reorder(List<List<Book>> books) {
     state = AsyncData(books);
-  }
-
-  void moveBookToTop(int bookId) {
-    var groups = state.value!.map((group) {
-      if (group.any((book) => book.id == bookId)) {
-        return [
-          group.firstWhere((book) => book.id == bookId),
-          ...group.where((b) => b.id != bookId)
-        ];
-      }
-      return group;
-    }).toList();
-
-    state = AsyncData([
-      groups.firstWhere((group) => group.any((book) => book.id == bookId)),
-      ...groups.where((group) => group.every((book) => book.id != bookId))
-    ]);
   }
 
   Future<void> search(String? value) async {

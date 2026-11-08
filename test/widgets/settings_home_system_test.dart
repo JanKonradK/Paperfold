@@ -4,10 +4,19 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:paperfold/config/shared_preference_provider.dart';
 import 'package:paperfold/l10n/generated/L10n.dart';
 import 'package:paperfold/page/settings_page/settings_home_page.dart';
+import 'package:paperfold/providers/shelf_home.dart';
+import 'dart:async';
 import 'package:shared_preferences/shared_preferences.dart';
+
+/// Settings shows the library layout. These tests need no library.
+class _NoLibrary extends ShelfHomeController {
+  @override
+  Future<ShelfHomeData> build() => Completer<ShelfHomeData>().future;
+}
 
 Widget host({double scale = 1, TextDirection direction = TextDirection.ltr}) =>
     ProviderScope(
+      overrides: [shelfHomeProvider.overrideWith(_NoLibrary.new)],
       child: MaterialApp(
         locale: const Locale('en'),
         localizationsDelegates: [

@@ -50,20 +50,6 @@ class ReadingTimeDao extends BaseDao {
     });
   }
 
-  Future<void> insertReadingSession({
-    required int bookId,
-    required int readingTime,
-    DateTime? startedAt,
-  }) async {
-    final session = ReadingTime(
-      bookId: bookId,
-      readingTime: readingTime,
-      date: startedAt?.toIso8601String(),
-    );
-
-    await insertReadingTime(session, startedAt: startedAt);
-  }
-
   String _resolveDayString(ReadingTime readingTime, DateTime? startedAt) {
     final fromModel = readingTime.startedAt;
     if (fromModel != null) {
@@ -84,14 +70,6 @@ class ReadingTimeDao extends BaseDao {
 
   String _dayKey(DateTime dateTime) =>
       dateTime.toIso8601String().substring(0, 10);
-
-  Future<List<ReadingTime>> selectAllReadingTime() async {
-    return queryList(
-      table,
-      mapper: ReadingTime.fromDb,
-      orderBy: 'datetime(date) DESC, id DESC',
-    );
-  }
 
   Future<int> selectTotalReadingTime() async {
     final result = await rawQuerySingle(
@@ -224,64 +202,6 @@ class ReadingTimeDao extends BaseDao {
       whereArgs: [bookId],
       orderBy: 'datetime(date) DESC, id DESC',
     );
-  }
-
-  Future<List<ReadingTime>> queryReadingHistory({
-    int? bookId,
-    DateTime? from,
-    DateTime? to,
-    int? limit,
-  }) async {
-    final where = <String>[];
-    final whereArgs = <Object?>[];
-
-    if (bookId != null) {
-      where.add('book_id = ?');
-      whereArgs.add(bookId);
-    }
-
-    String? toDateTimeString(DateTime? date) => date?.toIso8601String();
-
-    final fromStr = toDateTimeString(from);
-    final toStr = toDateTimeString(to);
-
-    if (fromStr != null) {
-      where.add('datetime(date) >= datetime(?)');
-      whereArgs.add(fromStr);
-    }
-
-    if (toStr != null) {
-      where.add('datetime(date) <= datetime(?)');
-      whereArgs.add(toStr);
-    }
-
-    return queryList(
-      table,
-      mapper: ReadingTime.fromDb,
-      where: where.isEmpty ? null : where.join(' AND '),
-      whereArgs: where.isEmpty ? null : whereArgs,
-      orderBy: 'datetime(date) DESC, id DESC',
-      limit: limit,
-    );
-  }
-
-  Future<List<Map<int, int>>> selectThisWeekBooks() async {
-    final monday =
-        DateTime.now().subtract(Duration(days: DateTime.now().weekday - 1));
-    final rows = await rawQueryList(
-      '''
-      SELECT book_id, SUM(reading_time) AS total_sum 
-      FROM $table 
-      WHERE DATE(date) >= DATE(?) 
-      GROUP BY book_id 
-      ORDER BY total_sum DESC
-      ''',
-      arguments: [monday.toIso8601String().substring(0, 10)],
-      mapper: (row) => {
-        (row['book_id'] as int?) ?? 0: row['total_sum'] as int? ?? 0,
-      },
-    );
-    return rows;
   }
 
   Future<int> selectTotalReadingTimeByBookId(int bookId) async {

@@ -176,7 +176,6 @@ void main() {
               body: ShelfStage(
                 key: stage,
                 books: _books,
-                shelfName: 'Completed',
                 // The real row of controls, so the sheet shows what a reader
                 // holding a book actually sees rather than the book alone.
                 optionsBuilder: (context, book) => ShelfBookOptionBar(

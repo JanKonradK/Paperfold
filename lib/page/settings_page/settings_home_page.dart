@@ -192,10 +192,6 @@ class _SettingsHomePageState extends ConsumerState<SettingsHomePage> {
                                   minTileHeight:
                                       settingsListTileTheme.minTileHeight,
                                   child: SettingsPageBuilder(
-                                    isMobile: true,
-                                    id: index,
-                                    selectedIndex: -1,
-                                    setDetail: (_, _) {},
                                     icon: Icon(categories[index].icon),
                                     title: categories[index].title,
                                     sections: categories[index].sections,
@@ -221,7 +217,7 @@ class _SettingsHomePageState extends ConsumerState<SettingsHomePage> {
                           ),
                         ),
                       const CustomSettingsTile(
-                        child: About(leadingColor: true),
+                        child: About(),
                       ),
                     ],
                   ),

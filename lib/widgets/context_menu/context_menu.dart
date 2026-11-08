@@ -9,7 +9,6 @@ import 'package:paperfold/widgets/context_menu/excerpt_menu.dart';
 import 'package:paperfold/widgets/context_menu/reader_note_menu.dart';
 import 'package:paperfold/widgets/context_menu/translation_menu.dart';
 import 'package:material_ui/material_ui.dart';
-import 'package:pointer_interceptor/pointer_interceptor.dart';
 
 import 'package:paperfold/dao/book_note.dart';
 import 'package:paperfold/models/book_note.dart';
@@ -488,88 +487,86 @@ class _ContextMenuOverlayState extends State<_ContextMenuOverlay>
     return Positioned(
       left: _position.dx,
       top: _position.dy,
-      child: PointerInterceptor(
-        child: Stack(
-          children: [
-            GestureDetector(
-              onTap: widget.onClose,
-              child: IgnorePointer(
-                ignoring: _waitingForFirstMeasurement,
-                child: Opacity(
-                  opacity: _waitingForFirstMeasurement ? 0 : 1,
-                  child: Container(
-                    key: _menuKey,
-                    color: Colors.transparent,
-                    constraints: _menuConstraints,
-                    child: AxisFlex(
-                      axis: flipAxis(widget.axis),
-                      reverse: _reverse,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
+      child: Stack(
+        children: [
+          GestureDetector(
+            onTap: widget.onClose,
+            child: IgnorePointer(
+              ignoring: _waitingForFirstMeasurement,
+              child: Opacity(
+                opacity: _waitingForFirstMeasurement ? 0 : 1,
+                child: Container(
+                  key: _menuKey,
+                  color: Colors.transparent,
+                  constraints: _menuConstraints,
+                  child: AxisFlex(
+                    axis: flipAxis(widget.axis),
+                    reverse: _reverse,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      AxisFlex(
+                        axis: flipAxis(widget.axis),
+                        reverse: _reverse,
+                        children: [
+                          AxisFlex(
+                            axis: widget.axis,
+                            children: [
+                              ExcerptMenu(
+                                annoCfi: widget.annoCfi,
+                                annoContent: widget.annoContent,
+                                id: widget.annoId,
+                                onClose: widget.onClose,
+                                footnote: widget.footnote,
+                                decoration: widget.decoration,
+                                toggleTranslationMenu: _toggleTranslationMenu,
+                                toggleReaderNoteMenu: _toggleReaderNoteMenu,
+                                openReaderNoteMenu: _openReaderNoteMenu,
+                                onNoteCreated: _handleNoteCreated,
+                                axis: widget.axis,
+                                reverse: _reverse,
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                      if (_showReaderNoteMenu) ...[
+                        const SizedBox.square(dimension: 10),
                         AxisFlex(
-                          axis: flipAxis(widget.axis),
-                          reverse: _reverse,
+                          axis: widget.axis,
                           children: [
-                            AxisFlex(
+                            ReaderNoteMenu(
+                              key: _readerNoteMenuKey,
+                              noteId: _noteId,
+                              decoration: widget.decoration,
                               axis: widget.axis,
-                              children: [
-                                ExcerptMenu(
-                                  annoCfi: widget.annoCfi,
-                                  annoContent: widget.annoContent,
-                                  id: widget.annoId,
-                                  onClose: widget.onClose,
-                                  footnote: widget.footnote,
-                                  decoration: widget.decoration,
-                                  toggleTranslationMenu: _toggleTranslationMenu,
-                                  toggleReaderNoteMenu: _toggleReaderNoteMenu,
-                                  openReaderNoteMenu: _openReaderNoteMenu,
-                                  onNoteCreated: _handleNoteCreated,
-                                  axis: widget.axis,
-                                  reverse: _reverse,
-                                ),
-                              ],
+                              onVisibilityChange:
+                                  _handleReaderNoteVisibilityChange,
+                              onSizeChanged: _handleReaderNoteSizeChanged,
                             ),
                           ],
                         ),
-                        if (_showReaderNoteMenu) ...[
-                          const SizedBox.square(dimension: 10),
-                          AxisFlex(
-                            axis: widget.axis,
-                            children: [
-                              ReaderNoteMenu(
-                                key: _readerNoteMenuKey,
-                                noteId: _noteId,
-                                decoration: widget.decoration,
-                                axis: widget.axis,
-                                onVisibilityChange:
-                                    _handleReaderNoteVisibilityChange,
-                                onSizeChanged: _handleReaderNoteSizeChanged,
-                              ),
-                            ],
-                          ),
-                        ],
-                        if (_showTranslationMenu) ...[
-                          const SizedBox.square(dimension: 10),
-                          AxisFlex(
-                            axis: widget.axis,
-                            children: [
-                              TranslationMenu(
-                                content: widget.annoContent,
-                                decoration: widget.decoration,
-                                axis: widget.axis,
-                                contextText: widget.contextText,
-                              ),
-                            ],
-                          ),
-                        ],
                       ],
-                    ),
+                      if (_showTranslationMenu) ...[
+                        const SizedBox.square(dimension: 10),
+                        AxisFlex(
+                          axis: widget.axis,
+                          children: [
+                            TranslationMenu(
+                              content: widget.annoContent,
+                              decoration: widget.decoration,
+                              axis: widget.axis,
+                              contextText: widget.contextText,
+                            ),
+                          ],
+                        ),
+                      ],
+                    ],
                   ),
                 ),
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

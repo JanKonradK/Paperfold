@@ -2,7 +2,6 @@ import 'package:paperfold/config/paperfold_system.dart';
 import 'package:paperfold/l10n/generated/L10n.dart';
 import 'package:paperfold/models/book.dart';
 import 'package:paperfold/page/book_notes_page.dart';
-import 'package:paperfold/providers/notes_page_current_book.dart';
 import 'package:paperfold/providers/notes_statistics.dart';
 import 'package:paperfold/utils/date/convert_seconds.dart';
 import 'package:paperfold/widgets/bookshelf/book_cover.dart';
@@ -36,7 +35,7 @@ class _NotesPageState extends ConsumerState<NotesPage> {
           constraints: const BoxConstraints(maxWidth: 760),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: [notesStatistic(), bookNotesList(true)],
+            children: [notesStatistic(), bookNotesList()],
           ),
         ),
       ),
@@ -90,7 +89,7 @@ class _NotesPageState extends ConsumerState<NotesPage> {
     );
   }
 
-  Widget bookNotesList(bool isMobile) {
+  Widget bookNotesList() {
     final bookIdAndNotes = ref.watch(bookIdAndNotesProvider);
 
     return bookIdAndNotes.when(
@@ -109,7 +108,6 @@ class _NotesPageState extends ConsumerState<NotesPage> {
                     return bookNotesItem(
                       book: data[index]['book']!,
                       numberOfNotes: data[index]['numberOfNotes']!,
-                      isMobile: isMobile,
                       readingTime: data[index]['readingTime']!,
                     );
                   },
@@ -127,7 +125,6 @@ class _NotesPageState extends ConsumerState<NotesPage> {
   Widget bookNotesItem({
     required Book book,
     required int numberOfNotes,
-    required bool isMobile,
     required int readingTime,
   }) {
     final theme = Theme.of(context);
@@ -148,22 +145,12 @@ class _NotesPageState extends ConsumerState<NotesPage> {
     );
 
     void open() {
-      if (isMobile) {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => BookNotesPage(
-              book: book,
-              numberOfNotes: numberOfNotes,
-              isMobile: true,
-            ),
-          ),
-        );
-      } else {
-        ref
-            .read(notesPageCurrentBookProvider.notifier)
-            .setData(book, numberOfNotes);
-      }
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => BookNotesPage(book: book),
+        ),
+      );
     }
 
     // A GestureDetector stood here: no ink, no focus, and no button role, so
@@ -226,9 +213,7 @@ class _NotesPageState extends ConsumerState<NotesPage> {
                 ),
               ),
               Hero(
-                tag: isMobile
-                    ? book.coverFullPath
-                    : '${book.coverFullPath}notMobile',
+                tag: book.coverFullPath,
                 child: BookCover(
                   book: book,
                   height: 130,
@@ -243,26 +228,5 @@ class _NotesPageState extends ConsumerState<NotesPage> {
         ),
       ),
     );
-  }
-}
-
-class NotesDetail extends ConsumerWidget {
-  const NotesDetail({super.key});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return ref
-        .watch(notesPageCurrentBookProvider)
-        .when(
-          data: (current) {
-            return BookNotesPage(
-              isMobile: false,
-              book: current.book,
-              numberOfNotes: current.numberOfNotes,
-            );
-          },
-          loading: () => const CircularProgressIndicator(),
-          error: (error, stack) => NotesTips(),
-        );
   }
 }

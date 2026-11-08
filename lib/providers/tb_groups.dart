@@ -50,25 +50,6 @@ class GroupDao extends _$GroupDao {
     );
   }
 
-  Future<List<TbGroup>> getChildGroups(int parentId) async {
-    final db = await DBHelper().database;
-    final List<Map<String, dynamic>> maps = await db.query(
-      'tb_groups',
-      where: 'parent_id = ? AND is_deleted = ?',
-      whereArgs: [parentId, 0],
-    );
-    return List.generate(maps.length, (i) {
-      return TbGroup(
-        id: maps[i]['id'],
-        name: maps[i]['name'],
-        parentId: maps[i]['parent_id'],
-        isDeleted: maps[i]['is_deleted'],
-        createTime: maps[i]['create_time'],
-        updateTime: maps[i]['update_time'],
-      );
-    });
-  }
-
   Future<int> insertGroup(int groupId) async {
     final db = await DBHelper().database;
     final now = DateTime.now().toIso8601String();
@@ -91,40 +72,6 @@ class GroupDao extends _$GroupDao {
     return 0;
   }
 
-  Future<int> updateGroup(TbGroup group) async {
-    final db = await DBHelper().database;
-    final now = DateTime.now().toIso8601String();
-    final result = await db.update(
-      'tb_groups',
-      {
-        'name': group.name,
-        'parent_id': group.parentId,
-        'is_deleted': group.isDeleted,
-        'update_time': now,
-      },
-      where: 'id = ?',
-      whereArgs: [group.id],
-    );
-    ref.invalidateSelf();
-    return result;
-  }
-
-  Future<int> softDeleteGroup(int id) async {
-    final db = await DBHelper().database;
-    final now = DateTime.now().toIso8601String();
-    final result = await db.update(
-      'tb_groups',
-      {
-        'is_deleted': 1,
-        'update_time': now,
-      },
-      where: 'id = ?',
-      whereArgs: [id],
-    );
-    ref.invalidateSelf();
-    return result;
-  }
-
   Future<void> hardDeleteGroup(int id) async {
     final db = await DBHelper().database;
     await db.delete(
@@ -133,22 +80,6 @@ class GroupDao extends _$GroupDao {
       whereArgs: [id],
     );
     ref.invalidateSelf();
-  }
-
-  Future<int> moveGroup(int id, int? newParentId) async {
-    final db = await DBHelper().database;
-    final now = DateTime.now().toIso8601String();
-    final result = await db.update(
-      'tb_groups',
-      {
-        'parent_id': newParentId,
-        'update_time': now,
-      },
-      where: 'id = ?',
-      whereArgs: [id],
-    );
-    ref.invalidateSelf();
-    return result;
   }
 
   Future<void> refresh() async {

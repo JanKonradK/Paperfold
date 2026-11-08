@@ -5,7 +5,6 @@ import 'package:paperfold/utils/app_version.dart';
 import 'package:paperfold/utils/env_var.dart';
 import 'package:paperfold/utils/get_path/get_temp_dir.dart';
 import 'package:paperfold/utils/log/common.dart';
-import 'package:paperfold/utils/platform_utils.dart';
 import 'package:paperfold/utils/toast/common.dart';
 import 'package:paperfold/widgets/common/container/filled_container.dart';
 import 'package:paperfold/widgets/markdown/styled_markdown.dart';
@@ -183,13 +182,11 @@ Future<void> checkUpdate(bool manualCheck) async {
   }
 
   if (needUpdate) {
-    // Android installs the release package itself. Other systems, and a
-    // release without that package, use the release page. The universal
+    // Paperfold installs the release package itself. A release without that
+    // package uses the release page. The universal
     // package keeps the plain version code: a split package adds 1000 or
     // more, so after it a universal or local build is a downgrade.
-    final apk = AnxPlatform.isAndroid
-        ? releaseApk(response.data['assets'] as List? ?? const [])
-        : null;
+    final apk = releaseApk(response.data['assets'] as List? ?? const []);
     if (manualCheck) {
       Navigator.of(context).pop();
     }

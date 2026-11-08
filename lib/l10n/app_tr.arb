@@ -98,8 +98,6 @@
   "importSupportTypes": "Desteklenen türler: {types}",
   "importNBooksNotSupport": "{count, plural, =1{1 kitap henüz desteklenmiyor} other{{count} kitap henüz desteklenmiyor}}",
   "importImportNBooks": "{count, plural, =1{1 kitabı içe aktar} other{{count} kitabı içe aktar}}",
-  "bookshelfTips_1": "Kitap yok.",
-  "bookshelfTips_2": "Kitap eklemek için ekle butonuna tıklayın!",
   "statisticsTips_1": "Seçili zaman diliminde okuma yok.",
   "statisticsTips_2": "Bir kitap, ellerinizde tuttuğunuz bir rüyadır.",
   "notesTips_1": "Hiç not yok.",
@@ -125,8 +123,6 @@
   "readingPageFontWeight": "Yazı Tipi Kalınlığı",
   "headingFontSize": "Başlık Boyutu",
   "readingPageLetterSpacing": "Harf Aralığı",
-  "readingPageKeyboardShortcutTurnPage": "Klavye Kısayolu ile Sayfa Çevirme",
-  "readingPageKeyboardShortcutTurnPageTips": "Sayfaları çevirmek için Ctrl+[ ve Ctrl+] kullanın",
   "bookDetailSave": "Kaydet",
   "bookDetailEdit": "Düzenle",
   "bookDetailNthBook": "{count, plural, =1{Okuduğunuz 1. kitap} =2{Okuduğunuz 2. kitap} few{Okuduğunuz 3. kitap} other{Okuduğunuz {count}. kitap}}",
@@ -192,7 +188,6 @@
   "storageFontFile": "Yazı Tipi Dosyası",
   "storageDataFileDetails": "Veri Dosyası Detayları",
   "storageClearCache": "Önbelleği Temizle",
-  "serviceImportSuccess": "İçe aktarma başarılı",
   "webdavSyncing": "Senkronize ediliyor",
   "webdavSyncingFiles": "Dosyalar senkronize ediliyor",
   "webdavSyncComplete": "Senkronizasyon tamamlandı",
@@ -205,7 +200,6 @@
   "webdavSyncAborted": "Senkronizasyon iptal edildi",
   "webdavSyncAbortedContent": "WebDAV'dan veri alınamadı, uzak veri boş. Lütfen aşağıdakileri kontrol edin: \n1. Ağ bağlantısı \n2. Diğer cihazlarda geçerli okuma verilerinin WebDAV'a yüklendiğinden emin olun\n\nArdından, lütfen verileri WebDAV'a yüklemeyi deneyin",
   "webdavSyncDirection": "WebDAV verileri diğer cihazlar tarafından değiştirilmiş olabilir, lütfen verilerin nasıl işleneceğini seçin",
-  "settingsSync": "Senkronizasyon",
   "settingsSyncWebdav": "WebDAV",
   "settingsSyncEnableWebdav": "WebDAV'ı Etkinleştir",
   "settingsSyncWebdavUrl": "WebDAV URL",
@@ -229,15 +223,12 @@
   "settingsTranslateAuto": "Otomatik",
   "settingsReading": "Okuma",
   "settingsBookshelf": "Kitaplık",
-  "settingsBookshelfCover": "Kitap kapağı",
-  "settingsBookshelfCoverWidth": "Kitap kapağı genişliği",
   "settingsBookshelfFolderStyle": "Kitaplık klasör stili",
   "settingsBookshelfFolderStyleOverlap": "Üst üste",
   "settingsBookshelfFolderStyleGrid": "2x2 Izgara",
   "settingsBookshelfDefaultCoverShowTitle": "Varsayılan kapakta başlığı göster",
   "settingsBookshelfDefaultCoverShowAuthor": "Varsayılan kapakta yazarı göster",
   "storagePermissionDenied": "Depolama izni reddedildi",
-  "galleryPermissionDenied": "Galeri izni reddedildi",
   "gotoAuthorize": "Yetkilendirmeye git",
   "settingsAdvanced": "Gelişmiş",
   "settingsAdvancedLog": "Günlük",
@@ -259,8 +250,6 @@
   "webviewUnsupportedVersion": "Desteklenmeyen Webview Sürümü",
   "webviewUnsupportedMessage": "Webview sürümünüz desteklenmiyor olabilir. Mevcut sürüm: {version}, gerekli minimum sürüm: {minVersion}. Lütfen Webview'i güncelleyin.",
   "webviewCancel": "Biliyorum",
-  "webview2NotInstalled": "Yüklü bir WebView2 Runtime veya kararlı bir Microsoft Edge sürümü bulunamadı.",
-  "webview2Install": "İndirmeye git",
   "bookSyncStatusNotSyncing": "Senkronize edilmiyor",
   "bookSyncStatusUploadingTitle": "Yükleniyor",
   "bookSyncStatusDownloadingTitle": "İndiriliyor",
@@ -360,12 +349,6 @@
   "whatsNew": "Yenilikler",
   "databaseBackupManagement": "Veritabanı yedekleme yönetimi",
   "restoreBackup": "Yedeklemeyi geri yükle",
-  "customCssEnabled": "Özel CSS'i Etkinleştir",
-  "cssValidationUnmatchedBraces": "Eşleşmeyen parantezler",
-  "cssValidationMissingSemicolon": "{lineNumber} satırında noktalı virgül eksik",
-  "cssSaveAndApply": "Kaydet ve Uygula",
-  "cssRestoreDefault": "Varsayılanı Geri Yükle",
-  "cssEditorHint": "Özel CSS'iniz buraya...",
   "md5Management": "Dosya Tekrarını Kaldırma",
   "md5Statistics": "MD5 İstatistikleri",
   "md5TotalBooks": "Toplam kitap: {count}",
@@ -391,8 +374,6 @@
   "skipDuplicateFiles": "Yinelenen Dosyaları Atla",
   "readingPageSwapPageTurnArea": "Sayfa çevirme alanını değiştir",
   "readingPageSwapPageTurnAreaTips": "İleri sayfa çevirme alanını geri sayfa çevirme olarak değiştir",
-  "readingPageShowMenuOnHover": "Fare Üzerine Geldiğinde Menüyü Göster",
-  "readingPageShowMenuOnHoverTips": "Pencerenin üst veya alt kenarının üzerine fare geldiğinde menüyü otomatik olarak gösterir",
   "readingPageShowActionLabels": "Etiketleri Göster",
   "readingPageShowActionLabelsTips": "Seçim bağlam menüsü gibi simge stilindeki eylem düğmelerinin altında metin göster",
   "pageTurnModeSimple": "Basit",
@@ -432,7 +413,6 @@
   "close": "Kapat",
   "statisticsSwipeToDeleteHint": "Okuma kayıtlarını silmek için sola kaydırın. Bu sayfada geri alabilirsiniz, ancak sayfadan çıktıktan sonra değişiklikler kalıcı olur.",
   "bookNotesOperationsHint": "Silmek veya dışa aktarmak için çoklu seçim yapmak amacıyla uzun basın, notları düzenlemek veya paylaşmak için sola kaydırın",
-  "searchBooksOrNotes": "Kitap veya not ara",
   "startTypingToSearch": "Aramak için yazmaya başlayın",
   "nothingHere": "Burada hiçbir şey yok",
   "books": "Kitaplar",
@@ -535,7 +515,6 @@
   "bookshelfFilterReading": "Okunuyor",
   "bookshelfFilterNotStarted": "Başlanmadı",
   "settingsNarrateClickForHelp": "Yardım için buraya tıklayın",
-  "translateBingWeb": "Bing Web Çeviri",
   "translateGoogleWeb": "Google Web Çeviri",
   "translateMicrosoftAzure": "Microsoft Azure API",
   "translateGoogleCloud": "Google Cloud API",
@@ -547,22 +526,6 @@
   "translateAzureApiKeyDescription": "Azure Bilişsel Hizmetler API Anahtarı",
   "translateGoogleApiKeyDescription": "Google Cloud Translation API Anahtarı",
   "translateAzureRegionDescription": "Azure Bölgesi (örn. global, westus)",
-  "migrationInProgress": "Veriler Taşınıyor...",
-  "migrationComplete": "Taşıma Tamamlandı",
-  "migrationFailed": "Taşıma Başarısız",
-  "migrationDoNotClose": "Lütfen taşıma sırasında uygulamayı kapatmayın",
-  "migrationCurrentItem": "Taşınıyor",
-  "migrationPreparing": "Hazırlanıyor...",
-  "storageCustomLocation": "Özel Depolama Konumu",
-  "storageCurrentPath": "Mevcut Yol",
-  "storageNewPath": "Yeni Yol",
-  "storageSelectPath": "Yeni Konum Seç",
-  "storageMigrateData": "Migrasyonu Başlat",
-  "storageResetPath": "Varsayılana Sıfırla",
-  "storagePathNotEmpty": "Lütfen boş bir klasör seçin",
-  "storageMigrationSuccess": "Migrasyon tamamlandı. Lütfen uygulamayı yeniden başlatın.",
-  "storageMigrationFailed": "Migrasyon başarısız oldu. Veriler orijinal konumda kaldı.",
-  "storagePathNoPermission": "Seçilen klasör için yazma izni yok",
   "bookBottomSheetReplaceFile": "Dosyayı Değiştir",
   "bookBottomSheetOriginalFileSize": "Orijinal dosya boyutu: {size}",
   "bookBottomSheetNewFileSize": "Yeni dosya boyutu: {size}",
@@ -603,7 +566,6 @@
   "settingsAdvancedHttpProxyTestFailed": "Bağlantı başarısız",
   "navLibrary": "Kütüphane",
   "navJournal": "Günlük",
-  "navMore": "Diğer",
   "shelfHomeTitle": "Raflarım",
   "shelfReadingNow": "Şimdi okuyorum",
   "shelfAllTimeFavourites": "En sevdiğim kitaplar",
@@ -628,7 +590,6 @@
   "bookCoverSemanticLabel": "{title} kitabını aç",
   "bookOptionsSemanticHint": "Kitap seçenekleri için basılı tutun",
   "journalPlaceholderTitle": "Düşüncelerinizi burada saklayın",
-  "journalPlaceholderBody": "Bir değerlendirme veya düşüncelerinizi eklemek için kütüphanenizden kitabın günlüğünü açın.",
   "journalPagesCount": "{count, plural, other{{count} sayfa}}",
   "@journalPagesCount": {
     "placeholders": {
@@ -689,42 +650,8 @@
   },
   "challengeLegendFinished": "Okundu",
   "challengeLegendReading": "Okunuyor",
-  "challengeLegendEmpty": "Okumak istiyorum",
   "challengeSetTarget": "Hedefi değiştir",
   "challengeTargetLabel": "Bu yıl okunacak kitap sayısı",
-  "challengeShelfSemanticLabel": "Okuma hedefi rafı. {target} kitaptan {finished} tanesi okundu, {reading} tanesi şu anda okunuyor.",
-  "@challengeShelfSemanticLabel": {
-    "placeholders": {
-      "finished": {
-        "type": "int"
-      },
-      "target": {
-        "type": "int"
-      },
-      "reading": {
-        "type": "int"
-      }
-    }
-  },
-  "challengeSlotFilled": "Sırt {slot}: {title}",
-  "@challengeSlotFilled": {
-    "placeholders": {
-      "slot": {
-        "type": "int"
-      },
-      "title": {
-        "type": "String"
-      }
-    }
-  },
-  "challengeSlotEmpty": "{slot}. kitap sırtı boş.",
-  "@challengeSlotEmpty": {
-    "placeholders": {
-      "slot": {
-        "type": "int"
-      }
-    }
-  },
   "monthTrackerTitle": "Aylık takip",
   "monthTrackerPagesTotal": "{count, plural, =0{Bu ay sayfa okunmadı} other{Bu ay {count} sayfa}}",
   "@monthTrackerPagesTotal": {
@@ -784,9 +711,7 @@
       }
     }
   },
-  "opdsCatalogs": "Kataloglar",
   "opdsFindBooksOnline": "İnternetten kitap bul",
-  "opdsCatalogsEmpty": "Henüz katalog yok.",
   "opdsAddCatalog": "Katalog ekle",
   "opdsCatalogName": "Ad",
   "opdsCatalogUrl": "Adres",
@@ -873,25 +798,6 @@
   },
   "bookBindingWhyPublicDomain": "Eski bir kitabın kamu malı olan metin aktarımı.",
   "bookBindingWhyDefault": "Kitap cilt türünü belirtmediğinden kütüphanenin varsayılanı kullanılır.",
-  "bookModelSemanticLabel": "{title}, yazar: {author}. Kitabı açmak için dokunun.",
-  "@bookModelSemanticLabel": {
-    "placeholders": {
-      "title": {
-        "type": "String"
-      },
-      "author": {
-        "type": "String"
-      }
-    }
-  },
-  "bookModelSemanticLabelNoAuthor": "{title}. Kitabı açmak için dokunun.",
-  "@bookModelSemanticLabelNoAuthor": {
-    "placeholders": {
-      "title": {
-        "type": "String"
-      }
-    }
-  },
   "settingsDefaultBinding": "Varsayılan cilt türü",
   "settingsDefaultBindingDescription": "Biçim bilgisi olmayan kitapların cilt türü. Manga, hafif roman ve modern romanlar yumuşak; eski kitaplar sert kapaklı kalır.",
   "settingsBookshelfUniformSpines": "Eşit kitap sırtları",
@@ -991,13 +897,10 @@
     }
   },
   "bookBindingAskDecide": "Benim yerime karar ver",
-  "shelfPickUpHint": "Bu kitabı seç",
-  "shelfOpenHint": "Bu kitabı aç",
   "shelfBookOptions": "Kitap seçenekleri",
   "shelfBookOptionDetails": "Ayrıntılar",
   "shelfBookOptionShelves": "Raflar",
   "shelfBookOptionCustomise": "Özelleştir",
-  "shelfBookOptionNotes": "Notlar",
   "shelfBookShelvesTitle": "Rafa taşı veya ekle",
   "shelfBookCustomiseTitle": "Bu kitabı özelleştir",
   "shelfBookCoverArt": "Kapak resmi",
@@ -1011,9 +914,6 @@
   "settingsDeveloperOptionsEnable": "Geliştirici seçeneklerini etkinleştir",
   "settingsDeveloperOptionsEnableDescription": "Ayarlardaki geliştirici girişini gizlemek için kapatın.",
   "settingsDeveloperOptionsEnabledToast": "Geliştirici seçenekleri etkin",
-  "settingsDeveloperVibrationTest": "Titreşim testi",
-  "settingsDeveloperVibrationTestDescription": "Cihazın neleri desteklediğini kontrol edin ve her titreşim düzenini deneyin.",
-  "settingsQuickSettings": "Hızlı ayarlar",
   "commonLoadFailedTitle": "Bu öğe yüklenemedi.",
   "commonLoadFailedBody": "Kitaplarınız okunurken bir hata oluştu. Yeniden deneyin.",
   "notesLoadFailed": "Notlarınız yüklenemedi.",
@@ -1028,7 +928,6 @@
   "readingPageDeleteTheme": "Bu temayı sil",
   "journalSaveFailed": "Değişiklikleriniz kaydedilemedi. Bu sayfada kalın ve yeniden deneyin.",
   "journalLoadFailed": "Günlüğünüz yüklenemedi.",
-  "storageMigrationScheduled": "Kütüphanenizi seçilen klasöre taşımak için uygulamayı yeniden başlatın.",
   "appStartupFailed": "Paperfold başlatılamadı.",
   "appStartupFailedBody": "Uygulamayı kapatıp yeniden açın. Sorun sürerse kütüphane klasörüne erişilebildiğini kontrol edin.",
   "searchLibraryHint": "Kitaplarda, notlarda ve günlükte ara",
@@ -1042,7 +941,6 @@
     }
   },
   "journalBooks": "Kitap günlükleri",
-  "journalHighlightsOverview": "Kütüphanenizdeki bölümlere ve notlara yeniden bakın.",
   "challengeSaveFailed": "Hedefiniz kaydedilemedi. Yeniden deneyin.",
   "monthTrackerSaveFailed": "Toplam sayfa sayınız kaydedilemedi. Yeniden deneyin.",
   "monthTrackerInvalidPages": "0 veya daha büyük bir tam sayı olarak sayfa sayısını girin.",
@@ -1051,7 +949,6 @@
   "monthTrackerManualEntryHint": "Her gün için toplam sayfa sayısını kaydedin. Okuma süresi ayrı olarak izlenir.",
   "journalAddPassage": "Günlüğe ekle",
   "journalOpenPassage": "Bölümü aç",
-  "journalPassageAdded": "Bölüm günlüğe eklendi.",
   "journalPassageSaveFailed": "Bölüm eklenemedi. Yeniden deneyin.",
   "journalThoughtsHint": "Bu bölüm hakkındaki düşüncelerinizi yazın…",
   "journalBookOverview": "Okuma günlüğünüz",
@@ -1062,7 +959,6 @@
   "journalExportEmpty": "Günlüğünüzü dışa aktarmadan önce bir değerlendirme veya sayfa ekleyin.",
   "journalExportFailed": "Günlüğünüz dışa aktarılamadı. Yeniden deneyin.",
   "journalExportSaved": "Günlüğünüz dışa aktarıldı.",
-  "journalNoReview": "Henüz değerlendirme yok",
   "journalReadBook": "Kitabı oku",
   "journalDeletePage": "Sayfayı sil",
   "journalDeletePageConfirm": "Bu sayfa ve kaydedilen bölümü silinsin mi? Bu işlem geri alınamaz.",
@@ -1110,12 +1006,6 @@
   "settingsCatalogs": "Kataloglar",
   "captureLogPages": "Sayfaları kaydet",
   "captureWriteNote": "Not yaz",
-  "widgetContinue": "Okumaya devam et",
-  "widgetQuickCapture": "Hızlı kayıt",
-  "captureNote": "Not",
-  "captureQuote": "Alıntı",
-  "widgetContinueDescription": "Geçerli kitabı okumaya devam edin veya sayfaları kaydedin.",
-  "widgetCaptureDescription": "Not, alıntı veya okuma ilerlemesini kaydedin.",
   "newEntry": "Yeni kayıt",
   "recentEntries": "Son kayıtlar",
   "entryNote": "Not",

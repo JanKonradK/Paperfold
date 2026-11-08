@@ -100,9 +100,9 @@ Anxcye. The author of Anx Reader does not endorse Paperfold.
 
 ## Platforms
 
-Android is the tested release target. The project also contains iOS, Windows,
-macOS, Linux, and OpenHarmony targets. These targets need further device tests.
-Linux support is incomplete.
+Paperfold is an Android application. The iOS, macOS, Windows, Linux, web, and
+OpenHarmony projects were removed on 2026-11-08. A copy is in
+`Paperfold-other-platforms`, next to this repository.
 
 ## Build
 

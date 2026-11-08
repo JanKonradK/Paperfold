@@ -62,25 +62,10 @@ class SyncClientFactory {
     return Prefs().getSyncInfo(protocol);
   }
 
-  /// Update the current client configuration
-  static void updateCurrentClientConfig(Map<String, dynamic> newConfig) {
-    _currentClient?.updateConfig(newConfig);
-
-    // Save to preferences
-    final protocol = getCurrentSyncProtocol();
-    saveConfigForProtocol(protocol, newConfig);
-  }
-
   /// Save configuration for a specific protocol
   static void saveConfigForProtocol(
       SyncProtocol protocol, Map<String, dynamic> config) {
     Prefs().setSyncInfo(protocol, config);
-  }
-
-  /// Switch to a different sync protocol
-  static void switchProtocol(SyncProtocol newProtocol) {
-    Prefs().syncProtocol = newProtocol.name;
-    initializeCurrentClient();
   }
 
   /// Check if current client is configured and ready

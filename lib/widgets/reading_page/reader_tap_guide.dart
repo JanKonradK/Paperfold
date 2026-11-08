@@ -8,7 +8,6 @@ import 'package:paperfold/l10n/generated/L10n.dart';
 import 'package:paperfold/widgets/common/paperfold_pane.dart';
 import 'package:paperfold/widgets/reading_page/more_settings/page_turning/diagram.dart';
 import 'package:paperfold/widgets/reading_page/more_settings/page_turning/types_and_icons.dart';
-import 'package:pointer_interceptor/pointer_interceptor.dart';
 
 /// Keeps first-open policy separate from the WebView so it can be tested.
 class ReaderTapGuideGate extends StatefulWidget {
@@ -50,8 +49,7 @@ class ReaderTapGuideGateState extends State<ReaderTapGuideGate> {
           excluding: visible,
           child: ExcludeSemantics(excluding: visible, child: widget.child),
         ),
-        if (visible)
-          PointerInterceptor(child: ReaderTapGuide(onDismiss: _dismiss)),
+        if (visible) ReaderTapGuide(onDismiss: _dismiss),
       ],
     );
   }

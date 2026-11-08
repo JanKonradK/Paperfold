@@ -23,8 +23,6 @@ void main() {
   testWidgets('detail uses a route and Library does not capture Back', (
     tester,
   ) async {
-    final handle = LibraryBackHandle();
-    addTearDown(handle.dispose);
     fakeData = populatedData();
     await tester.binding.setSurfaceSize(const Size(412, 915));
     addTearDown(() => tester.binding.setSurfaceSize(null));
@@ -44,7 +42,6 @@ void main() {
             colorScheme: PaperfoldTokens.colorScheme(Brightness.light),
           ),
           home: ShelfHomePage(
-            backHandle: handle,
             bookActions: ShelfHomeBookActions(details: (_) {}),
           ),
         ),
@@ -52,19 +49,11 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    // Nothing off the shelf: back is not the Library's to take.
-    expect(handle.canTakeBack, isFalse);
-    expect(handle.takeBack(), isFalse);
-
     final bookcase = tester.state<BookcaseState>(find.byType(Bookcase));
     final stage = bookcase.activeStage!;
     stage.pickUp();
     await tester.pump();
     await tester.pumpAndSettle();
-    expect(stage.phase, ShelfPhase.shelved);
-
-    expect(handle.canTakeBack, isFalse);
-    expect(handle.takeBack(), isFalse);
     expect(stage.phase, ShelfPhase.shelved);
   });
 }

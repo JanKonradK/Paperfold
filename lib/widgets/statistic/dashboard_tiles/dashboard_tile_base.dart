@@ -7,7 +7,8 @@ import 'dart:math';
 import 'package:paperfold/l10n/generated/L10n.dart';
 import 'package:paperfold/main.dart';
 import 'package:paperfold/providers/dashboard_tiles_provider.dart';
-import 'package:paperfold/service/vibration_service.dart';
+import 'package:flutter/services.dart';
+import 'package:paperfold/config/shared_preference_provider.dart';
 import 'package:paperfold/widgets/common/container/filled_container.dart';
 import 'package:paperfold/widgets/common/fitted_text.dart';
 import 'package:paperfold/widgets/statistic/dashboard_tiles/dashboard_tile_detail_view.dart';
@@ -246,7 +247,7 @@ class DashboardTileShell extends ConsumerWidget {
             tile.onTap(context, ref);
             return;
           }
-          VibrationService.medium();
+          if (!Prefs().reduceVibrationFeedback) HapticFeedback.mediumImpact();
           Navigator.of(context)
               .push(
                 PageRouteBuilder(
@@ -266,7 +267,7 @@ class DashboardTileShell extends ConsumerWidget {
                 ),
               )
               .then((_) {
-                VibrationService.rigid();
+                if (!Prefs().reduceVibrationFeedback) HapticFeedback.heavyImpact();
               });
         },
         child: Stack(

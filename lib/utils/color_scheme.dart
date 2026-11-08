@@ -3,8 +3,6 @@ import 'package:paperfold/config/paperfold_tokens.dart';
 import 'package:paperfold/config/paperfold_motion.dart';
 import 'package:paperfold/config/paperfold_system.dart';
 import 'package:chinese_font_library/chinese_font_library.dart';
-import 'package:cupertino_ui/cupertino_ui.dart'
-    show CupertinoPageTransitionsBuilder;
 import 'package:flex_color_scheme/flex_color_scheme.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -424,11 +422,6 @@ ThemeData paperfoldComponentTheme(ThemeData themeData) {
       builders: {
         // The system Back gesture drives the page on Android 14 and later.
         TargetPlatform.android: PredictiveBackPageTransitionsBuilder(),
-        TargetPlatform.fuchsia: FadeForwardsPageTransitionsBuilder(),
-        TargetPlatform.linux: FadeForwardsPageTransitionsBuilder(),
-        TargetPlatform.windows: FadeForwardsPageTransitionsBuilder(),
-        TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
-        TargetPlatform.macOS: CupertinoPageTransitionsBuilder(),
       },
     ),
   );

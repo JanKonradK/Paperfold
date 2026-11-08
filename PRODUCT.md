@@ -6,8 +6,7 @@
 
 android
 
-Android phones come first. Tablets, iOS, and desktop adapt from the phone design.
-iOS still gets its OS guarantees: safe areas, Reduce Motion, and edge-swipe Back.
+Android only. Phones come first, and tablets adapt from the phone design.
 
 ## Users
 

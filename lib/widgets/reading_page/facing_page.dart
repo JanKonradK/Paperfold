@@ -2,7 +2,6 @@ import 'package:paperfold/page/journal/journal_photo.dart';
 import 'package:paperfold/config/paperfold_visual_policy.dart';
 import 'package:paperfold/widgets/common/paperfold_transition.dart';
 import 'package:material_ui/material_ui.dart';
-import 'package:pointer_interceptor/pointer_interceptor.dart';
 import 'package:paperfold/config/paperfold_motion.dart';
 import 'package:paperfold/config/paperfold_system.dart';
 import 'package:paperfold/dao/journal.dart';
@@ -210,121 +209,119 @@ class _FacingPageState extends State<FacingPage> {
     final media = MediaQuery.of(context);
     final available =
         media.size.height - media.viewInsets.bottom - media.padding.top;
-    return PointerInterceptor(
-      child: Padding(
-        padding: EdgeInsets.only(bottom: media.viewInsets.bottom),
-        child: SizedBox(
-          height: (available - 120).clamp(180, media.size.height * 0.65),
-          child: SafeArea(
-            top: false,
-            child: Padding(
-              padding: const EdgeInsets.all(PaperfoldSpace.sheetGutter),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Row(
+    return Padding(
+      padding: EdgeInsets.only(bottom: media.viewInsets.bottom),
+      child: SizedBox(
+        height: (available - 120).clamp(180, media.size.height * 0.65),
+        child: SafeArea(
+          top: false,
+          child: Padding(
+            padding: const EdgeInsets.all(PaperfoldSpace.sheetGutter),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        l.facingPage,
+                        style: Theme.of(context).textTheme.titleLarge,
+                      ),
+                    ),
+                    const CloseButton(),
+                  ],
+                ),
+                if (widget.label != null)
+                  Text(
+                    widget.label!,
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                Expanded(
+                  child: ListView(
                     children: [
-                      Expanded(
-                        child: Text(
-                          l.facingPage,
-                          style: Theme.of(context).textTheme.titleLarge,
+                      for (final entry in _entries)
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
+                            vertical: PaperfoldSpace.xxs,
+                          ),
+                          child: PaperfoldPane(
+                            color: Theme.of(context)
+                                .colorScheme
+                                .surfaceContainerLow,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                if (entry.sourceExcerpt?.isNotEmpty ?? false)
+                                  Text(
+                                    entry.sourceExcerpt!,
+                                    style: const TextStyle(
+                                      fontFamily: 'Philosopher',
+                                      fontSize: 17,
+                                      height: 24 / 17,
+                                    ),
+                                  ),
+                                if (entry.body.isNotEmpty) Text(entry.body),
+                                if (entry.photoPath != null)
+                                  JournalPhoto(path: entry.photoPath!),
+                                if (entry.hasSource &&
+                                    widget.onOpenEntry != null)
+                                  TextButton.icon(
+                                    icon: const Icon(
+                                      Icons.menu_book_outlined,
+                                      size: PaperfoldSize.smallIcon,
+                                    ),
+                                    label: Text(
+                                      entry.sourceLabel ??
+                                          entry.sourceChapter ??
+                                          l.journalOpenPassage,
+                                    ),
+                                    onPressed: () async {
+                                      Navigator.of(context).pop();
+                                      await widget.onOpenEntry!(entry);
+                                    },
+                                  ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      if (!_later)
+                        TextButton(
+                          onPressed: () {
+                            setState(() => _later = true);
+                            _load();
+                          },
+                          child: Text(l.showLaterEntries),
+                        ),
+                      TextField(
+                        controller: _text,
+                        readOnly: _busy || !_loaded,
+                        minLines: 2,
+                        maxLines: null,
+                        onChanged: _persist,
+                        decoration: InputDecoration(
+                          hintText: _loaded
+                              ? l.journalPageHint
+                              : l.journalSaveFailed,
                         ),
                       ),
-                      const CloseButton(),
-                    ],
-                  ),
-                  if (widget.label != null)
-                    Text(
-                      widget.label!,
-                      style: Theme.of(context).textTheme.bodySmall,
-                    ),
-                  Expanded(
-                    child: ListView(
-                      children: [
-                        for (final entry in _entries)
-                          Padding(
-                            padding: const EdgeInsets.symmetric(
-                              vertical: PaperfoldSpace.xxs,
-                            ),
-                            child: PaperfoldPane(
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .surfaceContainerLow,
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  if (entry.sourceExcerpt?.isNotEmpty ?? false)
-                                    Text(
-                                      entry.sourceExcerpt!,
-                                      style: const TextStyle(
-                                        fontFamily: 'Philosopher',
-                                        fontSize: 17,
-                                        height: 24 / 17,
-                                      ),
-                                    ),
-                                  if (entry.body.isNotEmpty) Text(entry.body),
-                                  if (entry.photoPath != null)
-                                    JournalPhoto(path: entry.photoPath!),
-                                  if (entry.hasSource &&
-                                      widget.onOpenEntry != null)
-                                    TextButton.icon(
-                                      icon: const Icon(
-                                        Icons.menu_book_outlined,
-                                        size: PaperfoldSize.smallIcon,
-                                      ),
-                                      label: Text(
-                                        entry.sourceLabel ??
-                                            entry.sourceChapter ??
-                                            l.journalOpenPassage,
-                                      ),
-                                      onPressed: () async {
-                                        Navigator.of(context).pop();
-                                        await widget.onOpenEntry!(entry);
-                                      },
-                                    ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        if (!_later)
-                          TextButton(
-                            onPressed: () {
-                              setState(() => _later = true);
-                              _load();
-                            },
-                            child: Text(l.showLaterEntries),
-                          ),
-                        TextField(
-                          controller: _text,
-                          readOnly: _busy || !_loaded,
-                          minLines: 2,
-                          maxLines: null,
-                          onChanged: _persist,
-                          decoration: InputDecoration(
-                            hintText: _loaded
-                                ? l.journalPageHint
-                                : l.journalSaveFailed,
+                      if (_failed)
+                        Text(
+                          l.journalSaveFailed,
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.error,
                           ),
                         ),
-                        if (_failed)
-                          Text(
-                            l.journalSaveFailed,
-                            style: TextStyle(
-                              color: Theme.of(context).colorScheme.error,
-                            ),
-                          ),
-                      ],
-                    ),
+                    ],
                   ),
-                  SizedBox(
-                    height: PaperfoldSize.primary,
-                    child: FilledButton(
-                      onPressed: _busy || !_loaded ? null : _save,
-                      child: Text(l.commonSave),
-                    ),
+                ),
+                SizedBox(
+                  height: PaperfoldSize.primary,
+                  child: FilledButton(
+                    onPressed: _busy || !_loaded ? null : _save,
+                    child: Text(l.commonSave),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         ),

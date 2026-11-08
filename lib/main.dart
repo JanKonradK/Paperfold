@@ -6,42 +6,30 @@ import 'dart:io';
 import 'package:paperfold/service/capture_launch.dart';
 
 import 'package:paperfold/config/paperfold_visual_policy.dart';
-import 'package:paperfold/utils/platform_utils.dart';
 
 import 'package:paperfold/config/shared_preference_provider.dart';
 import 'package:paperfold/dao/database.dart';
 import 'package:paperfold/enums/sync_direction.dart';
 import 'package:paperfold/enums/sync_trigger.dart';
 import 'package:paperfold/l10n/generated/L10n.dart';
-import 'package:paperfold/models/window_info.dart';
 import 'package:paperfold/page/home_page.dart';
-import 'package:paperfold/page/migration_page.dart';
 import 'package:paperfold/page/opening/opening_sequence.dart';
 import 'package:paperfold/service/book_player/book_player_server.dart';
 import 'package:paperfold/service/network/http_proxy_overrides.dart';
-import 'package:paperfold/utils/get_path/macos_migration.dart';
 import 'package:paperfold/utils/color_scheme.dart';
 import 'package:paperfold/widgets/paperfold_library_theme.dart';
 import 'package:paperfold/utils/error/common.dart';
 import 'package:paperfold/utils/get_path/get_base_path.dart';
-import 'package:paperfold/utils/get_path/storage_migration.dart';
 import 'package:paperfold/utils/log/common.dart';
-import 'package:paperfold/utils/window_position_validator.dart';
 import 'package:paperfold/providers/sync.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:heroine/heroine.dart';
 import 'package:provider/provider.dart' as provider;
-import 'package:window_manager/window_manager.dart';
 
 final navigatorKey = GlobalKey<NavigatorState>();
 final heroineController = HeroineController();
-
-/// Whether macOS data migration is needed (checked at startup)
-bool _needsMigration = false;
-bool _storageMigrationFailed = false;
-MigrationCheckResult? _migrationCheckResult;
 
 /// This process-level flag is set once in [main] and consumed once by MyApp.
 /// Widget rebuilds, configuration changes, and lifecycle resumes cannot reset
@@ -55,9 +43,6 @@ bool _takeColdStartOpening() {
 }
 
 Future<void> _initializeStorage() async {
-  if (AnxPlatform.isWindows) {
-    _storageMigrationFailed = !await applyPendingStorageMigration();
-  }
   await initBasePath();
   await AnxLog.init();
   AnxError.init();
@@ -81,26 +66,11 @@ Future<void> main() async {
   PaperfoldVisualPolicy.init();
   HttpOverrides.global = AnxHttpProxyOverrides();
 
-  // Initialize desktop window with validated position
-  if (AnxPlatform.isWindows || AnxPlatform.isMacOS) {
-    await initializeDesktopWindow();
-  }
-
-  // Check if migration is needed before initializing paths
-  if (AnxPlatform.isMacOS) {
-    _migrationCheckResult = await checkMigrationNeeded();
-    _needsMigration = _migrationCheckResult?.needsMigration ?? false;
-  }
-
-  Future<void>? databaseReady;
-
   // Start storage, the database, and the local reader server without waiting
   // for them before runApp. HomePage and all DAOs join databaseReady.
-  if (!_needsMigration) {
-    databaseReady = _startDataServices();
-  }
+  final databaseReady = _startDataServices();
 
-  _coldStartOpeningPending = !_needsMigration && Prefs().openBookAnimation;
+  _coldStartOpeningPending = Prefs().openBookAnimation;
 
   SmartDialog.config.custom = SmartConfigCustom(
     maskColor: Colors.black.withAlpha(35),
@@ -120,14 +90,14 @@ Future<void> main() async {
 class MyApp extends ConsumerStatefulWidget {
   const MyApp({super.key, required this.databaseReady});
 
-  final Future<void>? databaseReady;
+  final Future<void> databaseReady;
 
   @override
   ConsumerState<ConsumerStatefulWidget> createState() => _MyAppState();
 }
 
 class _MyAppState extends ConsumerState<MyApp>
-    with WidgetsBindingObserver, WindowListener {
+    with WidgetsBindingObserver {
   static const Locale _englishFallbackLocale = Locale('en');
   late final bool _playColdStartOpening;
   late final Completer<void> _openingFinished;
@@ -142,79 +112,12 @@ class _MyAppState extends ConsumerState<MyApp>
       _openingFinished.complete();
     }
     WidgetsBinding.instance.addObserver(this);
-    windowManager.addListener(this);
-    _showStorageMigrationFailure();
-  }
-
-  Future<void> _showStorageMigrationFailure() async {
-    try {
-      await widget.databaseReady;
-      await _openingFinished.future;
-      if (!mounted || !_storageMigrationFailed) return;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        final context = navigatorKey.currentContext;
-        if (!mounted || context == null) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(L10n.of(context).storageMigrationFailed)),
-        );
-      });
-    } catch (_) {
-      // HomePage shows the startup failure and restart guidance.
-    }
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
-    windowManager.removeListener(this);
     super.dispose();
-  }
-
-  @override
-  Future<void> onWindowClose() async {
-    await Server().stop();
-    await webViewEnvironment?.dispose();
-    webViewEnvironment = null;
-    await DBHelper.close();
-    await windowManager.destroy();
-  }
-
-  @override
-  Future<void> onWindowMoved() async {
-    await _updateWindowInfo();
-  }
-
-  @override
-  Future<void> onWindowMaximize() async {
-    await _updateWindowInfo();
-  }
-
-  @override
-  Future<void> onWindowUnmaximize() async {
-    await _updateWindowInfo();
-  }
-
-  @override
-  Future<void> onWindowResized() async {
-    await _updateWindowInfo();
-  }
-
-  Future<void> _updateWindowInfo() async {
-    if (!AnxPlatform.isWindows && !AnxPlatform.isMacOS) {
-      return;
-    }
-    final windowOffset = await windowManager.getPosition();
-    final windowSize = await windowManager.getSize();
-    final isMaximized = await windowManager.isMaximized();
-
-    Prefs().windowInfo = WindowInfo(
-      x: windowOffset.dx,
-      y: windowOffset.dy,
-      width: windowSize.width,
-      height: windowSize.height,
-      isMaximized: isMaximized,
-    );
-    AnxLog.info('onWindowClose: Offset: $windowOffset, Size: $windowSize');
   }
 
   void _handleOpeningFinished() {
@@ -232,29 +135,18 @@ class _MyAppState extends ConsumerState<MyApp>
             .read(syncProvider.notifier)
             .syncData(SyncDirection.both, ref, trigger: SyncTrigger.auto);
       }
-    } else if (state == AppLifecycleState.resumed) {
-      if (AnxPlatform.isIOS) {
-        Server().start();
-      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final databaseReady = widget.databaseReady;
-    final Widget home;
-    if (_needsMigration) {
-      home = _MigrationWrapper(migrationCheckResult: _migrationCheckResult!);
-    } else {
-      assert(databaseReady != null);
-      final homePage = HomePage(
-        databaseReady: databaseReady!,
-        startupRevealReady: _openingFinished.future,
-      );
-      home = _playColdStartOpening
-          ? OpeningSequence(onFinished: _handleOpeningFinished, child: homePage)
-          : homePage;
-    }
+    final homePage = HomePage(
+      databaseReady: widget.databaseReady,
+      startupRevealReady: _openingFinished.future,
+    );
+    final home = _playColdStartOpening
+        ? OpeningSequence(onFinished: _handleOpeningFinished, child: homePage)
+        : homePage;
 
     return provider.MultiProvider(
       providers: [provider.ChangeNotifierProvider(create: (_) => Prefs())],
@@ -337,41 +229,5 @@ class _MyAppState extends ConsumerState<MyApp>
     });
 
     return hasMatch ? resolvedLocale : _englishFallbackLocale;
-  }
-}
-
-/// Widget that wraps the migration flow on macOS.
-/// Shows MigrationPage during migration, then navigates to HomePage.
-class _MigrationWrapper extends StatefulWidget {
-  final MigrationCheckResult migrationCheckResult;
-
-  const _MigrationWrapper({required this.migrationCheckResult});
-
-  @override
-  State<_MigrationWrapper> createState() => _MigrationWrapperState();
-}
-
-class _MigrationWrapperState extends State<_MigrationWrapper> {
-  bool _migrationComplete = false;
-
-  Future<void> _onMigrationComplete() async {
-    await _startDataServices();
-
-    if (mounted) {
-      setState(() {
-        _migrationComplete = true;
-      });
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    if (_migrationComplete) {
-      return HomePage(databaseReady: DBHelper().database);
-    }
-    return MigrationPage(
-      checkResult: widget.migrationCheckResult,
-      onMigrationComplete: _onMigrationComplete,
-    );
   }
 }

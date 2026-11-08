@@ -1,1 +1,0 @@
-An e-book reader and note application that keeps your data on your device

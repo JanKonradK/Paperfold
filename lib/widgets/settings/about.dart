@@ -10,7 +10,6 @@ import 'package:paperfold/page/settings_page/developer/developer_options_page.da
 import 'package:paperfold/utils/env_var.dart';
 import 'package:paperfold/utils/toast/common.dart';
 import 'package:paperfold/widgets/paperfold_logo_mark.dart';
-import 'package:paperfold/widgets/settings/link_icon.dart';
 import 'package:paperfold/utils/check_update.dart';
 import 'package:cupertino_ui/cupertino_ui.dart';
 import 'package:flutter/foundation.dart';
@@ -20,8 +19,7 @@ import 'package:pubspec_parse/pubspec_parse.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class About extends StatefulWidget {
-  const About({super.key, this.leadingColor = false});
-  final bool leadingColor;
+  const About({super.key});
 
   @override
   State<About> createState() => _AboutState();
@@ -167,7 +165,7 @@ Future<void> openAboutDialog() async {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        linkIcon(
+                        _linkIcon(
                           icon: Icon(
                             Icons.code,
                             color: Theme.of(context).colorScheme.secondary,
@@ -175,15 +173,14 @@ Future<void> openAboutDialog() async {
                           url: 'https://github.com/JanKonradK/Paperfold',
                           mode: LaunchMode.externalApplication,
                         ),
-                        if (EnvVar.showTelegramLink)
-                          linkIcon(
-                            icon: Icon(
-                              Icons.telegram,
-                              color: Theme.of(context).colorScheme.secondary,
-                            ),
-                            url: 'https://t.me/Paperfold',
-                            mode: LaunchMode.externalApplication,
+                        _linkIcon(
+                          icon: Icon(
+                            Icons.telegram,
+                            color: Theme.of(context).colorScheme.secondary,
                           ),
+                          url: 'https://t.me/Paperfold',
+                          mode: LaunchMode.externalApplication,
+                        ),
                       ],
                     ),
                   ),
@@ -194,5 +191,24 @@ Future<void> openAboutDialog() async {
         ),
       );
     },
+  );
+}
+
+Widget _linkIcon({
+  required Widget icon,
+  required String url,
+  required LaunchMode mode,
+  double size = 30,
+}) {
+  return IconButton(
+    onPressed: () => launchUrl(
+      Uri.parse(url),
+      mode: mode,
+    ),
+    icon: SizedBox(
+      width: size,
+      height: size,
+      child: icon,
+    ),
   );
 }

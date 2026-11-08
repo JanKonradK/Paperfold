@@ -73,7 +73,7 @@ Future<void> _pumpNotes(
       localizationsDelegates: [L10n.delegate, ...GlobalMaterialLocalizations.delegates],
       supportedLocales: L10n.supportedLocales,
       locale: const Locale('en'),
-      home: BookNotesPage(book: book, numberOfNotes: 42, isMobile: true),
+      home: BookNotesPage(book: book),
     ),
   ));
   await tester.pumpAndSettle();

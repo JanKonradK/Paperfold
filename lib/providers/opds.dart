@@ -60,10 +60,6 @@ class OpdsCatalogsController extends AsyncNotifier<List<OpdsCatalog>> {
     return id;
   }
 
-  Future<void> setPassword(int catalogId, String password) async {
-    await ref.read(opdsCredentialsProvider).write(catalogId, password);
-  }
-
   /// Removes a catalog and its password together.
   ///
   /// The keystore is a separate store. Deleting the row alone would leave the

@@ -15,10 +15,6 @@ class Bookcase extends StatefulWidget {
     this.onShelfChanged,
     this.optionsBuilder,
     this.emptyBuilder,
-    this.onHoldingChanged,
-    this.pickUpHint,
-    this.openHint,
-    this.showSignposts = true,
     this.showCovers = false,
     this.onOptions,
     this.headerBuilder,
@@ -40,12 +36,6 @@ class Bookcase extends StatefulWidget {
   /// What stands on a shelf with nothing on it.
   final Widget Function(BuildContext context, ShelfRow shelf)? emptyBuilder;
 
-  /// Legacy callback; direct routes never hold a book.
-  final ValueChanged<bool>? onHoldingChanged;
-
-  final String? pickUpHint;
-  final String? openHint;
-  final bool showSignposts;
   final bool showCovers;
 
   @override
@@ -116,13 +106,10 @@ class BookcaseState extends State<Bookcase>
                         GlobalKey<ShelfStageState>.new,
                       ),
                       books: widget.shelves[i].books,
-                      shelfName: widget.shelves[i].name,
                       showCovers: widget.showCovers,
                       onOpen: widget.onOpen,
                       onOptions: widget.onOptions,
                       optionsBuilder: widget.optionsBuilder,
-                      pickUpHint: widget.pickUpHint,
-                      openHint: widget.openHint,
                     ),
                   ),
                 ),

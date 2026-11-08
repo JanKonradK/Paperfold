@@ -10,7 +10,6 @@ import 'package:paperfold/l10n/generated/L10n.dart';
 import 'package:paperfold/main.dart';
 import 'package:paperfold/models/book.dart';
 import 'package:paperfold/models/current_reading_state.dart';
-import 'package:paperfold/page/home_page.dart';
 import 'package:paperfold/providers/chapter_content_bridge.dart';
 import 'package:paperfold/providers/current_reading.dart';
 import 'package:paperfold/providers/sync.dart';
@@ -555,11 +554,6 @@ void updateBookRating(Book book, double rating) {
   bookDao.updateBook(book);
 }
 
-Future<void> resetBookCover(Book book) async {
-  File file = File(book.fileFullPath);
-  await getBookMetadata(file, book: book, md5: book.md5);
-}
-
 Future<void> saveBook(
   File file,
   String title,
@@ -646,7 +640,6 @@ Future<void> _getBookMetadata(File file, {Book? book, String? md5}) async {
   AnxLog.info("import start: book url: $bookUrl");
 
   AnxHeadlessWebView webview = AnxHeadlessWebView(
-    webViewEnvironment: webViewEnvironment,
     initialUrlRequest: URLRequest(
         url: WebUri(generateUrl(
       bookUrl,

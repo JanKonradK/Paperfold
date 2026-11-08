@@ -90,8 +90,6 @@ String generateUrl(
     'bgimgOpacity': Prefs().bgimg.opacity,
     'bgimgFit': Prefs().bgimgFit.code,
     'allowScript': Prefs().enableJsForEpub,
-    'customCSS': Prefs().customCSS,
-    'customCSSEnabled': Prefs().customCSSEnabled,
     'useBookStyles': Prefs().useBookStyles,
     'headingFontSize': bookStyle.headingFontSize,
     'codeHighlightTheme': Prefs().codeHighlightTheme.code,

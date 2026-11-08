@@ -55,6 +55,8 @@ void main() {
       SharedPreferences.setMockInitialValues({});
       await Prefs().initPrefs();
       temporary = await Directory.systemTemp.createTemp('paperfold_sync_');
+      // Android keeps databases in their own folder; give each test one.
+      await databaseFactory.setDatabasesPath('${temporary.path}/databases');
       originalPaths = PathProviderPlatform.instance;
       PathProviderPlatform.instance = _Paths(temporary.path);
       originalDocumentPath = documentPath;

@@ -133,16 +133,13 @@ void main() {
     });
   }
 
-  test('effective actions preserve swap, custom layout, and disabled taps', () {
+  test('effective actions preserve swap and custom layout', () {
     Prefs().swapPageTurnArea = true;
     expect(currentPageTurningActions()[0], PageTurningType.next);
     Prefs().pageTurnMode = 'custom';
     Prefs().customPageTurnConfig = [3, 3, 3, 2, 2, 2, 1, 1, 1];
     expect(currentPageTurningActions()[0], PageTurningType.menu);
     expect(currentPageTurningActions()[3], PageTurningType.prev);
-    Prefs().keyboardShortcutTurnPage = true;
-    expect(currentPageTurningActions()[3], PageTurningType.none);
-    expect(currentPageTurningActions()[0], PageTurningType.menu);
   });
 
   testWidgets('RTL arrows and accessible zones; reduced motion is still', (

@@ -98,8 +98,6 @@
   "importSupportTypes": "Tipuri acceptate: {types}",
   "importNBooksNotSupport": "{count, plural, one{O carte nu este încă acceptată} few{{count} cărți nu sunt încă acceptate} other{{count} de cărți nu sunt încă acceptate}}",
   "importImportNBooks": "{count, plural, one{Importă o carte} few{Importă {count} cărți} other{Importă {count} de cărți}}",
-  "bookshelfTips_1": "Nu există cărți.",
-  "bookshelfTips_2": "Apasă butonul de adăugare pentru a adăuga o carte!",
   "statisticsTips_1": "Nu există lecturi în perioada selectată.",
   "statisticsTips_2": "O carte este un vis pe care îl ții în mâini.",
   "notesTips_1": "Nu există note.",
@@ -125,8 +123,6 @@
   "readingPageFontWeight": "Grosimea fontului",
   "headingFontSize": "Dimensiunea titlurilor",
   "readingPageLetterSpacing": "Spațierea literelor",
-  "readingPageKeyboardShortcutTurnPage": "Scurtătură Tastatură pentru Întoarcere Pagină",
-  "readingPageKeyboardShortcutTurnPageTips": "Folosește Ctrl+[ și Ctrl+] pentru a întoarce paginile",
   "bookDetailSave": "Salvează",
   "bookDetailEdit": "Editează",
   "bookDetailNthBook": "{count, plural, one{Prima carte citită} other{Cartea citită cu numărul {count}}}",
@@ -192,7 +188,6 @@
   "storageFontFile": "Fișier de font",
   "storageDataFileDetails": "Detaliile fișierelor de date",
   "storageClearCache": "Golește memoria cache",
-  "serviceImportSuccess": "Import reușit",
   "webdavSyncing": "Se sincronizează",
   "webdavSyncingFiles": "Se sincronizează fișierele",
   "webdavSyncComplete": "Sincronizare încheiată",
@@ -205,7 +200,6 @@
   "webdavSyncAborted": "Sincronizare oprită",
   "webdavSyncAbortedContent": "Datele nu au putut fi obținute de pe WebDAV. Datele la distanță sunt goale. Verifică:\n1. Conexiunea la rețea\n2. Dacă date de lectură valide au fost încărcate pe WebDAV de pe alte dispozitive\n\nApoi încearcă să încarci datele pe WebDAV.",
   "webdavSyncDirection": "Datele WebDAV pot fi modificate de alte dispozitive. Alege cum să fie gestionate datele.",
-  "settingsSync": "Sincronizare",
   "settingsSyncWebdav": "WebDAV",
   "settingsSyncEnableWebdav": "Activează WebDAV",
   "settingsSyncWebdavUrl": "Adresă WebDAV",
@@ -229,15 +223,12 @@
   "settingsTranslateAuto": "Automat",
   "settingsReading": "Lectură",
   "settingsBookshelf": "Raft de cărți",
-  "settingsBookshelfCover": "Coperta cărții",
-  "settingsBookshelfCoverWidth": "Lățimea coperții",
   "settingsBookshelfFolderStyle": "Stilul dosarelor din bibliotecă",
   "settingsBookshelfFolderStyleOverlap": "Suprapunere",
   "settingsBookshelfFolderStyleGrid": "Grilă 2 × 2",
   "settingsBookshelfDefaultCoverShowTitle": "Afișează titlul pe coperta implicită",
   "settingsBookshelfDefaultCoverShowAuthor": "Afișează autorul pe coperta implicită",
   "storagePermissionDenied": "Permisiunea de stocare a fost refuzată",
-  "galleryPermissionDenied": "Permisiunea pentru galerie a fost refuzată",
   "gotoAuthorize": "Mergi la autorizare",
   "settingsAdvanced": "Avansat",
   "settingsAdvancedLog": "Jurnal de diagnosticare",
@@ -259,8 +250,6 @@
   "webviewUnsupportedVersion": "Versiune WebView neacceptată",
   "webviewUnsupportedMessage": "Este posibil ca versiunea WebView să nu fie acceptată. Versiunea curentă este {version}, iar cea minimă necesară este {minVersion}. Actualizează WebView.",
   "webviewCancel": "Am înțeles",
-  "webview2NotInstalled": "Nu a fost găsită o instalare WebView2 Runtime sau o versiune de test Microsoft Edge.",
-  "webview2Install": "Mergi la descărcare",
   "bookSyncStatusNotSyncing": "Nu se sincronizează",
   "bookSyncStatusUploadingTitle": "Se încarcă",
   "bookSyncStatusDownloadingTitle": "Se descarcă",
@@ -360,12 +349,6 @@
   "whatsNew": "Noutăți",
   "databaseBackupManagement": "Gestionarea copiilor de siguranță ale bazei de date",
   "restoreBackup": "Restaurează o copie de siguranță",
-  "customCssEnabled": "Activează CSS personalizat",
-  "cssValidationUnmatchedBraces": "Acolade nepereche",
-  "cssValidationMissingSemicolon": "Lipsește punctul și virgula pe linia {lineNumber}",
-  "cssSaveAndApply": "Salvează și aplică",
-  "cssRestoreDefault": "Restabilește valorile implicite",
-  "cssEditorHint": "Codul tău CSS personalizat…",
   "md5Management": "Eliminarea fișierelor duplicate",
   "md5Statistics": "Statistici MD5",
   "md5TotalBooks": "Total cărți: {count}",
@@ -391,8 +374,6 @@
   "skipDuplicateFiles": "Omite fișierele duplicate",
   "readingPageSwapPageTurnArea": "Inversează zonele de întoarcere a paginii",
   "readingPageSwapPageTurnAreaTips": "Transformă zona pentru pagina precedentă în zona pentru pagina următoare",
-  "readingPageShowMenuOnHover": "Show Menu on Mouse Hover",
-  "readingPageShowMenuOnHoverTips": "Afișează automat meniul când cursorul se află lângă marginea de sus sau de jos a ferestrei",
   "readingPageShowActionLabels": "Afișează etichetele acțiunilor",
   "readingPageShowActionLabelsTips": "Afișează text sub butoanele cu pictograme, precum cele din meniul contextual al selecției",
   "pageTurnModeSimple": "Simplu",
@@ -432,7 +413,6 @@
   "close": "Închide",
   "statisticsSwipeToDeleteHint": "Glisează la stânga pentru a șterge înregistrările. Poți anula în această pagină, dar modificările sunt permanente odată ce ieși.",
   "bookNotesOperationsHint": "Apasă lung pentru selecție multiplă, glisează la stânga pentru a edita sau partaja notițe",
-  "searchBooksOrNotes": "Caută cărți sau notițe",
   "startTypingToSearch": "Începe să tastezi pentru a căuta",
   "nothingHere": "Nimic aici",
   "books": "Cărți",
@@ -535,7 +515,6 @@
   "bookshelfFilterReading": "În curs de citire",
   "bookshelfFilterNotStarted": "Neîncepute",
   "settingsNarrateClickForHelp": "Apasă aici pentru ajutor",
-  "translateBingWeb": "Traducere Web Bing",
   "translateGoogleWeb": "Traducere Web Google",
   "translateMicrosoftAzure": "API Microsoft Azure",
   "translateGoogleCloud": "API Google Cloud",
@@ -547,22 +526,6 @@
   "translateAzureApiKeyDescription": "Cheie API Azure Cognitive Services",
   "translateGoogleApiKeyDescription": "Cheie API Google Cloud Translation",
   "translateAzureRegionDescription": "Regiune Azure (ex. global, westus)",
-  "migrationInProgress": "Migrarea datelor...",
-  "migrationComplete": "Migrare finalizată",
-  "migrationFailed": "Migrare eșuată",
-  "migrationDoNotClose": "Vă rugăm să nu închideți aplicația în timpul migrării",
-  "migrationCurrentItem": "Migrarea",
-  "migrationPreparing": "Se pregătește...",
-  "storageCustomLocation": "Locație de stocare personalizată",
-  "storageCurrentPath": "Calea curentă",
-  "storageNewPath": "Cale nouă",
-  "storageSelectPath": "Selectați o locație nouă",
-  "storageMigrateData": "Începeți migrarea",
-  "storageResetPath": "Revenire la setările implicite",
-  "storagePathNotEmpty": "Vă rugăm să selectați un folder gol",
-  "storageMigrationSuccess": "Migrarea a fost finalizată. Vă rugăm să reporniți aplicația.",
-  "storageMigrationFailed": "Migrarea a eșuat. Datele rămân în locația inițială.",
-  "storagePathNoPermission": "Nu există permisiunea de scriere pentru folderul selectat",
   "bookBottomSheetReplaceFile": "Înlocuiește fișierul",
   "bookBottomSheetOriginalFileSize": "Dimensiune fișier original: {size}",
   "bookBottomSheetNewFileSize": "Dimensiune fișier nou: {size}",
@@ -603,7 +566,6 @@
   "settingsAdvancedHttpProxyTestFailed": "Conexiune eșuată",
   "navLibrary": "Bibliotecă",
   "navJournal": "Jurnal",
-  "navMore": "Mai multe",
   "shelfHomeTitle": "Rafturile mele",
   "shelfReadingNow": "Citesc acum",
   "shelfAllTimeFavourites": "Cărți preferate",
@@ -628,7 +590,6 @@
   "bookCoverSemanticLabel": "Deschide {title}",
   "bookOptionsSemanticHint": "Apasă lung pentru opțiunile cărții",
   "journalPlaceholderTitle": "Păstrează-ți gândurile aici",
-  "journalPlaceholderBody": "Deschide jurnalul unei cărți din bibliotecă pentru a adăuga o recenzie sau gândurile tale.",
   "journalPagesCount": "{count, plural, one{O pagină} few{{count} pagini} other{{count} de pagini}}",
   "@journalPagesCount": {
     "placeholders": {
@@ -689,42 +650,8 @@
   },
   "challengeLegendFinished": "Citită",
   "challengeLegendReading": "În lectură",
-  "challengeLegendEmpty": "Vreau să citesc",
   "challengeSetTarget": "Schimbă obiectivul",
   "challengeTargetLabel": "Cărți în acest an",
-  "challengeShelfSemanticLabel": "Raftul provocării de lectură. {finished} din {target} cărți citite, {reading} în curs de lectură.",
-  "@challengeShelfSemanticLabel": {
-    "placeholders": {
-      "finished": {
-        "type": "int"
-      },
-      "target": {
-        "type": "int"
-      },
-      "reading": {
-        "type": "int"
-      }
-    }
-  },
-  "challengeSlotFilled": "Cotorul {slot}: {title}",
-  "@challengeSlotFilled": {
-    "placeholders": {
-      "slot": {
-        "type": "int"
-      },
-      "title": {
-        "type": "String"
-      }
-    }
-  },
-  "challengeSlotEmpty": "Cotorul {slot} este gol.",
-  "@challengeSlotEmpty": {
-    "placeholders": {
-      "slot": {
-        "type": "int"
-      }
-    }
-  },
   "monthTrackerTitle": "Monitorizare lunară",
   "monthTrackerPagesTotal": "{count, plural, =0{Nicio pagină în această lună} one{O pagină în această lună} few{{count} pagini în această lună} other{{count} de pagini în această lună}}",
   "@monthTrackerPagesTotal": {
@@ -784,9 +711,7 @@
       }
     }
   },
-  "opdsCatalogs": "Cataloage",
   "opdsFindBooksOnline": "Găsește cărți online",
-  "opdsCatalogsEmpty": "Nu există încă niciun catalog.",
   "opdsAddCatalog": "Adaugă un catalog",
   "opdsCatalogName": "Nume",
   "opdsCatalogUrl": "Adresă",
@@ -873,25 +798,6 @@
   },
   "bookBindingWhyPublicDomain": "O transcriere aflată în domeniul public a unei cărți vechi.",
   "bookBindingWhyDefault": "Cartea nu precizează legătura, așa că se folosește opțiunea implicită a bibliotecii.",
-  "bookModelSemanticLabel": "{title}, de {author}. Atinge pentru a deschide cartea.",
-  "@bookModelSemanticLabel": {
-    "placeholders": {
-      "title": {
-        "type": "String"
-      },
-      "author": {
-        "type": "String"
-      }
-    }
-  },
-  "bookModelSemanticLabelNoAuthor": "{title}. Atinge pentru a deschide cartea.",
-  "@bookModelSemanticLabelNoAuthor": {
-    "placeholders": {
-      "title": {
-        "type": "String"
-      }
-    }
-  },
   "settingsDefaultBinding": "Legătură implicită",
   "settingsDefaultBindingDescription": "Legătura pentru cărțile fără informații despre format. Manga, romanele ușoare și romanele moderne păstrează coperta broșată, iar cărțile vechi, coperta cartonată.",
   "settingsBookshelfUniformSpines": "Cotoare uniforme",
@@ -991,13 +897,10 @@
     }
   },
   "bookBindingAskDecide": "Decide pentru mine",
-  "shelfPickUpHint": "Alege această carte",
-  "shelfOpenHint": "Deschide această carte",
   "shelfBookOptions": "Opțiunile cărții",
   "shelfBookOptionDetails": "Detalii",
   "shelfBookOptionShelves": "Rafturi",
   "shelfBookOptionCustomise": "Personalizează",
-  "shelfBookOptionNotes": "Note",
   "shelfBookShelvesTitle": "Mută sau adaugă pe un raft",
   "shelfBookCustomiseTitle": "Personalizează această carte",
   "shelfBookCoverArt": "Imaginea coperții",
@@ -1011,9 +914,6 @@
   "settingsDeveloperOptionsEnable": "Activează opțiunile pentru dezvoltatori",
   "settingsDeveloperOptionsEnableDescription": "Dezactivează pentru a ascunde intrarea pentru dezvoltatori din setări.",
   "settingsDeveloperOptionsEnabledToast": "Opțiunile pentru dezvoltatori sunt activate",
-  "settingsDeveloperVibrationTest": "Test de vibrații",
-  "settingsDeveloperVibrationTestDescription": "Verifică ce acceptă dispozitivul și testează fiecare model de vibrație.",
-  "settingsQuickSettings": "Setări rapide",
   "commonLoadFailedTitle": "Acest element nu a putut fi încărcat.",
   "commonLoadFailedBody": "A apărut o eroare la citirea cărților tale. Încearcă din nou.",
   "notesLoadFailed": "Notele tale nu au putut fi încărcate.",
@@ -1028,7 +928,6 @@
   "readingPageDeleteTheme": "Șterge această temă",
   "journalSaveFailed": "Modificările nu au putut fi salvate. Rămâi pe această pagină și încearcă din nou.",
   "journalLoadFailed": "Jurnalul tău nu a putut fi încărcat.",
-  "storageMigrationScheduled": "Repornește aplicația pentru a muta biblioteca în dosarul ales.",
   "appStartupFailed": "Paperfold nu a putut porni.",
   "appStartupFailedBody": "Închide aplicația și deschide-o din nou. Dacă problema continuă, verifică dacă dosarul bibliotecii este disponibil.",
   "searchLibraryHint": "Caută în cărți, note și jurnal",
@@ -1042,7 +941,6 @@
     }
   },
   "journalBooks": "Jurnalele cărților",
-  "journalHighlightsOverview": "Revino la pasaje și note din biblioteca ta.",
   "challengeSaveFailed": "Obiectivul nu a putut fi salvat. Încearcă din nou.",
   "monthTrackerSaveFailed": "Totalul paginilor nu a putut fi salvat. Încearcă din nou.",
   "monthTrackerInvalidPages": "Introdu un număr întreg de pagini, cel puțin 0.",
@@ -1051,7 +949,6 @@
   "monthTrackerManualEntryHint": "Înregistrează totalul paginilor pentru fiecare zi. Timpul de lectură este urmărit separat.",
   "journalAddPassage": "Adaugă în jurnal",
   "journalOpenPassage": "Deschide pasajul",
-  "journalPassageAdded": "Pasaj adăugat în jurnal.",
   "journalPassageSaveFailed": "Pasajul nu a putut fi adăugat. Încearcă din nou.",
   "journalThoughtsHint": "Scrie-ți gândurile despre acest pasaj…",
   "journalBookOverview": "Jurnalul tău de lectură",
@@ -1062,7 +959,6 @@
   "journalExportEmpty": "Adaugă o recenzie sau o pagină înainte de a exporta jurnalul.",
   "journalExportFailed": "Jurnalul nu a putut fi exportat. Încearcă din nou.",
   "journalExportSaved": "Jurnalul a fost exportat.",
-  "journalNoReview": "Nicio recenzie încă",
   "journalReadBook": "Citește cartea",
   "journalDeletePage": "Șterge pagina",
   "journalDeletePageConfirm": "Ștergi această pagină și pasajul salvat? Acțiunea nu poate fi anulată.",
@@ -1110,12 +1006,6 @@
   "settingsCatalogs": "Cataloage",
   "captureLogPages": "Înregistrează pagini",
   "captureWriteNote": "Scrie o notă",
-  "widgetContinue": "Continuă lectura",
-  "widgetQuickCapture": "Înregistrare rapidă",
-  "captureNote": "Notă",
-  "captureQuote": "Citat",
-  "widgetContinueDescription": "Continuă cartea curentă sau înregistrează pagini.",
-  "widgetCaptureDescription": "Salvează o notă, un citat sau progresul lecturii.",
   "newEntry": "Înregistrare nouă",
   "recentEntries": "Înregistrări recente",
   "entryNote": "Notă",

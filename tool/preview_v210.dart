@@ -240,7 +240,6 @@ void main() {
         await capture('book-wide', const Size(1100, 800));
         await capture('book-large-text', const Size(320, 720), textScale: 2);
       }
-      await stage.putBack();
       Prefs().shelfCoverView = true;
       await capture('$mode-covers', const Size(412, 850));
       for (final (index, name) in [
@@ -261,9 +260,6 @@ void main() {
         .state<ShelfStageState>(find.byType(ShelfStage).first)
         .pickUpAt(0);
     await capture('arabic-book', const Size(412, 850));
-    await tester
-        .state<ShelfStageState>(find.byType(ShelfStage).first)
-        .putBack();
     locale.value = const Locale('en');
     unawaited(
       navigator.currentState!.push<void>(

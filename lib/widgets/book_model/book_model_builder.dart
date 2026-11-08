@@ -221,10 +221,6 @@ abstract final class BookModelBuilder {
       ...parts.frontBoard(angle),
     ];
   }
-
-  /// The angle of the cover at this opening, in radians.
-  static double coverAngle(double open) =>
-      open.clamp(0.0, overshootLimit) * maximumCoverAngle;
 }
 
 /// Builds every face of one book and holds every content painter.

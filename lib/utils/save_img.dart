@@ -1,7 +1,5 @@
 import 'package:paperfold/l10n/generated/L10n.dart';
 import 'package:paperfold/main.dart';
-import 'package:paperfold/utils/platform_utils.dart';
-import 'package:paperfold/utils/save_file_to_download.dart';
 import 'package:paperfold/utils/log/common.dart';
 import 'package:paperfold/utils/toast/common.dart';
 import 'package:device_info_plus/device_info_plus.dart';
@@ -24,35 +22,6 @@ class SaveImg {
           return AlertDialog(
             title: Text(L10n.of(context).storagePermissionDenied),
             content: Text(L10n.of(context).storagePermissionDenied),
-            actions: [
-              TextButton(
-                onPressed: () async {
-                  openAppSettings();
-                },
-                child: Text(L10n.of(context).gotoAuthorize),
-              )
-            ],
-          );
-        },
-      );
-      return false;
-    } else {
-      return true;
-    }
-  }
-
-  static Future<bool> requestPhotoPer() async {
-    await Permission.photos.request();
-    PermissionStatus status = await Permission.photos.status;
-    if (status == PermissionStatus.denied ||
-        status == PermissionStatus.permanentlyDenied) {
-      SmartDialog.show(
-        useSystem: true,
-        animationType: SmartAnimationType.centerFade_otherSlide,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            title: Text(L10n.of(context).commonAttention),
-            content: Text(L10n.of(context).galleryPermissionDenied),
             actions: [
               TextButton(
                 onPressed: () async {
@@ -106,7 +75,6 @@ class SaveImg {
     String name,
   ) async {
     try {
-      if (!AnxPlatform.isAndroid) return true;
       final deviceInfoPlugin = DeviceInfoPlugin();
       final deviceInfo = await deviceInfoPlugin.androidInfo;
       final sdkInt = deviceInfo.version.sdkInt;
@@ -126,33 +94,6 @@ class SaveImg {
     }
   }
 
-  // windows just save the image to the download path
-  static Future<bool> windowsImgSaver(
-    Uint8List img,
-    String extension,
-    String name,
-  ) async {
-    String? path = await saveFileToDownload(
-      bytes: img,
-      fileName: '$name.$extension',
-      mimeType: 'image/$extension',
-    );
-    if (path == null) {
-      return false;
-    }
-    AnxToast.show(
-        '「$name.$extension」${L10n.of(navigatorKey.currentContext!).commonSaved}');
-    return true;
-  }
-
-  static Future<bool> iosImgSaver(
-    Uint8List img,
-    String extension,
-    String name,
-  ) async {
-    return await saveImg(img, extension, name);
-  }
-
   static Future<bool> downloadImg(
     Uint8List img,
     String extension,
@@ -160,15 +101,6 @@ class SaveImg {
   ) async {
     String picName =
         "Paperfold_${name}_${DateTime.now().toString().replaceAll(RegExp(r'[- :]'), '').split('.').first}";
-    switch (AnxPlatform.type) {
-      case AnxPlatformEnum.android:
-        return await androidImgSaver(img, extension, picName);
-      case AnxPlatformEnum.windows:
-      case AnxPlatformEnum.macos:
-        return await windowsImgSaver(img, extension, picName);
-      case AnxPlatformEnum.ohos:
-      case AnxPlatformEnum.ios:
-        return await iosImgSaver(img, extension, name);
-    }
+    return await androidImgSaver(img, extension, picName);
   }
 }
